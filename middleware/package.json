@@ -1,0 +1,33 @@
+{
+  "name": "speedrunbrowser-middleware",
+  "version": "1.0.0",
+  "description": "Middleware for a Speedrun.com smartphone client to categorize and crawl data",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@git.buyme360.com:8022/beald/speedrun-browser.git"
+  },
+  "keywords": [
+    "speedrun",
+    "middleware"
+  ],
+  "author": "Daniel Beal <git@danb.email>",
+  "license": "GPL-3.0-or-later",
+  "dependencies": {
+    "@types/ioredis": "^4.0.6",
+    "@types/lodash": "^4.14.120",
+    "@types/moment": "^2.13.0",
+    "@types/node": "^10.12.18",
+    "@types/request": "^2.48.1",
+    "@types/request-promise-native": "^1.0.15",
+    "express": "^4.16.4",
+    "ioredis": "^4.5.1",
+    "lodash": "^4.17.11",
+    "moment": "^2.24.0",
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.5"
+  }
+}
