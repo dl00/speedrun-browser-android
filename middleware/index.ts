@@ -1,13 +1,12 @@
-import IORedis from 'ioredis';
-
 import { config } from './lib/config';
 
+import * as scraper from './scraper';
+
 export function start_scraper() {
-    let rdb = new IORedis(config.redis);
+    scraper.run(config);
 }
 
 export function start_server() {
-    let rdb = new IORedis(config.redis);
 }
 
 export function run() {

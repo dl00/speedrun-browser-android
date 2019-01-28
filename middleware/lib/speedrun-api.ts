@@ -5,7 +5,7 @@ export const API_PREFIX = 'https://www.speedrun.com/api/v1'
 
 export interface Names {
     international: string
-    japanese?: string
+    [index: string]: string
 }
 
 export interface Asset {

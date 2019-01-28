@@ -1,7 +1,7 @@
-import _ from 'lodash';
+import * as _ from 'lodash';
 
-import request from 'request-promise-native';
-import moment from 'moment';
+import request from './request';
+import * as moment from 'moment';
 
 const WIKIPEDIA_API_URL = 'https://en.wikipedia.org/w/api.php';
 const WIKIMEDIA_REST_URL = 'https://wikimedia.org/api/rest_v1';
@@ -27,6 +27,7 @@ export interface WikipediaSearchResult {
 export async function search(name: string) {
     let res = await request(WIKIPEDIA_API_URL, {
         qs: {
+            format: 'json',
             action: 'query',
             list: 'search',
             srsearch: name
