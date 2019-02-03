@@ -8,10 +8,18 @@ import { RedisOptions } from 'ioredis';
 export interface Config {
     listen: {
         /// Hostname to accept connections from. Use 0.0.0.0 for all interfaces.
-        host: string,
+        host: string
 
         /// Port for the API to accept connections from
         port: number
+    },
+
+    api: {
+        /// Maximum number of individual elements to return in a single request
+        maxItems: number
+
+        /// Maximum number of characters which may be used to search for an autocomplete result
+        maxSearchLength: number
     }
 
     /// Configure the DB connection
@@ -26,6 +34,9 @@ export interface Config {
 
         /// Override configuration options for the redis connection (for example, different DB index)
         redis: RedisOptions
+
+        /// Number of seconds before a running task is considered stalled/lost
+        runningTaskTimeout: number
     }
 
     /// Settings for the indexing engine--used for autocomplete and any title search
@@ -49,13 +60,20 @@ export const DEFAULT_CONFIG: Config = {
         port: 3500
     },
 
+    api: {
+        maxItems: 30,
+        maxSearchLength: 50
+    },
+
     redis: {},
 
     scraper: {
         // number of calls / second
-        rate: 0.33333,
+        rate: 1,
 
         maxRetries: 3,
+
+        runningTaskTimeout: 300, // 5 minutes
 
         redis: {
             db: 1

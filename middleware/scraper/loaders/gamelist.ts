@@ -2,14 +2,13 @@
 // * Game popularity (according to wikipedia data)
 // * Autocomplete (indexer) indexing
 
+import * as _ from 'lodash';
+
 import * as speedrun_api from '../../lib/speedrun-api';
 import * as speedrun_db from '../../lib/speedrun-db';
-import * as wikipedia from '../../lib/wikipedia';
 import request from '../../lib/request';
 
 import * as scraper from '../index';
-
-import * as moment from 'moment';
 
 export async function list_all_games(runid: string, options: any) {
 
@@ -60,73 +59,127 @@ export async function pull_game(runid: string, options: any) {
         // write the game to db
         await scraper.storedb!.hset(speedrun_db.locs.games, options.id, JSON.stringify(game));
 
-        // search for the article on wikipedia
-        let wikipedia_pages = await wikipedia.search(game.id);
 
-        // by default, have very few page views because if no results, then it is undoubtebly not a very notable game
-        let wikipedia_pageviews = 1;
-        if(wikipedia_pages.search.length) {
-            // load pageviews (just use the top search result for now)
-            wikipedia_pageviews = await wikipedia.get_pageviews(wikipedia_pages.search[0].title.replace(' ', '_'), moment().subtract(1, 'month'), moment());
-        }
-
-
-        let indexes: { text: string, score: number, namespace?: string }[] = [];
-        for(let name in game.names) {
-
-            if(!game.names[name])
-                continue;
-
-            let idx: any = { text: game.names[name], score: wikipedia_pageviews };
-
-            if(name != 'international')
-                idx.namespace = name;
-            
-            indexes.push(idx);
-        }
-
-        // install autocomplete entry
-        await scraper.indexer.add(game.id, indexes);
-
-        const LEADERBOARD_CACHE_PULL = {
-            runid: scraper.join_runid([runid, options.id, '{{ id }}']),
-            module: 'cache',
-            exec: 'load',
-            options: {
-                url: speedrun_api.API_PREFIX + '/leaderboards/' + options.id + '/category/{{ id }}?embed=platforms,regions',
-                id: '{{ id }}',
-                db_loc: [
-                    {
-                        hash: 'leaderboards'
-                    }
-                ]
-            }
-        };
-
-        const CATEGORY_CACHE_PULL = {
-            runid: scraper.join_runid([runid, game.id, 'categories']),
-            module: 'cache',
-            exec: 'load',
-            options: {
-                url: speedrun_api.API_PREFIX + '/games/' + options.id + '/categories?embed=variables',
-                id: options.id,
-                db_loc: [{
-                    hash: 'categories',
-                    sub: 'categories'
-                }],
-
-                chain: [
-                    // also retrieve full leaderboard for category
-                    LEADERBOARD_CACHE_PULL
-                ]
-            }
-        };
 
         // unfortunately we have to load the categories for a game in a separate request...
-        await scraper.push_call(CATEGORY_CACHE_PULL, 9);
+        await scraper.push_call({
+            runid: scraper.join_runid([runid, options.id, 'categories']),
+            module: 'gamelist',
+            exec: 'pull_game_categories',
+            options: {
+                id: options.id
+            }
+        }, 9);
     }
     catch(err) {
-        console.error('Could not retrieve single game entry:', options, err.statusCode);
+        console.error('loader/gamelist: could not retrieve single game entry:', options, err.statusCode);
+        throw 'reschedule';
+    }
+}
+
+export async function pull_game_categories(runid: string, options: any) {
+    try {
+        let res = await request(speedrun_api.API_PREFIX + '/games/' + options.id + '/categories');
+
+        let categories: speedrun_api.Category[] = res.data;
+
+        // write the categories to db
+        await scraper.storedb!.hset(speedrun_db.locs.categories, options.id, JSON.stringify(categories));
+
+        let grouped_categories = _.groupBy(categories, 'type');
+
+        if(grouped_categories['per-level']) {
+            await scraper.push_call({
+                runid: scraper.join_runid([runid, options.id, 'levels']),
+                module: 'gamelist',
+                exec: 'pull_game_levels',
+                options: {
+                    categories: _.map(grouped_categories['per-level'], 'id'),
+                    id: options.id
+                }
+            }, 9);
+        }
+        
+        if(grouped_categories['per-game']) {
+            for(let category of grouped_categories['per-game']) {
+                await scraper.push_call({
+                    runid: scraper.join_runid([runid, options.id, category.id, 'leaderboard']),
+                    module: 'cache',
+                    exec: 'load',
+                    options: {
+                        url: speedrun_api.API_PREFIX + '/leaderboards/' + options.id + '/category/' + category.id + '?embed=platforms,regions',
+                        id: category.id,
+                        db_loc: [
+                            {
+                                hash: 'leaderboards'
+                            }
+                        ]
+                    }
+                }, 8);
+            }
+        }
+
+        await scraper.push_call({
+            runid: scraper.join_runid([runid, options.id, 'postprocess']),
+            module: 'gamelist',
+            exec: 'postprocess_game',
+            skip_wait: true,
+            options: {
+                id: options.id
+            }
+        }, 9);
+    }
+    catch(err) {
+        console.error('loader/gamelist: could not retrieve categories for single game:', options, err.statusCode);
+        throw 'reschedule';
+    }
+}
+
+export async function pull_game_levels(runid: string, options: any) {
+    try {
+        let res = await request(speedrun_api.API_PREFIX + '/games/' + options.id + '/levels');
+
+        let levels: speedrun_api.Level[] = res.data;
+
+
+        if(levels.length) {
+            await scraper.storedb!.hset(speedrun_db.locs.levels, options.id, JSON.stringify(levels));
+            for(let level of levels) {
+                for(let category_id of options.categories) {
+                    await scraper.push_call({
+                        runid: scraper.join_runid([runid, options.id, level.id + '_' + category_id, 'leaderboard']),
+                        module: 'cache',
+                        exec: 'load',
+                        options: {
+                            url: speedrun_api.API_PREFIX + '/leaderboards/' + options.id + '/level/' + level.id + '/' + category_id + '?embed=platforms,regions',
+                            id: level.id + '_' + category_id,
+                            db_loc: [
+                                {
+                                    hash: 'leaderboards'
+                                }
+                            ]
+                        }
+                    }, 8);
+                }
+            }
+        }
+    }
+    catch(err) {
+        console.error('loader/gamelist: could not retrieve levels for single game:', options, err.statusCode);
+        throw 'reschedule';
+    }
+}
+
+export async function postprocess_game(_runid: string, options: any) {
+    try {
+        let raw_game = await scraper.storedb!.hget(speedrun_db.locs.games, options.id);
+        if(!raw_game)
+            throw 'game does not exist in db!';
+
+        await speedrun_db.rescore_game(scraper.storedb!, scraper.indexer, JSON.parse(raw_game));
+    } catch(err) {
+        // this should not happen unless there is some internal problem with the previous steps
+        console.error('loader/gamelist: could not postprocess game:', options, err);
         throw 'reschedule';
     }
 }

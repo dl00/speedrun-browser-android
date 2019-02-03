@@ -3,6 +3,10 @@
 
 export const API_PREFIX = 'https://www.speedrun.com/api/v1'
 
+export interface BaseMiddleware {
+    updated?: string
+}
+
 export interface Names {
     international: string
     [index: string]: string
@@ -21,7 +25,7 @@ export interface BulkGame {
     weblink: string
 }
 
-export interface Game extends BulkGame {
+export interface Game extends BulkGame, BaseMiddleware {
     released: number
     'release-date': string
     romhack: boolean
@@ -47,7 +51,7 @@ export interface Game extends BulkGame {
     }
 }
 
-export interface Category {
+export interface Category extends BaseMiddleware {
     id: string
     name: string
     weblink: string
@@ -55,7 +59,11 @@ export interface Category {
     miscellaneous: boolean
 }
 
-export interface Leaderboard {
+export interface Level extends BaseMiddleware {
+    id: string
+}
+
+export interface Leaderboard extends BaseMiddleware {
     weblink: string
     game: Game|string
     category: Category|string
@@ -66,16 +74,18 @@ export interface Leaderboard {
     'video-only': boolean
     runs: {
        place: number
-       run: string|Run 
+       run: Run 
     }[]
 }
 
-export interface Run {
+export interface Run extends BaseMiddleware {
     id: string
     weblink: string
     game: Game|string
     level: string
     category: Category|string
+    date: string
+    submitted: string
     videos: {
         text: string
         links: {
@@ -91,7 +101,7 @@ export interface Run {
     }
 }
 
-export interface User {
+export interface User extends BaseMiddleware {
     id: string
     names: Names
     weblink: string

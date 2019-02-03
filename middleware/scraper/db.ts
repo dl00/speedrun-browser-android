@@ -13,5 +13,6 @@ export function split(str: string) {
 /// key values/prefixes for which datasets can be found
 export const locs = {
     pending_tasks: 'pending_tasks',
+    running_tasks: 'running_tasks',
     callqueue: 'queue'
 }
