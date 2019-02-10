@@ -56,6 +56,7 @@ router.get('/', async (req, res) => {
 });
 
 // retrieve one or more games by id
+// if only one game is requested, embed additionally the categories and levels
 router.get('/:ids', async (req, res) => {
     let ids = req.params.ids.split(',');
 
@@ -65,10 +66,21 @@ router.get('/:ids', async (req, res) => {
 
     let games_raw = await api.storedb!.hmget(speedrun_db.locs.games, ...ids);
 
-    let games = _.chain(games_raw)
+    let games = <any[]>_.chain(games_raw)
         .reject(_.isNil)
         .map(JSON.parse)
         .value();
+
+    
+    if(ids.length === 1) {
+        let category_raw = await api.storedb!.hget(speedrun_db.locs.categories, ids[0]);
+        let level_raw = await api.storedb!.hget(speedrun_db.locs.levels, ids[0]);
+
+        if(category_raw)
+            games[0].categories = JSON.parse(category_raw);
+        if(level_raw)
+            games[0].levels = JSON.parse(level_raw);
+    }
 
     return api_response.complete(res, games);
 });

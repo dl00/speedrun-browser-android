@@ -6,8 +6,10 @@ import com.google.gson.GsonBuilder;
 
 import java.util.List;
 
+import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.Leaderboard;
+import danb.speedrunbrowser.api.objects.Level;
 import io.reactivex.Observable;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
@@ -16,8 +18,7 @@ import retrofit2.http.GET;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
-public class SpeedrunAPI {
-
+public class SpeedrunMiddlewareAPI {
     public static Gson getGson() {
         GsonBuilder gson = new GsonBuilder();
 
@@ -30,7 +31,7 @@ public class SpeedrunAPI {
 
     public static Endpoints make() {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://www.speedrun.com/api/v1/")
+                .baseUrl("http://192.168.85.30:3500/api/v1/")
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
                 .addConverterFactory(GsonConverterFactory.create(getGson()))
                 .build();
@@ -38,24 +39,39 @@ public class SpeedrunAPI {
         return retrofit.create(Endpoints.class);
     }
 
+    public static class Error {
+        public String msg;
+    }
+
     public static class APIResponse<T> {
-        public T data;
+        public List<T> data;
+        public Error error;
+    }
+
+    public static class APISearchData {
+        public List<Game> games;
+    }
+
+    public static class APISearchResponse {
+        public APISearchData search;
+        public Error error;
     }
 
     public interface Endpoints {
 
+        // Autocomplete
+        @GET("autocomplete")
+        Observable<APISearchResponse> autocomplete(@Query("q") String query);
+
         // Games
-        @GET("games?_bulk=yes&max=1000")
-        Observable<APIResponse<List<Game>>> bulkListGames(@Query("offset") int offset);
-
         @GET("games")
-        Observable<APIResponse<List<Game>>> listGames(@Query("name") String name);
+        Observable<APIResponse<Game>> listGames(@Query("start") int offset);
 
-        @GET("games/{id}?embed=categories.variables,levels.variables")
-        Observable<APIResponse<Game>> getGame(@Path("id") String gameId);
+        @GET("games/{ids}")
+        Observable<APIResponse<Game>> listGames(@Path("ids") String ids);
 
         // Leaderboards
-        @GET("leaderboards/{game}/category/{category}")
-        Observable<APIResponse<Leaderboard>> getLeaderboard(@Path("game") String gameId, @Path("category") String categoryId);
+        @GET("leaderboards/{leaderboardId}")
+        Observable<APIResponse<Leaderboard>> listLeaderboards(@Path("leaderboardId") String categoryId);
     }
 }

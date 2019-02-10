@@ -1,8 +1,10 @@
 package danb.speedrunbrowser;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,13 +12,23 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.astuetz.PagerSlidingTabStrip;
+
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Objects;
 
 import danb.speedrunbrowser.api.SpeedrunAPI;
+import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
+import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.utils.DownloadImageTask;
+import danb.speedrunbrowser.utils.LeaderboardPagerAdapter;
+import danb.speedrunbrowser.utils.Util;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -27,7 +39,7 @@ import retrofit2.Response;
  * in two-pane mode (on tablets) or a {@link GameDetailActivity}
  * on handsets.
  */
-public class GameDetailFragment extends Fragment implements Callback<SpeedrunAPI.APIResponse<Game>> {
+public class GameDetailFragment extends Fragment {
 
     public static final String TAG = GameDetailFragment.class.getSimpleName();
 
@@ -51,6 +63,11 @@ public class GameDetailFragment extends Fragment implements Callback<SpeedrunAPI
     TextView mPlatformList;
 
     ImageView mCover;
+    ImageView mBackground;
+
+    ViewPager mLeaderboardPager;
+    PagerSlidingTabStrip mCategoryTabStrip;
+    LeaderboardPagerAdapter mLeaderboardPagerAdapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -73,9 +90,37 @@ public class GameDetailFragment extends Fragment implements Callback<SpeedrunAPI
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
 
-            Log.d(TAG, "Downloading game data: " + getArguments().getString(ARG_GAME_ID));
-            SpeedrunAPI.make().getGame(getArguments().getString(ARG_GAME_ID)).enqueue(this);
+            final String gameId = getArguments().getString(ARG_GAME_ID);
+            loadGame(gameId);
         }
+    }
+
+    public Disposable loadGame(final String gameId) {
+        Log.d(TAG, "Downloading game data: " + gameId);
+        return SpeedrunMiddlewareAPI.make().listGames(gameId)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<SpeedrunMiddlewareAPI.APIResponse<Game>>() {
+                    @Override
+                    public void accept(SpeedrunMiddlewareAPI.APIResponse<Game> gameAPIResponse) throws Exception {
+
+                        if (gameAPIResponse.data.isEmpty()) {
+                            // game was not able to be found for some reason?
+                            Util.showErrorToast(getContext(), getString(R.string.error_missing_game, gameId));
+                            return;
+                        }
+
+                        mGame = gameAPIResponse.data.get(0);
+                        setViewData();
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+
+                        Log.e(TAG, "Could not download game data:", throwable);
+
+                        Util.showErrorToast(getContext(), getString(R.string.error_missing_game, gameId));
+                    }
+                });
     }
 
     @Override
@@ -88,6 +133,12 @@ public class GameDetailFragment extends Fragment implements Callback<SpeedrunAPI
         mPlatformList = rootView.findViewById(R.id.txtPlatforms);
 
         mCover = rootView.findViewById(R.id.imgCover);
+        mBackground = rootView.findViewById(R.id.imgBackground);
+
+        mLeaderboardPager = rootView.findViewById(R.id.leaderboardPage);
+        mLeaderboardPager.setAdapter(new LeaderboardPagerAdapter(getChildFragmentManager(), new Game()));
+
+        mCategoryTabStrip = rootView.findViewById(R.id.categoryTabStrip);
 
         setViewData();
 
@@ -109,25 +160,24 @@ public class GameDetailFragment extends Fragment implements Callback<SpeedrunAPI
 
             mPlatformList.setText(sb.toString());
 
-            try {
-                new DownloadImageTask(mCover).clear(false).execute(new URL(mGame.assets.coverLarge.uri));
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
+            // leaderboards
+            LeaderboardPagerAdapter leaderboardPagerAdapter = new LeaderboardPagerAdapter(getChildFragmentManager(), mGame);
+            mLeaderboardPager.setAdapter(leaderboardPagerAdapter);
+
+            mCategoryTabStrip.setViewPager(mLeaderboardPager);
+
+            Context ctx;
+            if((ctx = getContext()) != null) {
+                try {
+                    if(mGame.assets.coverLarge != null)
+                        new DownloadImageTask(ctx, mCover).clear(false).execute(new URL(mGame.assets.coverLarge.uri));
+
+                    if(mGame.assets.background != null && mBackground != null)
+                        new DownloadImageTask(ctx, mBackground).execute(new URL(mGame.assets.background.uri));
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
             }
         }
-    }
-
-    @Override
-    public void onResponse(@NonNull Call<SpeedrunAPI.APIResponse<Game>> call, @NonNull Response<SpeedrunAPI.APIResponse<Game>> response) {
-        if (response.isSuccessful()) {
-            mGame = Objects.requireNonNull(response.body()).data;
-            setViewData();
-        }
-    }
-
-    @Override
-    public void onFailure(@NonNull Call<SpeedrunAPI.APIResponse<Game>> call, @NonNull Throwable t) {
-        // TODO: Handle gracefully
-        Log.w(TAG, "Could not download game info!", t);
     }
 }

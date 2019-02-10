@@ -35,7 +35,7 @@ export function run(conf: Config) {
     for(let endpoint_module of endpoint_modules) {
         let name = endpoint_module.split('.')[0];
         console.log('Load endpoint:', '/' + name);
-        app.use('/' + name, require(path.join(__dirname, 'endpoints', endpoint_module)));
+        app.use('/api/v1/' + name, require(path.join(__dirname, 'endpoints', endpoint_module)));
     }
     
     app.listen(config!.listen, () => {

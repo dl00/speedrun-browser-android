@@ -20,9 +20,7 @@
         android:name="danb.speedrunbrowser.GameListFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+        app:layoutManager="android.support.v7.widget.GridLayoutManager"
         tools:context=".GameListActivity"
-        tools:listitem="@layout/game_list_content" />
+        tools:listitem="@layout/game_grid_content" />
 </LinearLayout>

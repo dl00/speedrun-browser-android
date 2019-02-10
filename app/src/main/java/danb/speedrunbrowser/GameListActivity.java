@@ -2,26 +2,36 @@ package danb.speedrunbrowser;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import danb.speedrunbrowser.api.SpeedrunAPI;
+import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.utils.DownloadImageTask;
 import danb.speedrunbrowser.api.objects.Game;
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.PublishSubject;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -29,8 +39,12 @@ import retrofit2.Response;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+
+import javax.security.auth.Subject;
 
 /**
  * An activity representing a list of Games. This activity
@@ -40,7 +54,7 @@ import java.util.Objects;
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class GameListActivity extends AppCompatActivity implements Callback<SpeedrunAPI.APIResponse<List<Game>>>, TextView.OnEditorActionListener {
+public class GameListActivity extends AppCompatActivity implements Callback<SpeedrunMiddlewareAPI.APIResponse<Game>>, TextWatcher {
     private static final String TAG = GameListActivity.class.getSimpleName();
 
     /**
@@ -56,22 +70,49 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
 
     private EditText mGameFilter;
 
+    private PublishSubject<CharSequence> mGameFilterSearchSubject;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_list);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         toolbar.setTitle(getTitle());
 
         mGameFilter = findViewById(R.id.editGameFilter);
         assert mGameFilter != null;
-        mGameFilter.setOnEditorActionListener(this);
+        mGameFilter.addTextChangedListener(this);
 
-        View recyclerView = findViewById(R.id.game_list);
+        mGameFilterSearchSubject = PublishSubject.create();
+
+        final RecyclerView recyclerView = findViewById(R.id.game_list);
         assert recyclerView != null;
-        setupRecyclerView((RecyclerView) recyclerView);
+
+        mAdapter = new GameListAdapter();
+        recyclerView.setAdapter(mAdapter);
+
+
+
+        findViewById(android.R.id.content)
+                .getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+
+            int lastMeasuredWidth = 0;
+
+            @Override
+            public void onGlobalLayout() {
+                int mw = findViewById(android.R.id.content).getMeasuredWidth();
+                if(lastMeasuredWidth != mw)
+                    setupRecyclerView((RecyclerView) recyclerView);
+
+                lastMeasuredWidth = mw;
+            }
+        });
+
+        setupGameDownloader();
+
+        mGameFilterSearchSubject.onNext("");
     }
 
     protected boolean isTwoPane() {
@@ -83,19 +124,59 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
-        mAdapter = new GameListAdapter();
-        recyclerView.setAdapter(mAdapter);
+
+        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+
+        // set number of columns based on screen width
+        Log.d(TAG, "WIDTH: " + findViewById(android.R.id.content).getMeasuredWidth());
+        recyclerView.setLayoutManager(new GridLayoutManager(this,
+                Math.max((int)Math.ceil(
+                        findViewById(android.R.id.content).getMeasuredWidth() / (512.0f)
+                ), 3)));
     }
 
-    private void downloadGames(String nameFilter) {
-        Log.d("Downloading games", nameFilter);
-        SpeedrunAPI.make().listGames(nameFilter).enqueue(this);
+    private Disposable setupGameDownloader() {
+        return mGameFilterSearchSubject
+                .debounce(250, TimeUnit.MILLISECONDS)
+                .switchMap(new Function<CharSequence, ObservableSource<?>>() {
+                    @Override
+                    public ObservableSource<?> apply(CharSequence q) throws Exception {
+                        Log.d(TAG, "IN THE SWITCH MAP " + q);
+                        if(q.length() > 0) {
+                            return SpeedrunMiddlewareAPI.make().autocomplete(q.toString());
+                        }
+                        else {
+                            return SpeedrunMiddlewareAPI.make().listGames(0);
+                        }
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<Object>() {
+                    @Override
+                    public void accept(Object res) throws Exception {
+                        List<Game> games = new ArrayList<>(0);
+                        if (res instanceof SpeedrunMiddlewareAPI.APISearchResponse) {
+                            games = ((SpeedrunMiddlewareAPI.APISearchResponse) res).search.games;
+                        } else if (res instanceof SpeedrunMiddlewareAPI.APIResponse) {
+                            games = ((SpeedrunMiddlewareAPI.APIResponse<Game>) res).data;
+                        }
+
+                        mGames = games;
+                        mAdapter.notifyDataSetChanged();
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+                        Log.w(TAG, "Could not download autocomplete results:", throwable);
+                    }
+                });
     }
 
     @Override
-    public void onResponse(@NonNull Call<SpeedrunAPI.APIResponse<List<Game>>> call, @NonNull Response<SpeedrunAPI.APIResponse<List<Game>>> response) {
+    public void onResponse(@NonNull Call<SpeedrunMiddlewareAPI.APIResponse<Game>> call, @NonNull Response<SpeedrunMiddlewareAPI.APIResponse<Game>> response) {
         if(response.isSuccessful()) {
             mGames = Objects.requireNonNull(response.body()).data;
+            Log.d(TAG, "Downloaded " + mGames.size() + " games!");
             mAdapter.notifyDataSetChanged();
         }
         else {
@@ -109,19 +190,23 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
     }
 
     @Override
-    public void onFailure(@NonNull Call<SpeedrunAPI.APIResponse<List<Game>>> call, @NonNull Throwable t) {
+    public void onFailure(@NonNull Call<SpeedrunMiddlewareAPI.APIResponse<Game>> call, @NonNull Throwable t) {
         Log.w(TAG, "Could not download games", t);
     }
 
     @Override
-    public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
-        try {
-            downloadGames(mGameFilter.getText().toString());
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
+    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
-        return true;
+    }
+
+    @Override
+    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+    }
+
+    @Override
+    public void afterTextChanged(Editable editable) {
+        Log.d(TAG, "After text changed " + mGameFilter.getText());
+        mGameFilterSearchSubject.onNext(mGameFilter.getText());
     }
 
     private class GameListAdapter extends RecyclerView.Adapter<GameListActivity.GameItemViewHolder> {
@@ -155,7 +240,7 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
 
         @Override
         public GameItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View v = inflater.inflate(R.layout.game_list_content, parent, false);
+            View v = inflater.inflate(R.layout.game_grid_content, parent, false);
             return new GameItemViewHolder(v);
         }
 
@@ -172,7 +257,7 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
         }
     }
 
-    public static class GameItemViewHolder extends RecyclerView.ViewHolder {
+    public class GameItemViewHolder extends RecyclerView.ViewHolder {
 
         private TextView mName;
         private TextView mDate;
@@ -195,7 +280,7 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
             mRunnersCount.setText("");
 
             try {
-                new DownloadImageTask(mCover).execute(new URL(game.assets.coverSmall.uri));
+                new DownloadImageTask(GameListActivity.this, mCover).execute(new URL(game.assets.coverLarge.uri));
             } catch(MalformedURLException e) {
                 // skip
             }

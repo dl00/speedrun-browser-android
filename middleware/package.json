@@ -17,15 +17,15 @@
   "author": "Daniel Beal <git@danb.email>",
   "license": "GPL-3.0-or-later",
   "dependencies": {
-    "@13013/indexer": "git+ssh://git@git.buyme360.com:8022/beald/indexer.git",
+    "@13013/indexer": "git+ssh://git@git.buyme360.com:8022/beald/indexer.git#v0.0.3",
     "@types/ioredis": "^4.0.6",
     "@types/lodash": "^4.14.120",
     "@types/moment": "^2.13.0",
-    "@types/node": "^10.12.18",
+    "@types/node": "^10.12.24",
     "@types/request": "^2.48.1",
     "@types/request-promise-native": "^1.0.15",
     "express": "^4.16.4",
-    "ioredis": "^4.5.1",
+    "ioredis": "^4.6.2",
     "lodash": "^4.17.11",
     "moment": "^2.24.0",
     "request": "^2.88.0",
@@ -38,6 +38,6 @@
     "chai": "^4.2.0",
     "mocha": "^5.2.0",
     "ts-node": "^8.0.2",
-    "typescript": "^3.2.4"
+    "typescript": "^3.3.3"
   }
 }

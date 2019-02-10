@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <dimen name="half_fab_margin">8dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="app_bar_height">200dp</dimen>
     <dimen name="item_width">350dp</dimen>
     <dimen name="text_margin">16dp</dimen>
+    <dimen name="tab_height">40dp</dimen>
 </resources>

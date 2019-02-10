@@ -2,4 +2,10 @@
     <string name="app_name">Speedrun.com Browser</string>
     <string name="title_game_detail">Game Detail</string>
     <string name="enter_game_name">Enter Game Name...</string>
+    <string name="label_key_platforms">Platforms</string>
+
+    <string name="error_missing_game">Error: Game not Found: %1$s</string>
+    <string name="error_missing_leaderboard">Error: Leaderboard not Found: %1$s</string>
+
+
 </resources>

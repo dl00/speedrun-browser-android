@@ -22,10 +22,12 @@ const SCAN_INDEXES: {[type: string]: any} = {
 const router = Router();
 
 router.get('/', async (req, res) => {
-    let query = req.query.q;
+    let query = <string>req.query.q;
 
     if(!query || query.length > api.config!.api.maxSearchLength)
         api_response.error(res, api_response.err.INVALID_PARAMS(['q'], 'invalid length'));
+
+    query = query.toLowerCase();
 
     // search all the indexer indexes
     try {
@@ -33,8 +35,6 @@ router.get('/', async (req, res) => {
 
         for(let si in SCAN_INDEXES) {
             let ids = await SCAN_INDEXES[si].indexer.search(query, {maxResults: 5});
-
-            console.log(ids);
 
             if(ids.length) {
                 // resolve all the results

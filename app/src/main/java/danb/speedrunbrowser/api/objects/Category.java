@@ -1,11 +1,11 @@
 package danb.speedrunbrowser.api.objects;
 
 public class Category {
-    String id;
-    String name;
-    String weblink;
-    String type;
-    String rules;
+    public String id;
+    public String name;
+    public String weblink;
+    public String type;
+    public String rules;
 
-    boolean miscellaneous;
+    public boolean miscellaneous;
 }

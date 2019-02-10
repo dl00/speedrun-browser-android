@@ -17,7 +17,8 @@ export async function list_all_games(runid: string, options: any) {
             qs: {
                 _bulk: 'yes',
                 max: 1000,
-                offset: options ? options.offset : 0
+                offset: options ? options.offset : 0,
+                embed: 'platforms,regions'
             }
         });
 
@@ -107,7 +108,7 @@ export async function pull_game_categories(runid: string, options: any) {
                     module: 'cache',
                     exec: 'load',
                     options: {
-                        url: speedrun_api.API_PREFIX + '/leaderboards/' + options.id + '/category/' + category.id + '?embed=platforms,regions',
+                        url: speedrun_api.API_PREFIX + '/leaderboards/' + options.id + '/category/' + category.id,
                         id: category.id,
                         db_loc: [
                             {
@@ -151,7 +152,7 @@ export async function pull_game_levels(runid: string, options: any) {
                         module: 'cache',
                         exec: 'load',
                         options: {
-                            url: speedrun_api.API_PREFIX + '/leaderboards/' + options.id + '/level/' + level.id + '/' + category_id + '?embed=platforms,regions',
+                            url: speedrun_api.API_PREFIX + '/leaderboards/' + options.id + '/level/' + level.id + '/' + category_id + '?embed=players',
                             id: level.id + '_' + category_id,
                             db_loc: [
                                 {

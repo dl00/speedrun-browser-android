@@ -4,9 +4,9 @@ import java.util.List;
 
 public class Leaderboard {
     public String weblink;
-    public Game game;
-    public Category category;
-    public Level level;
+    public String game;
+    public String category;
+    public String level;
 
     public String platform;
     public String region;

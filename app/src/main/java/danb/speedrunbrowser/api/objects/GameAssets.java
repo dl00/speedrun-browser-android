@@ -7,10 +7,10 @@ public class GameAssets {
     public MediaLink coverMedium;
     public MediaLink coverLarge;
     public MediaLink icon;
-    public MediaLink trophy1st;
-    public MediaLink trophy2nd;
-    public MediaLink trophy3rd;
-    public MediaLink trophy4th;
+    public MediaLink trophy_1st;
+    public MediaLink trophy_2nd;
+    public MediaLink trophy_3rd;
+    public MediaLink trophy_4th;
     public MediaLink background;
     public MediaLink foreground;
 }

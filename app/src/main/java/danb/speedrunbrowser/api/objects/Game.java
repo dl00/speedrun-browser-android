@@ -26,8 +26,8 @@ public class Game {
     public HashMap<String, String> moderators;
     public Date created;
 
-    public SpeedrunAPI.APIResponse<List<Category>> categories;
-    public SpeedrunAPI.APIResponse<List<Level>> levels;
+    public List<Category> categories;
+    public List<Level> levels;
 
     public GameAssets assets;
 

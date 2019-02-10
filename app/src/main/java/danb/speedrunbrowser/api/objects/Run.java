@@ -6,8 +6,8 @@ public class Run {
     public String id;
     public String weblink;
     public String game;
-    public Level level;
-    public Category category;
+    public String level;
+    public String category;
     public RunVideos videos;
     public String comment;
 
