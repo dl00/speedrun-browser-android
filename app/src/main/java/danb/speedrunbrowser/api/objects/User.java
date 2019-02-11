@@ -1,26 +1,27 @@
 package danb.speedrunbrowser.api.objects;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
 
-class UserNameStyleColor {
+class UserNameStyleColor implements Serializable {
     public String light;
     public String dark;
 }
 
-class UserNameStyle {
+class UserNameStyle implements Serializable {
     public String style;
     public UserNameStyleColor color;
     public UserNameStyleColor colorFrom;
     public UserNameStyleColor colorTo;
 }
 
-class UserLocation {
+class UserLocation implements Serializable {
     public String code;
     public HashMap<String, String> names;
 }
 
-public class User {
+public class User implements Serializable {
     public String id;
     public HashMap<String, String> names;
     public String weblink;
@@ -37,7 +38,7 @@ public class User {
     public MediaLink speedrunslive;
 
     public String getName() {
-        String n = names.get("international");
+        String n = names != null ? names.get("international") : null;
         return n != null ? n : "? Unknown Name ?";
     }
 }

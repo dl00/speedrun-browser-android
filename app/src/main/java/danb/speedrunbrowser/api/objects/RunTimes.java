@@ -1,9 +1,11 @@
 package danb.speedrunbrowser.api.objects;
 
+import java.io.Serializable;
+import java.text.DecimalFormat;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RunTimes {
+public class RunTimes implements Serializable {
     public String primary;
     public String realtime;
     public String realtimeNoloads;
@@ -37,7 +39,6 @@ public class RunTimes {
     }
 
     public String formatTime() {
-        System.out.println(primary);
         return format(readTime(primary));
     }
 
@@ -54,6 +55,8 @@ public class RunTimes {
     }
 
     private static String format(float t) {
-        return ((int)t / 60) + "m " + (t % 60) + "s";
+        return  (t > 3600 ? ((int)t / 3600) + "h " : "") +
+                (t > 60 ? ((int)(t % 3600) / 60) + "m " : "") +
+                new DecimalFormat("0.##").format(t % 60) + "s";
     }
 }

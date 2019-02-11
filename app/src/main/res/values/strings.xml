@@ -6,6 +6,8 @@
 
     <string name="error_missing_game">Error: Game not Found: %1$s</string>
     <string name="error_missing_leaderboard">Error: Leaderboard not Found: %1$s</string>
+    <string name="button_view_rules">View Rules</string>
+    <string name="msg_no_rules_content">No rules were provided for this category.</string>
 
 
 </resources>

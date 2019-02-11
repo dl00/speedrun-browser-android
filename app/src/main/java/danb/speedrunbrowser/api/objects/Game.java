@@ -1,12 +1,13 @@
 package danb.speedrunbrowser.api.objects;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
 import danb.speedrunbrowser.api.SpeedrunAPI;
 
-public class Game {
+public class Game implements Serializable {
     public String id;
     public HashMap<String, String> names;
     public String abbreviation;

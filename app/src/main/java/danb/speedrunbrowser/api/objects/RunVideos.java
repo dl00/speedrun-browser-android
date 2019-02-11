@@ -1,6 +1,9 @@
 package danb.speedrunbrowser.api.objects;
 
-public class RunVideos {
+import java.io.Serializable;
+import java.util.List;
+
+public class RunVideos implements Serializable {
     public String text;
-    public MediaLink[] links;
+    public List<MediaLink> links;
 }

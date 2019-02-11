@@ -1,8 +1,9 @@
 package danb.speedrunbrowser.api.objects;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Run {
+public class Run implements Serializable {
     public String id;
     public String weblink;
     public String game;

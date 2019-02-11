@@ -1,15 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout android:orientation="vertical"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/leaderboardList"
-    android:name="danb.speedrunbrowser.LeaderboardFragment"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_marginLeft="16dp"
-    android:layout_marginRight="16dp"
-    app:layoutManager="android.support.v7.widget.LinearLayoutManager"
-    tools:context=".GameListActivity"
-    tools:listitem="@layout/leaderboard_list_content">
+    android:layout_height="match_parent">
 
-</android.support.v7.widget.RecyclerView>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/leaderboardList"
+        android:name="danb.speedrunbrowser.LeaderboardFragment"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+        tools:context=".GameListActivity"
+        tools:listitem="@layout/leaderboard_list_content">
+
+    </android.support.v7.widget.RecyclerView>
+
+    <Button
+        android:id="@+id/viewRulesButton"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:background="@color/colorAccent"
+        android:text="@string/button_view_rules" />
+
+</LinearLayout>

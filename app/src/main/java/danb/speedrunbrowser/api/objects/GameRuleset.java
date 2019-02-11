@@ -1,6 +1,8 @@
 package danb.speedrunbrowser.api.objects;
 
-class GameRuleset {
+import java.io.Serializable;
+
+class GameRuleset implements Serializable {
     public boolean showMilliseconds;
     public boolean requireVerification;
     public boolean requireVideo;

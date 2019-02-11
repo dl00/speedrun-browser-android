@@ -1,6 +1,8 @@
 package danb.speedrunbrowser.api.objects;
 
-public class Level {
+import java.io.Serializable;
+
+public class Level implements Serializable {
     public String id;
     public String name;
 }

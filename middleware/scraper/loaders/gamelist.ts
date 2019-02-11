@@ -108,7 +108,7 @@ export async function pull_game_categories(runid: string, options: any) {
                     module: 'cache',
                     exec: 'load',
                     options: {
-                        url: speedrun_api.API_PREFIX + '/leaderboards/' + options.id + '/category/' + category.id,
+                        url: speedrun_api.API_PREFIX + '/leaderboards/' + options.id + '/category/' + category.id + '?embed=players',
                         id: category.id,
                         db_loc: [
                             {

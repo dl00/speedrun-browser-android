@@ -34,7 +34,7 @@ router.get('/', async (req, res) => {
         let results: IndexerResponse = {};
 
         for(let si in SCAN_INDEXES) {
-            let ids = await SCAN_INDEXES[si].indexer.search(query, {maxResults: 5});
+            let ids = await SCAN_INDEXES[si].indexer.search_raw(query, {maxResults: 5});
 
             if(ids.length) {
                 // resolve all the results

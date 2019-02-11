@@ -1,5 +1,7 @@
 package danb.speedrunbrowser.api.objects;
 
-public class RunStatus {
+import java.io.Serializable;
+
+public class RunStatus implements Serializable {
 
 }

@@ -13,6 +13,7 @@ import java.util.List;
 import danb.speedrunbrowser.LeaderboardFragment;
 import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
+import danb.speedrunbrowser.api.objects.Leaderboard;
 import danb.speedrunbrowser.api.objects.Level;
 import io.reactivex.annotations.NonNull;
 
@@ -55,16 +56,18 @@ public class LeaderboardPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public Fragment getItem(int position) {
-        Fragment frag = new LeaderboardFragment(game);
+        Fragment frag = new LeaderboardFragment();
         Bundle args = new Bundle();
 
+        args.putSerializable(LeaderboardFragment.ARG_GAME, game);
+
         if(position < perGameCategories.size()) {
-            args.putString(LeaderboardFragment.ARG_CATEGORY_ID, perGameCategories.get(position).id);
+            args.putSerializable(LeaderboardFragment.ARG_CATEGORY, perGameCategories.get(position));
         }
         else {
             int mpos = position - perGameCategories.size();
-            args.putString(LeaderboardFragment.ARG_CATEGORY_ID, perLevelCategories.get(mpos / levels.size()).id);
-            args.putString(LeaderboardFragment.ARG_CATEGORY_ID, levels.get(mpos % levels.size()).id);
+            args.putSerializable(LeaderboardFragment.ARG_CATEGORY, perLevelCategories.get(mpos / levels.size()));
+            args.putSerializable(LeaderboardFragment.ARG_LEVEL, levels.get(mpos % levels.size()));
         }
 
         frag.setArguments(args);

@@ -1,6 +1,8 @@
 package danb.speedrunbrowser.api.objects;
 
-public class LeaderboardRunEntry {
+import java.io.Serializable;
+
+public class LeaderboardRunEntry implements Serializable {
     public int place;
     public Run run;
 

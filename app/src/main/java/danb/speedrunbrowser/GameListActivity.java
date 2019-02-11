@@ -128,7 +128,6 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
 
         // set number of columns based on screen width
-        Log.d(TAG, "WIDTH: " + findViewById(android.R.id.content).getMeasuredWidth());
         recyclerView.setLayoutManager(new GridLayoutManager(this,
                 Math.max((int)Math.ceil(
                         findViewById(android.R.id.content).getMeasuredWidth() / (512.0f)
@@ -141,7 +140,6 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
                 .switchMap(new Function<CharSequence, ObservableSource<?>>() {
                     @Override
                     public ObservableSource<?> apply(CharSequence q) throws Exception {
-                        Log.d(TAG, "IN THE SWITCH MAP " + q);
                         if(q.length() > 0) {
                             return SpeedrunMiddlewareAPI.make().autocomplete(q.toString());
                         }
@@ -205,8 +203,7 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
 
     @Override
     public void afterTextChanged(Editable editable) {
-        Log.d(TAG, "After text changed " + mGameFilter.getText());
-        mGameFilterSearchSubject.onNext(mGameFilter.getText());
+        mGameFilterSearchSubject.onNext(mGameFilter.getText().toString().trim());
     }
 
     private class GameListAdapter extends RecyclerView.Adapter<GameListActivity.GameItemViewHolder> {
@@ -279,11 +276,10 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
             mDate.setText(game.releaseDate);
             mRunnersCount.setText("");
 
-            try {
-                new DownloadImageTask(GameListActivity.this, mCover).execute(new URL(game.assets.coverLarge.uri));
-            } catch(MalformedURLException e) {
-                // skip
-            }
+            if(game.assets.coverLarge != null)
+                new DownloadImageTask(GameListActivity.this, mCover).execute(game.assets.coverLarge.uri);
+            else {}
+            // TODO: In the extremely unlikely case there is no cover, might have to replace with dummy image
         }
     }
 }

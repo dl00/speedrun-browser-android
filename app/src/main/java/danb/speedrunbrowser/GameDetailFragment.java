@@ -168,15 +168,11 @@ public class GameDetailFragment extends Fragment {
 
             Context ctx;
             if((ctx = getContext()) != null) {
-                try {
-                    if(mGame.assets.coverLarge != null)
-                        new DownloadImageTask(ctx, mCover).clear(false).execute(new URL(mGame.assets.coverLarge.uri));
+                if(mGame.assets.coverLarge != null)
+                    new DownloadImageTask(ctx, mCover).clear(false).execute(mGame.assets.coverLarge.uri);
 
-                    if(mGame.assets.background != null && mBackground != null)
-                        new DownloadImageTask(ctx, mBackground).execute(new URL(mGame.assets.background.uri));
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
+                if(mGame.assets.background != null && mBackground != null)
+                    new DownloadImageTask(ctx, mBackground).execute(mGame.assets.background.uri);
             }
         }
     }

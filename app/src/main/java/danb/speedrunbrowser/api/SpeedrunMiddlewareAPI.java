@@ -8,6 +8,7 @@ import java.util.List;
 
 import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
+import danb.speedrunbrowser.api.objects.GameAssets;
 import danb.speedrunbrowser.api.objects.Leaderboard;
 import danb.speedrunbrowser.api.objects.Level;
 import io.reactivex.Observable;
@@ -23,6 +24,8 @@ public class SpeedrunMiddlewareAPI {
         GsonBuilder gson = new GsonBuilder();
 
         gson.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_DASHES);
+
+        gson.registerTypeAdapter(GameAssets.class, new GameAssets.JsonConverter());
 
         // type adapters go here
 
