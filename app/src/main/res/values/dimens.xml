@@ -6,4 +6,6 @@
     <dimen name="item_width">350dp</dimen>
     <dimen name="text_margin">16dp</dimen>
     <dimen name="tab_height">40dp</dimen>
+    <dimen name="text_size_player">18</dimen>
+    <dimen name="anim_slide_transition_distance">30dp</dimen>
 </resources>

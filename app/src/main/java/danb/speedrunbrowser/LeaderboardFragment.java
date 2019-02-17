@@ -1,10 +1,13 @@
 package danb.speedrunbrowser;
 
+import android.animation.Animator;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -16,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.net.MalformedURLException;
@@ -29,8 +33,10 @@ import danb.speedrunbrowser.api.objects.Leaderboard;
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
 import danb.speedrunbrowser.api.objects.Level;
 import danb.speedrunbrowser.api.objects.Run;
+import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.utils.DownloadImageTask;
 import danb.speedrunbrowser.utils.Util;
+import danb.speedrunbrowser.views.ProgressSpinnerView;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
@@ -52,6 +58,10 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
     private Game mGame;
     private Category mCategory;
     private Level mLevel;
+
+    private ProgressSpinnerView mProgressSpinner;
+
+    private LinearLayout mContentLayout;
 
     private Leaderboard mLeaderboard;
 
@@ -89,7 +99,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         String leaderboardId = mCategory.id;
 
         if (mLevel != null) {
-            leaderboardId += mLevel.id;
+            leaderboardId += "_" + mLevel.id;
         }
 
         return leaderboardId;
@@ -109,8 +119,10 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.leaderboard_list, container, false);
 
-        mLeaderboardList = rootView.findViewById(R.id.leaderboardList);
+        mProgressSpinner = rootView.findViewById(R.id.progress);
+        mContentLayout = rootView.findViewById(R.id.contentLayout);
 
+        mLeaderboardList = rootView.findViewById(R.id.leaderboardList);
 
         mRunsListAdapter = new LeaderboardAdapter();
         mLeaderboardList.setAdapter(mRunsListAdapter);
@@ -127,6 +139,16 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         Log.d(TAG, "create leaderboard list");
 
         return rootView;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if(mLeaderboard != null) {
+            mProgressSpinner.setVisibility(View.GONE);
+            mContentLayout.setVisibility(View.VISIBLE);
+        }
     }
 
     public Game getGame() {
@@ -155,6 +177,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         if(leaderboards.isEmpty()) {
             // not found
             Util.showErrorToast(getContext(), getString(R.string.error_missing_leaderboard, calculateLeaderboardId()));
+            return;
         }
 
         mLeaderboard = leaderboards.get(0);
@@ -163,7 +186,46 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         if(mRunsListAdapter != null) {
             Log.d(TAG, "Runs list adapter not created/available");
             mRunsListAdapter.notifyDataSetChanged();
+            animateLeaderboardIn();
         }
+    }
+
+    private void animateLeaderboardIn() {
+        int animTime = getResources().getInteger(
+                android.R.integer.config_shortAnimTime);
+
+        int translationDistance = getResources().getDimensionPixelSize(R.dimen.anim_slide_transition_distance);
+
+        mProgressSpinner.animate()
+                .alpha(0.0f)
+                .translationY(-translationDistance)
+                .setDuration(animTime)
+                .setListener(new Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(Animator animator) {}
+
+                    @Override
+                    public void onAnimationEnd(Animator animator) {
+                        mProgressSpinner.stop();
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animator) {}
+
+                    @Override
+                    public void onAnimationRepeat(Animator animator) {}
+                });
+
+        mContentLayout.setAlpha(0.0f);
+        mContentLayout.setVisibility(View.VISIBLE);
+
+        mContentLayout.setTranslationY(translationDistance);
+
+        mContentLayout.animate()
+                .alpha(1.0f)
+                .setDuration(animTime)
+                .translationY(0)
+                .setListener(null);
     }
 
     public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardFragment.RunViewHolder> {
@@ -196,7 +258,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         public void onBindViewHolder(@NonNull RunViewHolder holder, int position) {
             LeaderboardRunEntry run = mLeaderboard.runs.get(position);
 
-            holder.apply(getContext(), mGame, run);
+            holder.apply(getContext(), mGame, run, mLeaderboard);
             holder.itemView.setOnClickListener(mOnClickListener);
             holder.itemView.setTag(run);
         }
@@ -209,7 +271,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
 
     public static class RunViewHolder extends RecyclerView.ViewHolder {
 
-        private TextView mPlayerName;
+        private LinearLayout mPlayerNames;
         private TextView mRunTime;
         private TextView mRunDate;
         private TextView mRank;
@@ -219,15 +281,49 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         public RunViewHolder(View v) {
             super(v);
 
-            mPlayerName = v.findViewById(R.id.txtPlayerName);
+            mPlayerNames = v.findViewById(R.id.txtPlayerNames);
             mRunTime = v.findViewById(R.id.txtRunTime);
             mRunDate = v.findViewById(R.id.txtRunDate);
             mRank = v.findViewById(R.id.txtRank);
             mRankImg = v.findViewById(R.id.imgRank);
         }
 
-        public void apply(Context context, Game game, LeaderboardRunEntry entry) {
-            mPlayerName.setText(entry.run.players.get(0).id);
+        public void apply(Context context, Game game, LeaderboardRunEntry entry, Leaderboard lb) {
+
+            mPlayerNames.removeAllViews();
+            boolean first = true;
+            for(User pid : entry.run.players) {
+
+                // find the matching player
+                User player = null;
+
+                if(pid.id != null) {
+                    player = lb.players.get(pid.id);
+
+                    if(player == null) {
+                        player = pid;
+                    }
+                }
+                else {
+                    player = pid;
+                }
+
+                TextView tv = new TextView(context);
+                tv.setTextSize(18);
+                player.applyTextView(tv);
+
+                if(!first) {
+                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                    lp.setMargins(context.getResources().getDimensionPixelSize(R.dimen.half_fab_margin), 0, 0, 0);
+                    tv.setLayoutParams(lp);
+                }
+                else
+                    first = false;
+
+
+                mPlayerNames.addView(tv);
+            }
+
             mRunTime.setText(entry.run.times.formatTime());
             mRunDate.setText(entry.run.date);
             mRank.setText(entry.getPlaceName());

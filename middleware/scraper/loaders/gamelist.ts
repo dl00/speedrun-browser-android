@@ -17,8 +17,7 @@ export async function list_all_games(runid: string, options: any) {
             qs: {
                 _bulk: 'yes',
                 max: 1000,
-                offset: options ? options.offset : 0,
-                embed: 'platforms,regions'
+                offset: options ? options.offset : 0
             }
         });
 
@@ -53,14 +52,13 @@ export async function list_all_games(runid: string, options: any) {
 
 export async function pull_game(runid: string, options: any) {
     try {
-        let res = await request(speedrun_api.API_PREFIX + '/games/' + options.id);
+        let res = await request(speedrun_api.API_PREFIX + '/games/' + options.id + '?embed=platforms,regions');
 
         let game: speedrun_api.Game = res.data;
 
         // write the game to db
+        speedrun_db.trim(game);
         await scraper.storedb!.hset(speedrun_db.locs.games, options.id, JSON.stringify(game));
-
-
 
         // unfortunately we have to load the categories for a game in a separate request...
         await scraper.push_call({
@@ -80,7 +78,7 @@ export async function pull_game(runid: string, options: any) {
 
 export async function pull_game_categories(runid: string, options: any) {
     try {
-        let res = await request(speedrun_api.API_PREFIX + '/games/' + options.id + '/categories');
+        let res = await request(speedrun_api.API_PREFIX + '/games/' + options.id + '/categories?embed=variables');
 
         let categories: speedrun_api.Category[] = res.data;
 

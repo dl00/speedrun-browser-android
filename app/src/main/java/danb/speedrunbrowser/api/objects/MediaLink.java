@@ -16,7 +16,26 @@ public class MediaLink implements Serializable {
     }
 
     public String getYoutubeVideoID() {
-        return uri.getFile().substring(1);
+        if(!isYoutube())
+            return null;
+
+        String f = uri.getFile().substring(1);
+
+        if(f.indexOf("watch?") == 0) {
+            Pattern p = Pattern.compile("v=(.+)?&?");
+            Matcher m = p.matcher(f);
+
+            if(m.find()) {
+                return m.group(1);
+            }
+            else {
+                // should not happen if the video url was real
+                return "";
+            }
+        }
+        else {
+            return f;
+        }
     }
 
     public boolean isTwitch() {

@@ -22,7 +22,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.net.URL;
+import java.util.HashMap;
 
+import danb.speedrunbrowser.R;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -38,6 +40,8 @@ public class DownloadImageTask extends AsyncTask<URL, Integer, Bitmap> {
     private static final String TAG = DownloadImageTask.class.getSimpleName();
 
     private static final OkHttpClient client = new OkHttpClient();
+
+    private static final HashMap<View, DownloadImageTask> pendingTasks = new HashMap<>();
 
     private final File cacheDir;
 
@@ -62,6 +66,14 @@ public class DownloadImageTask extends AsyncTask<URL, Integer, Bitmap> {
                     new ColorDrawable());
             else
                 view.setBackground(null);
+        }
+
+        synchronized(pendingTasks) {
+            if(pendingTasks.containsKey(view)) {
+                pendingTasks.get(view).cancel(true);
+            }
+
+            pendingTasks.put(view, this);
         }
     }
 
@@ -155,10 +167,32 @@ public class DownloadImageTask extends AsyncTask<URL, Integer, Bitmap> {
 
     @Override
     protected void onPostExecute(final Bitmap result) {
+
+        synchronized(pendingTasks) {
+            if(pendingTasks.get(view) != this)
+                return;
+
+            pendingTasks.remove(view);
+        }
+
         Log.v(TAG, "Placing image from background" + result);
         if(view != null) {
-            if(view instanceof ImageView)
-                ((ImageView)view).setImageBitmap(result);
+            if(view instanceof ImageView) {
+                ((ImageView) view).setImageBitmap(result);
+
+                // fade in gracefully
+                int animTime = view.getResources().getInteger(
+                        android.R.integer.config_shortAnimTime);
+
+                view.setAlpha(0.0f);
+                view.setVisibility(View.VISIBLE);
+
+                view.animate()
+                        .alpha(1.0f)
+                        .setDuration(animTime)
+                        .setListener(null);
+
+            }
             else {
 
                 View.OnLayoutChangeListener l = new View.OnLayoutChangeListener() {

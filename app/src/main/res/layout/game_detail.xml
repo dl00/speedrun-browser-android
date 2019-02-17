@@ -12,6 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
+        android:contentDescription="@string/desc_game_background"
         android:id="@+id/imgBackground"/>
 
     <LinearLayout
@@ -35,25 +36,15 @@
                 android:text="The Legend of Zelda: Breath of the Wild"
                 android:textAlignment="center"
                 android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <com.astuetz.PagerSlidingTabStrip
-                android:id="@+id/categoryTabStrip"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/tab_height" />
-
-
-            <com.astuetz.PagerSlidingTabStrip
-                android:id="@+id/levelTabStrip"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/tab_height"
-                android:visibility="gone" />
+                android:textStyle="bold"
+                tools:ignore="HardcodedText" />
 
             <android.support.v4.view.ViewPager
                 android:id="@+id/leaderboardPage"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                tools:ignore="NestedWeights" />
 
         </LinearLayout>
 
@@ -79,6 +70,7 @@
                     android:id="@+id/imgCover"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:contentDescription="@string/desc_game_cover"
                     android:src="@android:color/transparent" />
 
             </danb.speedrunbrowser.utils.FixedAspectRatioFrameLayout>
@@ -112,7 +104,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="WiiU, Switch" />
+                        android:text="WiiU, Switch"
+                        tools:ignore="HardcodedText" />
                 </TableRow>
 
                 <TableRow
@@ -126,7 +119,8 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Release Date"
-                        android:textAlignment="viewEnd" />
+                        android:textAlignment="viewEnd"
+                        tools:ignore="HardcodedText" />
 
                     <View
                         android:id="@+id/divider2"
@@ -140,7 +134,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="2017-03-03" />
+                        android:text="2017-03-03"
+                        tools:ignore="HardcodedText" />
                 </TableRow>
 
             </TableLayout>

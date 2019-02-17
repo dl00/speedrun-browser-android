@@ -1,20 +1,15 @@
 package danb.speedrunbrowser.api.objects;
 
+import android.content.Context;
+import android.graphics.LinearGradient;
+import android.graphics.Rect;
+import android.graphics.Shader;
+import android.graphics.Typeface;
+import android.widget.TextView;
+
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
-
-class UserNameStyleColor implements Serializable {
-    public String light;
-    public String dark;
-}
-
-class UserNameStyle implements Serializable {
-    public String style;
-    public UserNameStyleColor color;
-    public UserNameStyleColor colorFrom;
-    public UserNameStyleColor colorTo;
-}
 
 class UserLocation implements Serializable {
     public String code;
@@ -24,6 +19,8 @@ class UserLocation implements Serializable {
 public class User implements Serializable {
     public String id;
     public HashMap<String, String> names;
+    // guests just have a simple "name" field
+    public String name;
     public String weblink;
     public UserNameStyle nameStyle;
     public String role;
@@ -38,7 +35,30 @@ public class User implements Serializable {
     public MediaLink speedrunslive;
 
     public String getName() {
-        String n = names != null ? names.get("international") : null;
-        return n != null ? n : "? Unknown Name ?";
+        if(names != null) {
+            return names.get("international");
+        }
+        else if(name != null) {
+            return name;
+        }
+        else {
+            return id;
+        }
+    }
+
+    // creates a text view with name and appropriate formatting
+    public void applyTextView(TextView tv) {
+        String pname = getName();
+
+        tv.setText(pname);
+        tv.setTypeface(Typeface.MONOSPACE, Typeface.BOLD);
+        //tv.setShadowLayer(5, 0, 0, Color.BLACK);
+
+        if(nameStyle != null) {
+            Rect bounds = new Rect();
+            tv.getPaint().getTextBounds(getName(), 0, pname.length(), bounds);
+
+            tv.getPaint().setShader(nameStyle.getTextShader(bounds.width(), false));
+        }
     }
 }

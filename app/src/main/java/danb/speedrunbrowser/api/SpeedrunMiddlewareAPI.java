@@ -11,6 +11,8 @@ import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.GameAssets;
 import danb.speedrunbrowser.api.objects.Leaderboard;
 import danb.speedrunbrowser.api.objects.Level;
+import danb.speedrunbrowser.api.objects.Platform;
+import danb.speedrunbrowser.api.objects.Region;
 import io.reactivex.Observable;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
@@ -26,6 +28,10 @@ public class SpeedrunMiddlewareAPI {
         gson.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_DASHES);
 
         gson.registerTypeAdapter(GameAssets.class, new GameAssets.JsonConverter());
+        gson.registerTypeAdapter(Platform.class, new Platform.JsonConverter());
+        gson.registerTypeAdapter(Region.class, new Region.JsonConverter());
+
+        gson.registerTypeAdapter(List.class, new NestedListDeserializer());
 
         // type adapters go here
 
@@ -34,7 +40,7 @@ public class SpeedrunMiddlewareAPI {
 
     public static Endpoints make() {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.85.30:3500/api/v1/")
+                .baseUrl("http://10.24.32.2:3500/api/v1/")
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
                 .addConverterFactory(GsonConverterFactory.create(getGson()))
                 .build();

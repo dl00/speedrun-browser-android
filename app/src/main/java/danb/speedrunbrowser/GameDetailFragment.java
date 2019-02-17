@@ -23,6 +23,7 @@ import danb.speedrunbrowser.api.SpeedrunAPI;
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
+import danb.speedrunbrowser.api.objects.Platform;
 import danb.speedrunbrowser.utils.DownloadImageTask;
 import danb.speedrunbrowser.utils.LeaderboardPagerAdapter;
 import danb.speedrunbrowser.utils.Util;
@@ -152,10 +153,10 @@ public class GameDetailFragment extends Fragment {
 
             // we have to join the string manually because it is java 7
             StringBuilder sb = new StringBuilder();
-            for (String s : mGame.platforms)
-            {
-                sb.append(s);
-                sb.append(", ");
+            for (int i = 0;i < mGame.platforms.size();i++) {
+                sb.append(mGame.platforms.get(i).getName());
+                if(i < mGame.platforms.size() - 1)
+                    sb.append(", ");
             }
 
             mPlatformList.setText(sb.toString());

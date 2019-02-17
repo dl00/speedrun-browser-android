@@ -73,23 +73,28 @@ export function generate_leaderboard_score(leaderboard: speedrun_api.Leaderboard
 
 export async function rescore_game(db: ioredis.Redis, indexer: any, game: speedrun_api.Game) {
 
-    // look at the game's leaderboards. Find the number of records
-    let leaderboard_ids = await list_leaderboards(db, game.id);
-
-    let div = 1 + Math.log(Math.max(1, leaderboard_ids.length));
-
     let game_score = 0;
-    if(leaderboard_ids.length) {
-        let leaderboards_raw = await db.hmget(locs.leaderboards, ...leaderboard_ids);
-        if(leaderboards_raw)
-            game_score = Math.ceil(_.chain(leaderboards_raw)
-                .reject(_.isNil)
-                .map(JSON.parse)
-                .map(generate_leaderboard_score)
-                .sum().value() / div);
-    }
-    
 
+    // look at the game's leaderboards, for categories not levels. Find the number of records
+    let categories_raw = await db.hget(locs.categories, game.id);
+
+    if(categories_raw) {
+        let categories = JSON.parse(categories_raw);
+
+        categories = _.filter(categories, c => c.type == 'per-game');
+
+        let div = 1 + Math.log(Math.max(1, categories.length));
+
+        if(categories.length) {
+            let leaderboards_raw = await db.hmget(locs.leaderboards, ..._.map(categories, 'id'));
+            if(leaderboards_raw)
+                game_score = Math.ceil(_.chain(leaderboards_raw)
+                    .reject(_.isNil)
+                    .map(JSON.parse)
+                    .map(generate_leaderboard_score)
+                    .sum().value() / div);
+        }
+    }
 
     let indexes: { text: string, score: number, namespace?: string }[] = [];
     for(let name in game.names) {

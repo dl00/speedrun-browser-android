@@ -18,8 +18,8 @@ public class Game implements Serializable {
     public GameRuleset ruleset;
     public boolean romhack;
     public List<String> gametypes;
-    public List<String> platforms;
-    public List<String> regions;
+    public List<Platform> platforms;
+    public List<Region> regions;
     public List<String> genres;
     public List<String> engines;
     public List<String> developers;

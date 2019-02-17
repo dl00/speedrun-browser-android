@@ -8,6 +8,9 @@
     <string name="error_missing_leaderboard">Error: Leaderboard not Found: %1$s</string>
     <string name="button_view_rules">View Rules</string>
     <string name="msg_no_rules_content">No rules were provided for this category.</string>
-
-
+    <string name="title_run_detail">View Run</string>
+    <string name="desc_game_cover">Game Cover ARt</string>
+    <string name="desc_game_background">Game Background Art</string>
+    <string name="msg_cannot_play_video">Sorry, this video cannot currently be played inside the app.</string>
+    <string name="btn_open_browser">Open in Browser</string>
 </resources>

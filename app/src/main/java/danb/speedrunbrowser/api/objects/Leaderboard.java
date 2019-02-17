@@ -1,6 +1,7 @@
 package danb.speedrunbrowser.api.objects;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
 
 public class Leaderboard implements Serializable {
@@ -16,5 +17,5 @@ public class Leaderboard implements Serializable {
     public String timing;
 
     public List<LeaderboardRunEntry> runs;
-    public List<User> players;
+    public HashMap<String, User> players;
 }

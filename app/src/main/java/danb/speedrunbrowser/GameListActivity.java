@@ -2,6 +2,7 @@ package danb.speedrunbrowser;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -94,7 +95,6 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
         recyclerView.setAdapter(mAdapter);
 
 
-
         findViewById(android.R.id.content)
                 .getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
 
@@ -103,7 +103,7 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
             @Override
             public void onGlobalLayout() {
                 int mw = findViewById(android.R.id.content).getMeasuredWidth();
-                if(lastMeasuredWidth != mw)
+                if (lastMeasuredWidth != mw)
                     setupRecyclerView((RecyclerView) recyclerView);
 
                 lastMeasuredWidth = mw;
@@ -165,7 +165,7 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
                 }, new Consumer<Throwable>() {
                     @Override
                     public void accept(Throwable throwable) throws Exception {
-                        Log.w(TAG, "Could not download autocomplete results:", throwable);
+                        Log.w(TAG, "Could not download autocomplete results:" + throwable.getMessage(), throwable);
                     }
                 });
     }
