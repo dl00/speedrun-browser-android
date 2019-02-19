@@ -40,6 +40,21 @@ export interface BulkGame {
     weblink: string
 }
 
+export interface GameAssets {
+    logo: Asset
+    'cover-tiny': Asset
+    'cover-small': Asset
+    'cover-medium': Asset
+    'cover-large': Asset
+    icon: Asset
+    'trophy-1st': Asset
+    'trophy-2nd': Asset
+    'trophy-3rd': Asset
+    'trophy-4th': Asset
+    background: Asset
+    foreground: Asset
+}
+
 export interface Game extends BulkGame, BaseMiddleware {
     released: number
     'release-date': string
@@ -50,20 +65,7 @@ export interface Game extends BulkGame, BaseMiddleware {
     developers: string[]
     publishers: string[]|Publisher[]
     created: string
-    assets: {
-        logo: Asset
-        'cover-tiny': Asset
-        'cover-small': Asset
-        'cover-medium': Asset
-        'cover-large': Asset
-        icon: Asset
-        'trophy-1st': Asset
-        'trophy-2nd': Asset
-        'trophy-3rd': Asset
-        'trophy-4th': Asset
-        background: Asset
-        foreground: Asset
-    }
+    assets: GameAssets
 }
 
 export function normalize_game(d: Game) {
@@ -88,6 +90,7 @@ export function normalize_game(d: Game) {
 export interface Category extends BaseMiddleware {
     id: string
     name: string
+    type: string
     weblink: string
     rules: string
     miscellaneous: boolean
@@ -113,6 +116,12 @@ export interface Variable extends BaseMiddleware {
 
 export interface Level extends BaseMiddleware {
     id: string
+    name: string
+}
+
+export interface LeaderboardRunEntry {
+    place: number
+    run: Run 
 }
 
 export interface Leaderboard extends BaseMiddleware {
@@ -124,10 +133,7 @@ export interface Leaderboard extends BaseMiddleware {
     region: string
     emulators: string
     'video-only': boolean
-    runs: {
-       place: number
-       run: Run 
-    }[]
+    runs: LeaderboardRunEntry[]
 
     players: {[id: string]: User}|{data: User[]}
 }
@@ -158,7 +164,9 @@ export interface Run extends BaseMiddleware {
         links: {
             uri: string
         }[]
-    }
+    },
+
+    players: User[]
 
     comment: string
     status: {
@@ -166,6 +174,31 @@ export interface Run extends BaseMiddleware {
         examiner?: User|string
         'verify-date': string
     }
+}
+
+export interface GamePersonalBests {
+    id: string
+    names: Names
+    assets: GameAssets
+
+    categories: {[id: string]: CategoryPersonalBests}
+}
+
+export interface CategoryPersonalBests {
+    id: string
+    name: string
+    type: string
+
+    levels?: {[id: string]: LevelPersonalBests}
+
+    run?: LeaderboardRunEntry
+}
+
+export interface LevelPersonalBests {
+    id: string
+    name: string
+    
+    run: LeaderboardRunEntry
 }
 
 export interface User extends BaseMiddleware {
@@ -181,6 +214,8 @@ export interface User extends BaseMiddleware {
     }
     role: 'banned'|'user'|'trusted'|'moderator'|'admin'|'programmer'
     signup?: string
+
+    bests: {[id: string]: GamePersonalBests}
 }
 
 export interface Platform {

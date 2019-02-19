@@ -12,27 +12,15 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.astuetz.PagerSlidingTabStrip;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Objects;
-
-import danb.speedrunbrowser.api.SpeedrunAPI;
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
-import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
-import danb.speedrunbrowser.api.objects.Platform;
 import danb.speedrunbrowser.utils.DownloadImageTask;
 import danb.speedrunbrowser.utils.LeaderboardPagerAdapter;
 import danb.speedrunbrowser.utils.Util;
+import danb.speedrunbrowser.views.CategoryTabStrip;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 /**
  * A fragment representing a single Game detail screen.
@@ -66,9 +54,8 @@ public class GameDetailFragment extends Fragment {
     ImageView mCover;
     ImageView mBackground;
 
+    CategoryTabStrip mCategoryTabStrip;
     ViewPager mLeaderboardPager;
-    PagerSlidingTabStrip mCategoryTabStrip;
-    LeaderboardPagerAdapter mLeaderboardPagerAdapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -136,10 +123,11 @@ public class GameDetailFragment extends Fragment {
         mCover = rootView.findViewById(R.id.imgCover);
         mBackground = rootView.findViewById(R.id.imgBackground);
 
-        mLeaderboardPager = rootView.findViewById(R.id.leaderboardPage);
-        mLeaderboardPager.setAdapter(new LeaderboardPagerAdapter(getChildFragmentManager(), new Game()));
+        mLeaderboardPager = rootView.findViewById(R.id.pageLeaderboard);
+        mCategoryTabStrip = rootView.findViewById(R.id.tabCategories);
 
-        mCategoryTabStrip = rootView.findViewById(R.id.categoryTabStrip);
+        if(mGame != null)
+            mCategoryTabStrip.setup(mGame, mLeaderboardPager, getChildFragmentManager());
 
         setViewData();
 
@@ -162,10 +150,8 @@ public class GameDetailFragment extends Fragment {
             mPlatformList.setText(sb.toString());
 
             // leaderboards
-            LeaderboardPagerAdapter leaderboardPagerAdapter = new LeaderboardPagerAdapter(getChildFragmentManager(), mGame);
-            mLeaderboardPager.setAdapter(leaderboardPagerAdapter);
-
-            mCategoryTabStrip.setViewPager(mLeaderboardPager);
+            if(mCategoryTabStrip != null)
+                mCategoryTabStrip.setup(mGame, mLeaderboardPager, getChildFragmentManager());
 
             Context ctx;
             if((ctx = getContext()) != null) {

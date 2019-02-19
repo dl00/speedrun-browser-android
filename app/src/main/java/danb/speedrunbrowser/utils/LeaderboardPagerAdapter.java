@@ -54,6 +54,40 @@ public class LeaderboardPagerAdapter extends FragmentPagerAdapter {
         assert perLevelCategories.isEmpty() || !levels.isEmpty();
     }
 
+    public Category getCategoryOfIndex(int position) {
+        if(position < perGameCategories.size()) {
+            return perGameCategories.get(position);
+        }
+
+        int mpos = position - perGameCategories.size();
+        return perLevelCategories.get(mpos / levels.size());
+    }
+
+    public Level getLevelOfIndex(int position) {
+        if(position >= perGameCategories.size()) {
+            int mpos = position - perGameCategories.size();
+            levels.get(mpos % levels.size());
+        }
+
+        return null;
+    }
+
+    public int indexOf(Category category, Level level) {
+        int index;
+        if((index = perGameCategories.indexOf(category)) != -1)
+            return index;
+
+        index = levels.indexOf(level);
+        if(index < 0)
+            return -1;
+
+        index += levels.size() * perLevelCategories.indexOf(category);
+        if(index < 0)
+            return -1;
+
+        return index;
+    }
+
     @Override
     public Fragment getItem(int position) {
         Fragment frag = new LeaderboardFragment();
@@ -61,15 +95,8 @@ public class LeaderboardPagerAdapter extends FragmentPagerAdapter {
 
         args.putSerializable(LeaderboardFragment.ARG_GAME, game);
 
-        if(position < perGameCategories.size()) {
-            args.putSerializable(LeaderboardFragment.ARG_CATEGORY, perGameCategories.get(position));
-        }
-        else {
-            int mpos = position - perGameCategories.size();
-            args.putSerializable(LeaderboardFragment.ARG_CATEGORY, perLevelCategories.get(mpos / levels.size()));
-            args.putSerializable(LeaderboardFragment.ARG_LEVEL, levels.get(mpos % levels.size()));
-        }
-
+        args.putSerializable(LeaderboardFragment.ARG_CATEGORY, getCategoryOfIndex(position));
+        args.putSerializable(LeaderboardFragment.ARG_LEVEL, getLevelOfIndex(position));
         frag.setArguments(args);
 
         return frag;

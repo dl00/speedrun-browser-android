@@ -39,8 +39,14 @@
                 android:textStyle="bold"
                 tools:ignore="HardcodedText" />
 
+            <danb.speedrunbrowser.views.CategoryTabStrip
+                android:id="@+id/tabCategories"
+                android:layout_width="match_parent"
+                android:layout_height="70dp"
+                android:layout_gravity="top" />
+
             <android.support.v4.view.ViewPager
-                android:id="@+id/leaderboardPage"
+                android:id="@+id/pageLeaderboard"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"

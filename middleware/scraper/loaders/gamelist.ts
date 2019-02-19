@@ -57,7 +57,7 @@ export async function pull_game(runid: string, options: any) {
         let game: speedrun_api.Game = res.data;
 
         // write the game to db
-        speedrun_db.trim(game);
+        speedrun_api.normalize_game(game);
         await scraper.storedb!.hset(speedrun_db.locs.games, options.id, JSON.stringify(game));
 
         // unfortunately we have to load the categories for a game in a separate request...
@@ -83,6 +83,9 @@ export async function pull_game_categories(runid: string, options: any) {
         let categories: speedrun_api.Category[] = res.data;
 
         // write the categories to db
+        for(let category of categories) {
+            speedrun_api.normalize_category(category);
+        }
         await scraper.storedb!.hset(speedrun_db.locs.categories, options.id, JSON.stringify(categories));
 
         let grouped_categories = _.groupBy(categories, 'type');
@@ -103,16 +106,11 @@ export async function pull_game_categories(runid: string, options: any) {
             for(let category of grouped_categories['per-game']) {
                 await scraper.push_call({
                     runid: scraper.join_runid([runid, options.id, category.id, 'leaderboard']),
-                    module: 'cache',
-                    exec: 'load',
+                    module: 'leaderboard',
+                    exec: 'pull_leaderboard',
                     options: {
-                        url: speedrun_api.API_PREFIX + '/leaderboards/' + options.id + '/category/' + category.id + '?embed=players',
-                        id: category.id,
-                        db_loc: [
-                            {
-                                hash: 'leaderboards'
-                            }
-                        ]
+                        game_id: options.id,
+                        category_id: category.id
                     }
                 }, 8);
             }
@@ -142,21 +140,20 @@ export async function pull_game_levels(runid: string, options: any) {
 
 
         if(levels.length) {
+            for(let level of levels) {
+                speedrun_api.normalize(level);
+            }
             await scraper.storedb!.hset(speedrun_db.locs.levels, options.id, JSON.stringify(levels));
             for(let level of levels) {
                 for(let category_id of options.categories) {
                     await scraper.push_call({
                         runid: scraper.join_runid([runid, options.id, level.id + '_' + category_id, 'leaderboard']),
-                        module: 'cache',
-                        exec: 'load',
+                        module: 'leaderboard',
+                        exec: 'pull_leaderboard',
                         options: {
-                            url: speedrun_api.API_PREFIX + '/leaderboards/' + options.id + '/level/' + level.id + '/' + category_id + '?embed=players',
-                            id: level.id + '_' + category_id,
-                            db_loc: [
-                                {
-                                    hash: 'leaderboards'
-                                }
-                            ]
+                            game_id: options.id,
+                            category_id: category_id,
+                            level_id: level.id
                         }
                     }, 8);
                 }

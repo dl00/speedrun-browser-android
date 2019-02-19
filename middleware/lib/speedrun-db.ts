@@ -11,7 +11,8 @@ export const locs: {[index: string]: string} = {
     runs: 'runs',
     categories: 'categories',
     levels: 'levels',
-    leaderboards: 'leaderboards'
+    leaderboards: 'leaderboards',
+    players: 'players'
 }
 
 /// Finds all leaderboards for a particular game by id
@@ -115,4 +116,50 @@ export async function rescore_game(db: ioredis.Redis, indexer: any, game: speedr
 
     // install master rank list
     await db.zadd(locs.game_rank, game_score.toString(), game.id);
+}
+
+export async function push_or_merge_update(arr: {[index: string]: any}[], ins: {[index: string]: any}, cmp_prop: string) {
+    if(_.find(arr, v => v[cmp_prop] == ins[cmp_prop])) {
+
+    }
+}
+
+// add/update the given personal best entry for the given user
+export async function apply_personal_best(player: speedrun_api.User, game: speedrun_api.Game, category: speedrun_api.Category, level: speedrun_api.Level|null, lb: speedrun_api.Leaderboard, index: number) {
+
+    let category_run: speedrun_api.CategoryPersonalBests = {
+        id: category.id,
+        name: category.name,
+        type: category.type
+    };
+
+    let game_run: speedrun_api.GamePersonalBests = {
+        id: game.id,
+        names: game.names,
+        assets: game.assets,
+        categories: {}
+    };
+
+    if(level) {
+        let level_run: speedrun_api.LevelPersonalBests = {
+            id: level.id,
+            name: level.name,
+
+            run: lb.runs[index]
+        };
+
+        category_run.levels = {};
+        category_run.levels[level.id] = level_run;
+    }
+    else {
+        category_run.run = lb.runs[index];
+    }
+
+    game_run.categories[category.id] = category_run;
+
+    let new_bests: {[id: string]: speedrun_api.GamePersonalBests} = {};
+
+    new_bests[game.id] = game_run;
+
+    return _.merge(player, {bests: new_bests});
 }
