@@ -1,6 +1,7 @@
 package danb.speedrunbrowser;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Point;
@@ -29,14 +30,17 @@ import com.google.android.youtube.player.YouTubePlayerSupportFragment;
 
 import java.util.Locale;
 
+import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.MediaLink;
 import danb.speedrunbrowser.api.objects.Run;
 import danb.speedrunbrowser.utils.Constants;
+import danb.speedrunbrowser.utils.DownloadImageTask;
 
 public class RunDetailActivity extends AppCompatActivity implements YouTubePlayer.OnInitializedListener {
     private static final String TAG = RunDetailActivity.class.getSimpleName();
 
     public static final String EXTRA_RUN = "run";
+    public static final String EXTRA_GAME = "game";
 
     public static final String SAVED_PLAYBACK_TIME = "playback_time";
 
@@ -62,6 +66,7 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
     YouTubePlayer mYoutubePlayer;
     WebView mTwitchWebView;
 
+    Game mGame;
     Run mRun;
 
     MediaLink mShownLink;
@@ -86,6 +91,7 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
 
         Bundle args = getIntent().getExtras();
 
+        mGame = (Game)args.getSerializable(EXTRA_GAME);
         mRun = (Run)args.getSerializable(EXTRA_RUN);
 
         if(savedInstanceState != null) {
@@ -247,5 +253,26 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
         if(youTubeInitializationResult.isUserRecoverableError()) {
             youTubeInitializationResult.getErrorDialog(this, 0).show();
         }
+    }
+
+    private void setViewData() {
+        mGameName.setText(mGame.getName());
+        mReleaseDate.setText(mGame.releaseDate);
+
+        // we have to join the string manually because it is java 7
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0;i < mGame.platforms.size();i++) {
+            sb.append(mGame.platforms.get(i).getName());
+            if(i < mGame.platforms.size() - 1)
+                sb.append(", ");
+        }
+
+        mPlatformList.setText(sb.toString());
+
+        if(mGame.assets.coverLarge != null)
+            new DownloadImageTask(this, mCover).clear(false).execute(mGame.assets.coverLarge.uri);
+
+        //if(mGame.assets.background != null && mBackground != null)
+        //    new DownloadImageTask(this, mBackground).execute(mGame.assets.background.uri);
     }
 }

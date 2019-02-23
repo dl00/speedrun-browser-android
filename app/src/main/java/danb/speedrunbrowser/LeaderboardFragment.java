@@ -238,6 +238,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
                 LeaderboardRunEntry re = (LeaderboardRunEntry) view.getTag();
 
                 Intent intent = new Intent(getContext(), RunDetailActivity.class);
+                intent.putExtra(RunDetailActivity.EXTRA_GAME, mGame);
                 intent.putExtra(RunDetailActivity.EXTRA_RUN, re.run);
                 startActivity(intent);
             }
@@ -309,7 +310,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
                 }
 
                 TextView tv = new TextView(context);
-                tv.setTextSize(18);
+                tv.setTextSize(16);
                 player.applyTextView(tv);
 
                 if(!first) {

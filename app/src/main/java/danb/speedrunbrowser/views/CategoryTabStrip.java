@@ -6,6 +6,7 @@ import android.graphics.Typeface;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
@@ -88,27 +89,53 @@ public class CategoryTabStrip extends LinearLayout implements ViewPager.OnPageCh
         mLayoutCategory.removeAllViews();
         mLayoutLevel.removeAllViews();
 
-        for(Category c : mGame.categories) {
+        for(final Category category : mGame.categories) {
             TextView tv = new TextView(getContext());
 
-            tv.setText(c.name);
+            tv.setText(category.name);
             styleTab(tv);
+
+            tv.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    selectLeaderboard(category, null);
+                }
+            });
 
             mLayoutCategory.addView(tv);
         }
 
 
-        for(Level l : mGame.levels) {
+        for(final Level level : mGame.levels) {
             TextView tv = new TextView(getContext());
 
-            tv.setText(l.name);
+            tv.setText(level.name);
             styleTab(tv);
+
+            tv.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    selectLeaderboard(mPagerAdapter.getCategoryOfIndex(mPager.getCurrentItem()), level);
+                }
+            });
 
             mLayoutLevel.addView(tv);
         }
     }
 
     private void setScroll(int categoryPos, float categoryOffset, int levelPos, float levelOffset) {
+        // we want the tab to be as center aligned as possible.
+        View categoryChild = mLayoutCategory.getChildAt(categoryPos);
+        int categoryX = categoryChild.getLeft() - categoryChild.getWidth() / 2;
+
+        mHsvCategory.scrollTo(categoryX, 0);
+
+        if(levelPos != -1 && mLayoutLevel.getChildAt(levelPos) != null) {
+            View levelChild = mLayoutLevel.getChildAt(levelPos);
+            int levelX = levelChild.getLeft() - levelChild.getWidth() / 2;
+
+            mHsvLevel.scrollTo(levelX, 0);
+        }
 
     }
 

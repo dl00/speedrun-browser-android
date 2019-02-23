@@ -22,7 +22,7 @@ public class MediaLink implements Serializable {
         String f = uri.getFile().substring(1);
 
         if(f.indexOf("watch?") == 0) {
-            Pattern p = Pattern.compile("v=(.+)?&?");
+            Pattern p = Pattern.compile("v=(.+?)(&|$)");
             Matcher m = p.matcher(f);
 
             if(m.find()) {

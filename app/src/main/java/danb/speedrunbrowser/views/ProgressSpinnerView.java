@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.RectF;
 import android.os.Build;
 import android.support.annotation.Nullable;
@@ -38,6 +39,7 @@ public class ProgressSpinnerView extends View {
     /// The amount of padding between each animation box
     private int mAnimBoxPadding = 10;
 
+    private Direction mDirection = Direction.UP;
 
     /// The number of animation exp columns to show same animation, shrunken, off to the side
     private int mAnimExp = 0;
@@ -136,6 +138,7 @@ public class ProgressSpinnerView extends View {
             float x0, x1, y0, y1;
 
             float cx = mDrawRegion.centerX();
+            float cy = mDrawRegion.centerY();
 
             // first and last boxes may have special
             if(i == 0) {
@@ -162,6 +165,23 @@ public class ProgressSpinnerView extends View {
                 y1 = y0 + mAnimBoxSize * mDensity;
             }
 
+            // transform rotate
+            if(mDirection.equals(Direction.UP) || mDirection.equals(Direction.LEFT)) {
+                // rotate 180
+                y0 = 2 * cy - y0;
+                y1 = 2 * cy - y1;
+            }
+
+            if(mDirection.equals(Direction.RIGHT) || mDirection.equals(Direction.LEFT)) {
+                float t0 = cx - (cy - y0);
+                float t1 = cx - (cy - y1);
+
+                y0 = cy - (cx - x0);
+                y1 = cy - (cx - x1);
+                x0 = t0;
+                x1 = t1;
+            }
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 c.drawRoundRect(x0, y0, x1, y1, mAnimBoxRoundedCornerRadius, mAnimBoxRoundedCornerRadius, mDrawPaint);
             }
@@ -172,4 +192,11 @@ public class ProgressSpinnerView extends View {
 
         postInvalidateOnAnimation();
     }
+
+    public enum Direction {
+        UP,
+        DOWN,
+        LEFT,
+        RIGHT
+    };
 }
