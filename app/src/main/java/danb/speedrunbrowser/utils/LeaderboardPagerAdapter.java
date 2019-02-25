@@ -1,21 +1,18 @@
 package danb.speedrunbrowser.utils;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 import danb.speedrunbrowser.LeaderboardFragment;
 import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
-import danb.speedrunbrowser.api.objects.Leaderboard;
 import danb.speedrunbrowser.api.objects.Level;
-import io.reactivex.annotations.NonNull;
 
 public class LeaderboardPagerAdapter extends FragmentPagerAdapter {
 

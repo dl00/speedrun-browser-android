@@ -18,7 +18,7 @@
         android:visibility="gone">
 
 
-        <android.support.v7.widget.RecyclerView
+        <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/leaderboardList"
             android:name="danb.speedrunbrowser.LeaderboardFragment"
             android:layout_width="match_parent"
@@ -26,11 +26,11 @@
             android:layout_weight="1"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
-            app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             tools:context=".GameListActivity"
             tools:listitem="@layout/leaderboard_list_content">
 
-        </android.support.v7.widget.RecyclerView>
+        </androidx.recyclerview.widget.RecyclerView>
 
         <Button
             android:id="@+id/viewRulesButton"

@@ -1,10 +1,10 @@
 package danb.speedrunbrowser;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewPager;
+import androidx.fragment.app.Fragment;
+import androidx.viewpager.widget.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,7 +15,6 @@ import android.widget.TextView;
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.utils.DownloadImageTask;
-import danb.speedrunbrowser.utils.LeaderboardPagerAdapter;
 import danb.speedrunbrowser.utils.Util;
 import danb.speedrunbrowser.views.CategoryTabStrip;
 import io.reactivex.android.schedulers.AndroidSchedulers;

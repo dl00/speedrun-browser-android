@@ -3,8 +3,8 @@ package danb.speedrunbrowser.views;
 import android.animation.Animator;
 import android.content.Context;
 import android.graphics.Typeface;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.view.ViewPager;
+import androidx.fragment.app.FragmentManager;
+import androidx.viewpager.widget.ViewPager;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +12,6 @@ import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import danb.speedrunbrowser.BuildConfig;
 import danb.speedrunbrowser.R;
 import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
@@ -105,21 +104,22 @@ public class CategoryTabStrip extends LinearLayout implements ViewPager.OnPageCh
             mLayoutCategory.addView(tv);
         }
 
+        if(mGame.levels != null) {
+            for(final Level level : mGame.levels) {
+                TextView tv = new TextView(getContext());
 
-        for(final Level level : mGame.levels) {
-            TextView tv = new TextView(getContext());
+                tv.setText(level.name);
+                styleTab(tv);
 
-            tv.setText(level.name);
-            styleTab(tv);
+                tv.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        selectLeaderboard(mPagerAdapter.getCategoryOfIndex(mPager.getCurrentItem()), level);
+                    }
+                });
 
-            tv.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    selectLeaderboard(mPagerAdapter.getCategoryOfIndex(mPager.getCurrentItem()), level);
-                }
-            });
-
-            mLayoutLevel.addView(tv);
+                mLayoutLevel.addView(tv);
+            }
         }
     }
 

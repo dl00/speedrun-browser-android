@@ -1,22 +1,19 @@
 package danb.speedrunbrowser;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.PersistableBundle;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -49,6 +46,7 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
     /**
      * Game detail views
      */
+    LinearLayout mGameInfoPane;
     TextView mGameName;
     TextView mReleaseDate;
     TextView mPlatformList;
@@ -80,6 +78,7 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
         setContentView(R.layout.activity_run_detail);
 
         mRootView = findViewById(R.id.contentLayout);
+        mGameInfoPane = findViewById(R.id.gameInfoHead);
         mGameName = findViewById(R.id.txtGameName);
         mReleaseDate = findViewById(R.id.txtReleaseDate);
         mPlatformList = findViewById(R.id.txtPlatforms);
@@ -206,6 +205,9 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
             if((float)size.x / size.y < 16.0f / 9)
                 mRootView.setOrientation(LinearLayout.HORIZONTAL);
 
+            // hide things
+            mGameInfoPane.setVisibility(View.GONE);
+
         }
         else {
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
@@ -213,6 +215,9 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
 
             // layout should always be vertical in this case
             mRootView.setOrientation(LinearLayout.VERTICAL);
+
+            // show things
+            mGameInfoPane.setVisibility(View.VISIBLE);
         }
     }
 

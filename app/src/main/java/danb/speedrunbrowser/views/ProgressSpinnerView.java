@@ -4,17 +4,11 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.graphics.RectF;
 import android.os.Build;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.util.AttributeSet;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
-
-import java.util.Calendar;
-import java.util.Date;
 
 public class ProgressSpinnerView extends View {
 
@@ -166,7 +160,7 @@ public class ProgressSpinnerView extends View {
             }
 
             // transform rotate
-            if(mDirection.equals(Direction.UP) || mDirection.equals(Direction.LEFT)) {
+            if(mDirection.equals(Direction.DOWN) || mDirection.equals(Direction.LEFT)) {
                 // rotate 180
                 y0 = 2 * cy - y0;
                 y1 = 2 * cy - y1;
