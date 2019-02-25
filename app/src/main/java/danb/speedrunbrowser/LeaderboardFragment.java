@@ -22,6 +22,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.google.android.flexbox.FlexboxLayout;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
@@ -272,7 +274,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
 
     public static class RunViewHolder extends RecyclerView.ViewHolder {
 
-        private LinearLayout mPlayerNames;
+        private FlexboxLayout mPlayerNames;
         private TextView mRunTime;
         private TextView mRunDate;
         private TextView mRank;
