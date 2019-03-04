@@ -12,6 +12,8 @@ export function start_server() {
 }
 
 export function run() {
+    config.load_config();
+    
     start_scraper();
     start_server();
 }
