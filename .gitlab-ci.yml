@@ -35,10 +35,12 @@ stages:
 middlewareDocker:
   stage: build
   image: dcr.buyme360.com/devops/docker:latest
-  script:
+  before_script:
     - cd middleware
     - npm i typescript
     - tsc
+  script:
+    - cd middleware
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
     - docker build -t $IMAGE_TAG .
     - docker push $IMAGE_TAG
