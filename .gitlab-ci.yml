@@ -37,7 +37,7 @@ middlewareDocker:
   image: dcr.buyme360.com/devops/docker:latest
   before_script:
     - cd middleware
-    - npm i typescript
+    - npm i -g typescript
     - tsc
   script:
     - cd middleware
