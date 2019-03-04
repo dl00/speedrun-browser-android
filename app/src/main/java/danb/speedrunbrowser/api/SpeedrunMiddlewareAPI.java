@@ -45,7 +45,7 @@ public class SpeedrunMiddlewareAPI {
 
     public static Endpoints make() {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://10.24.32.2:3500/api/v1/")
+                .baseUrl("https://sr-browser.dbeal.dev/api/v1/")
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
                 .addConverterFactory(GsonConverterFactory.create(getGson()))
                 .client(Util.getHTTPClient())
