@@ -8,11 +8,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.widget.Toolbar;
+
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -23,6 +28,8 @@ import android.widget.TextView;
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.utils.DownloadImageTask;
 import danb.speedrunbrowser.api.objects.Game;
+import danb.speedrunbrowser.utils.Util;
+import danb.speedrunbrowser.views.ProgressSpinnerView;
 import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
@@ -63,6 +70,9 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
 
     private EditText mGameFilter;
 
+    private ProgressSpinnerView mSpinner;
+    private RecyclerView mGameListView;
+
     private PublishSubject<CharSequence> mGameFilterSearchSubject;
 
     @Override
@@ -70,21 +80,15 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_list);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        toolbar.setTitle(getTitle());
-
         mGameFilter = findViewById(R.id.editGameFilter);
-        assert mGameFilter != null;
+        mSpinner = findViewById(R.id.spinner);
+        mGameListView = findViewById(R.id.listGame);
         mGameFilter.addTextChangedListener(this);
 
         mGameFilterSearchSubject = PublishSubject.create();
 
-        final RecyclerView recyclerView = findViewById(R.id.game_list);
-        assert recyclerView != null;
-
         mAdapter = new GameListAdapter();
-        recyclerView.setAdapter(mAdapter);
+        mGameListView.setAdapter(mAdapter);
 
 
         findViewById(android.R.id.content)
@@ -96,7 +100,7 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
             public void onGlobalLayout() {
                 int mw = findViewById(android.R.id.content).getMeasuredWidth();
                 if (lastMeasuredWidth != mw)
-                    setupRecyclerView((RecyclerView) recyclerView);
+                    setupRecyclerView(mGameListView);
 
                 lastMeasuredWidth = mw;
             }
@@ -104,7 +108,25 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
 
         setupGameDownloader();
 
-        mGameFilterSearchSubject.onNext("");
+        // force initial load
+        mGameFilterSearchSubject.onNext(mGameFilter.getText());
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.game_list, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId() == R.id.menu_about) {
+            showAbout();
+            return true;
+        }
+
+        return false;
     }
 
     protected boolean isTwoPane() {
@@ -158,8 +180,17 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
                     @Override
                     public void accept(Throwable throwable) throws Exception {
                         Log.w(TAG, "Could not download autocomplete results:" + throwable.getMessage(), throwable);
+
+                        Util.showErrorToast(GameListActivity.this, getString(R.string.error_could_not_connect));
+
+                        finish();
                     }
                 });
+    }
+
+    public void showAbout() {
+        Intent intent = new Intent(this, AboutActivity.class);
+        startActivity(intent);
     }
 
     @Override
@@ -195,7 +226,12 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
 
     @Override
     public void afterTextChanged(Editable editable) {
-        mGameFilterSearchSubject.onNext(mGameFilter.getText().toString().trim());
+        String q = mGameFilter.getText().toString().trim();
+
+        if(q.isEmpty() || q.length() > SpeedrunMiddlewareAPI.MIN_AUTOCOMPLETE_LENGTH) {
+            mGameFilterSearchSubject.onNext(q);
+            mSpinner.setVisibility(View.VISIBLE);
+        }
     }
 
     private class GameListAdapter extends RecyclerView.Adapter<GameListActivity.GameItemViewHolder> {
@@ -269,7 +305,15 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
             mRunnersCount.setText("");
 
             if(game.assets.coverLarge != null)
-                new DownloadImageTask(GameListActivity.this, mCover).execute(game.assets.coverLarge.uri);
+                new DownloadImageTask(GameListActivity.this, mCover)
+                        .listener(new DownloadImageTask.OnCompleteListener() {
+                            @Override
+                            public void onComplete(View v) {
+                                if(DownloadImageTask.getPendingCount() == 0)
+                                    mSpinner.setVisibility(View.GONE);
+                            }
+                        })
+                        .execute(game.assets.coverLarge.uri);
             else {}
             // TODO: In the extremely unlikely case there is no cover, might have to replace with dummy image
         }

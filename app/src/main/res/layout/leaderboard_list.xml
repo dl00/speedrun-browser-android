@@ -35,7 +35,7 @@
         <Button
             android:id="@+id/viewRulesButton"
             android:layout_width="match_parent"
-            android:layout_height="32dp"
+            android:layout_height="48dp"
             android:background="@color/colorAccent"
             android:text="@string/button_view_rules" />
 

@@ -33,7 +33,7 @@
                 android:id="@+id/txtGameName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="The Legend of Zelda: Breath of the Wild"
+                android:text=""
                 android:textAlignment="center"
                 android:textSize="18sp"
                 android:textStyle="bold"
@@ -54,7 +54,15 @@
 
         </LinearLayout>
 
+        <danb.speedrunbrowser.views.ProgressSpinnerView
+            android:id="@+id/spinner"
+            android:layout_width="275dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0" />
+
         <LinearLayout
+            android:id="@+id/gameInfoHead"
+            android:visibility="gone"
             android:layout_marginTop="@dimen/fab_margin"
             android:layout_marginBottom="@dimen/fab_margin"
             android:layout_marginEnd="@dimen/fab_margin"
@@ -83,7 +91,7 @@
 
             <TableLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="wrap_content">
 
                 <TableRow
                     android:layout_width="match_parent"
@@ -94,7 +102,7 @@
                         android:textSize="12sp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
+                        android:layout_weight="0"
                         android:text="@string/label_key_platforms"
                         android:textAlignment="viewEnd" />
 
@@ -123,7 +131,7 @@
                         android:textSize="12sp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
+                        android:layout_weight="0"
                         android:text="Release Date"
                         android:textAlignment="viewEnd"
                         tools:ignore="HardcodedText" />
@@ -145,6 +153,13 @@
                 </TableRow>
 
             </TableLayout>
+
+            <Button
+                android:id="@+id/filtersButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@color/colorAccent"
+                android:text="@string/button_filters" />
 
         </LinearLayout>
 

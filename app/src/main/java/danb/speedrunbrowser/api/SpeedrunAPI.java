@@ -8,6 +8,7 @@ import java.util.List;
 
 import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.Leaderboard;
+import danb.speedrunbrowser.utils.Util;
 import io.reactivex.Observable;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
@@ -33,6 +34,7 @@ public class SpeedrunAPI {
                 .baseUrl("https://www.speedrun.com/api/v1/")
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
                 .addConverterFactory(GsonConverterFactory.create(getGson()))
+                .client(Util.getHTTPClient())
                 .build();
 
         return retrofit.create(Endpoints.class);

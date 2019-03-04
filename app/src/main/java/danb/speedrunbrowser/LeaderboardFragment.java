@@ -22,6 +22,7 @@ import android.widget.TextView;
 import com.google.android.flexbox.FlexboxLayout;
 
 import java.util.List;
+import java.util.Objects;
 
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.api.objects.Category;
@@ -29,6 +30,7 @@ import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.Leaderboard;
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
 import danb.speedrunbrowser.api.objects.Level;
+import danb.speedrunbrowser.api.objects.Run;
 import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.utils.DownloadImageTask;
 import danb.speedrunbrowser.utils.Util;
@@ -77,9 +79,11 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mGame = (Game)getArguments().getSerializable(ARG_GAME);
-        mCategory = (Category)getArguments().getSerializable(ARG_CATEGORY);
-        mLevel = (Level)getArguments().getSerializable(ARG_LEVEL);
+        Bundle args = Objects.requireNonNull(getArguments());
+
+        mGame = (Game)args.getSerializable(ARG_GAME);
+        mCategory = (Category)args.getSerializable(ARG_CATEGORY);
+        mLevel = (Level)args.getSerializable(ARG_LEVEL);
 
         assert mGame != null;
         assert mCategory != null;
@@ -182,7 +186,9 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         if(mRunsListAdapter != null) {
             Log.d(TAG, "Runs list adapter not created/available");
             mRunsListAdapter.notifyDataSetChanged();
-            animateLeaderboardIn();
+
+            if(getContext() != null)
+                animateLeaderboardIn();
         }
     }
 
@@ -224,6 +230,24 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
                 .setListener(null);
     }
 
+    private static User resolvePlayer(Leaderboard lb, User pid) {
+        // find the matching player
+        User player = null;
+
+        if(pid.id != null) {
+            player = lb.players.get(pid.id);
+
+            if(player == null) {
+                player = pid;
+            }
+        }
+        else {
+            player = pid;
+        }
+
+        return player;
+    }
+
     public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardFragment.RunViewHolder> {
 
         private final LayoutInflater inflater;
@@ -233,9 +257,18 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
             public void onClick(View view) {
                 LeaderboardRunEntry re = (LeaderboardRunEntry) view.getTag();
 
+                Run run = re.run;
+
+                // map actual player data in
+                for(int i = 0;i < run.players.size();i++) {
+                    run.players.set(i, resolvePlayer(mLeaderboard, run.players.get(i)));
+                }
+
                 Intent intent = new Intent(getContext(), RunDetailActivity.class);
                 intent.putExtra(RunDetailActivity.EXTRA_GAME, mGame);
-                intent.putExtra(RunDetailActivity.EXTRA_RUN, re.run);
+                intent.putExtra(RunDetailActivity.EXTRA_CATEGORY, mCategory);
+                intent.putExtra(RunDetailActivity.EXTRA_LEVEL, mLevel);
+                intent.putExtra(RunDetailActivity.EXTRA_RUN, run);
                 startActivity(intent);
             }
         };
@@ -292,18 +325,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
             for(User pid : entry.run.players) {
 
                 // find the matching player
-                User player = null;
-
-                if(pid.id != null) {
-                    player = lb.players.get(pid.id);
-
-                    if(player == null) {
-                        player = pid;
-                    }
-                }
-                else {
-                    player = pid;
-                }
+                User player = resolvePlayer(lb, pid);
 
                 TextView tv = new TextView(context);
                 tv.setTextSize(16);

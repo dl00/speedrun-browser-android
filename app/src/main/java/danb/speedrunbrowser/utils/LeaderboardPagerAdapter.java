@@ -57,13 +57,14 @@ public class LeaderboardPagerAdapter extends FragmentPagerAdapter {
         }
 
         int mpos = position - perGameCategories.size();
+
         return perLevelCategories.get(mpos / levels.size());
     }
 
     public Level getLevelOfIndex(int position) {
         if(position >= perGameCategories.size()) {
             int mpos = position - perGameCategories.size();
-            levels.get(mpos % levels.size());
+            return levels.get(mpos % levels.size());
         }
 
         return null;
@@ -82,7 +83,7 @@ public class LeaderboardPagerAdapter extends FragmentPagerAdapter {
         if(index < 0)
             return -1;
 
-        return index;
+        return getPerGameCategorySize() + index;
     }
 
     @Override
@@ -94,6 +95,7 @@ public class LeaderboardPagerAdapter extends FragmentPagerAdapter {
 
         args.putSerializable(LeaderboardFragment.ARG_CATEGORY, getCategoryOfIndex(position));
         args.putSerializable(LeaderboardFragment.ARG_LEVEL, getLevelOfIndex(position));
+
         frag.setArguments(args);
 
         return frag;
@@ -114,5 +116,16 @@ public class LeaderboardPagerAdapter extends FragmentPagerAdapter {
     @Override
     public int getCount() {
         return perGameCategories.size() + (perLevelCategories.size() * levels.size());
+    }
+
+    public int getPerGameCategorySize() {
+        return perGameCategories.size();
+    }
+
+    public List<Category> getSortedCategories() {
+        List<Category> sortedCategories = new ArrayList<>(perGameCategories);
+        sortedCategories.addAll(perLevelCategories);
+
+        return sortedCategories;
     }
 }

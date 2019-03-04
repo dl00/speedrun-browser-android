@@ -39,15 +39,18 @@ public class DownloadImageTask extends AsyncTask<URL, Integer, Bitmap> {
 
     private static final String TAG = DownloadImageTask.class.getSimpleName();
 
-    private static final OkHttpClient client = new OkHttpClient();
+    private static final OkHttpClient client = Util.getHTTPClient();
 
     private static final HashMap<View, DownloadImageTask> pendingTasks = new HashMap<>();
 
     private final File cacheDir;
 
-    View view;
+    // TODO: Remove application context
+    private View view;
 
-    boolean doClear = true;
+    private boolean doClear = true;
+
+    private OnCompleteListener listener;
 
     public DownloadImageTask(Context ctx) {
         view = null;
@@ -225,6 +228,9 @@ public class DownloadImageTask extends AsyncTask<URL, Integer, Bitmap> {
             }
 
             view.postInvalidate();
+
+            if(listener != null)
+                listener.onComplete(view);
         }
     }
 
@@ -236,5 +242,18 @@ public class DownloadImageTask extends AsyncTask<URL, Integer, Bitmap> {
     public DownloadImageTask clear(boolean c) {
         doClear = c;
         return this;
+    }
+
+    public DownloadImageTask listener(OnCompleteListener l) {
+        listener = l;
+        return this;
+    }
+
+    public static int getPendingCount() {
+        return pendingTasks.size();
+    }
+
+    public interface OnCompleteListener {
+        void onComplete(View v);
     }
 }

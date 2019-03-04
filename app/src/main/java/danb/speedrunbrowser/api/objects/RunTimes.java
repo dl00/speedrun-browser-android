@@ -55,8 +55,8 @@ public class RunTimes implements Serializable {
     }
 
     private static String format(float t) {
-        return  (t > 3600 ? ((int)t / 3600) + "h " : "") +
-                (t > 60 ? ((int)(t % 3600) / 60) + "m " : "") +
+        return  (t >= 3600 ? ((int)t / 3600) + "h " : "") +
+                (t >= 60 ? ((int)(t % 3600) / 60) + "m " : "") +
                 new DecimalFormat("0.##").format(t % 60) + "s";
     }
 }

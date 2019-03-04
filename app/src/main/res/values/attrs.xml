@@ -4,4 +4,13 @@
         <attr name="aspectRatioWidth" format="integer" />
         <attr name="aspectRatioHeight" format="integer" />
     </declare-styleable>
+
+    <declare-styleable name="ProgressSpinnerView">
+        <attr name="direction" format="enum">
+            <enum name="up" value="0" />
+            <enum name="right" value="1" />
+            <enum name="down" value="2" />
+            <enum name="left" value="3" />
+        </attr>
+    </declare-styleable>
 </resources>

@@ -13,6 +13,8 @@ import danb.speedrunbrowser.api.objects.Leaderboard;
 import danb.speedrunbrowser.api.objects.Level;
 import danb.speedrunbrowser.api.objects.Platform;
 import danb.speedrunbrowser.api.objects.Region;
+import danb.speedrunbrowser.api.objects.Variable;
+import danb.speedrunbrowser.utils.Util;
 import io.reactivex.Observable;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
@@ -22,6 +24,8 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public class SpeedrunMiddlewareAPI {
+    public static final int MIN_AUTOCOMPLETE_LENGTH = 3;
+
     public static Gson getGson() {
         GsonBuilder gson = new GsonBuilder();
 
@@ -30,6 +34,7 @@ public class SpeedrunMiddlewareAPI {
         gson.registerTypeAdapter(GameAssets.class, new GameAssets.JsonConverter());
         gson.registerTypeAdapter(Platform.class, new Platform.JsonConverter());
         gson.registerTypeAdapter(Region.class, new Region.JsonConverter());
+        gson.registerTypeAdapter(Variable.class, new Variable.JsonConverter());
 
         gson.registerTypeAdapter(List.class, new NestedListDeserializer());
 
@@ -43,6 +48,7 @@ public class SpeedrunMiddlewareAPI {
                 .baseUrl("http://10.24.32.2:3500/api/v1/")
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
                 .addConverterFactory(GsonConverterFactory.create(getGson()))
+                .client(Util.getHTTPClient())
                 .build();
 
         return retrofit.create(Endpoints.class);

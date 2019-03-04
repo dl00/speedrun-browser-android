@@ -1,12 +1,15 @@
 package danb.speedrunbrowser.views;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.os.Build;
 import androidx.annotation.Nullable;
+import danb.speedrunbrowser.R;
+
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -58,6 +61,17 @@ public class ProgressSpinnerView extends View {
     public ProgressSpinnerView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
 
+        TypedArray a = context.getTheme().obtainStyledAttributes(
+                attrs,
+                R.styleable.ProgressSpinnerView,
+                0, 0);
+
+        try {
+            mDirection = Direction.fromValue(a.getInteger(R.styleable.ProgressSpinnerView_direction, 0));
+        } finally {
+            a.recycle();
+        }
+
         mStartTime = 0;
 
         start();
@@ -70,14 +84,18 @@ public class ProgressSpinnerView extends View {
     }
 
     public void start() {
-        mStartTime = System.currentTimeMillis() - mStartTime;
-        mRunning = true;
-        postInvalidateOnAnimation();
+        if(!mRunning) {
+            mStartTime = System.currentTimeMillis() - mStartTime;
+            mRunning = true;
+            postInvalidateOnAnimation();
+        }
     }
 
     public void stop() {
-        mStartTime = System.currentTimeMillis() - mStartTime;
-        mRunning = false;
+        if(mRunning) {
+            mStartTime = System.currentTimeMillis() - mStartTime;
+            mRunning = false;
+        }
     }
 
     private void recalculateDrawRect() {
@@ -110,6 +128,18 @@ public class ProgressSpinnerView extends View {
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
         recalculateDrawRect();
+    }
+
+    @Override
+    public void setVisibility(int visibility) {
+        super.setVisibility(visibility);
+
+        if(visibility == VISIBLE) {
+            start();
+        }
+        else {
+            stop();
+        }
     }
 
     @Override
@@ -160,7 +190,7 @@ public class ProgressSpinnerView extends View {
             }
 
             // transform rotate
-            if(mDirection.equals(Direction.DOWN) || mDirection.equals(Direction.LEFT)) {
+            if(mDirection.equals(Direction.DOWN) || mDirection.equals(Direction.RIGHT)) {
                 // rotate 180
                 y0 = 2 * cy - y0;
                 y1 = 2 * cy - y1;
@@ -191,6 +221,36 @@ public class ProgressSpinnerView extends View {
         UP,
         DOWN,
         LEFT,
-        RIGHT
+        RIGHT;
+
+        public static Direction fromString(String dir) {
+            switch(dir) {
+                case "up":
+                    return UP;
+                case "down":
+                    return DOWN;
+                case "left":
+                    return LEFT;
+                case "right":
+                    return RIGHT;
+                default:
+                    return null;
+            }
+        }
+
+        public static Direction fromValue(int dir) {
+            switch(dir) {
+                case 0:
+                    return UP;
+                case 1:
+                    return RIGHT;
+                case 2:
+                    return DOWN;
+                case 3:
+                    return LEFT;
+                default:
+                    return null;
+            }
+        }
     };
 }

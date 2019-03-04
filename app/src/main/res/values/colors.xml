@@ -3,6 +3,9 @@
     <color name="colorPrimary">#222</color>
     <color name="colorPrimaryDark">#000</color>
     <color name="colorAccent">#757575</color>
+    <color name="colorSelected">#b3b300</color>
 
     <color name="colorPrimaryTranslucent">#e0222222</color>
+
+    <color name="colorLinkText">#0000ff</color>
 </resources>

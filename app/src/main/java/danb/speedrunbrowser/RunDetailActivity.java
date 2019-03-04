@@ -19,25 +19,34 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 
+import com.google.android.flexbox.FlexboxLayout;
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerSupportFragment;
 
+import java.io.IOException;
 import java.util.Locale;
 
+import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
+import danb.speedrunbrowser.api.objects.Level;
 import danb.speedrunbrowser.api.objects.MediaLink;
 import danb.speedrunbrowser.api.objects.Run;
+import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.utils.Constants;
 import danb.speedrunbrowser.utils.DownloadImageTask;
+import danb.speedrunbrowser.utils.Util;
 
 public class RunDetailActivity extends AppCompatActivity implements YouTubePlayer.OnInitializedListener {
     private static final String TAG = RunDetailActivity.class.getSimpleName();
 
-    public static final String EXTRA_RUN = "run";
     public static final String EXTRA_GAME = "game";
+    public static final String EXTRA_CATEGORY = "category";
+    public static final String EXTRA_LEVEL = "level";
+    public static final String EXTRA_RUN = "run";
 
     public static final String SAVED_PLAYBACK_TIME = "playback_time";
 
@@ -47,6 +56,7 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
      * Game detail views
      */
     LinearLayout mGameInfoPane;
+    LinearLayout mRunFooterPane;
     TextView mGameName;
     TextView mReleaseDate;
     TextView mPlatformList;
@@ -54,8 +64,11 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
     ImageView mCover;
 
     TextView mCategoryName;
-    TextView mPlayerName;
+    FlexboxLayout mPlayerNames;
     TextView mRunTime;
+
+    ListView mRunSplits;
+    TextView mRunEmptySplits;
 
     /**
      * Video views
@@ -65,6 +78,8 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
     WebView mTwitchWebView;
 
     Game mGame;
+    Category mCategory;
+    Level mLevel;
     Run mRun;
 
     MediaLink mShownLink;
@@ -79,18 +94,23 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
 
         mRootView = findViewById(R.id.contentLayout);
         mGameInfoPane = findViewById(R.id.gameInfoHead);
+        mRunFooterPane = findViewById(R.id.runFooter);
         mGameName = findViewById(R.id.txtGameName);
         mReleaseDate = findViewById(R.id.txtReleaseDate);
         mPlatformList = findViewById(R.id.txtPlatforms);
         mCover = findViewById(R.id.imgCover);
         mCategoryName = findViewById(R.id.txtCategoryName);
-        mPlayerName = findViewById(R.id.txtPlayerName);
+        mPlayerNames = findViewById(R.id.txtPlayerNames);
         mRunTime = findViewById(R.id.txtRunTime);
         mVideoFrame = findViewById(R.id.videoFrame);
+        mRunSplits = findViewById(R.id.runSplitsList);
+        mRunEmptySplits = findViewById(R.id.emptySplits);
 
         Bundle args = getIntent().getExtras();
 
         mGame = (Game)args.getSerializable(EXTRA_GAME);
+        mCategory = (Category)args.getSerializable(EXTRA_CATEGORY);
+        mLevel = (Level)args.getSerializable(EXTRA_LEVEL);
         mRun = (Run)args.getSerializable(EXTRA_RUN);
 
         if(savedInstanceState != null) {
@@ -134,7 +154,17 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
                     mTwitchWebView.getSettings().setMediaPlaybackRequiresUserGesture(false);
 
                     float scaleFactor = 1.0f;
-                    String pageContent = String.format(Locale.US, Constants.TWITCH_EMBED_SNIPPET, scaleFactor, videoId);
+                    String pageContent;
+                    try {
+                        pageContent = String.format(Locale.US, Util.readToString(getClass().getResourceAsStream(Constants.TWITCH_EMBED_SNIPPET_FILE)), scaleFactor, videoId);
+                    }
+                    catch(IOException e) {
+
+                        Util.showErrorToast(this, getString(R.string.error_twitch));
+
+                        finish();
+                        return;
+                    }
 
                     Log.d(TAG, pageContent);
 
@@ -187,6 +217,8 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
         }
 
         onConfigurationChanged(getResources().getConfiguration());
+
+        setViewData();
     }
 
     @Override
@@ -207,6 +239,7 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
 
             // hide things
             mGameInfoPane.setVisibility(View.GONE);
+            mRunFooterPane.setVisibility(View.GONE);
 
         }
         else {
@@ -218,6 +251,7 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
 
             // show things
             mGameInfoPane.setVisibility(View.VISIBLE);
+            mRunFooterPane.setVisibility(View.VISIBLE);
         }
     }
 
@@ -277,7 +311,30 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
         if(mGame.assets.coverLarge != null)
             new DownloadImageTask(this, mCover).clear(false).execute(mGame.assets.coverLarge.uri);
 
-        //if(mGame.assets.background != null && mBackground != null)
-        //    new DownloadImageTask(this, mBackground).execute(mGame.assets.background.uri);
+        mPlayerNames.removeAllViews();
+        boolean first = true;
+        for(User player : mRun.players) {
+            TextView tv = new TextView(this);
+            tv.setTextSize(16);
+            player.applyTextView(tv);
+
+            if(!first) {
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                lp.setMargins(getResources().getDimensionPixelSize(R.dimen.half_fab_margin), 0, 0, 0);
+                tv.setLayoutParams(lp);
+            }
+            else
+                first = false;
+
+            mPlayerNames.addView(tv);
+        }
+
+        mCategoryName.setText(mCategory.name);
+        mRunTime.setText(mRun.times.formatTime());
+
+
+        TextView emptyTv = new TextView(this);
+
+        emptyTv.setText(R.string.empty_no_splits);
     }
 }

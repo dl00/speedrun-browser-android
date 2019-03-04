@@ -106,21 +106,27 @@
             </TableLayout>
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/fab_margin"
                 android:layout_marginBottom="@dimen/fab_margin"
                 android:textStyle="bold"
+                android:textAlignment="center"
                 android:id="@+id/txtCategoryName" />
 
-            <TextView
-                android:layout_width="wrap_content"
+            <com.google.android.flexbox.FlexboxLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/txtPlayerName" />
+                app:justifyContent="center"
+                app:flexWrap="wrap"
+                app:alignItems="center"
+                app:alignContent="center"
+                android:id="@+id/txtPlayerNames" />
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textAlignment="center"
                 android:id="@+id/txtRunTime" />
 
         </LinearLayout>
@@ -158,9 +164,26 @@
 
     </danb.speedrunbrowser.utils.FixedAspectRatioFrameLayout>
 
-    <ListView
+    <LinearLayout
+        android:id="@+id/runFooter"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:layout_marginTop="@dimen/fab_margin"
+        android:orientation="vertical">
 
+        <ListView
+            android:visibility="gone"
+            android:id="@+id/runSplitsList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/emptySplits"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:text="@string/empty_no_splits" />
+
+    </LinearLayout>
 </LinearLayout>

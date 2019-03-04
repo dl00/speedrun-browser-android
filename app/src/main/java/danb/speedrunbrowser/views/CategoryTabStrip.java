@@ -5,13 +5,17 @@ import android.content.Context;
 import android.graphics.Typeface;
 import androidx.fragment.app.FragmentManager;
 import androidx.viewpager.widget.ViewPager;
+
+import android.graphics.drawable.ColorDrawable;
 import android.util.AttributeSet;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import danb.speedrunbrowser.GameListActivity;
 import danb.speedrunbrowser.R;
 import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
@@ -19,6 +23,7 @@ import danb.speedrunbrowser.api.objects.Level;
 import danb.speedrunbrowser.utils.LeaderboardPagerAdapter;
 
 public class CategoryTabStrip extends LinearLayout implements ViewPager.OnPageChangeListener {
+    private static final String TAG = GameListActivity.class.getSimpleName();
 
     private Game mGame;
 
@@ -31,6 +36,9 @@ public class CategoryTabStrip extends LinearLayout implements ViewPager.OnPageCh
     private ViewPager mPager;
     private LeaderboardPagerAdapter mPagerAdapter;
 
+    private int mHighlightCategory = 0;
+    private int mHighlightLevel = 0;
+
     public CategoryTabStrip(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -38,6 +46,9 @@ public class CategoryTabStrip extends LinearLayout implements ViewPager.OnPageCh
 
         mHsvCategory = new HorizontalScrollView(context);
         mHsvLevel = new HorizontalScrollView(context);
+
+        mHsvCategory.setHorizontalScrollBarEnabled(false);
+        mHsvLevel.setHorizontalScrollBarEnabled(false);
 
         mLayoutCategory = new LinearLayout(context);
         mLayoutLevel = new LinearLayout(context);
@@ -60,27 +71,30 @@ public class CategoryTabStrip extends LinearLayout implements ViewPager.OnPageCh
 
         mGame = game;
 
-        LeaderboardPagerAdapter leaderboardPagerAdapter = new LeaderboardPagerAdapter(fm, mGame);
-        mPager.setAdapter(leaderboardPagerAdapter);
+        mPagerAdapter = new LeaderboardPagerAdapter(fm, mGame);
+        mPager.setAdapter(mPagerAdapter);
 
         applyTabs();
+
+        onPageSelected(0);
     }
 
     public void selectLeaderboard(Category category, Level level) {
-        selectLeaderboardIndex(mPagerAdapter.indexOf(category, level));
-    }
-
-    private void selectLeaderboardIndex(int position) {
-
+        mPager.setCurrentItem(mPagerAdapter.indexOf(category, level));
     }
 
     private void styleTab(TextView tv) {
         tv.setTypeface(tv.getTypeface(), Typeface.BOLD);
         tv.setAllCaps(true);
 
+        tv.setHeight(getResources().getDimensionPixelSize(R.dimen.tab_height));
+        tv.setGravity(Gravity.CENTER_VERTICAL);
+
+        tv.setPadding(getResources().getDimensionPixelSize(R.dimen.half_fab_margin), 0, getResources().getDimensionPixelSize(R.dimen.half_fab_margin), 0);
+
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.leftMargin = getResources().getDimensionPixelSize(R.dimen.fab_margin);
-        lp.rightMargin = getResources().getDimensionPixelSize(R.dimen.fab_margin);
+        lp.leftMargin = getResources().getDimensionPixelSize(R.dimen.half_fab_margin);
+        lp.rightMargin = getResources().getDimensionPixelSize(R.dimen.half_fab_margin);
         tv.setLayoutParams(lp);
     }
 
@@ -88,7 +102,7 @@ public class CategoryTabStrip extends LinearLayout implements ViewPager.OnPageCh
         mLayoutCategory.removeAllViews();
         mLayoutLevel.removeAllViews();
 
-        for(final Category category : mGame.categories) {
+        for(final Category category : mPagerAdapter.getSortedCategories()) {
             TextView tv = new TextView(getContext());
 
             tv.setText(category.name);
@@ -97,7 +111,9 @@ public class CategoryTabStrip extends LinearLayout implements ViewPager.OnPageCh
             tv.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    selectLeaderboard(category, null);
+                    Level l = mPagerAdapter.getLevelOfIndex(mPager.getCurrentItem());
+
+                    selectLeaderboard(category, l == null && mGame.levels != null && !mGame.levels.isEmpty() ? mGame.levels.get(0) : l);
                 }
             });
 
@@ -123,18 +139,28 @@ public class CategoryTabStrip extends LinearLayout implements ViewPager.OnPageCh
         }
     }
 
-    private void setScroll(int categoryPos, float categoryOffset, int levelPos, float levelOffset) {
+    private int getCenterScrollPosition(HorizontalScrollView hsv, View child) {
+        return child.getLeft() + child.getWidth() / 2 - hsv.getWidth() / 2;
+    }
+
+    private void setScroll(int categoryPos, int levelPos, float offset) {
         // we want the tab to be as center aligned as possible.
         View categoryChild = mLayoutCategory.getChildAt(categoryPos);
-        int categoryX = categoryChild.getLeft() - categoryChild.getWidth() / 2;
+        int categoryX1 = getCenterScrollPosition(mHsvCategory, categoryChild);
 
-        mHsvCategory.scrollTo(categoryX, 0);
+        int categoryX2 = categoryX1;
+        if(mLayoutCategory.getChildCount() > categoryPos + 1)
+            categoryX2 = getCenterScrollPosition(mHsvCategory, mLayoutCategory.getChildAt(categoryPos + 1));
+
+        mHsvCategory.scrollTo(categoryX1 + (int)Math.floor((float)(categoryX2 - categoryX1) * offset), 0);
 
         if(levelPos != -1 && mLayoutLevel.getChildAt(levelPos) != null) {
             View levelChild = mLayoutLevel.getChildAt(levelPos);
-            int levelX = levelChild.getLeft() - levelChild.getWidth() / 2;
+            int levelX1 = getCenterScrollPosition(mHsvLevel, levelChild);
 
-            mHsvLevel.scrollTo(levelX, 0);
+            int levelX2 = getCenterScrollPosition(mHsvLevel, mLayoutLevel.getChildAt((levelPos + 1) % mLayoutLevel.getChildCount()));
+
+            mHsvLevel.scrollTo(levelX1 + (int)Math.floor((float)(levelX2 - levelX1) * offset), 0);
         }
 
     }
@@ -143,51 +169,51 @@ public class CategoryTabStrip extends LinearLayout implements ViewPager.OnPageCh
         if(mHsvLevel.getVisibility() == GONE)
             return;
 
-        // animate out
-        mHsvLevel.animate()
-                .translationY(0)
-                .setListener(new Animator.AnimatorListener() {
-                    @Override
-                    public void onAnimationStart(Animator animator) {}
-
-                    @Override
-                    public void onAnimationEnd(Animator animator) {
-                        mHsvLevel.setVisibility(GONE);
-                    }
-
-                    @Override
-                    public void onAnimationCancel(Animator animator) {}
-
-                    @Override
-                    public void onAnimationRepeat(Animator animator) {}
-                });
+        mHsvLevel.setVisibility(GONE);
     }
 
     private void showLevelsStrip() {
         if(mHsvLevel.getVisibility() == VISIBLE)
             return;
 
-        // animate in
-        mHsvLevel.setTranslationY(-mHsvLevel.getHeight());
         mHsvLevel.setVisibility(VISIBLE);
+    }
 
-        mHsvLevel.animate()
-                .translationY(0)
-                .setListener(null);
+    public LeaderboardPagerAdapter getPagerAdapter() {
+        return mPagerAdapter;
     }
 
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-        setScroll(mPager.getCurrentItem(), positionOffset, mPager.getCurrentItem(), 0);
+        if(position < mPagerAdapter.getPerGameCategorySize()) {
+            setScroll(position, -1, positionOffset);
+        }
+        else {
+            setScroll(mPagerAdapter.getPerGameCategorySize() + (position - mPagerAdapter.getPerGameCategorySize()) / mGame.levels.size(),
+                    (position - mPagerAdapter.getPerGameCategorySize()) % mGame.levels.size(), positionOffset);
+        }
     }
 
     @Override
     public void onPageSelected(int position) {
-        selectLeaderboardIndex(position);
+        if(position < mPagerAdapter.getPerGameCategorySize()) {
+            mLayoutCategory.getChildAt(mHighlightCategory).setBackground(new ColorDrawable(getResources().getColor(android.R.color.transparent)));
+            mHighlightCategory = position;
+            mLayoutCategory.getChildAt(mHighlightCategory).setBackground(new ColorDrawable(getResources().getColor(R.color.colorAccent)));
+            hideLevelsStrip();
+        }
+        else {
+            mLayoutCategory.getChildAt(mHighlightCategory).setBackground(new ColorDrawable(getResources().getColor(android.R.color.transparent)));
+            mLayoutLevel.getChildAt(mHighlightLevel).setBackground(new ColorDrawable(getResources().getColor(android.R.color.transparent)));
+            mHighlightCategory = mPagerAdapter.getPerGameCategorySize() + (position - mPagerAdapter.getPerGameCategorySize()) / mGame.levels.size();
+            mHighlightLevel = (position - mPagerAdapter.getPerGameCategorySize()) % mGame.levels.size();
+            mLayoutCategory.getChildAt(mHighlightCategory).setBackground(new ColorDrawable(getResources().getColor(R.color.colorAccent)));
+            mLayoutLevel.getChildAt(mHighlightLevel).setBackground(new ColorDrawable(getResources().getColor(R.color.colorAccent)));
+            showLevelsStrip();
+        }
     }
 
     @Override
     public void onPageScrollStateChanged(int state) {
-        setScroll(mPager.getCurrentItem(), 0, mPager.getCurrentItem(), 0);
     }
 }
