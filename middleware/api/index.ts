@@ -32,10 +32,15 @@ export function run(conf: Config) {
 
     // load endpoints
     let endpoint_modules = fs.readdirSync(path.join(__dirname, 'endpoints'));
+    let loaded: {[name: string]: express.Router} = {};
     for(let endpoint_module of endpoint_modules) {
         let name = endpoint_module.split('.')[0];
+        if(loaded[name])
+            continue;
+
         console.log('Load endpoint:', '/' + name);
-        app.use('/api/v1/' + name, require(path.join(__dirname, 'endpoints', endpoint_module)));
+        loaded[name] = require(path.join(__dirname, 'endpoints', name));
+        app.use('/api/v1/' + name, loaded[name]);
     }
     
     app.listen(config!.listen, () => {

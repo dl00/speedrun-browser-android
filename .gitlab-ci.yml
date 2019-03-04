@@ -5,6 +5,13 @@ variables:
   ANDROID_BUILD_TOOLS: "28.0.2"
   ANDROID_SDK_TOOLS:   "4333796"
 
+
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  DOCKER_HOST: tcp://localhost:2375
+
+services:
+  - dcr.buyme360.com/devops/docker:dind
+
 before_script:
   - apt-get --quiet update --yes
   - apt-get --quiet install --yes wget tar unzip lib32stdc++6 lib32z1
@@ -25,6 +32,18 @@ stages:
   - build
   - test
 
+middlewareDocker:
+  stage: build
+  image: dcr.buyme360.com/devops/docker:latest
+  script:
+    - cd middleware
+    - npm i typescript
+    - tsc
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker build -t $IMAGE_TAG .
+    - docker push $IMAGE_TAG
+
+
 lintDebug:
   stage: build
   script:
@@ -42,4 +61,5 @@ debugTests:
   stage: test
   script:
     - ./gradlew -Pci --console=plain :app:testDebug
+
 

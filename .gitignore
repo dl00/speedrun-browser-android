@@ -10,4 +10,5 @@
 .externalNativeBuild
 
 # middleware
+middleware/dist
 node_modules
