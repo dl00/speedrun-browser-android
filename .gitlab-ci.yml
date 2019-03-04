@@ -38,6 +38,7 @@ middlewareDocker:
   before_script:
     - cd middleware
     - npm i -g typescript
+    - npm i
     - tsc
   script:
     - cd middleware
