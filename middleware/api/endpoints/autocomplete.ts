@@ -1,5 +1,4 @@
 
-
 import { Router } from 'express';
 
 import * as _ from 'lodash';
@@ -14,7 +13,7 @@ type IndexerResponse = {[type: string]: any[]};
 
 const SCAN_INDEXES: {[type: string]: any} = {
     games: {
-        indexer: new Indexer('games', api.config!.indexer.config, api.config!.indexer.redis),
+        indexer: new Indexer('games', api.config!.indexer.config, _.defaults(api.config!.indexer.redis, api.config!.redis)),
         loc: 'games'
     }
 };

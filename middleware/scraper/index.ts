@@ -213,7 +213,7 @@ export async function connect(conf: Config) {
     rdb = new ioredis(_.defaults(config.scraper.redis, config.redis));
     storedb = new ioredis(config.redis);
 
-    indexer = new Indexer('games', config.indexer.config, config.indexer.redis);
+    indexer = new Indexer('games', config.indexer.config, _.defaults(config.scraper.redis, config.redis));
 
     redis.defineCommands(rdb);
 }
