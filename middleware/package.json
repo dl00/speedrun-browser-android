@@ -17,7 +17,7 @@
   "author": "Daniel Beal <git@danb.email>",
   "license": "GPL-3.0-or-later",
   "dependencies": {
-    "@13013/indexer": "git+https://git@git.buyme360.com/beald/indexer.git#v0.0.3",
+    "@13013/indexer": "git+https://git.buyme360.com/beald/indexer.git#v0.0.3",
     "@types/ioredis": "^4.0.6",
     "@types/lodash": "^4.14.120",
     "@types/moment": "^2.13.0",
