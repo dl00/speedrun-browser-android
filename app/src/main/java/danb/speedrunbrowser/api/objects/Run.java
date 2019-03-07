@@ -1,6 +1,7 @@
 package danb.speedrunbrowser.api.objects;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
 
 public class Run implements Serializable {
@@ -17,6 +18,8 @@ public class Run implements Serializable {
 
     public String date;
     public String submitted;
+
+    public HashMap<String, String> values;
 
     public RunTimes times;
     public MediaLink splits;

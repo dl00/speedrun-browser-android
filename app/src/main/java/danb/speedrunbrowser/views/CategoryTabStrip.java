@@ -20,6 +20,7 @@ import danb.speedrunbrowser.R;
 import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.Level;
+import danb.speedrunbrowser.api.objects.Variable;
 import danb.speedrunbrowser.utils.LeaderboardPagerAdapter;
 
 public class CategoryTabStrip extends LinearLayout implements ViewPager.OnPageChangeListener {
@@ -65,13 +66,13 @@ public class CategoryTabStrip extends LinearLayout implements ViewPager.OnPageCh
         addView(mHsvLevel);
     }
 
-    public void setup(Game game, ViewPager vp, FragmentManager fm) {
+    public void setup(Game game, Variable.VariableSelections selections, ViewPager vp, FragmentManager fm) {
         mPager = vp;
         mPager.setOnPageChangeListener(this);
 
         mGame = game;
 
-        mPagerAdapter = new LeaderboardPagerAdapter(fm, mGame);
+        mPagerAdapter = new LeaderboardPagerAdapter(fm, mGame, selections);
         mPager.setAdapter(mPagerAdapter);
 
         applyTabs();
@@ -149,7 +150,7 @@ public class CategoryTabStrip extends LinearLayout implements ViewPager.OnPageCh
         int categoryX1 = getCenterScrollPosition(mHsvCategory, categoryChild);
 
         int categoryX2 = categoryX1;
-        if(mLayoutCategory.getChildCount() > categoryPos + 1)
+        if(mLayoutCategory.getChildCount() > categoryPos + 1 && (levelPos == -1 || levelPos + 1 >= mLayoutLevel.getChildCount()))
             categoryX2 = getCenterScrollPosition(mHsvCategory, mLayoutCategory.getChildAt(categoryPos + 1));
 
         mHsvCategory.scrollTo(categoryX1 + (int)Math.floor((float)(categoryX2 - categoryX1) * offset), 0);

@@ -61,7 +61,7 @@ export const DEFAULT_CONFIG: Config = {
     },
 
     api: {
-        maxItems: 30,
+        maxItems: 80,
         maxSearchLength: 50
     },
 

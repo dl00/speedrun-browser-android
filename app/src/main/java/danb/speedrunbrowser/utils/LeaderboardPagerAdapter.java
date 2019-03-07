@@ -1,18 +1,22 @@
 package danb.speedrunbrowser.utils;
 
 import android.os.Bundle;
+import android.util.SparseArray;
+
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import danb.speedrunbrowser.LeaderboardFragment;
 import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.Level;
+import danb.speedrunbrowser.api.objects.Variable;
 
 public class LeaderboardPagerAdapter extends FragmentPagerAdapter {
 
@@ -22,10 +26,15 @@ public class LeaderboardPagerAdapter extends FragmentPagerAdapter {
     private final List<Category> perLevelCategories;
     private final List<Level> levels;
 
-    public LeaderboardPagerAdapter(FragmentManager fm, Game game) {
+    private Variable.VariableSelections filterSelections;
+
+    private final LeaderboardFragment[] existingFragments;
+
+    public LeaderboardPagerAdapter(FragmentManager fm, Game game, Variable.VariableSelections selections) {
         super(fm);
 
         this.game = game;
+        filterSelections = selections;
 
         perGameCategories = new ArrayList<>();
         perLevelCategories = new ArrayList<>();
@@ -49,6 +58,8 @@ public class LeaderboardPagerAdapter extends FragmentPagerAdapter {
         }
 
         assert perLevelCategories.isEmpty() || !levels.isEmpty();
+
+        existingFragments = new LeaderboardFragment[getCount()];
     }
 
     public Category getCategoryOfIndex(int position) {
@@ -88,7 +99,7 @@ public class LeaderboardPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public Fragment getItem(int position) {
-        Fragment frag = new LeaderboardFragment();
+        LeaderboardFragment frag = new LeaderboardFragment();
         Bundle args = new Bundle();
 
         args.putSerializable(LeaderboardFragment.ARG_GAME, game);
@@ -97,6 +108,11 @@ public class LeaderboardPagerAdapter extends FragmentPagerAdapter {
         args.putSerializable(LeaderboardFragment.ARG_LEVEL, getLevelOfIndex(position));
 
         frag.setArguments(args);
+
+        if(filterSelections != null)
+            frag.setFilter(filterSelections);
+
+        existingFragments[position] = frag;
 
         return frag;
     }
@@ -127,5 +143,12 @@ public class LeaderboardPagerAdapter extends FragmentPagerAdapter {
         sortedCategories.addAll(perLevelCategories);
 
         return sortedCategories;
+    }
+
+    public void notifyFilterChanged() {
+        for(LeaderboardFragment frag : existingFragments) {
+            if(frag != null)
+                frag.notifyFilterChanged();
+        }
     }
 }

@@ -32,6 +32,7 @@ import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
 import danb.speedrunbrowser.api.objects.Level;
 import danb.speedrunbrowser.api.objects.Run;
 import danb.speedrunbrowser.api.objects.User;
+import danb.speedrunbrowser.api.objects.Variable;
 import danb.speedrunbrowser.utils.DownloadImageTask;
 import danb.speedrunbrowser.utils.Util;
 import danb.speedrunbrowser.views.ProgressSpinnerView;
@@ -57,13 +58,18 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
     private Category mCategory;
     private Level mLevel;
 
+    private Variable.VariableSelections mVariableSelections;
+
     private ProgressSpinnerView mProgressSpinner;
 
     private LinearLayout mContentLayout;
 
     private Leaderboard mLeaderboard;
+    private List<LeaderboardRunEntry> mFilteredLeaderboardRuns;
 
     private RecyclerView mLeaderboardList;
+
+    private TextView mEmptyRuns;
 
     private LeaderboardAdapter mRunsListAdapter;
 
@@ -123,6 +129,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         mContentLayout = rootView.findViewById(R.id.contentLayout);
 
         mLeaderboardList = rootView.findViewById(R.id.leaderboardList);
+        mEmptyRuns = rootView.findViewById(R.id.emptyRuns);
 
         mRunsListAdapter = new LeaderboardAdapter();
         mLeaderboardList.setAdapter(mRunsListAdapter);
@@ -136,6 +143,8 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
             }
         });
 
+        notifyFilterChanged();
+
         Log.d(TAG, "create leaderboard list");
 
         return rootView;
@@ -148,6 +157,10 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         if(mLeaderboard != null) {
             mProgressSpinner.setVisibility(View.GONE);
             mContentLayout.setVisibility(View.VISIBLE);
+
+            if(mFilteredLeaderboardRuns.isEmpty()) {
+                mEmptyRuns.setVisibility(View.VISIBLE);
+            }
         }
     }
 
@@ -157,7 +170,11 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
 
     // show game rules as a Alert Dialog
     private void viewRules() {
-        String rulesText = mCategory.rules.trim();
+
+        String rulesText = "";
+
+        if(mCategory.rules != null)
+            rulesText = mCategory.rules.trim();
 
         if(rulesText.isEmpty())
             rulesText = getString(R.string.msg_no_rules_content);
@@ -181,6 +198,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         }
 
         mLeaderboard = leaderboards.get(0);
+        notifyFilterChanged();
 
         Log.d(TAG, "Downloaded " + mLeaderboard.runs.size() + " runs!");
         if(mRunsListAdapter != null) {
@@ -248,6 +266,31 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         return player;
     }
 
+    public void setFilter(Variable.VariableSelections selections) {
+        mVariableSelections = selections;
+        notifyFilterChanged();
+    }
+
+    public void notifyFilterChanged() {
+        if(mLeaderboard != null) {
+            if(mVariableSelections != null)
+                mFilteredLeaderboardRuns = mVariableSelections.filterLeaderboardRuns(mLeaderboard);
+            else
+                mFilteredLeaderboardRuns = mLeaderboard.runs;
+
+            if(mRunsListAdapter != null) {
+                mRunsListAdapter.notifyDataSetChanged();
+
+                if(mFilteredLeaderboardRuns.isEmpty()) {
+                    mEmptyRuns.setVisibility(View.VISIBLE);
+                }
+                else {
+                    mEmptyRuns.setVisibility(View.GONE);
+                }
+            }
+        }
+    }
+
     public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardFragment.RunViewHolder> {
 
         private final LayoutInflater inflater;
@@ -286,7 +329,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
 
         @Override
         public void onBindViewHolder(@NonNull RunViewHolder holder, int position) {
-            LeaderboardRunEntry run = mLeaderboard.runs.get(position);
+            LeaderboardRunEntry run = mFilteredLeaderboardRuns.get(position);
 
             holder.apply(getContext(), mGame, run, mLeaderboard);
             holder.itemView.setOnClickListener(mOnClickListener);
@@ -295,7 +338,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
 
         @Override
         public int getItemCount() {
-            return mLeaderboard != null ? mLeaderboard.runs.size() : 0;
+            return mFilteredLeaderboardRuns != null ? mFilteredLeaderboardRuns.size() : 0;
         }
     }
 

@@ -24,4 +24,6 @@
     <string name="button_filters">Filters</string>
     <string name="dialog_title_choose_filters">Filter runs by:</string>
     <string name="empty_no_splits">No splits provided for this run.</string>
+    <string name="empty_no_runs">No runs here (its free!)</string>
+    <string name="msg_no_video">This run does not have a video.</string>
 </resources>

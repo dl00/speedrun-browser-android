@@ -10,126 +10,132 @@
 
     <LinearLayout android:id="@+id/gameInfoHead"
         android:layout_width="match_parent"
-        android:orientation="horizontal"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/half_fab_margin"
-            android:contentDescription="@string/desc_game_cover"
-            android:id="@+id/imgCover" />
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:orientation="vertical"
-            android:layout_weight="1"
+        <LinearLayout android:layout_width="match_parent"
+            android:orientation="horizontal"
             android:layout_height="wrap_content">
 
-            <TextView
-                android:id="@+id/txtGameName"
-                android:layout_width="match_parent"
+            <ImageView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="The Legend of Zelda: Breath of the Wild"
-                android:textAlignment="center"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                tools:ignore="HardcodedText" />
+                android:layout_marginEnd="@dimen/half_fab_margin"
+                android:contentDescription="@string/desc_game_cover"
+                android:id="@+id/imgCover" />
 
-            <TableLayout
-                android:layout_width="match_parent"
+            <LinearLayout
+                android:layout_width="0dp"
+                android:orientation="vertical"
+                android:layout_weight="1"
                 android:layout_height="wrap_content">
 
-                <TableRow
+                <TextView
+                    android:id="@+id/txtGameName"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" >
+                    android:layout_height="wrap_content"
+                    android:text="The Legend of Zelda: Breath of the Wild"
+                    android:textAlignment="center"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    tools:ignore="HardcodedText" />
 
-                    <TextView
-                        android:id="@+id/textView3"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0"
-                        android:text="@string/label_key_platforms"
-                        android:textAlignment="viewEnd" />
-
-                    <View
-                        android:id="@+id/divider"
-                        android:layout_width="10dp"
-                        android:layout_height="match_parent"
-                        android:background="@android:color/transparent" />
-
-                    <TextView
-                        android:id="@+id/txtPlatforms"
-                        android:textSize="12sp"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:scrollHorizontally="true"
-                        android:scrollbarAlwaysDrawHorizontalTrack="true"
-                        android:text="WiiU, Switch"
-                        tools:ignore="HardcodedText" />
-                </TableRow>
-
-                <TableRow
+                <TableLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" >
+                    android:layout_height="wrap_content">
 
-                    <TextView
-                        android:id="@+id/textView5"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0"
-                        android:text="Release Date"
-                        android:textAlignment="viewEnd"
-                        tools:ignore="HardcodedText" />
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" >
 
-                    <View
-                        android:id="@+id/divider2"
-                        android:layout_width="1dp"
-                        android:layout_height="match_parent"
-                        android:background="@android:color/transparent" />
+                        <TextView
+                            android:id="@+id/textView3"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="0"
+                            android:text="@string/label_key_platforms"
+                            android:textAlignment="viewEnd" />
 
-                    <TextView
-                        android:id="@+id/txtReleaseDate"
-                        android:textSize="12sp"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="2017-03-03"
-                        tools:ignore="HardcodedText" />
-                </TableRow>
+                        <View
+                            android:id="@+id/divider"
+                            android:layout_width="10dp"
+                            android:layout_height="match_parent"
+                            android:background="@android:color/transparent" />
 
-            </TableLayout>
+                        <TextView
+                            android:id="@+id/txtPlatforms"
+                            android:textSize="12sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:scrollHorizontally="true"
+                            android:scrollbarAlwaysDrawHorizontalTrack="true"
+                            android:text="WiiU, Switch"
+                            tools:ignore="HardcodedText" />
+                    </TableRow>
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/fab_margin"
-                android:layout_marginBottom="@dimen/fab_margin"
-                android:textStyle="bold"
-                android:textAlignment="center"
-                android:id="@+id/txtCategoryName" />
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" >
 
-            <com.google.android.flexbox.FlexboxLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:justifyContent="center"
-                app:flexWrap="wrap"
-                app:alignItems="center"
-                app:alignContent="center"
-                android:id="@+id/txtPlayerNames" />
+                        <TextView
+                            android:id="@+id/textView5"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="0"
+                            android:text="Release Date"
+                            android:textAlignment="viewEnd"
+                            tools:ignore="HardcodedText" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textAlignment="center"
-                android:id="@+id/txtRunTime" />
+                        <View
+                            android:id="@+id/divider2"
+                            android:layout_width="1dp"
+                            android:layout_height="match_parent"
+                            android:background="@android:color/transparent" />
+
+                        <TextView
+                            android:id="@+id/txtReleaseDate"
+                            android:textSize="12sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="2017-03-03"
+                            tools:ignore="HardcodedText" />
+                    </TableRow>
+
+                </TableLayout>
+
+            </LinearLayout>
 
         </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/fab_margin"
+            android:layout_marginBottom="@dimen/fab_margin"
+            android:textStyle="bold"
+            android:textAlignment="center"
+            android:id="@+id/txtCategoryName" />
+
+        <com.google.android.flexbox.FlexboxLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:justifyContent="center"
+            app:flexWrap="wrap"
+            app:alignItems="center"
+            app:alignContent="center"
+            android:id="@+id/txtPlayerNames" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:id="@+id/txtRunTime" />
 
     </LinearLayout>
 

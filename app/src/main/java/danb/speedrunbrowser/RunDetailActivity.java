@@ -117,7 +117,7 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
             mStartPlaybackTime = savedInstanceState.getLong(SAVED_PLAYBACK_TIME);
         }
 
-        if(!mRun.videos.links.isEmpty()) {
+        if(mRun.videos != null && mRun.videos.links != null && !mRun.videos.links.isEmpty()) {
 
             mShownLink = mRun.videos.links.get(0);
 
@@ -214,6 +214,24 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
 
                 }
             }
+        }
+        else {
+            LinearLayout ll = new LinearLayout(this);
+            ll.setOrientation(LinearLayout.VERTICAL);
+            ll.setGravity(Gravity.CENTER);
+            ll.setBackground(new ColorDrawable(getResources().getColor(R.color.colorPrimaryDark)));
+
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            lp.gravity = Gravity.CENTER;
+            lp.topMargin = getResources().getDimensionPixelSize(R.dimen.half_fab_margin);
+
+            TextView tv = new TextView(this);
+            tv.setLayoutParams(lp);
+            tv.setText(R.string.msg_no_video);
+
+            ll.addView(tv);
+
+            mVideoFrame.addView(ll);
         }
 
         onConfigurationChanged(getResources().getConfiguration());

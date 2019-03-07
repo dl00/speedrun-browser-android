@@ -2,6 +2,8 @@ package danb.speedrunbrowser;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+
+import android.content.DialogInterface;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
@@ -35,7 +37,7 @@ import io.reactivex.functions.Consumer;
  * in two-pane mode (on tablets) or a {@link GameDetailActivity}
  * on handsets.
  */
-public class GameDetailFragment extends Fragment {
+public class GameDetailFragment extends Fragment implements DialogInterface.OnDismissListener {
 
     public static final String TAG = GameDetailFragment.class.getSimpleName();
 
@@ -61,20 +63,20 @@ public class GameDetailFragment extends Fragment {
     /**
      * Game detail view views
      */
-    ProgressSpinnerView mSpinner;
-    View mGameHeader;
+    private ProgressSpinnerView mSpinner;
+    private View mGameHeader;
 
-    TextView mGameName;
-    TextView mReleaseDate;
-    TextView mPlatformList;
+    private TextView mGameName;
+    private TextView mReleaseDate;
+    private TextView mPlatformList;
 
-    Button mFiltersButton;
+    private Button mFiltersButton;
 
-    ImageView mCover;
-    ImageView mBackground;
+    private ImageView mCover;
+    private ImageView mBackground;
 
-    CategoryTabStrip mCategoryTabStrip;
-    ViewPager mLeaderboardPager;
+    private CategoryTabStrip mCategoryTabStrip;
+    private ViewPager mLeaderboardPager;
 
     private Category mStartPositionCategory;
     private Level mStartPositionLevel;
@@ -169,18 +171,11 @@ public class GameDetailFragment extends Fragment {
         mBackground = rootView.findViewById(R.id.imgBackground);
 
         mLeaderboardPager = rootView.findViewById(R.id.pageLeaderboard);
+
         mCategoryTabStrip = rootView.findViewById(R.id.tabCategories);
 
         if(mGame != null) {
-            if(mGame.categories.get(0).variables.isEmpty())
-                mFiltersButton.setVisibility(View.GONE);
-            else if(mVariableSelections == null)
-                mVariableSelections = new Variable.VariableSelections(mGame.categories.get(0).variables);
-
-            mCategoryTabStrip.setup(mGame, mLeaderboardPager, getChildFragmentManager());
-
-            if(mStartPositionCategory != null)
-                mCategoryTabStrip.selectLeaderboard(mStartPositionCategory, mStartPositionLevel);
+            setupTabStrip();
         }
 
         mFiltersButton.setOnClickListener(new View.OnClickListener() {
@@ -205,6 +200,18 @@ public class GameDetailFragment extends Fragment {
         outState.putSerializable(SAVED_GAME, mGame);
     }
 
+    private void setupTabStrip() {
+        if(mGame.categories.get(0).variables.isEmpty())
+            mFiltersButton.setVisibility(View.GONE);
+        else if(mVariableSelections == null)
+            mVariableSelections = new Variable.VariableSelections(mGame.categories.get(0).variables);
+
+        mCategoryTabStrip.setup(mGame, mVariableSelections, mLeaderboardPager, getChildFragmentManager());
+
+        if(mStartPositionCategory != null)
+            mCategoryTabStrip.selectLeaderboard(mStartPositionCategory, mStartPositionLevel);
+    }
+
     private void setViewData() {
         if(mGame != null && mGameName != null) {
 
@@ -223,15 +230,7 @@ public class GameDetailFragment extends Fragment {
 
             // leaderboards
             if(mCategoryTabStrip != null) {
-                if(mGame.categories.get(0).variables.isEmpty())
-                    mFiltersButton.setVisibility(View.GONE);
-                else if(mVariableSelections == null)
-                    mVariableSelections = new Variable.VariableSelections(mGame.categories.get(0).variables);
-
-                mCategoryTabStrip.setup(mGame, mLeaderboardPager, getChildFragmentManager());
-
-                if(mStartPositionCategory != null)
-                    mCategoryTabStrip.selectLeaderboard(mStartPositionCategory, mStartPositionLevel);
+                setupTabStrip();
             }
 
             Context ctx;
@@ -254,5 +253,12 @@ public class GameDetailFragment extends Fragment {
                 mCategoryTabStrip.getPagerAdapter().getCategoryOfIndex(mLeaderboardPager.getCurrentItem()).variables, mVariableSelections);
 
         dialog.show();
+
+        dialog.setOnDismissListener(this);
+    }
+
+    @Override
+    public void onDismiss(DialogInterface dialog) {
+        mCategoryTabStrip.getPagerAdapter().notifyFilterChanged();
     }
 }

@@ -17,6 +17,14 @@
         android:layout_height="match_parent"
         android:visibility="gone">
 
+        <TextView
+            android:id="@+id/emptyRuns"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/fab_margin"
+            android:text="@string/empty_no_runs"
+            android:textAlignment="center" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/leaderboardList"

@@ -54,7 +54,7 @@ import java.util.concurrent.TimeUnit;
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class GameListActivity extends AppCompatActivity implements Callback<SpeedrunMiddlewareAPI.APIResponse<Game>>, TextWatcher {
+public class GameListActivity extends AppCompatActivity implements TextWatcher {
     private static final String TAG = GameListActivity.class.getSimpleName();
 
     /**
@@ -174,6 +174,7 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
                         }
 
                         mGames = games;
+                        mGameListView.scrollToPosition(0);
                         mAdapter.notifyDataSetChanged();
                     }
                 }, new Consumer<Throwable>() {
@@ -191,28 +192,6 @@ public class GameListActivity extends AppCompatActivity implements Callback<Spee
     public void showAbout() {
         Intent intent = new Intent(this, AboutActivity.class);
         startActivity(intent);
-    }
-
-    @Override
-    public void onResponse(@NonNull Call<SpeedrunMiddlewareAPI.APIResponse<Game>> call, @NonNull Response<SpeedrunMiddlewareAPI.APIResponse<Game>> response) {
-        if(response.isSuccessful()) {
-            mGames = Objects.requireNonNull(response.body()).data;
-            Log.d(TAG, "Downloaded " + mGames.size() + " games!");
-            mAdapter.notifyDataSetChanged();
-        }
-        else {
-            try {
-                Log.w(TAG, "Failed to download games: " + response.errorBody().string());
-            }
-            catch(IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @Override
-    public void onFailure(@NonNull Call<SpeedrunMiddlewareAPI.APIResponse<Game>> call, @NonNull Throwable t) {
-        Log.w(TAG, "Could not download games", t);
     }
 
     @Override

@@ -1,3 +1,5 @@
+import * as _ from 'lodash';
+
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -5,14 +7,15 @@ import * as ioredis from 'ioredis';
 
 let Indexer: any = require('@13013/indexer');
 
-import { config } from './config';
+import { load_config } from './config';
 
 export async function run() {
+    let config = load_config();
 
     console.log('[COMB] Start');
 
     let rdb = new ioredis(config.redis);
-    let indx = new Indexer('games', config.indexer.config, config.indexer.redis);
+    let indx = new Indexer('games', config.indexer.config, _.defaults(config.indexer.redis, config.redis));
 
     let update_modules = fs.readdirSync(path.join(__dirname, 'db-comb'));
     for(let update_module of update_modules) {

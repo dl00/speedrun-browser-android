@@ -55,15 +55,35 @@ public class Variable implements Serializable {
         }
 
         public boolean shouldShowRun(Run run) {
+
+            if(run.values != null) {
+                for(String selection : selections.keySet()) {
+                    if(!run.values.containsKey(selection))
+                        //return false;
+                        // TODO: Be more graceful/correct about this
+                        continue;
+
+                    if(!Objects.requireNonNull(selections.get(selection)).contains(run.values.get(selection)))
+                        return false;
+                }
+            }
+
             return true;
         }
 
         public List<LeaderboardRunEntry> filterLeaderboardRuns(Leaderboard lb) {
             List<LeaderboardRunEntry> shownRuns = new ArrayList<>();
 
+            int lastPlace = 0;
+
             for(LeaderboardRunEntry re : lb.runs) {
-                if(shouldShowRun(re.run))
-                    shownRuns.add(re);
+                if(shouldShowRun(re.run)) {
+                    LeaderboardRunEntry newRunEntry = new LeaderboardRunEntry();
+                    newRunEntry.place = re.place != lastPlace ? ++lastPlace : lastPlace;
+                    newRunEntry.run = re.run;
+
+                    shownRuns.add(newRunEntry);
+                }
             }
 
             return shownRuns;
