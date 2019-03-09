@@ -275,7 +275,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
     public void notifyFilterChanged() {
         if(mLeaderboard != null) {
             if(mVariableSelections != null)
-                mFilteredLeaderboardRuns = mVariableSelections.filterLeaderboardRuns(mLeaderboard);
+                mFilteredLeaderboardRuns = mVariableSelections.filterLeaderboardRuns(mLeaderboard, mCategory.variables);
             else
                 mFilteredLeaderboardRuns = mLeaderboard.runs;
 

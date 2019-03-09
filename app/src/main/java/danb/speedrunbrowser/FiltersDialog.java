@@ -5,6 +5,9 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -18,7 +21,7 @@ import java.util.Objects;
 
 import danb.speedrunbrowser.api.objects.Variable;
 
-public class FiltersDialog extends AlertDialog implements CompoundButton.OnCheckedChangeListener {
+public class FiltersDialog extends AlertDialog implements CompoundButton.OnCheckedChangeListener, View.OnClickListener {
 
     public List<Variable> mVariables;
     public Variable.VariableSelections mVariableSelections;
@@ -34,6 +37,9 @@ public class FiltersDialog extends AlertDialog implements CompoundButton.OnCheck
         super.onCreate(savedInstanceState);
 
         int paddingSize = getContext().getResources().getDimensionPixelSize(R.dimen.fab_margin);
+
+        LinearLayout layout = new LinearLayout(getContext());
+        layout.setOrientation(LinearLayout.VERTICAL);
 
         ScrollView scrollView = new ScrollView(getContext());
 
@@ -81,12 +87,34 @@ public class FiltersDialog extends AlertDialog implements CompoundButton.OnCheck
 
         scrollView.addView(filterLayout);
 
-        setContentView(scrollView);
+        LinearLayout.LayoutParams scrollViewLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        scrollViewLayoutParams.weight = 1;
+
+        scrollView.setLayoutParams(scrollViewLayoutParams);
+
+        layout.addView(scrollView);
+
+        Button okButton = new Button(getContext());
+        okButton.setText(android.R.string.ok);
+        LinearLayout.LayoutParams okButtonLayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        okButtonLayoutParams.weight = 0;
+        okButton.setLayoutParams(okButtonLayoutParams);
+
+        okButton.setOnClickListener(this);
+
+        layout.addView(okButton);
+
+        setContentView(layout);
     }
 
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         String[] spl = ((String)buttonView.getTag()).split("_");
         mVariableSelections.select(spl[0], spl[1], isChecked);
+    }
+
+    @Override
+    public void onClick(View v) {
+        dismiss();
     }
 }

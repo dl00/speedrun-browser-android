@@ -204,7 +204,7 @@ public class GameDetailFragment extends Fragment implements DialogInterface.OnDi
         if(mGame.categories.get(0).variables.isEmpty())
             mFiltersButton.setVisibility(View.GONE);
         else if(mVariableSelections == null)
-            mVariableSelections = new Variable.VariableSelections(mGame.categories.get(0).variables);
+            mVariableSelections = new Variable.VariableSelections();
 
         mCategoryTabStrip.setup(mGame, mVariableSelections, mLeaderboardPager, getChildFragmentManager());
 

@@ -37,33 +37,21 @@ public class Variable implements Serializable {
     public static class VariableSelections implements Serializable {
         private Map<String, Set<String>> selections;
 
-        public VariableSelections(List<Variable> variables) {
+        public VariableSelections() {
             selections = new HashMap<>();
-
-            for(Variable v : variables) {
-                HashSet<String> defaultSet = new HashSet<>();
-                if(v.deflt != null && !v.deflt.isEmpty()) {
-                    defaultSet.add(v.deflt);
-                }
-                else {
-                    // select all
-                    defaultSet.addAll(v.values.keySet());
-                }
-
-                selections.put(v.id, defaultSet);
-            }
         }
 
-        public boolean shouldShowRun(Run run) {
+        public boolean shouldShowRun(Run run, List<Variable> activeVariables) {
 
             if(run.values != null) {
-                for(String selection : selections.keySet()) {
-                    if(!run.values.containsKey(selection))
-                        //return false;
-                        // TODO: Be more graceful/correct about this
+                for(Variable selection : activeVariables) {
+                    if(!run.values.containsKey(selection.id))
+                        return false;
+
+                    if(!selections.containsKey(selection.id))
                         continue;
 
-                    if(!Objects.requireNonNull(selections.get(selection)).contains(run.values.get(selection)))
+                    if(!Objects.requireNonNull(selections.get(selection.id)).contains(run.values.get(selection.id)))
                         return false;
                 }
             }
@@ -71,14 +59,14 @@ public class Variable implements Serializable {
             return true;
         }
 
-        public List<LeaderboardRunEntry> filterLeaderboardRuns(Leaderboard lb) {
+        public List<LeaderboardRunEntry> filterLeaderboardRuns(Leaderboard lb, List<Variable> activeVariables) {
             List<LeaderboardRunEntry> shownRuns = new ArrayList<>();
 
             int lastPlace = 1;
             int curPlace = 0;
 
             for(LeaderboardRunEntry re : lb.runs) {
-                if(shouldShowRun(re.run)) {
+                if(shouldShowRun(re.run, activeVariables)) {
                     LeaderboardRunEntry newRunEntry = new LeaderboardRunEntry();
                     newRunEntry.place = re.place != curPlace ? (lastPlace = shownRuns.size() + 1) : lastPlace;
                     curPlace = re.place;
@@ -99,8 +87,12 @@ public class Variable implements Serializable {
             if(selections.containsKey(variableId)) {
                 if(isSelected)
                     Objects.requireNonNull(selections.get(variableId)).add(valueId);
-                else
+                else {
                     Objects.requireNonNull(selections.get(variableId)).remove(valueId);
+
+                    if(Objects.requireNonNull(selections.get(variableId)).isEmpty())
+                        selections.remove(variableId);
+                }
             }
             else if(isSelected) {
                 HashSet<String> newSet = new HashSet<>();
