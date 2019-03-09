@@ -33,6 +33,7 @@ import danb.speedrunbrowser.api.objects.Level;
 import danb.speedrunbrowser.api.objects.Run;
 import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.api.objects.Variable;
+import danb.speedrunbrowser.utils.ConnectionErrorConsumer;
 import danb.speedrunbrowser.utils.DownloadImageTask;
 import danb.speedrunbrowser.utils.Util;
 import danb.speedrunbrowser.views.ProgressSpinnerView;
@@ -117,7 +118,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
 
         return SpeedrunMiddlewareAPI.make().listLeaderboards(leaderboardId)
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(this);
+                .subscribe(this, new ConnectionErrorConsumer(getContext()));
     }
 
     @Override

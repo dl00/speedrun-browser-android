@@ -1,14 +1,15 @@
 <resources>
     <string name="app_name">Speedrun.com Browser</string>
-    <string name="title_game_detail">Game Detail</string>
+    <string name="title_game_detail">View Game Leaderboards</string>
     <string name="enter_game_name">Enter Game Name...</string>
     <string name="label_key_platforms">Platforms</string>
 
     <string name="error_missing_game">Error: Game not Found: %1$s</string>
     <string name="error_missing_leaderboard">Error: Leaderboard not Found: %1$s</string>
+    <string name="error_missing_run">Error: Run not Found: %1$s</string>
     <string name="button_view_rules">View Rules</string>
     <string name="msg_no_rules_content">No rules were provided for this category.</string>
-    <string name="title_run_detail">View Run</string>
+    <string name="title_run_detail">View Speedrun</string>
     <string name="desc_game_cover">Game Cover ARt</string>
     <string name="desc_game_background">Game Background Art</string>
     <string name="msg_cannot_play_video">Sorry, this video cannot currently be played inside the app.</string>
@@ -26,4 +27,5 @@
     <string name="empty_no_splits">No splits provided for this run.</string>
     <string name="empty_no_runs">No runs here (its free!)</string>
     <string name="msg_no_video">This run does not have a video.</string>
+    <string name="error_invalod_url">Invalid URL: %s</string>
 </resources>

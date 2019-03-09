@@ -1,11 +1,14 @@
 package danb.speedrunbrowser;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.appcompat.widget.Toolbar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.ActionBar;
+
+import android.util.Log;
 import android.view.MenuItem;
 
 /**
@@ -15,6 +18,7 @@ import android.view.MenuItem;
  * in a {@link GameListActivity}.
  */
 public class GameDetailActivity extends AppCompatActivity {
+    private static final String TAG = GameDetailActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,8 +44,23 @@ public class GameDetailActivity extends AppCompatActivity {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle args = new Bundle();
-            args.putString(GameDetailFragment.ARG_GAME_ID,
-                    getIntent().getStringExtra(GameDetailFragment.ARG_GAME_ID));
+
+            Intent intent = getIntent();
+
+            if(intent.hasExtra(GameDetailFragment.ARG_GAME_ID))
+                args.putString(GameDetailFragment.ARG_GAME_ID,
+                    intent.getStringExtra(GameDetailFragment.ARG_GAME_ID));
+            else if(intent.getData() != null) {
+                String id = intent.getData().getPathSegments().get(0);
+                Log.d(TAG, "Decoded game ID: " + id + ", from URL: " + intent.getData());
+                args.putString(GameDetailFragment.ARG_GAME_ID, id);
+            }
+            else {
+                Log.w(TAG, "Could not find game ID argument");
+            }
+
+
+
             GameDetailFragment fragment = new GameDetailFragment();
             fragment.setArguments(args);
             getSupportFragmentManager().beginTransaction()

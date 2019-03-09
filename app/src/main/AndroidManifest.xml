@@ -27,20 +27,11 @@
             android:name=".GameListActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data
-                    android:host="www.speedrun.com"
-                    android:scheme="https" />
             </intent-filter>
         </activity>
         <activity
@@ -48,6 +39,8 @@
             android:label="@string/title_game_detail"
             android:parentActivityName=".GameListActivity"
             android:theme="@style/AppTheme.NoActionBar">
+            <tools:validation testUrl="https://www.speedrun.com/botw" />
+
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="danb.speedrunbrowser.GameListActivity" />
@@ -60,8 +53,8 @@
 
                 <data
                     android:host="www.speedrun.com"
-                    android:pathPattern="/.*"
-                    android:scheme="https" />
+                    android:scheme="https"
+                    android:pathPattern="/.*" />
             </intent-filter>
         </activity>
         <activity
@@ -74,7 +67,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="danb.speedrunbrowser.GameDetailActivity" />
 
-            <intent-filter android:order="0">
+            <intent-filter android:order="2">
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
@@ -82,8 +75,8 @@
 
                 <data
                     android:host="www.speedrun.com"
-                    android:pathPattern="/.*/run/.*"
-                    android:scheme="https" />
+                    android:scheme="https"
+                    android:pathPattern="/.*/run/.*" />
             </intent-filter>
         </activity>
     </application>

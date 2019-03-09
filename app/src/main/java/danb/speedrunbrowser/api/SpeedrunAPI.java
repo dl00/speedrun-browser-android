@@ -7,7 +7,13 @@ import com.google.gson.GsonBuilder;
 import java.util.List;
 
 import danb.speedrunbrowser.api.objects.Game;
+import danb.speedrunbrowser.api.objects.GameAssets;
 import danb.speedrunbrowser.api.objects.Leaderboard;
+import danb.speedrunbrowser.api.objects.MediaLink;
+import danb.speedrunbrowser.api.objects.Platform;
+import danb.speedrunbrowser.api.objects.Region;
+import danb.speedrunbrowser.api.objects.Run;
+import danb.speedrunbrowser.api.objects.Variable;
 import danb.speedrunbrowser.utils.Util;
 import io.reactivex.Observable;
 import retrofit2.Retrofit;
@@ -23,6 +29,15 @@ public class SpeedrunAPI {
         GsonBuilder gson = new GsonBuilder();
 
         gson.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_DASHES);
+
+        gson.registerTypeAdapter(GameAssets.class, new GameAssets.JsonConverter());
+        gson.registerTypeAdapter(MediaLink.class, new MediaLink.JsonConverter());
+        gson.registerTypeAdapter(Platform.class, new Platform.JsonConverter());
+        gson.registerTypeAdapter(Region.class, new Region.JsonConverter());
+        gson.registerTypeAdapter(Run.class, new Run.JsonConverter());
+        gson.registerTypeAdapter(Variable.class, new Variable.JsonConverter());
+
+        gson.registerTypeAdapter(List.class, new NestedListDeserializer());
 
         // type adapters go here
 
@@ -45,19 +60,8 @@ public class SpeedrunAPI {
     }
 
     public interface Endpoints {
-
-        // Games
-        @GET("games?_bulk=yes&max=1000")
-        Observable<APIResponse<List<Game>>> bulkListGames(@Query("offset") int offset);
-
-        @GET("games")
-        Observable<APIResponse<List<Game>>> listGames(@Query("name") String name);
-
-        @GET("games/{id}?embed=categories.variables,levels.variables")
-        Observable<APIResponse<Game>> getGame(@Path("id") String gameId);
-
-        // Leaderboards
-        @GET("leaderboards/{game}/category/{category}")
-        Observable<APIResponse<Leaderboard>> getLeaderboard(@Path("game") String gameId, @Path("category") String categoryId);
+        // Runs
+        @GET("runs/{id}?embed=game,game.platforms,category,level,players")
+        Observable<APIResponse<Run>> getRun(@Path("id") String runId);
     }
 }

@@ -9,7 +9,13 @@
     android:background="@color/colorPrimary"
     tools:context=".RunDetailActivity">
 
+    <danb.speedrunbrowser.views.ProgressSpinnerView
+        android:id="@+id/spinner"
+        android:layout_width="match_parent"
+        android:layout_height="200dp" />
+
     <LinearLayout android:id="@+id/gameInfoHead"
+        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
@@ -173,6 +179,7 @@
 
     <LinearLayout
         android:id="@+id/runFooter"
+        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"

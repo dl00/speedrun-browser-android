@@ -14,6 +14,7 @@ import danb.speedrunbrowser.api.objects.Level;
 import danb.speedrunbrowser.api.objects.MediaLink;
 import danb.speedrunbrowser.api.objects.Platform;
 import danb.speedrunbrowser.api.objects.Region;
+import danb.speedrunbrowser.api.objects.Run;
 import danb.speedrunbrowser.api.objects.Variable;
 import danb.speedrunbrowser.utils.Util;
 import io.reactivex.Observable;
@@ -36,6 +37,7 @@ public class SpeedrunMiddlewareAPI {
         gson.registerTypeAdapter(MediaLink.class, new MediaLink.JsonConverter());
         gson.registerTypeAdapter(Platform.class, new Platform.JsonConverter());
         gson.registerTypeAdapter(Region.class, new Region.JsonConverter());
+        gson.registerTypeAdapter(Run.class, new Run.JsonConverter());
         gson.registerTypeAdapter(Variable.class, new Variable.JsonConverter());
 
         gson.registerTypeAdapter(List.class, new NestedListDeserializer());

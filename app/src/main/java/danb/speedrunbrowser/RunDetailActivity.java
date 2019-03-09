@@ -28,8 +28,12 @@ import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerSupportFragment;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
+import danb.speedrunbrowser.api.SpeedrunAPI;
+import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.Level;
@@ -39,6 +43,10 @@ import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.utils.Constants;
 import danb.speedrunbrowser.utils.DownloadImageTask;
 import danb.speedrunbrowser.utils.Util;
+import danb.speedrunbrowser.views.ProgressSpinnerView;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
 
 public class RunDetailActivity extends AppCompatActivity implements YouTubePlayer.OnInitializedListener {
     private static final String TAG = RunDetailActivity.class.getSimpleName();
@@ -52,9 +60,12 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
 
     LinearLayout mRootView;
 
+    Disposable mDataRequest;
+
     /**
      * Game detail views
      */
+    ProgressSpinnerView mSpinner;
     LinearLayout mGameInfoPane;
     LinearLayout mRunFooterPane;
     TextView mGameName;
@@ -93,6 +104,7 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
         setContentView(R.layout.activity_run_detail);
 
         mRootView = findViewById(R.id.contentLayout);
+        mSpinner = findViewById(R.id.spinner);
         mGameInfoPane = findViewById(R.id.gameInfoHead);
         mRunFooterPane = findViewById(R.id.runFooter);
         mGameName = findViewById(R.id.txtGameName);
@@ -106,116 +118,76 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
         mRunSplits = findViewById(R.id.runSplitsList);
         mRunEmptySplits = findViewById(R.id.emptySplits);
 
-        Bundle args = getIntent().getExtras();
-
-        mGame = (Game)args.getSerializable(EXTRA_GAME);
-        mCategory = (Category)args.getSerializable(EXTRA_CATEGORY);
-        mLevel = (Level)args.getSerializable(EXTRA_LEVEL);
-        mRun = (Run)args.getSerializable(EXTRA_RUN);
-
-        if(savedInstanceState != null) {
+        if (savedInstanceState != null) {
             mStartPlaybackTime = savedInstanceState.getLong(SAVED_PLAYBACK_TIME);
         }
 
-        if(mRun.videos != null && mRun.videos.links != null && !mRun.videos.links.isEmpty()) {
+        if(getIntent().getData() != null) {
+            Intent appLinkIntent = getIntent();
+            Uri appLinkData = appLinkIntent.getData();
 
-            mShownLink = mRun.videos.links.get(0);
+            List<String> segments = Objects.requireNonNull(appLinkData).getPathSegments();
 
-            // find the first available youtube video we can recognize
-            for(final MediaLink m : mRun.videos.links) {
+            if(segments.size() >= 3) {
+                final String runId = segments.get(2);
 
-                Log.d(TAG, "Trying to find YT/Twitch video: " + m.uri);
+                Log.d(TAG, "Read runId from URI: " + runId);
+                mDataRequest = SpeedrunAPI.make().getRun(runId)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new Consumer<SpeedrunAPI.APIResponse<Run>>() {
+                            @Override
+                            public void accept(SpeedrunAPI.APIResponse<Run> gameAPIResponse) throws Exception {
 
-                if(m.isYoutube()) {
-                    Log.d(TAG, "Load YouTube video: " + m.uri);
+                                if (gameAPIResponse.data == null) {
+                                    // game was not able to be found for some reason?
+                                    Util.showErrorToast(RunDetailActivity.this, getString(R.string.error_missing_game, runId));
+                                    return;
+                                }
 
-                    YouTubePlayerSupportFragment ytFrag = new YouTubePlayerSupportFragment();
+                                mRun = gameAPIResponse.data;
+                                mGame = mRun.game;
+                                mCategory = mRun.category;
+                                mLevel = mRun.level;
 
-                    getSupportFragmentManager().beginTransaction()
-                            .replace(R.id.videoFrame, ytFrag)
-                            .commit();
+                                onDataReady();
+                            }
+                        }, new Consumer<Throwable>() {
+                            @Override
+                            public void accept(Throwable throwable) throws Exception {
 
-                    ytFrag.initialize(Constants.YOUTUBE_DEVELOPER_KEY, this);
+                                Log.e(TAG, "Could not download game data:", throwable);
 
-                    mShownLink = m;
-                    break;
-                }
-                else if(m.isTwitch()) {
-                    String videoId = m.getTwitchVideoID();
-
-                    Log.d(TAG, "Show Twitch video ID: " + videoId);
-
-                    // start a web view and load custom content
-                    mTwitchWebView = new WebView(this);
-
-                    // configure the webview to support playing video
-                    mTwitchWebView.getSettings().setAppCacheMaxSize(10 * 1024 * 1024); // 50MB
-                    mTwitchWebView.getSettings().setJavaScriptEnabled(true);
-                    mTwitchWebView.getSettings().setMediaPlaybackRequiresUserGesture(false);
-
-                    float scaleFactor = 1.0f;
-                    String pageContent;
-                    try {
-                        pageContent = String.format(Locale.US, Util.readToString(getClass().getResourceAsStream(Constants.TWITCH_EMBED_SNIPPET_FILE)), scaleFactor, videoId);
-                    }
-                    catch(IOException e) {
-
-                        Util.showErrorToast(this, getString(R.string.error_twitch));
-
-                        finish();
-                        return;
-                    }
-
-                    Log.d(TAG, pageContent);
-
-                    mTwitchWebView.getSettings().setUseWideViewPort(true);
-                    mTwitchWebView.getSettings().setLoadWithOverviewMode(true);
-
-                    mTwitchWebView.loadDataWithBaseURL("https://twitch.tv", pageContent,
-                            "text/html",
-                            null,
-                            null);
-
-                    mVideoFrame.addView(mTwitchWebView);
-                }
-                else {
-
-                    LinearLayout ll = new LinearLayout(this);
-                    ll.setOrientation(LinearLayout.VERTICAL);
-                    ll.setGravity(Gravity.CENTER);
-                    ll.setBackground(new ColorDrawable(getResources().getColor(R.color.colorPrimaryDark)));
-
-                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                    lp.gravity = Gravity.CENTER;
-                    lp.topMargin = getResources().getDimensionPixelSize(R.dimen.half_fab_margin);
-
-                    TextView tv = new TextView(this);
-                    tv.setLayoutParams(lp);
-                    tv.setText(R.string.msg_cannot_play_video);
-
-                    ll.addView(tv);
-
-                    Button btn = new Button(this);
-                    btn.setLayoutParams(lp);
-                    btn.setText(R.string.btn_open_browser);
-                    btn.setBackground(new ColorDrawable(getResources().getColor(R.color.colorPrimary)));
-                    btn.setPadding(getResources().getDimensionPixelSize(R.dimen.half_fab_margin), 0, getResources().getDimensionPixelSize(R.dimen.half_fab_margin), 0);
-                    btn.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(m.uri.toString()));
-                            startActivity(intent);
-                        }
-                    });
-
-                    ll.addView(btn);
-
-                    mVideoFrame.addView(ll);
-
-                }
+                                Util.showErrorToast(RunDetailActivity.this, getString(R.string.error_missing_run, runId));
+                            }
+                        });
+            }
+            else {
+                Util.showErrorToast(this, getString(R.string.error_invalod_url, appLinkData));
             }
         }
         else {
+            Bundle args = getIntent().getExtras();
+
+            mGame = (Game) args.getSerializable(EXTRA_GAME);
+            mCategory = (Category) args.getSerializable(EXTRA_CATEGORY);
+            mLevel = (Level) args.getSerializable(EXTRA_LEVEL);
+            mRun = (Run) args.getSerializable(EXTRA_RUN);
+
+            onDataReady();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        if(mDataRequest != null && !mDataRequest.isDisposed())
+            mDataRequest.dispose();
+    }
+
+    public void onDataReady() {
+
+        if (mRun.videos == null || mRun.videos.links == null || mRun.videos.links.isEmpty()) {
             LinearLayout ll = new LinearLayout(this);
             ll.setOrientation(LinearLayout.VERTICAL);
             ll.setGravity(Gravity.CENTER);
@@ -232,16 +204,132 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
             ll.addView(tv);
 
             mVideoFrame.addView(ll);
+
+            setViewData();
+
+            return;
         }
 
-        onConfigurationChanged(getResources().getConfiguration());
+        mShownLink = mRun.videos.links.get(0);
+
+        // find the first available youtube video we can recognize
+        for (final MediaLink m : mRun.videos.links) {
+
+            Log.d(TAG, "Trying to find YT/Twitch video: " + m.uri);
+
+            if (m.isYoutube()) {
+                setVideoFrameYT(m);
+                break;
+            } else if (m.isTwitch()) {
+                setVideoFrameTwitch(m);
+            } else {
+                setVideoFrameOther(m);
+            }
+        }
 
         setViewData();
+
+        mSpinner.setVisibility(View.GONE);
+        onConfigurationChanged(getResources().getConfiguration());
+    }
+
+    public void setVideoFrameYT(MediaLink m) {
+        Log.d(TAG, "Load YouTube video: " + m.uri);
+
+        YouTubePlayerSupportFragment ytFrag = new YouTubePlayerSupportFragment();
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.videoFrame, ytFrag)
+                .commit();
+
+        ytFrag.initialize(Constants.YOUTUBE_DEVELOPER_KEY, this);
+
+        mVideoFrame.removeAllViews();
+        mShownLink = m;
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    public void setVideoFrameTwitch(MediaLink m) {
+        String videoId = m.getTwitchVideoID();
+
+        Log.d(TAG, "Show Twitch video ID: " + videoId);
+
+        // start a web view and load custom content
+        mTwitchWebView = new WebView(this);
+
+        // configure the webview to support playing video
+        mTwitchWebView.getSettings().setAppCacheMaxSize(10 * 1024 * 1024); // 50MB
+        mTwitchWebView.getSettings().setJavaScriptEnabled(true);
+        mTwitchWebView.getSettings().setMediaPlaybackRequiresUserGesture(false);
+
+        float scaleFactor = 1.0f;
+        String pageContent;
+        try {
+            pageContent = String.format(Locale.US, Util.readToString(getClass().getResourceAsStream(Constants.TWITCH_EMBED_SNIPPET_FILE)), scaleFactor, videoId);
+        } catch (IOException e) {
+
+            Util.showErrorToast(this, getString(R.string.error_twitch));
+
+            finish();
+            return;
+        }
+
+        Log.d(TAG, pageContent);
+
+        mTwitchWebView.getSettings().setUseWideViewPort(true);
+        mTwitchWebView.getSettings().setLoadWithOverviewMode(true);
+
+        mTwitchWebView.loadDataWithBaseURL("https://twitch.tv", pageContent,
+                "text/html",
+                null,
+                null);
+
+        mVideoFrame.removeAllViews();
+        mVideoFrame.addView(mTwitchWebView);
+        mShownLink = m;
+    }
+
+    public void setVideoFrameOther(final MediaLink m) {
+        LinearLayout ll = new LinearLayout(this);
+        ll.setOrientation(LinearLayout.VERTICAL);
+        ll.setGravity(Gravity.CENTER);
+        ll.setBackground(new ColorDrawable(getResources().getColor(R.color.colorPrimaryDark)));
+
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.gravity = Gravity.CENTER;
+        lp.topMargin = getResources().getDimensionPixelSize(R.dimen.half_fab_margin);
+
+        TextView tv = new TextView(this);
+        tv.setLayoutParams(lp);
+        tv.setText(R.string.msg_cannot_play_video);
+
+        ll.addView(tv);
+
+        Button btn = new Button(this);
+        btn.setLayoutParams(lp);
+        btn.setText(R.string.btn_open_browser);
+        btn.setBackground(new ColorDrawable(getResources().getColor(R.color.colorPrimary)));
+        btn.setPadding(getResources().getDimensionPixelSize(R.dimen.half_fab_margin), 0, getResources().getDimensionPixelSize(R.dimen.half_fab_margin), 0);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(m.uri.toString()));
+                startActivity(intent);
+            }
+        });
+
+        ll.addView(btn);
+
+        mVideoFrame.removeAllViews();
+        mVideoFrame.addView(ll);
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+
+        if(mSpinner.getVisibility() == View.VISIBLE)
+            return;
 
         if(newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
