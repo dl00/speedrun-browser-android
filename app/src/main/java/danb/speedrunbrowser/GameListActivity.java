@@ -25,9 +25,13 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.security.ProviderInstaller;
+
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.utils.DownloadImageTask;
 import danb.speedrunbrowser.api.objects.Game;
+import danb.speedrunbrowser.utils.PreCachingGridLayoutManager;
 import danb.speedrunbrowser.utils.Util;
 import danb.speedrunbrowser.views.ProgressSpinnerView;
 import io.reactivex.ObservableSource;
@@ -79,6 +83,14 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_list);
+
+        // might need to update certificates/connection modes on older android versions
+        // TODO: this is the synchronous call, may block user interation when installing provider. Consider using async
+        try {
+            ProviderInstaller.installIfNeeded(getApplicationContext());
+        } catch(Exception e) {
+            Log.w(TAG, "Could not install latest certificates using Google Play Services");
+        }
 
         mGameFilter = findViewById(R.id.editGameFilter);
         mSpinner = findViewById(R.id.spinner);
@@ -142,7 +154,7 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher {
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
 
         // set number of columns based on screen width
-        recyclerView.setLayoutManager(new GridLayoutManager(this,
+        recyclerView.setLayoutManager(new PreCachingGridLayoutManager(this,
                 Math.max((int)Math.ceil(
                         findViewById(android.R.id.content).getMeasuredWidth() / (512.0f)
                 ), 3)));

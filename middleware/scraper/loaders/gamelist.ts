@@ -59,6 +59,7 @@ export async function pull_game(runid: string, options: any) {
         // write the game to db
         speedrun_api.normalize_game(game);
         await scraper.storedb!.hset(speedrun_db.locs.games, options.id, JSON.stringify(game));
+        await scraper.storedb!.hset(speedrun_db.locs.game_abbrs, game.abbreviation, game.id);
 
         // unfortunately we have to load the categories for a game in a separate request...
         await scraper.push_call({

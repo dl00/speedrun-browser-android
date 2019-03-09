@@ -10,7 +10,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
 
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -23,26 +27,29 @@ public class Util {
     }
 
     public static OkHttpClient getHTTPClient() {
-        final OkHttpClient okHttpClient = new OkHttpClient.Builder()
 
-                // lower timeout--the middleware should respond pretty quickly
-                .readTimeout(15, TimeUnit.SECONDS)
-                .connectTimeout(3, TimeUnit.SECONDS)
+        try {
 
-                // add a request header to identify app request
-                .addInterceptor(new Interceptor() {
-                    @Override
-                    public Response intercept(Chain chain) throws IOException {
-                        Request newReq = chain.request().newBuilder()
-                                .addHeader("User-Agent", "SpeedrunAndroidMiddlewareClient (report@danb.email)")
-                                .build();
+            return new OkHttpClient.Builder()
+                    // lower timeout--the middleware should respond pretty quickly
+                    .readTimeout(15, TimeUnit.SECONDS)
+                    .connectTimeout(3, TimeUnit.SECONDS)
+                    // add a request header to identify app request
+                    .addInterceptor(new Interceptor() {
+                        @Override
+                        public Response intercept(Chain chain) throws IOException {
+                            Request newReq = chain.request().newBuilder()
+                                    .addHeader("User-Agent", "SpeedrunAndroidMiddlewareClient (report@danb.email)")
+                                    .build();
 
-                        return chain.proceed(newReq);
-                    }
-                })
-                .build();
-
-        return okHttpClient;
+                            return chain.proceed(newReq);
+                        }
+                    })
+                    .build();
+        }
+        catch(Exception e) {
+            return null;
+        }
     }
 
     // reads all the contents of a file to string

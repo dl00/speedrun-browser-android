@@ -11,6 +11,7 @@ import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.GameAssets;
 import danb.speedrunbrowser.api.objects.Leaderboard;
 import danb.speedrunbrowser.api.objects.Level;
+import danb.speedrunbrowser.api.objects.MediaLink;
 import danb.speedrunbrowser.api.objects.Platform;
 import danb.speedrunbrowser.api.objects.Region;
 import danb.speedrunbrowser.api.objects.Variable;
@@ -32,6 +33,7 @@ public class SpeedrunMiddlewareAPI {
         gson.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_DASHES);
 
         gson.registerTypeAdapter(GameAssets.class, new GameAssets.JsonConverter());
+        gson.registerTypeAdapter(MediaLink.class, new MediaLink.JsonConverter());
         gson.registerTypeAdapter(Platform.class, new Platform.JsonConverter());
         gson.registerTypeAdapter(Region.class, new Region.JsonConverter());
         gson.registerTypeAdapter(Variable.class, new Variable.JsonConverter());

@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorPrimary"
     android:orientation="vertical">
 
 
@@ -11,6 +12,8 @@
         android:id="@+id/editGameFilter"
         android:layout_width="match_parent"
         android:layout_height="50dp"
+        android:paddingStart="@dimen/half_fab_margin"
+        android:paddingEnd="@dimen/half_fab_margin"
         android:ems="10"
         android:hint="@string/enter_game_name"
         android:textColor="@android:color/white"

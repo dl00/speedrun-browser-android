@@ -74,12 +74,14 @@ public class Variable implements Serializable {
         public List<LeaderboardRunEntry> filterLeaderboardRuns(Leaderboard lb) {
             List<LeaderboardRunEntry> shownRuns = new ArrayList<>();
 
-            int lastPlace = 0;
+            int lastPlace = 1;
+            int curPlace = 0;
 
             for(LeaderboardRunEntry re : lb.runs) {
                 if(shouldShowRun(re.run)) {
                     LeaderboardRunEntry newRunEntry = new LeaderboardRunEntry();
-                    newRunEntry.place = re.place != lastPlace ? ++lastPlace : lastPlace;
+                    newRunEntry.place = re.place != curPlace ? (lastPlace = shownRuns.size() + 1) : lastPlace;
+                    curPlace = re.place;
                     newRunEntry.run = re.run;
 
                     shownRuns.add(newRunEntry);

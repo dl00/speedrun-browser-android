@@ -64,7 +64,10 @@ router.get('/:ids', async (req, res) => {
         return api_response.error(res, api_response.err.TOO_MANY_ITEMS());
     }
 
-    let games_raw = await api.storedb!.hmget(speedrun_db.locs.games, ...ids);
+    // remap abbrevations as necessary
+    let abbr_remapped = await api.storedb!.hmget(speedrun_db.locs.game_abbrs, ...ids);
+    abbr_remapped = _.zipWith(abbr_remapped, ids, (abbr, id) => abbr || id);
+    let games_raw = await api.storedb!.hmget(speedrun_db.locs.games, ...abbr_remapped);
 
     let games = <any[]>_.chain(games_raw)
         .reject(_.isNil)

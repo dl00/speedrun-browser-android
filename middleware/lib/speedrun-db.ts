@@ -7,6 +7,7 @@ import * as speedrun_api from './speedrun-api';
 /// key values/prefixes for which datasets can be found
 export const locs: {[index: string]: string} = {
     game_rank: 'game_rank',
+    game_abbrs: 'game_abbrs',
     games: 'games',
     runs: 'runs',
     categories: 'categories',
