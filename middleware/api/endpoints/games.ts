@@ -67,7 +67,7 @@ router.get('/:ids', async (req, res) => {
     // remap abbrevations as necessary
     let abbr_remapped = await api.storedb!.hmget(speedrun_db.locs.game_abbrs, ...ids);
     ids = _.zipWith(abbr_remapped, ids, (abbr, id) => abbr || id);
-    let games_raw = await api.storedb!.hmget(speedrun_db.locs.games, ...abbr_remapped);
+    let games_raw = await api.storedb!.hmget(speedrun_db.locs.games, ...ids);
 
     let games = <any[]>_.chain(games_raw)
         .reject(_.isNil)
@@ -76,8 +76,8 @@ router.get('/:ids', async (req, res) => {
 
     
     if(games.length === 1) {
-        let category_raw = await api.storedb!.hget(speedrun_db.locs.categories, ids[0]);
-        let level_raw = await api.storedb!.hget(speedrun_db.locs.levels, ids[0]);
+        let category_raw = await api.storedb!.hget(speedrun_db.locs.categories, games[0].id);
+        let level_raw = await api.storedb!.hget(speedrun_db.locs.levels, games[0].id);
 
         if(category_raw)
             games[0].categories = JSON.parse(category_raw);
