@@ -14,6 +14,7 @@ import android.view.Display;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -31,22 +32,31 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Observable;
+import java.util.concurrent.TimeUnit;
 
 import danb.speedrunbrowser.api.SpeedrunAPI;
-import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.Level;
 import danb.speedrunbrowser.api.objects.MediaLink;
 import danb.speedrunbrowser.api.objects.Run;
 import danb.speedrunbrowser.api.objects.User;
+import danb.speedrunbrowser.utils.AppDatabase;
 import danb.speedrunbrowser.utils.Constants;
 import danb.speedrunbrowser.utils.DownloadImageTask;
+import danb.speedrunbrowser.utils.NoopConsumer;
 import danb.speedrunbrowser.utils.Util;
 import danb.speedrunbrowser.views.ProgressSpinnerView;
+import io.reactivex.Scheduler;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
+import io.reactivex.internal.operators.flowable.FlowableInterval;
+import io.reactivex.schedulers.Schedulers;
 
 public class RunDetailActivity extends AppCompatActivity implements YouTubePlayer.OnInitializedListener {
     private static final String TAG = RunDetailActivity.class.getSimpleName();
@@ -58,9 +68,13 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
 
     public static final String SAVED_PLAYBACK_TIME = "playback_time";
 
+    /// how often to save the current watch position/time to the watch history db
+    private static final int BACKGROUND_SEEK_SAVE_START = 15;
+    private static final int BACKGROUND_SEEK_SAVE_PERIOD = 30;
+
     LinearLayout mRootView;
 
-    Disposable mDataRequest;
+    CompositeDisposable mDisposables = new CompositeDisposable();
 
     /**
      * Game detail views
@@ -88,6 +102,8 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
     YouTubePlayer mYoutubePlayer;
     WebView mTwitchWebView;
 
+    AppDatabase mDB;
+
     Game mGame;
     Category mCategory;
     Level mLevel;
@@ -95,13 +111,15 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
 
     MediaLink mShownLink;
 
-    long mStartPlaybackTime = 0;
+    long mSeekPos = 0;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_run_detail);
+
+        mDB = AppDatabase.make(this);
 
         mRootView = findViewById(R.id.contentLayout);
         mSpinner = findViewById(R.id.spinner);
@@ -118,10 +136,6 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
         mRunSplits = findViewById(R.id.runSplitsList);
         mRunEmptySplits = findViewById(R.id.emptySplits);
 
-        if (savedInstanceState != null) {
-            mStartPlaybackTime = savedInstanceState.getLong(SAVED_PLAYBACK_TIME);
-        }
-
         if(getIntent().getData() != null) {
             Intent appLinkIntent = getIntent();
             Uri appLinkData = appLinkIntent.getData();
@@ -132,7 +146,7 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
                 final String runId = segments.get(2);
 
                 Log.d(TAG, "Read runId from URI: " + runId);
-                mDataRequest = SpeedrunAPI.make().getRun(runId)
+                mDisposables.add(SpeedrunAPI.make().getRun(runId)
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(new Consumer<SpeedrunAPI.APIResponse<Run>>() {
                             @Override
@@ -159,7 +173,7 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
 
                                 Util.showErrorToast(RunDetailActivity.this, getString(R.string.error_missing_run, runId));
                             }
-                        });
+                        }));
             }
             else {
                 Util.showErrorToast(this, getString(R.string.error_invalod_url, appLinkData));
@@ -178,14 +192,45 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onPause() {
+        super.onPause();
+    }
 
-        if(mDataRequest != null && !mDataRequest.isDisposed())
-            mDataRequest.dispose();
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mDisposables.dispose();
+        mDB.close();
     }
 
     public void onDataReady() {
+
+        setViewData();
+        mSpinner.setVisibility(View.GONE);
+
+        onConfigurationChanged(getResources().getConfiguration());
+
+        // check watch history to set video start time
+        mDisposables.add(mDB.watchHistoryDao().get(mRun.id)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<AppDatabase.WatchHistoryEntry>() {
+                    @Override
+                    public void accept(AppDatabase.WatchHistoryEntry historyEntry) throws Exception {
+                        Log.d(TAG, "Got seek record for run: " + mRun.id);
+                        mSeekPos = historyEntry.seekPos;
+                        onVideoReady();
+                    }
+                }, new NoopConsumer<Throwable>(), new Action() {
+                    @Override
+                    public void run() throws Exception {
+                        System.out.println("No seek record for run: " + mRun.id);
+                        onVideoReady();
+                    }
+                }));
+    }
+
+    public void onVideoReady() {
 
         if (mRun.videos == null || mRun.videos.links == null || mRun.videos.links.isEmpty()) {
             LinearLayout ll = new LinearLayout(this);
@@ -205,8 +250,6 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
 
             mVideoFrame.addView(ll);
 
-            setViewData();
-
             return;
         }
 
@@ -224,13 +267,25 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
                 setVideoFrameTwitch(m);
             } else {
                 setVideoFrameOther(m);
+                writeWatchToDb(0);
             }
         }
 
-        setViewData();
-
-        mSpinner.setVisibility(View.GONE);
-        onConfigurationChanged(getResources().getConfiguration());
+        if(mShownLink.isYoutube() || mShownLink.isTwitch()) {
+            // set an interval to record the watch time
+            mDisposables.add(new FlowableInterval(BACKGROUND_SEEK_SAVE_START, BACKGROUND_SEEK_SAVE_PERIOD, TimeUnit.SECONDS, Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Consumer<Long>() {
+                        @Override
+                        public void accept(Long aLong) throws Exception {
+                            recordStartPlaybackTime();
+                        }
+                    }));
+        }
+        else {
+            // just record the fact that the video page was accessed
+            writeWatchToDb(0);
+        }
     }
 
     public void setVideoFrameYT(MediaLink m) {
@@ -265,7 +320,7 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
         float scaleFactor = 1.0f;
         String pageContent;
         try {
-            pageContent = String.format(Locale.US, Util.readToString(getClass().getResourceAsStream(Constants.TWITCH_EMBED_SNIPPET_FILE)), scaleFactor, videoId);
+            pageContent = String.format(Locale.US, Util.readToString(getClass().getResourceAsStream(Constants.TWITCH_EMBED_SNIPPET_FILE)), scaleFactor, videoId, mSeekPos);
         } catch (IOException e) {
 
             Util.showErrorToast(this, getString(R.string.error_twitch));
@@ -384,7 +439,7 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
 
             mYoutubePlayer = youTubePlayer;
             mYoutubePlayer.setShowFullscreenButton(false);
-            mYoutubePlayer.loadVideo(mShownLink.getYoutubeVideoID(), (int)mStartPlaybackTime);
+            mYoutubePlayer.loadVideo(mShownLink.getYoutubeVideoID(), (int) mSeekPos);
         }
     }
 
@@ -398,6 +453,36 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
         if(youTubeInitializationResult.isUserRecoverableError()) {
             youTubeInitializationResult.getErrorDialog(this, 0).show();
         }
+    }
+
+    private void recordStartPlaybackTime() {
+        if(mYoutubePlayer != null) {
+            writeWatchToDb(mYoutubePlayer.getCurrentTimeMillis());
+        }
+        else if(mTwitchWebView != null) {
+            mTwitchWebView.evaluateJavascript("player.getCurrentTime()", new ValueCallback<String>() {
+                @Override
+                public void onReceiveValue(String value) {
+                    try {
+                        long seekPos = (long)Math.floor(Float.parseFloat(value));
+
+                        writeWatchToDb(seekPos);
+                    }
+                    catch(NumberFormatException e) {
+                        // ignored
+                    }
+                }
+            });
+        }
+    }
+
+    private void writeWatchToDb(long seekTime) {
+
+        Log.d(TAG, "Record seek time: " + seekTime);
+
+        mDisposables.add(mDB.watchHistoryDao().record(new AppDatabase.WatchHistoryEntry(mRun.id, seekTime))
+                .subscribeOn(Schedulers.io())
+                .subscribe());
     }
 
     private void setViewData() {

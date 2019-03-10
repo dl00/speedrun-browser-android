@@ -15,11 +15,21 @@
     player.setVolume(0.5);
     player.setMuted(false);
 
+    var doSeek = true;
+    player.addEventListener(Twitch.Player.PLAYING, function() {
+        if(doSeek) {
+            player.seek(%3$d);
+            doSeek = false;
+        }
+    });
+
     window.onresize = function(event) {
         var iframe = document.getElementsByTagName("iframe")[0];
         iframe.width = window.innerWidth;
         iframe.height = window.innerHeight;
     }
+
+    window.player = player;
     </script>
 </body>
 </html>
