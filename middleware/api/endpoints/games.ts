@@ -75,7 +75,7 @@ router.get('/:ids', async (req, res) => {
         .value();
 
     
-    if(ids.length === 1) {
+    if(games.length === 1) {
         let category_raw = await api.storedb!.hget(speedrun_db.locs.categories, ids[0]);
         let level_raw = await api.storedb!.hget(speedrun_db.locs.levels, ids[0]);
 
