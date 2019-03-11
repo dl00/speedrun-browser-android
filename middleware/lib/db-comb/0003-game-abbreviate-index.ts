@@ -2,6 +2,7 @@ import * as ioredis from 'ioredis';
 
 import * as speedrun_db from '../speedrun-db';
 import { Game } from '../speedrun-api';
+import { Config } from '../config';
 
 // Operations:
 // 1. update scoring system for games to be based on available speedrunning data:
@@ -9,7 +10,7 @@ import { Game } from '../speedrun-api';
 // * using the time data was pulled, find number of speedruns updated in the last 3 months. Divide by number of leaderboards.
 // * games with shorter overall leaderboards will be at a disadvantage.
 
-export default async function(db: ioredis.Redis, _indexer: any) {
+export default async function(db: ioredis.Redis, _config: Config) {
 
     let cursor = 0;
     let done_count = 0;

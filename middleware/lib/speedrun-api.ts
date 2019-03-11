@@ -191,14 +191,14 @@ export interface CategoryPersonalBests {
 
     levels?: {[id: string]: LevelPersonalBests}
 
-    run?: LeaderboardRunEntry
+    run?: { place: number, run_id: string }
 }
 
 export interface LevelPersonalBests {
     id: string
     name: string
     
-    run: LeaderboardRunEntry
+    run: { place: number, run_id: string }
 }
 
 export interface User extends BaseMiddleware {

@@ -14,6 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:targetApi="n">
+        <activity android:name=".PlayerDetailActivity"></activity>
         <activity
             android:name=".AboutActivity"
             android:label="@string/title_activity_about"
@@ -27,7 +28,6 @@
             android:name=".GameListActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -53,8 +53,8 @@
 
                 <data
                     android:host="www.speedrun.com"
-                    android:scheme="https"
-                    android:pathPattern="/.*" />
+                    android:pathPattern="/.*"
+                    android:scheme="https" />
             </intent-filter>
         </activity>
         <activity
@@ -75,8 +75,8 @@
 
                 <data
                     android:host="www.speedrun.com"
-                    android:scheme="https"
-                    android:pathPattern="/.*/run/.*" />
+                    android:pathPattern="/.*/run/.*"
+                    android:scheme="https" />
             </intent-filter>
         </activity>
     </application>

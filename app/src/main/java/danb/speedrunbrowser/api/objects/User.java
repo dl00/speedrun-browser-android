@@ -34,6 +34,8 @@ public class User implements Serializable {
     public MediaLink twitter;
     public MediaLink speedrunslive;
 
+    public HashMap<String, UserGameBests> bests;
+
     public String getName() {
         if(names != null) {
             return names.get("international");
@@ -60,5 +62,34 @@ public class User implements Serializable {
 
             tv.getPaint().setShader(nameStyle.getTextShader(bounds.width(), false));
         }
+    }
+
+    public boolean isGuest() {
+        return name != null;
+    }
+
+    public class UserGameBests {
+        public String id;
+        public HashMap<String, String> names;
+        public GameAssets assets;
+
+        public HashMap<String, UserCategoryBest> categories;
+    }
+
+    public class UserCategoryBest {
+        public String id;
+        public String name;
+        public String type;
+
+        public HashMap<String, UserLevelBest> levels;
+
+        public LeaderboardRunEntry run;
+    }
+
+    public class UserLevelBest {
+        public String id;
+        public String name;
+
+        public LeaderboardRunEntry run;
     }
 }

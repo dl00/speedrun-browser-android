@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableRow xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView
+        android:id="@+id/txtRunCategory"
+        android:textAlignment="center" />
+    <LinearLayout
+        android:orientation="horizontal"
+        android:gravity="center">
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <LinearLayout>
+        <TextView android:id="@+id/txtRunTime"
+            />
+        <TextView android:id="@+id/txtRunDate"
+            />
+    </LinearLayout>
+</TableRow>

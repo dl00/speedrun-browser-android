@@ -3,7 +3,9 @@ import * as path from 'path';
 
 import * as _ from 'lodash';
 
-import { RedisOptions } from 'ioredis';
+import * as ioredis from 'ioredis';
+
+let Indexer: any = require('@13013/indexer');
 
 export interface Config {
     listen: {
@@ -23,7 +25,7 @@ export interface Config {
     }
 
     /// Configure the DB connection
-    redis: RedisOptions
+    redis: ioredis.RedisOptions
 
     scraper: {
         /// How fast should the API scan for changes?
@@ -33,7 +35,7 @@ export interface Config {
         maxRetries: number
 
         /// Override configuration options for the redis connection (for example, different DB index)
-        redis: RedisOptions
+        redis: ioredis.RedisOptions
 
         /// Number of seconds before a running task is considered stalled/lost
         runningTaskTimeout: number
@@ -50,7 +52,7 @@ export interface Config {
         }
 
         /// Override configuration options for this redis connection
-        redis: RedisOptions
+        redis: ioredis.RedisOptions
     }
 }
 
@@ -123,4 +125,16 @@ export function load_config() {
     }
 
     return config;
+}
+
+export function load_store_redis(config: Config) {
+    return new ioredis(config.redis);
+}
+
+export function load_scraper_redis(config: Config) {
+    return new ioredis(_.defaults(config.scraper.redis, config.redis));
+}
+
+export function load_indexer(config: Config, name: string) {
+    return new Indexer(name, config.indexer.config, _.defaults(config.indexer.redis, config.redis));
 }

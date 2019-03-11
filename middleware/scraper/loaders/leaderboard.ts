@@ -21,42 +21,26 @@ export async function pull_leaderboard(_runid: string, options: any) {
         speedrun_api.normalize_leaderboard(lb);
         await scraper.storedb!.hset(speedrun_db.locs.leaderboards, options.category_id + (options.level_id ? '_' + options.level_id : ''), JSON.stringify(_.omit(lb, 'players')));
 
-        if(_.keys(lb.players).length > 0) {
-            res = await scraper.storedb!.multi()
-                .hget(speedrun_db.locs.games, options.game_id)
-                .hget(speedrun_db.locs.categories, options.game_id)
-                .hget(speedrun_db.locs.levels, options.game_id)
-                .hmget(speedrun_db.locs.players, ..._.keys(lb.players))
-                .exec();
-            
-            let game: speedrun_api.Game = JSON.parse(res[0][1]);
-            let category: speedrun_api.Category = _.find(JSON.parse(res[1][1]), v => v.id == options.category_id);
-            let level: speedrun_api.Level = _.find(JSON.parse(res[2][1]), v => v.id == options.level_id);
+        await speedrun_db.apply_leaderboard_bests(scraper.storedb!, lb);
 
-            // store/update player information
-            // TODO: not sure why, but typescript errors with wrong value here?
-            let players: {[id: string]: speedrun_api.User} = <any>_.chain(<(string|null)[]>res[1][3])
-                .remove(_.isNil)
-                .map(JSON.parse)
-                .keyBy('id')
-                .value();
+        // add players to the autocomplete
+        for(let player_id in lb.players) {
+            let player: speedrun_api.User = (<any>lb.players)[player_id];
+            let indexes: { text: string, score: number, namespace?: string }[] = [];
+            for(let name in player.names) {
 
-            // set known leaderboard information to player
-            _.merge(players, lb.players);
+                if(!player.names[name])
+                    continue;
 
-            for(let i = 0;i < lb.runs.length;i++) {
-                for(let player of lb.runs[i].run.players) {
-                    speedrun_db.apply_personal_best(players[player.id], game, category, level, lb, i);
-                }
+                let idx: any = { text: player.names[name].toLowerCase(), score: 1 };
+
+                if(name != 'international')
+                    idx.namespace = name;
+                
+                indexes.push(idx);
             }
-            
-            let flat_players: string[] = <any>_.chain(players)
-                .mapValues(JSON.stringify)
-                .toPairs()
-                .flatten()
-                .value();
 
-            await scraper.storedb!.hmset(speedrun_db.locs.players, ...<[string, string]>flat_players);
+            await scraper.indexer_players.add(player_id, indexes);
         }
     }
     catch(err) {

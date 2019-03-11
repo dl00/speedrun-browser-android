@@ -141,19 +141,24 @@ export async function apply_personal_best(player: speedrun_api.User, game: speed
         categories: {}
     };
 
+    let best_run: { place: number, run_id: string } = {
+        place: lb.runs[index].place,
+        run_id: lb.runs[index].run.id
+    };
+
     if(level) {
         let level_run: speedrun_api.LevelPersonalBests = {
             id: level.id,
             name: level.name,
 
-            run: lb.runs[index]
+            run: best_run
         };
 
         category_run.levels = {};
         category_run.levels[level.id] = level_run;
     }
     else {
-        category_run.run = lb.runs[index];
+        category_run.run = best_run;
     }
 
     game_run.categories[category.id] = category_run;
@@ -163,4 +168,64 @@ export async function apply_personal_best(player: speedrun_api.User, game: speed
     new_bests[game.id] = game_run;
 
     return _.merge(player, {bests: new_bests});
+}
+
+export async function apply_leaderboard_bests(db: ioredis.Redis, lb: speedrun_api.Leaderboard) {
+
+    let player_ids = _.chain(lb.runs)
+        .map(v => _.map(v.run.players, 'id'))
+        .flatten()
+        .reject(_.isNil)
+        .uniq()
+        .value();
+
+    if(!player_ids.length)
+        return; // nothing to do
+
+    let game_id = (<any>lb.game).id || lb.game;
+    let category_id = (<any>lb.category).id || lb.category;
+    let level_id = lb.level;
+
+    let res = await db.multi()
+        .hget(locs.games, game_id)
+        .hget(locs.categories, game_id)
+        .hget(locs.levels, game_id)
+        .hmget(locs.players, ...player_ids)
+        .exec();
+    
+    let game: speedrun_api.Game = JSON.parse(res[0][1]);
+    let category: speedrun_api.Category = _.find(JSON.parse(res[1][1]), v => v.id == category_id);
+    let level: speedrun_api.Level = _.find(JSON.parse(res[2][1]), v => v.id == level_id);
+
+    if(!category)
+        return;
+
+    // store/update player information
+    // TODO: not sure why, but typescript errors with wrong value here?
+    let players: {[id: string]: speedrun_api.User} = <any>_.chain(<(string|null)[]>res[3][1])
+        .reject(_.isNil)
+        .map(JSON.parse)
+        .keyBy('id')
+        .value();
+
+    // set known leaderboard information to player
+    _.merge(players, lb.players);
+
+    if(!_.keys(players).length) {
+        return; // still nothing
+    }
+
+    for(let i = 0;i < lb.runs.length;i++) {
+        for(let id in players) {
+            apply_personal_best(players[id], game, category, level, lb, i);
+        }
+    }
+    
+    let flat_players: string[] = <any>_.chain(players)
+        .mapValues(JSON.stringify)
+        .toPairs()
+        .flatten()
+        .value();
+
+    await db.hmset(locs.players, ...<[string, string]>flat_players);
 }

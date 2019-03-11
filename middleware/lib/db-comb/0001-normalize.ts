@@ -4,6 +4,7 @@ import * as ioredis from 'ioredis';
 
 import * as speedrun_api from '../speedrun-api';
 import * as speedrun_db from '../speedrun-db';
+import { Config } from '../config';
 
 function do_normalize(type: string, d: any) {
     switch(type) {
@@ -22,10 +23,10 @@ function do_normalize(type: string, d: any) {
 // * normalize every object stored in the db
 // * use special normalize functions as necessary
 
-export default async function(db: ioredis.Redis, _indexer: any) {
+export default async function(db: ioredis.Redis, _config: Config) {
     for(let type in speedrun_db.locs) {
 
-        if(type == 'game_rank')
+        if(type == 'game_rank' || type == 'game_abbrs')
             continue;
 
         let cursor = 0;

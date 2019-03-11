@@ -6,15 +6,19 @@ import * as _ from 'lodash';
 import * as api from '../';
 import * as api_response from '../response';
 import * as speedrun_db from '../../lib/speedrun-db';
-
-let Indexer = require('@13013/indexer');
+import { load_indexer, load_config } from '../../lib/config';
 
 type IndexerResponse = {[type: string]: any[]};
 
 const SCAN_INDEXES: {[type: string]: any} = {
     games: {
-        indexer: new Indexer('games', api.config!.indexer.config, _.defaults(api.config!.indexer.redis, api.config!.redis)),
+        indexer: load_indexer(load_config(), 'games'),
         loc: 'games'
+    },
+
+    players: {
+        indexer: load_indexer(load_config(), 'players'),
+        loc: 'players'
     }
 };
 

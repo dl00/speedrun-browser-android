@@ -1,11 +1,9 @@
 import * as _ from 'lodash';
 import * as moment from 'moment';
 
-let Indexer: any = require('@13013/indexer');
-
 import * as ioredis from 'ioredis';
 
-import { Config } from '../lib/config';
+import { Config, load_store_redis, load_scraper_redis, load_indexer } from '../lib/config';
 import { generate_unique_id } from '../lib/util';
 import * as redis from '../lib/redis';
 
@@ -13,7 +11,8 @@ import * as DB from './db';
 
 export let rdb: ioredis.Redis|null = null;
 export let storedb: ioredis.Redis|null = null;
-export let indexer: any|null = null;
+export let indexer_games: any|null = null;
+export let indexer_players: any|null = null;
 export let config: any = null;
 
 interface Task {
@@ -210,10 +209,11 @@ async function wipe_running_tasks() {
 
 export async function connect(conf: Config) {
     config = conf;
-    rdb = new ioredis(_.defaults(config.scraper.redis, config.redis));
-    storedb = new ioredis(config.redis);
+    rdb = load_scraper_redis(config);
+    storedb = load_store_redis(config);
 
-    indexer = new Indexer('games', config.indexer.config, _.defaults(config.indexer.redis, config.redis));
+    indexer_games = load_indexer(config, 'games');
+    indexer_players = load_indexer(config, 'players');
 
     redis.defineCommands(rdb);
 }

@@ -173,7 +173,7 @@ export async function postprocess_game(_runid: string, options: any) {
         if(!raw_game)
             throw 'game does not exist in db!';
 
-        await speedrun_db.rescore_game(scraper.storedb!, scraper.indexer, JSON.parse(raw_game));
+        await speedrun_db.rescore_game(scraper.storedb!, scraper.indexer_games, JSON.parse(raw_game));
     } catch(err) {
         // this should not happen unless there is some internal problem with the previous steps
         console.error('loader/gamelist: could not postprocess game:', options, err);
