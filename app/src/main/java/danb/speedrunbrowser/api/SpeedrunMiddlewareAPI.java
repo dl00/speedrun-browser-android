@@ -15,6 +15,7 @@ import danb.speedrunbrowser.api.objects.MediaLink;
 import danb.speedrunbrowser.api.objects.Platform;
 import danb.speedrunbrowser.api.objects.Region;
 import danb.speedrunbrowser.api.objects.Run;
+import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.api.objects.Variable;
 import danb.speedrunbrowser.utils.Util;
 import io.reactivex.Observable;
@@ -69,6 +70,7 @@ public class SpeedrunMiddlewareAPI {
 
     public static class APISearchData {
         public List<Game> games;
+        public List<User> players;
     }
 
     public static class APISearchResponse {

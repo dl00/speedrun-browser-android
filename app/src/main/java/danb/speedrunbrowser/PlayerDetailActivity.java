@@ -34,6 +34,9 @@ import java.util.List;
 public class PlayerDetailActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = PlayerDetailActivity.class.getSimpleName();
 
+    public static final String ARG_PLAYER = "player";
+    public static final String ARG_PLAYER_ID = "player_id";
+
     private static final String AVATAR_IMG_LOCATION = "https://www.speedrun.com/themes/user/%s/image.png";
 
     private User mPlayer;
@@ -65,6 +68,12 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
         mIconTwitter.setOnClickListener(this);
         mIconYoutube.setOnClickListener(this);
         mIconZSR.setOnClickListener(this);
+
+        Bundle args = getIntent().getExtras();
+
+        if(args != null && (mPlayer = (User)args.getSerializable(ARG_PLAYER)) != null) {
+            setViewData();
+        }
     }
 
     private void setViewData() {
@@ -102,7 +111,7 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
             ((TextView)gameLayout.findViewById(R.id.txtGameName)).setText(gameBests.names.get("international"));
 
             if(gameBests.assets.coverLarge != null)
-                new DownloadImageTask(this, gameLayout.findViewById(R.id.imgCover)).clear(true).execute(gameBests.assets.coverLarge.uri);
+                new DownloadImageTask(this, gameLayout.findViewById(R.id.imgGameCover)).clear(true).execute(gameBests.assets.coverLarge.uri);
 
             List<PersonalBestRunRow> runsToAdd = new ArrayList<>();
 
@@ -120,10 +129,13 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
                 }
             }
 
+            System.out.println(runsToAdd);
+
             // sort these runs by date, descending
             Collections.sort(runsToAdd, new Comparator<PersonalBestRunRow>() {
                 @Override
                 public int compare(PersonalBestRunRow o1, PersonalBestRunRow o2) {
+                    System.out.println(o1.re.run + ", " + o2.re.run);
                     return -o1.re.run.date.compareTo(o2.re.run.date);
                 }
             });

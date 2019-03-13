@@ -22,13 +22,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.EditText;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.security.ProviderInstaller;
 
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
+import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.utils.DownloadImageTask;
 import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.utils.PreCachingGridLayoutManager;
@@ -65,6 +68,7 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher {
      * The list of games we are presenting on the list to the user
      */
     private List<Game> mGames;
+    private List<User> mPlayers;
 
     /**
      * A reference to the renderer for the game list items
@@ -74,8 +78,13 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher {
 
     private EditText mGameFilter;
 
+    private TextView mGameResultsLabel;
+    private TextView mPlayerResultsLabel;
+
     private ProgressSpinnerView mSpinner;
     private RecyclerView mGameListView;
+    private HorizontalScrollView mPlayerHsv;
+    private LinearLayout mPlayerListView;
 
     private PublishSubject<CharSequence> mGameFilterSearchSubject;
 
@@ -95,6 +104,11 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher {
         mGameFilter = findViewById(R.id.editGameFilter);
         mSpinner = findViewById(R.id.spinner);
         mGameListView = findViewById(R.id.listGame);
+        mPlayerHsv = findViewById(R.id.hsvPlayers);
+        mPlayerListView = findViewById(R.id.layoutPlayerSearchResults);
+        mGameResultsLabel = findViewById(R.id.txtGamesSearch);
+        mPlayerResultsLabel = findViewById(R.id.txtPlayersSearch);
+
         mGameFilter.addTextChangedListener(this);
 
         mGameFilterSearchSubject = PublishSubject.create();
@@ -179,15 +193,21 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher {
                     @Override
                     public void accept(Object res) throws Exception {
                         List<Game> games = new ArrayList<>(0);
+                        List<User> players = new ArrayList<>(0);
                         if (res instanceof SpeedrunMiddlewareAPI.APISearchResponse) {
                             games = ((SpeedrunMiddlewareAPI.APISearchResponse) res).search.games;
+                            players = ((SpeedrunMiddlewareAPI.APISearchResponse) res).search.players;
+
                         } else if (res instanceof SpeedrunMiddlewareAPI.APIResponse) {
                             games = ((SpeedrunMiddlewareAPI.APIResponse<Game>) res).data;
                         }
 
                         mGames = games;
+                        mPlayers = players;
                         mGameListView.scrollToPosition(0);
-                        mAdapter.notifyDataSetChanged();
+
+                        setPlayerSearchResults();
+                        setGameSearchResults();
                     }
                 }, new Consumer<Throwable>() {
                     @Override
@@ -199,6 +219,51 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher {
                         finish();
                     }
                 });
+    }
+
+    private void setPlayerSearchResults() {
+        mPlayerListView.removeAllViews();
+
+        if(mPlayers != null && !mPlayers.isEmpty()) {
+            for(final User player : mPlayers) {
+                TextView tv = new TextView(this);
+                tv.setTextSize(18);
+                player.applyTextView(tv);
+
+                int padding = getResources().getDimensionPixelSize(R.dimen.half_fab_margin);
+                tv.setPadding(padding, padding, padding, padding);
+
+                tv.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(GameListActivity.this, PlayerDetailActivity.class);
+                        intent.putExtra(PlayerDetailActivity.ARG_PLAYER, player);
+
+                        startActivity(intent);
+                    }
+                });
+
+                mPlayerListView.addView(tv);
+            }
+
+            mPlayerHsv.setVisibility(View.VISIBLE);
+            mPlayerHsv.setHorizontalScrollBarEnabled(false);
+            mPlayerHsv.scrollTo(0, 0);
+            mPlayerResultsLabel.setVisibility(View.VISIBLE);
+        }
+        else {
+            mPlayerHsv.setVisibility(View.GONE);
+            mPlayerResultsLabel.setVisibility(View.GONE);
+        }
+    }
+
+    private void setGameSearchResults() {
+        mAdapter.notifyDataSetChanged();
+
+        if(mPlayers != null && !mPlayers.isEmpty() && mGames != null && !mGames.isEmpty())
+            mGameResultsLabel.setVisibility(View.VISIBLE);
+        else
+            mGameResultsLabel.setVisibility(View.GONE);
     }
 
     public void showAbout() {

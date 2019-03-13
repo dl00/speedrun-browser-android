@@ -17,15 +17,29 @@ export async function pull_leaderboard(_runid: string, options: any) {
 
         let lb: speedrun_api.Leaderboard = res.data;
 
-        // write the leaderboard to db (excluding the players)
-        speedrun_api.normalize_leaderboard(lb);
-        await scraper.storedb!.hset(speedrun_db.locs.leaderboards, options.category_id + (options.level_id ? '_' + options.level_id : ''), JSON.stringify(_.omit(lb, 'players')));
 
-        await speedrun_db.apply_leaderboard_bests(scraper.storedb!, lb);
+        let updated_players = {};
+        if(lb.players != null && _.isArray(lb.players.data)) {
+            updated_players = _.keyBy(lb.players.data);
+        }
 
-        // add players to the autocomplete
-        for(let player_id in lb.players) {
-            let player: speedrun_api.User = (<any>lb.players)[player_id];
+        // record runs
+        let set_run_vals = <any>_.chain(lb.runs)
+            .keyBy('run.id')
+            .mapValues(JSON.stringify)
+            .toPairs()
+            .flatten()
+            .value();
+        
+        if(set_run_vals.length)
+            await scraper.storedb!.hmset(speedrun_db.locs.runs, ...set_run_vals);
+        
+        // record players
+        // this applies players as well as set their personal best
+        await speedrun_db.apply_leaderboard_bests(scraper.storedb!, lb, updated_players);
+
+        for(let player_id in updated_players) {
+            let player: speedrun_api.User = (<any>updated_players)[player_id];
             let indexes: { text: string, score: number, namespace?: string }[] = [];
             for(let name in player.names) {
 
@@ -42,6 +56,10 @@ export async function pull_leaderboard(_runid: string, options: any) {
 
             await scraper.indexer_players.add(player_id, indexes);
         }
+
+        // write the leaderboard to db (excluding the players)
+        speedrun_api.normalize_leaderboard(lb);
+        await scraper.storedb!.hset(speedrun_db.locs.leaderboards, options.category_id + (options.level_id ? '_' + options.level_id : ''), JSON.stringify(_.omit(lb, 'players')));
     }
     catch(err) {
         console.error('loader/leaderboard: could not retrieve and process leaderboard/players:', options, err.statusCode || err);

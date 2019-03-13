@@ -47,6 +47,7 @@ router.get('/:ids', async (req, res) => {
             leaderboard.players = <any>_.chain(players_raw)
                 .reject(_.isNil)
                 .map(JSON.parse)
+                .map(v => _.pick(v, 'id', 'names', 'weblink', 'name-style', 'role'))
                 .keyBy('id')
                 .value();
         }

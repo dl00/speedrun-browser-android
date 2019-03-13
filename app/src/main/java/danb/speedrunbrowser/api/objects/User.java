@@ -68,7 +68,7 @@ public class User implements Serializable {
         return name != null;
     }
 
-    public class UserGameBests {
+    public class UserGameBests implements Serializable {
         public String id;
         public HashMap<String, String> names;
         public GameAssets assets;
@@ -76,7 +76,7 @@ public class User implements Serializable {
         public HashMap<String, UserCategoryBest> categories;
     }
 
-    public class UserCategoryBest {
+    public class UserCategoryBest implements Serializable {
         public String id;
         public String name;
         public String type;
@@ -86,7 +86,7 @@ public class User implements Serializable {
         public LeaderboardRunEntry run;
     }
 
-    public class UserLevelBest {
+    public class UserLevelBest implements Serializable {
         public String id;
         public String name;
 

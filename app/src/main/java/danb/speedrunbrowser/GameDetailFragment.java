@@ -236,7 +236,7 @@ public class GameDetailFragment extends Fragment implements DialogInterface.OnDi
             Context ctx;
             if((ctx = getContext()) != null) {
                 if(mGame.assets.coverLarge != null)
-
+                    new DownloadImageTask(ctx, mCover).execute(mGame.assets.coverLarge.uri);
                 if(mGame.assets.background != null && mBackground != null)
                     new DownloadImageTask(ctx, mBackground).execute(mGame.assets.background.uri);
             }

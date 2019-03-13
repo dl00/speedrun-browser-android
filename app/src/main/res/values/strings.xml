@@ -28,4 +28,6 @@
     <string name="empty_no_runs">No runs here (its free!)</string>
     <string name="msg_no_video">This run does not have a video.</string>
     <string name="error_invalod_url">Invalid URL: %s</string>
+    <string name="label_game_search">Games</string>
+    <string name="label_player_search">Players</string>
 </resources>

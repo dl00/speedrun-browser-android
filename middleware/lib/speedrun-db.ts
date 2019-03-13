@@ -57,12 +57,7 @@ export function generate_leaderboard_score(leaderboard: speedrun_api.Leaderboard
     let score = 0;
 
     for(let run of leaderboard.runs) {
-
-        // we only care about verified runs
-        if(run.run.status.status !== 'verified')
-            continue;
-
-        let d = moment(run.run.submitted);
+        let d = moment(run.run.date);
 
         if(d.isAfter(edge_cutoff))
             score += 4;
@@ -137,13 +132,13 @@ export async function apply_personal_best(player: speedrun_api.User, game: speed
     let game_run: speedrun_api.GamePersonalBests = {
         id: game.id,
         names: game.names,
-        assets: game.assets,
+        assets: speedrun_api.game_assets_to_bulk(game.assets),
         categories: {}
     };
 
-    let best_run: { place: number, run_id: string } = {
+    let best_run: { place: number, run: speedrun_api.BulkRun } = {
         place: lb.runs[index].place,
-        run_id: lb.runs[index].run.id
+        run: lb.runs[index].run
     };
 
     if(level) {
@@ -170,7 +165,7 @@ export async function apply_personal_best(player: speedrun_api.User, game: speed
     return _.merge(player, {bests: new_bests});
 }
 
-export async function apply_leaderboard_bests(db: ioredis.Redis, lb: speedrun_api.Leaderboard) {
+export async function apply_leaderboard_bests(db: ioredis.Redis, lb: speedrun_api.Leaderboard, updated_players: {[id: string]: speedrun_api.User}) {
 
     let player_ids = _.chain(lb.runs)
         .map(v => _.map(v.run.players, 'id'))
@@ -209,7 +204,7 @@ export async function apply_leaderboard_bests(db: ioredis.Redis, lb: speedrun_ap
         .value();
 
     // set known leaderboard information to player
-    _.merge(players, lb.players);
+    _.merge(players, updated_players);
 
     if(!_.keys(players).length) {
         return; // still nothing

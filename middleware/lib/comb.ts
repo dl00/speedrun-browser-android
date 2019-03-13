@@ -29,7 +29,9 @@ export async function run() {
 
     let update_modules = fs.readdirSync(path.join(__dirname, 'db-comb'));
     for(let update_module of update_modules) {
-        run_single(update_module);
+        let spl = update_module.split('.');
+        if(spl[1] == 'js' || spl[1] == 'ts')
+            await run_single(spl[0]);
     }
 
     console.log('[COMB] Stop');

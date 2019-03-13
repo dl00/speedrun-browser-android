@@ -55,6 +55,18 @@ export interface GameAssets {
     foreground: Asset
 }
 
+export interface BulkGameAssets {
+    'cover-large': Asset
+    'trophy-1st': Asset
+    'trophy-2nd': Asset
+    'trophy-3rd': Asset
+    'trophy-4th': Asset
+}
+
+export function game_assets_to_bulk(game_assets: GameAssets): BulkGameAssets {
+    return _.pick(game_assets, 'cover-large', 'trophy-1st', 'trophy-2nd', 'trophy-3rd', 'trophy-4th');
+}
+
 export interface Game extends BulkGame, BaseMiddleware {
     released: number
     'release-date': string
@@ -66,6 +78,11 @@ export interface Game extends BulkGame, BaseMiddleware {
     publishers: string[]|Publisher[]
     created: string
     assets: GameAssets
+}
+
+/// TODO: Use decorators
+export function game_to_bulk(game: Game): BulkGame {
+    return _.pick(game, 'id', 'names', 'abbreviation', 'weblink');
 }
 
 export function normalize_game(d: Game) {
@@ -121,7 +138,7 @@ export interface Level extends BaseMiddleware {
 
 export interface LeaderboardRunEntry {
     place: number
-    run: Run 
+    run: BulkRun 
 }
 
 export interface Leaderboard extends BaseMiddleware {
@@ -142,22 +159,36 @@ export function normalize_leaderboard(d: Leaderboard) {
 
     normalize(d);
 
-    if(d.players && _.isArray((<any>d.players).data)) {
-        d.players = _.keyBy((<any>d.players).data, 'id');
+    if(d.runs) {
+        d.runs.map((v) => {
+            v.run = run_to_bulk(<Run>v.run);
+
+            return v;
+        });
     }
 
-    for(let player in d.players) {
-        normalize((<any>d.players)[player]);
-    }
+    delete d.players;
 }
 
-export interface Run extends BaseMiddleware {
+export interface RunTimes {
+    primary: string
+    realtime: string
+    realtimeNoloads: string
+    ingame: string
+}
+
+export interface BulkRun {
     id: string
+    date: string
+    players: BulkUser[]
+    times: RunTimes
+}
+
+export interface Run extends BulkRun, BaseMiddleware {
     weblink: string
     game: Game|string
     level: string
     category: Category|string
-    date: string
     submitted: string
     videos: {
         text: string
@@ -165,8 +196,6 @@ export interface Run extends BaseMiddleware {
             uri: string
         }[]
     },
-
-    players: User[]
 
     comment: string
     status: {
@@ -176,10 +205,19 @@ export interface Run extends BaseMiddleware {
     }
 }
 
+/// TODO: Use decorators
+export function run_to_bulk(run: Run): BulkRun {
+    let newr = _.pick(run, 'id', 'date', 'players', 'times');
+
+    newr.players = newr.players.map(v => user_to_bulk(<User>v));
+
+    return newr;
+}
+
 export interface GamePersonalBests {
     id: string
     names: Names
-    assets: GameAssets
+    assets: BulkGameAssets
 
     categories: {[id: string]: CategoryPersonalBests}
 }
@@ -191,20 +229,19 @@ export interface CategoryPersonalBests {
 
     levels?: {[id: string]: LevelPersonalBests}
 
-    run?: { place: number, run_id: string }
+    run?: LeaderboardRunEntry
 }
 
 export interface LevelPersonalBests {
     id: string
     name: string
     
-    run: { place: number, run_id: string }
+    run: LeaderboardRunEntry
 }
 
-export interface User extends BaseMiddleware {
-    id: string
-    names: Names
-    weblink: string
+export interface BulkUser {
+    id: string,
+    names: Names,
     'name-style': {
         style: 'solid'|''
         color: {
@@ -212,10 +249,18 @@ export interface User extends BaseMiddleware {
             dark: string
         }
     }
+}
+
+export interface User extends BulkUser, BaseMiddleware {
+    weblink: string
     role: 'banned'|'user'|'trusted'|'moderator'|'admin'|'programmer'
     signup?: string
 
     bests: {[id: string]: GamePersonalBests}
+}
+
+export function user_to_bulk(user: User) {
+    return _.pick(user, 'id', 'names', 'name-style');
 }
 
 export interface Platform {

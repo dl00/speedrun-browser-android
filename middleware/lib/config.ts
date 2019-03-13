@@ -105,7 +105,7 @@ const CONFIG_LOCATIONS: (string|null)[] = [
 
 export var config = DEFAULT_CONFIG;
 
-export function load_config() {
+export var load_config = _.memoize(() => {
     let config = DEFAULT_CONFIG;
 
     for(let loc of CONFIG_LOCATIONS) {
@@ -125,7 +125,7 @@ export function load_config() {
     }
 
     return config;
-}
+});
 
 export function load_store_redis(config: Config) {
     return new ioredis(config.redis);

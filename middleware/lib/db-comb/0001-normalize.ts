@@ -42,7 +42,18 @@ export default async function(db: ioredis.Redis, _config: Config) {
 
             // cursor returns both keys and values. Iterate by values.
             for(let i = 1;i < res[1].length;i += 2) {
-                let d = JSON.parse(res[1][i]);
+                let d;
+                try {
+                    d = JSON.parse(res[1][i]);
+                }
+                catch(err) {
+                    let bad_id = res[1][i - 1];
+                    console.log(`Failed to parse json (${bad_id}): ${err}`);
+                    // remove this bad json from db
+                    await db.hdel(speedrun_db.locs[type], bad_id);
+
+                    continue;
+                }
 
                 let orig = _.cloneDeep(d);
 

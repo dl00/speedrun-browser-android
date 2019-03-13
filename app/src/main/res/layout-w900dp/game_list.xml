@@ -43,6 +43,42 @@
             tools:context=".GameListActivity"
             tools:listitem="@layout/game_grid_content" />
 
+        <TextView
+            android:id="@+id/txtPlayersSearch"
+            android:text="@string/label_player_search"
+            android:textSize="20sp"
+            android:layout_margin="@dimen/fab_margin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <HorizontalScrollView
+            android:id="@+id/hsvPlayers"
+            android:visibility="gone"
+            android:paddingTop="@dimen/fab_margin"
+            android:paddingBottom="@dimen/fab_margin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:id="@+id/layoutPlayerSearchResults"
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+
+
+            </LinearLayout>
+
+        </HorizontalScrollView>
+
+        <TextView
+            android:id="@+id/txtGamesSearch"
+            android:text="@string/label_game_search"
+            android:textSize="20sp"
+            android:layout_margin="@dimen/fab_margin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
         <androidx.recyclerview.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
             xmlns:tools="http://schemas.android.com/tools"
             android:id="@+id/listGame"

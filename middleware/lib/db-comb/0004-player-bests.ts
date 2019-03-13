@@ -17,20 +17,15 @@ export default async function(db: ioredis.Redis, _config: Config) {
     do {
         console.log('Player Bests Leaderboard Scan:', done_count, '/', total_count);
 
-        let res = await db.hscan(speedrun_db.locs.leaderboards, cursor);
+        let res = await db.hscan(speedrun_db.locs.leaderboards, cursor, 'COUNT', 400);
 
         cursor = res[0];
-
-        let abbr_mapping: string[] = [];
 
         // cursor returns both keys and values. Iterate by values.
         for(let i = 1;i < res[1].length;i += 2) {
             let leaderboard: Leaderboard = JSON.parse(res[1][i]);
-            await speedrun_db.apply_leaderboard_bests(db, leaderboard);
+            await speedrun_db.apply_leaderboard_bests(db, leaderboard, {});
         }
-
-        if(abbr_mapping.length)
-            await db.hmset(speedrun_db.locs.game_abbrs, ...abbr_mapping);
 
         done_count += res[1].length / 2;
 
