@@ -45,7 +45,8 @@ public class Run implements Serializable {
             JsonObject obj = json.getAsJsonObject();
 
             v.id = obj.get("id").getAsString();
-            v.weblink = obj.get("weblink").getAsString();
+            if(obj.has("weblink"))
+                v.weblink = obj.get("weblink").getAsString();
             v.videos = context.deserialize(obj.get("videos"), RunVideos.class);
             if(obj.has("comment") && obj.get("comment").isJsonPrimitive())
                 v.comment = obj.get("comment").getAsString();
@@ -67,30 +68,34 @@ public class Run implements Serializable {
             v.times = context.deserialize(obj.get("times"), RunTimes.class);
             v.splits = context.deserialize(obj.get("splits"), MediaLink.class);
 
-            if(obj.get("game").isJsonObject()) {
-                JsonObject gObj = obj.getAsJsonObject("game");
-                if(gObj.has("id"))
-                    v.game = context.deserialize(gObj, Game.class);
-                else if(gObj.has("data"))
-                    v.game = context.deserialize(gObj.get("data"), Game.class);
-            }
-            else {
-                Game g = new Game();
-                g.id = obj.get("game").getAsString();
-                v.game = g;
+            if(obj.has("game")) {
+                if(obj.get("game").isJsonObject()) {
+                    JsonObject gObj = obj.getAsJsonObject("game");
+                    if(gObj.has("id"))
+                        v.game = context.deserialize(gObj, Game.class);
+                    else if(gObj.has("data"))
+                        v.game = context.deserialize(gObj.get("data"), Game.class);
+                }
+                else {
+                    Game g = new Game();
+                    g.id = obj.get("game").getAsString();
+                    v.game = g;
+                }
             }
 
-            if(obj.get("category").isJsonObject()) {
-                JsonObject gObj = obj.getAsJsonObject("category");
-                if(gObj.has("id"))
-                    v.category = context.deserialize(gObj, Category.class);
-                else if(gObj.has("data"))
-                    v.category = context.deserialize(gObj.get("data"), Category.class);
-            }
-            else {
-                Category c = new Category();
-                c.id = obj.get("category").getAsString();
-                v.category = c;
+            if(obj.has("category")) {
+                if(obj.get("category").isJsonObject()) {
+                    JsonObject gObj = obj.getAsJsonObject("category");
+                    if(gObj.has("id"))
+                        v.category = context.deserialize(gObj, Category.class);
+                    else if(gObj.has("data"))
+                        v.category = context.deserialize(gObj.get("data"), Category.class);
+                }
+                else {
+                    Category c = new Category();
+                    c.id = obj.get("category").getAsString();
+                    v.category = c;
+                }
             }
 
             if(obj.get("level") != null) {

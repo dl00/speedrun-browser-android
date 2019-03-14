@@ -46,7 +46,7 @@ public class MediaLink implements Serializable {
             }
         }
         else {
-            return f;
+            return f.split("\\?")[0];
         }
     }
 

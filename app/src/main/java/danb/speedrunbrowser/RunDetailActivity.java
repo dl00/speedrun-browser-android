@@ -66,6 +66,8 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
     public static final String EXTRA_LEVEL = "level";
     public static final String EXTRA_RUN = "run";
 
+    public static final String EXTRA_RUN_ID = "runId";
+
     public static final String SAVED_PLAYBACK_TIME = "playback_time";
 
     /// how often to save the current watch position/time to the watch history db
@@ -136,7 +138,12 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
         mRunSplits = findViewById(R.id.runSplitsList);
         mRunEmptySplits = findViewById(R.id.emptySplits);
 
-        if(getIntent().getData() != null) {
+        Bundle args = getIntent().getExtras();
+
+        if(args.getString(EXTRA_RUN_ID) != null) {
+            loadRun(args.getString(EXTRA_RUN_ID));
+        }
+        else if(getIntent().getData() != null) {
             Intent appLinkIntent = getIntent();
             Uri appLinkData = appLinkIntent.getData();
 
@@ -145,42 +152,13 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
             if(segments.size() >= 3) {
                 final String runId = segments.get(2);
 
-                Log.d(TAG, "Read runId from URI: " + runId);
-                mDisposables.add(SpeedrunAPI.make().getRun(runId)
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(new Consumer<SpeedrunAPI.APIResponse<Run>>() {
-                            @Override
-                            public void accept(SpeedrunAPI.APIResponse<Run> gameAPIResponse) throws Exception {
-
-                                if (gameAPIResponse.data == null) {
-                                    // game was not able to be found for some reason?
-                                    Util.showErrorToast(RunDetailActivity.this, getString(R.string.error_missing_game, runId));
-                                    return;
-                                }
-
-                                mRun = gameAPIResponse.data;
-                                mGame = mRun.game;
-                                mCategory = mRun.category;
-                                mLevel = mRun.level;
-
-                                onDataReady();
-                            }
-                        }, new Consumer<Throwable>() {
-                            @Override
-                            public void accept(Throwable throwable) throws Exception {
-
-                                Log.e(TAG, "Could not download game data:", throwable);
-
-                                Util.showErrorToast(RunDetailActivity.this, getString(R.string.error_missing_run, runId));
-                            }
-                        }));
+                loadRun(runId);
             }
             else {
                 Util.showErrorToast(this, getString(R.string.error_invalod_url, appLinkData));
             }
         }
         else {
-            Bundle args = getIntent().getExtras();
 
             mGame = (Game) args.getSerializable(EXTRA_GAME);
             mCategory = (Category) args.getSerializable(EXTRA_CATEGORY);
@@ -189,6 +167,38 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
 
             onDataReady();
         }
+    }
+
+    private void loadRun(final String runId) {
+        Log.d(TAG, "Download runId: " + runId);
+        mDisposables.add(SpeedrunAPI.make().getRun(runId)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(new Consumer<SpeedrunAPI.APIResponse<Run>>() {
+                @Override
+                public void accept(SpeedrunAPI.APIResponse<Run> gameAPIResponse) throws Exception {
+
+                    if (gameAPIResponse.data == null) {
+                        // game was not able to be found for some reason?
+                        Util.showErrorToast(RunDetailActivity.this, getString(R.string.error_missing_game, runId));
+                        return;
+                    }
+
+                    mRun = gameAPIResponse.data;
+                    mGame = mRun.game;
+                    mCategory = mRun.category;
+                    mLevel = mRun.level;
+
+                    onDataReady();
+                }
+            }, new Consumer<Throwable>() {
+                @Override
+                public void accept(Throwable throwable) throws Exception {
+
+                    Log.e(TAG, "Could not download game data:", throwable);
+
+                    Util.showErrorToast(RunDetailActivity.this, getString(R.string.error_missing_run, runId));
+                }
+            }));
     }
 
     @Override

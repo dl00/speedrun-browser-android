@@ -53,7 +53,8 @@ public class User implements Serializable {
         String pname = getName();
 
         tv.setText(pname);
-        tv.setTypeface(Typeface.MONOSPACE, Typeface.BOLD);
+        tv.setTypeface(Typeface.MONOSPACE);
+
         //tv.setShadowLayer(5, 0, 0, Color.BLACK);
 
         if(nameStyle != null) {
@@ -74,6 +75,23 @@ public class User implements Serializable {
         public GameAssets assets;
 
         public HashMap<String, UserCategoryBest> categories;
+
+        public LeaderboardRunEntry getNewestRun() {
+            LeaderboardRunEntry newest = null;
+
+            for(UserCategoryBest bc : categories.values()) {
+                if(bc.levels != null) {
+                    for(UserLevelBest bl : bc.levels.values()) {
+                        if(bl.run.run.date != null && (newest == null || bl.run.run.date.compareTo(newest.run.date) > 0))
+                            newest = bl.run;
+                    }
+                }
+                else if(bc.run.run.date != null && (newest == null || bc.run.run.date.compareTo(newest.run.date) > 0))
+                    newest = bc.run;
+            }
+
+            return newest;
+        }
     }
 
     public class UserCategoryBest implements Serializable {

@@ -301,18 +301,8 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
             public void onClick(View view) {
                 LeaderboardRunEntry re = (LeaderboardRunEntry) view.getTag();
 
-                Run run = re.run;
-
-                // map actual player data in
-                for(int i = 0;i < run.players.size();i++) {
-                    run.players.set(i, resolvePlayer(mLeaderboard, run.players.get(i)));
-                }
-
                 Intent intent = new Intent(getContext(), RunDetailActivity.class);
-                intent.putExtra(RunDetailActivity.EXTRA_GAME, mGame);
-                intent.putExtra(RunDetailActivity.EXTRA_CATEGORY, mCategory);
-                intent.putExtra(RunDetailActivity.EXTRA_LEVEL, mLevel);
-                intent.putExtra(RunDetailActivity.EXTRA_RUN, run);
+                intent.putExtra(RunDetailActivity.EXTRA_RUN_ID, re.run.id);
                 startActivity(intent);
             }
         };

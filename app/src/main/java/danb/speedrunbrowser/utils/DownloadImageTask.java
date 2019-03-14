@@ -209,11 +209,11 @@ public class DownloadImageTask extends AsyncTask<URL, Integer, Bitmap> {
                                 (double)view.getWidth() / result.getWidth(),
                                 (double)view.getHeight() / result.getHeight());
 
-                        Log.d(TAG, "Scaling Background Bitmap to fit: " + factor);
-                        if(factor != 1) {
+                        //Log.d(TAG, "Scaling Background Bitmap to fit: " + factor);
+                        /*if(factor != 1) {
                             Log.d(TAG, "Do scale");
                             scaledResult = Bitmap.createScaledBitmap(result, (int) Math.ceil(result.getWidth() / factor), (int) Math.ceil(result.getHeight() / factor), false);
-                        }
+                        }*/
 
                         BitmapDrawable d = new BitmapDrawable(scaledResult);
 

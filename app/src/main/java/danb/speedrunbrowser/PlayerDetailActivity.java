@@ -3,6 +3,7 @@ package danb.speedrunbrowser;
 import androidx.appcompat.app.AppCompatActivity;
 import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
+import danb.speedrunbrowser.api.objects.Run;
 import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.utils.DownloadImageTask;
 
@@ -13,6 +14,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,6 +29,7 @@ import org.w3c.dom.Text;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -78,6 +81,8 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
 
     private void setViewData() {
 
+        setTitle(mPlayer.getName());
+
         mPlayer.applyTextView(mPlayerName);
 
         mIconTwitch.setVisibility(mPlayer.twitch != null ? View.VISIBLE : View.GONE);
@@ -89,8 +94,9 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
         if(!mPlayer.isGuest()) {
             try {
                 mBestsFrame.setVisibility(View.VISIBLE);
-                new DownloadImageTask(this, mBestsFrame).clear(true).execute(new URL(String.format(AVATAR_IMG_LOCATION, mPlayer.getName())));
+                new DownloadImageTask(this, mPlayerIcon).clear(true).execute(new URL(String.format(AVATAR_IMG_LOCATION, mPlayer.getName())));
             } catch (MalformedURLException e) {
+                Log.w(TAG, "Chould not show player logo:", e);
                 mBestsFrame.setVisibility(View.GONE);
             }
         }
@@ -105,13 +111,31 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
         if(mPlayer.bests == null)
             return;
 
-        for(User.UserGameBests gameBests : mPlayer.bests.values()) {
+        List<User.UserGameBests> playerGameBests = new ArrayList<>(mPlayer.bests.values());
+
+        Collections.sort(playerGameBests, new Comparator<User.UserGameBests>() {
+            @Override
+            public int compare(User.UserGameBests o1, User.UserGameBests o2) {
+                // find the min time
+                LeaderboardRunEntry r1 = o1.getNewestRun();
+                LeaderboardRunEntry r2 = o2.getNewestRun();
+
+                if(r1 != null && r1.run.date != null && r2 != null && r2.run.date != null)
+                    return -r1.run.date.compareTo(r2.run.date);
+                else
+                    return 0;
+            }
+        });
+
+        for(User.UserGameBests gameBests : playerGameBests) {
             View gameLayout = getLayoutInflater().inflate(R.layout.content_game_personal_bests, null);
 
             ((TextView)gameLayout.findViewById(R.id.txtGameName)).setText(gameBests.names.get("international"));
 
-            if(gameBests.assets.coverLarge != null)
-                new DownloadImageTask(this, gameLayout.findViewById(R.id.imgGameCover)).clear(true).execute(gameBests.assets.coverLarge.uri);
+            if(gameBests.assets.coverLarge != null) {
+                ImageView imgView = gameLayout.findViewById(R.id.imgGameCover);
+                new DownloadImageTask(this, imgView).clear(true).execute(gameBests.assets.coverLarge.uri);
+            }
 
             List<PersonalBestRunRow> runsToAdd = new ArrayList<>();
 
@@ -129,43 +153,50 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
                 }
             }
 
-            System.out.println(runsToAdd);
-
             // sort these runs by date, descending
             Collections.sort(runsToAdd, new Comparator<PersonalBestRunRow>() {
                 @Override
                 public int compare(PersonalBestRunRow o1, PersonalBestRunRow o2) {
-                    System.out.println(o1.re.run + ", " + o2.re.run);
+                    if(o1.re.run.date == null || o2.re.run.date == null)
+                        return 0;
                     return -o1.re.run.date.compareTo(o2.re.run.date);
                 }
             });
 
             TableLayout bestTable = gameLayout.findViewById(R.id.tablePersonalBests);
 
-            for(PersonalBestRunRow row : runsToAdd) {
+            for(final PersonalBestRunRow row : runsToAdd) {
                 TableRow rowPersonalBest = (TableRow)getLayoutInflater().inflate(R.layout.content_row_personal_best, null);
-                ((TextView)rowPersonalBest.getChildAt(0)).setText(row.label);
+                ((TextView)rowPersonalBest.findViewById(R.id.txtRunCategory)).setText(row.label);
 
-                LinearLayout placeLayout = (LinearLayout)rowPersonalBest.getChildAt(1);
+                View placeImg = rowPersonalBest.findViewById(R.id.imgPlace);
+
                 if(row.re.place == 1 && gameBests.assets.trophy1st != null) {
-                    new DownloadImageTask(this, placeLayout.getChildAt(0)).execute(gameBests.assets.trophy1st.uri);
+                    new DownloadImageTask(this, placeImg).execute(gameBests.assets.trophy1st.uri);
                 }
                 if(row.re.place == 2 && gameBests.assets.trophy2nd != null) {
-                    new DownloadImageTask(this, placeLayout.getChildAt(0)).execute(gameBests.assets.trophy2nd.uri);
+                    new DownloadImageTask(this, placeImg).execute(gameBests.assets.trophy2nd.uri);
                 }
                 if(row.re.place == 3 && gameBests.assets.trophy3rd != null) {
-                    new DownloadImageTask(this, placeLayout.getChildAt(0)).execute(gameBests.assets.trophy3rd.uri);
+                    new DownloadImageTask(this, placeImg).execute(gameBests.assets.trophy3rd.uri);
                 }
                 if(row.re.place == 4 && gameBests.assets.trophy4th != null) {
-                    new DownloadImageTask(this, placeLayout.getChildAt(0)).execute(gameBests.assets.trophy4th.uri);
+                    new DownloadImageTask(this, placeImg).execute(gameBests.assets.trophy4th.uri);
                 }
                 else
-                    ((ImageView)placeLayout.getChildAt(0)).setImageDrawable(new ColorDrawable(Color.TRANSPARENT));
+                    ((ImageView)placeImg).setImageDrawable(new ColorDrawable(Color.TRANSPARENT));
 
-                ((TextView)placeLayout.getChildAt(1)).setText(row.re.getPlaceName());
+                ((TextView)rowPersonalBest.findViewById(R.id.txtPlace)).setText(row.re.getPlaceName());
 
-                ((TextView)rowPersonalBest.getChildAt(2)).setText(row.re.run.times.formatTime());
-                ((TextView)rowPersonalBest.getChildAt(3)).setText(row.re.run.date);
+                ((TextView)rowPersonalBest.findViewById(R.id.txtRunTime)).setText(row.re.run.times.formatTime());
+                ((TextView)rowPersonalBest.findViewById(R.id.txtRunDate)).setText(row.re.run.date);
+
+                rowPersonalBest.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        viewRun(row.re.run.id);
+                    }
+                });
 
                 bestTable.addView(rowPersonalBest);
             }
@@ -192,6 +223,12 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(selectedLink.toString()));
             startActivity(intent);
         }
+    }
+
+    private void viewRun(String runId) {
+        Intent intent = new Intent(this, RunDetailActivity.class);
+        intent.putExtra(RunDetailActivity.EXTRA_RUN_ID, runId);
+        startActivity(intent);
     }
 
     private static class PersonalBestRunRow {
