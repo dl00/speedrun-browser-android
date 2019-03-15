@@ -30,4 +30,6 @@
     <string name="error_invalod_url">Invalid URL: %s</string>
     <string name="label_game_search">Games</string>
     <string name="label_player_search">Players</string>
+    <string name="label_personal_bests">Personal Bests</string>
+    <string name="label_you_can_click">Select a run to watch:</string>
 </resources>

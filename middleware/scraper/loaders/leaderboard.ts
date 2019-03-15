@@ -18,12 +18,17 @@ export async function pull_leaderboard(_runid: string, options: any) {
         let lb: speedrun_api.Leaderboard = res.data;
 
 
-        let updated_players = {};
+        let updated_players: {[id: string]: speedrun_api.User} = {};
         if(lb.players != null && _.isArray(lb.players.data)) {
             updated_players = _.keyBy(lb.players.data);
         }
 
         // record runs
+        for(let run of lb.runs) {
+            run.run.players.map(v => v.id ? updated_players[v.id] : v);
+            speedrun_api.normalize_run(<any>run.run);
+        }
+
         let set_run_vals = <any>_.chain(lb.runs)
             .keyBy('run.id')
             .mapValues(JSON.stringify)

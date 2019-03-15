@@ -182,6 +182,7 @@ export interface BulkRun {
     date: string
     players: BulkUser[]
     times: RunTimes
+    values: {[key: string]: string}
 }
 
 export interface Run extends BulkRun, BaseMiddleware {
@@ -205,9 +206,17 @@ export interface Run extends BulkRun, BaseMiddleware {
     }
 }
 
+export function normalize_run(d: Run) {
+    normalize(d);
+
+    if(d.players) {
+        d.players.map(<any>user_to_bulk);
+    }
+}
+
 /// TODO: Use decorators
 export function run_to_bulk(run: Run): BulkRun {
-    let newr = _.pick(run, 'id', 'date', 'players', 'times');
+    let newr = _.pick(run, 'id', 'date', 'players', 'times', 'values');
 
     newr.players = newr.players.map(v => user_to_bulk(<User>v));
 
@@ -241,8 +250,9 @@ export interface LevelPersonalBests {
 
 export interface BulkUser {
     id: string,
-    names: Names,
-    'name-style': {
+    names?: Names,
+    name?: string,
+    'name-style'?: {
         style: 'solid'|''
         color: {
             light: string
@@ -252,15 +262,15 @@ export interface BulkUser {
 }
 
 export interface User extends BulkUser, BaseMiddleware {
-    weblink: string
-    role: 'banned'|'user'|'trusted'|'moderator'|'admin'|'programmer'
+    weblink?: string
+    role?: 'banned'|'user'|'trusted'|'moderator'|'admin'|'programmer'
     signup?: string
 
     bests: {[id: string]: GamePersonalBests}
 }
 
 export function user_to_bulk(user: User) {
-    return _.pick(user, 'id', 'names', 'name-style');
+    return _.pick(user, 'id', 'names', 'name', 'name-style');
 }
 
 export interface Platform {

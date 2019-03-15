@@ -14,6 +14,8 @@ function do_normalize(type: string, d: any) {
         speedrun_api.normalize_category(d);
     case 'leaderboards':
         speedrun_api.normalize_leaderboard(d);
+    case 'runs':
+        speedrun_api.normalize_run(d);
     default:
         speedrun_api.normalize(d);
     }

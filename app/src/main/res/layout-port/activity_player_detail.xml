@@ -85,7 +85,24 @@
                 android:id="@+id/bestsLayout"
                 android:orientation="vertical"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="20sp"
+                    android:layout_gravity="center"
+                    android:text="@string/label_personal_bests" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:layout_gravity="center"
+                    android:text="@string/label_you_can_click" />
+
+
+            </LinearLayout>
 
         </FrameLayout>
 
@@ -96,8 +113,6 @@
             android:visibility="gone"
             android:layout_width="wrap_content"
             android:layout_height="match_parent">
-
-
 
         </danb.speedrunbrowser.utils.FixedAspectRatioFrameLayout>
 

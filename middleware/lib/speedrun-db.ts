@@ -114,12 +114,6 @@ export async function rescore_game(db: ioredis.Redis, indexer: any, game: speedr
     await db.zadd(locs.game_rank, game_score.toString(), game.id);
 }
 
-export async function push_or_merge_update(arr: {[index: string]: any}[], ins: {[index: string]: any}, cmp_prop: string) {
-    if(_.find(arr, v => v[cmp_prop] == ins[cmp_prop])) {
-
-    }
-}
-
 // add/update the given personal best entry for the given user
 export async function apply_personal_best(player: speedrun_api.User, game: speedrun_api.Game, category: speedrun_api.Category, level: speedrun_api.Level|null, lb: speedrun_api.Leaderboard, index: number) {
 
@@ -211,8 +205,8 @@ export async function apply_leaderboard_bests(db: ioredis.Redis, lb: speedrun_ap
     }
 
     for(let i = 0;i < lb.runs.length;i++) {
-        for(let id in players) {
-            apply_personal_best(players[id], game, category, level, lb, i);
+        for(let player of lb.runs[i].run.players) {
+            apply_personal_best(players[player.id], game, category, level, lb, i);
         }
     }
     
