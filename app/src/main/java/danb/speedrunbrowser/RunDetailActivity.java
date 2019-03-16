@@ -78,6 +78,8 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
 
     CompositeDisposable mDisposables = new CompositeDisposable();
 
+    Disposable mDisposableBackgroundSaveInterval = null;
+
     /**
      * Game detail views
      */
@@ -93,6 +95,8 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
     TextView mCategoryName;
     FlexboxLayout mPlayerNames;
     TextView mRunTime;
+
+    TextView mRunComment;
 
     ListView mRunSplits;
     TextView mRunEmptySplits;
@@ -135,6 +139,9 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
         mPlayerNames = findViewById(R.id.txtPlayerNames);
         mRunTime = findViewById(R.id.txtRunTime);
         mVideoFrame = findViewById(R.id.videoFrame);
+
+        mRunComment = findViewById(R.id.txtRunComment);
+
         mRunSplits = findViewById(R.id.runSplitsList);
         mRunEmptySplits = findViewById(R.id.emptySplits);
 
@@ -202,8 +209,26 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+
+
+        // set an interval to record the watch time
+        mDisposableBackgroundSaveInterval = new FlowableInterval(BACKGROUND_SEEK_SAVE_START, BACKGROUND_SEEK_SAVE_PERIOD, TimeUnit.SECONDS, Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(new Consumer<Long>() {
+                @Override
+                public void accept(Long aLong) throws Exception {
+                    recordStartPlaybackTime();
+                }
+            });
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
+
+        mDisposableBackgroundSaveInterval.dispose();
     }
 
     @Override
@@ -281,18 +306,7 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
             }
         }
 
-        if(mShownLink.isYoutube() || mShownLink.isTwitch()) {
-            // set an interval to record the watch time
-            mDisposables.add(new FlowableInterval(BACKGROUND_SEEK_SAVE_START, BACKGROUND_SEEK_SAVE_PERIOD, TimeUnit.SECONDS, Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Consumer<Long>() {
-                        @Override
-                        public void accept(Long aLong) throws Exception {
-                            recordStartPlaybackTime();
-                        }
-                    }));
-        }
-        else {
+        if(!mShownLink.isYoutube() && !mShownLink.isTwitch()) {
             // just record the fact that the video page was accessed
             writeWatchToDb(0);
         }
@@ -513,19 +527,21 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
             new DownloadImageTask(this, mCover).clear(false).execute(mGame.assets.coverLarge.uri);
 
         mPlayerNames.removeAllViews();
-        boolean first = true;
-        for(User player : mRun.players) {
+        for(final User player : mRun.players) {
             TextView tv = new TextView(this);
             tv.setTextSize(16);
             player.applyTextView(tv);
 
-            if(!first) {
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                lp.setMargins(getResources().getDimensionPixelSize(R.dimen.half_fab_margin), 0, 0, 0);
-                tv.setLayoutParams(lp);
-            }
-            else
-                first = false;
+            int padding = getResources().getDimensionPixelSize(R.dimen.half_fab_margin);
+
+            tv.setPadding(padding, padding, padding, padding);
+
+            tv.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    viewPlayer(player);
+                }
+            });
 
             mPlayerNames.addView(tv);
         }
@@ -533,9 +549,17 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
         mCategoryName.setText(mCategory.name);
         mRunTime.setText(mRun.times.formatTime());
 
+        mRunComment.setText(mRun.comment);
 
         TextView emptyTv = new TextView(this);
 
         emptyTv.setText(R.string.empty_no_splits);
+    }
+
+    private void viewPlayer(User player) {
+        Intent intent = new Intent(this, PlayerDetailActivity.class);
+        intent.putExtra(PlayerDetailActivity.ARG_PLAYER_ID, player.id);
+
+        startActivity(intent);
     }
 }

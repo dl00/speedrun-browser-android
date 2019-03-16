@@ -91,6 +91,10 @@ public class SpeedrunMiddlewareAPI {
         @GET("games/{ids}")
         Observable<APIResponse<Game>> listGames(@Path("ids") String ids);
 
+        // Players
+        @GET("users/{ids}")
+        Observable<APIResponse<User>> listPlayers(@Path("ids") String ids);
+
         // Leaderboards
         @GET("leaderboards/{leaderboardId}")
         Observable<APIResponse<Leaderboard>> listLeaderboards(@Path("leaderboardId") String categoryId);

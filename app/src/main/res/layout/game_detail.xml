@@ -82,10 +82,12 @@
 
                 <ImageView
                     android:id="@+id/imgCover"
+                    android:transitionName="gameCover"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:contentDescription="@string/desc_game_cover"
-                    android:src="@android:color/transparent" />
+                    android:src="@android:color/transparent"
+                    tools:targetApi="lollipop" />
 
             </danb.speedrunbrowser.utils.FixedAspectRatioFrameLayout>
 

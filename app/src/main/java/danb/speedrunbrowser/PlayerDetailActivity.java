@@ -1,11 +1,17 @@
 package danb.speedrunbrowser;
 
 import androidx.appcompat.app.AppCompatActivity;
+import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
 import danb.speedrunbrowser.api.objects.Run;
 import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.utils.DownloadImageTask;
+import danb.speedrunbrowser.utils.Util;
+import danb.speedrunbrowser.views.ProgressSpinnerView;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.functions.Consumer;
 
 import android.annotation.SuppressLint;
 import android.app.Person;
@@ -42,7 +48,13 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
 
     private static final String AVATAR_IMG_LOCATION = "https://www.speedrun.com/themes/user/%s/image.png";
 
+    CompositeDisposable mDisposables = new CompositeDisposable();
+
     private User mPlayer;
+
+    private ProgressSpinnerView mSpinner;
+    private View mPlayerHead;
+    private View mScrollBests;
 
     private ImageView mPlayerIcon;
     private TextView mPlayerName;
@@ -58,6 +70,10 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player_detail);
+
+        mSpinner = findViewById(R.id.spinner);
+        mPlayerHead = findViewById(R.id.layoutPlayerHeader);
+        mScrollBests = findViewById(R.id.scrollPlayerBests);
 
         mPlayerIcon = findViewById(R.id.imgAvatar);
         mPlayerName = findViewById(R.id.txtPlayerName);
@@ -77,6 +93,38 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
         if(args != null && (mPlayer = (User)args.getSerializable(ARG_PLAYER)) != null) {
             setViewData();
         }
+        else if(args != null && args.getString(ARG_PLAYER_ID) != null) {
+            loadPlayer(args.getString(ARG_PLAYER_ID));
+        }
+    }
+
+    private void loadPlayer(final String playerId) {
+        Log.d(TAG, "Download playerId: " + playerId);
+        mDisposables.add(SpeedrunMiddlewareAPI.make().listPlayers(playerId)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<SpeedrunMiddlewareAPI.APIResponse<User>>() {
+                    @Override
+                    public void accept(SpeedrunMiddlewareAPI.APIResponse<User> gameAPIResponse) throws Exception {
+
+                        if (gameAPIResponse.data == null || gameAPIResponse.data.isEmpty()) {
+                            // game was not able to be found for some reason?
+                            Util.showErrorToast(PlayerDetailActivity.this, getString(R.string.error_missing_game, playerId));
+                            return;
+                        }
+
+                        mPlayer = gameAPIResponse.data.get(0);
+
+                        setViewData();
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+
+                        Log.e(TAG, "Could not download player data:", throwable);
+
+                        Util.showErrorToast(PlayerDetailActivity.this, getString(R.string.error_missing_run, playerId));
+                    }
+                }));
     }
 
     private void setViewData() {
@@ -104,6 +152,11 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
             mBestsFrame.setVisibility(View.GONE);
 
         populateBestsFrame();
+
+        mSpinner.setVisibility(View.GONE);
+        mPlayerHead.setVisibility(View.VISIBLE);
+        mScrollBests.setVisibility(View.VISIBLE);
+
     }
 
     @SuppressLint("SetTextI18n")

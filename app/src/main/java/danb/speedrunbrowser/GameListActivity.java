@@ -1,7 +1,9 @@
 package danb.speedrunbrowser;
 
+import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -264,6 +266,9 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher {
             mGameResultsLabel.setVisibility(View.VISIBLE);
         else
             mGameResultsLabel.setVisibility(View.GONE);
+
+        if(mGames == null || mGames.isEmpty())
+            mSpinner.setVisibility(View.GONE);
     }
 
     public void showAbout() {
@@ -310,7 +315,14 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher {
                     Intent intent = new Intent(GameListActivity.this, GameDetailActivity.class);
                     intent.putExtra(GameDetailFragment.ARG_GAME_ID, g.id);
 
-                    startActivity(intent);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        view.setTransitionName("gameCover");
+
+                        startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(GameListActivity.this, view, "gameCover").toBundle());
+                    }
+                    else {
+                        startActivity(intent);
+                    }
                 }
             }
         };
