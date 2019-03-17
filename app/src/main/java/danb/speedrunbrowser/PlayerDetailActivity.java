@@ -55,6 +55,7 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
     private ProgressSpinnerView mSpinner;
     private View mPlayerHead;
     private View mScrollBests;
+    private View mFrameBests;
 
     private ImageView mPlayerIcon;
     private TextView mPlayerName;
@@ -74,6 +75,7 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
         mSpinner = findViewById(R.id.spinner);
         mPlayerHead = findViewById(R.id.layoutPlayerHeader);
         mScrollBests = findViewById(R.id.scrollPlayerBests);
+        mFrameBests = findViewById(R.id.framePlayerBests);
 
         mPlayerIcon = findViewById(R.id.imgAvatar);
         mPlayerName = findViewById(R.id.txtPlayerName);
@@ -155,7 +157,11 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
 
         mSpinner.setVisibility(View.GONE);
         mPlayerHead.setVisibility(View.VISIBLE);
-        mScrollBests.setVisibility(View.VISIBLE);
+
+        if(mScrollBests != null)
+            mScrollBests.setVisibility(View.VISIBLE);
+        if(mFrameBests != null)
+            mFrameBests.setVisibility(View.VISIBLE);
 
     }
 

@@ -32,7 +32,7 @@
     <TextView
         android:id="@+id/txtPlayersSearch"
         android:visibility="gone"
-        android:layout_margin="@dimen/fab_margin"
+        android:layout_margin="@dimen/half_fab_margin"
         android:text="@string/label_player_search"
         android:textSize="20sp"
         android:layout_width="wrap_content"
@@ -41,8 +41,6 @@
     <HorizontalScrollView
         android:id="@+id/hsvPlayers"
         android:visibility="gone"
-        android:paddingTop="@dimen/fab_margin"
-        android:paddingBottom="@dimen/fab_margin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -61,7 +59,7 @@
     <TextView
         android:id="@+id/txtGamesSearch"
         android:visibility="gone"
-        android:layout_margin="@dimen/fab_margin"
+        android:layout_margin="@dimen/half_fab_margin"
         android:text="@string/label_game_search"
         android:textSize="20sp"
         android:layout_width="wrap_content"
@@ -71,7 +69,8 @@
         android:id="@+id/listGame"
         android:name="danb.speedrunbrowser.GameListFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
         tools:context=".GameListActivity"
         tools:listitem="@layout/game_grid_content" />
