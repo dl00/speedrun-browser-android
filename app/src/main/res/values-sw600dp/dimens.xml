@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="game_cover_width">120dp</dimen>
+    <dimen name="game_cover_height">190dp</dimen>
+
+    <dimen name="game_big_cover_width">200dp</dimen>
+    <dimen name="game_big_cover_height">320dp</dimen>
+</resources>
