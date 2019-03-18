@@ -7,7 +7,7 @@
     android:layout_marginTop="@dimen/half_fab_margin">
     <TextView
         android:id="@+id/txtRunCategory"
-        android:maxWidth="175dp" />
+        android:maxWidth="75dp" />
     <LinearLayout
         android:orientation="horizontal"
         android:gravity="center">

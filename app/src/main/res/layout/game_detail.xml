@@ -74,22 +74,14 @@
             android:background="@color/colorPrimaryTranslucent"
             android:orientation="vertical">
 
-            <danb.speedrunbrowser.utils.FixedAspectRatioFrameLayout
-                android:layout_width="wrap_content"
-                android:layout_height="200dp"
-                app:aspectRatioWidth="32"
-                app:aspectRatioHeight="45">
-
-                <ImageView
-                    android:id="@+id/imgCover"
-                    android:transitionName="gameCover"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:contentDescription="@string/desc_game_cover"
-                    android:src="@android:color/transparent"
-                    tools:targetApi="lollipop" />
-
-            </danb.speedrunbrowser.utils.FixedAspectRatioFrameLayout>
+            <ImageView
+                android:id="@+id/imgCover"
+                android:transitionName="gameCover"
+                android:layout_width="@dimen/game_big_cover_width"
+                android:layout_height="@dimen/game_big_cover_height"
+                android:contentDescription="@string/desc_game_cover"
+                android:src="@android:color/transparent"
+                tools:targetApi="lollipop" />
 
             <TableLayout
                 android:layout_width="match_parent"
