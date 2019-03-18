@@ -67,6 +67,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="50dp"
+                android:paddingTop="@dimen/half_fab_margin"
+                android:paddingBottom="@dimen/half_fab_margin"
                 android:text="@string/label_about_os_licenses"
                 android:textAlignment="center"
                 android:typeface="monospace"
