@@ -1,44 +1,37 @@
 package danb.speedrunbrowser;
 
-import androidx.appcompat.app.AppCompatActivity;
-import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
-import danb.speedrunbrowser.api.objects.Game;
-import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
-import danb.speedrunbrowser.api.objects.Run;
-import danb.speedrunbrowser.api.objects.User;
-import danb.speedrunbrowser.utils.DownloadImageTask;
-import danb.speedrunbrowser.utils.Util;
-import danb.speedrunbrowser.views.ProgressSpinnerView;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.functions.Consumer;
-
 import android.annotation.SuppressLint;
-import android.app.Person;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+
+import androidx.appcompat.app.AppCompatActivity;
+import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
+import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
+import danb.speedrunbrowser.api.objects.User;
+import danb.speedrunbrowser.utils.ConnectionErrorConsumer;
+import danb.speedrunbrowser.utils.DownloadImageTask;
+import danb.speedrunbrowser.utils.Util;
+import danb.speedrunbrowser.views.ProgressSpinnerView;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.functions.Consumer;
 
 public class PlayerDetailActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = PlayerDetailActivity.class.getSimpleName();
@@ -118,15 +111,7 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
 
                         setViewData();
                     }
-                }, new Consumer<Throwable>() {
-                    @Override
-                    public void accept(Throwable throwable) throws Exception {
-
-                        Log.e(TAG, "Could not download player data:", throwable);
-
-                        Util.showErrorToast(PlayerDetailActivity.this, getString(R.string.error_missing_run, playerId));
-                    }
-                }));
+                }, new ConnectionErrorConsumer(this)));
     }
 
     private void setViewData() {

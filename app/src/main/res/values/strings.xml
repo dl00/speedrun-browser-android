@@ -20,7 +20,7 @@
     <string name="label_about_author2">Data provided by Speedrun.com</string>
     <string name="label_about_os_licenses">View Open Source Licenses</string>
     <string name="menu_about">About</string>
-    <string name="error_could_not_connect">Could not connect to server! Check your internet connection and try again later.</string>
+    <string name="error_could_not_connect">Connection error with server! Check your internet connection and try again later.</string>
     <string name="error_twitch">Could not load twitch player! Please try again later.</string>
     <string name="button_filters">Filters</string>
     <string name="dialog_title_choose_filters">Filter runs by:</string>
@@ -32,4 +32,5 @@
     <string name="label_player_search">Players</string>
     <string name="label_personal_bests">Personal Bests</string>
     <string name="label_you_can_click">Select a run to watch:</string>
+    <string name="error_cannot_play_video">Something went wrong running the player.</string>
 </resources>

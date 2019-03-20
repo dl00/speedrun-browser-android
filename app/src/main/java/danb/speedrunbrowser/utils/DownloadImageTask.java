@@ -1,10 +1,8 @@
 package danb.speedrunbrowser.utils;
 
-import android.app.Application;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
@@ -24,11 +22,9 @@ import java.io.InterruptedIOException;
 import java.net.URL;
 import java.util.HashMap;
 
-import danb.speedrunbrowser.R;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import okhttp3.ResponseBody;
 
 /**
  * Created by daniel on 12/13/16.

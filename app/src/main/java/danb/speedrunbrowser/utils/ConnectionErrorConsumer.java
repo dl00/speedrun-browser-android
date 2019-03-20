@@ -18,6 +18,10 @@ public class ConnectionErrorConsumer implements io.reactivex.functions.Consumer<
     public void accept(Throwable throwable) {
 
         Log.w(TAG, "Could not download dashboard:", throwable);
-        Util.showErrorToast(ctx, ctx.getString(R.string.error_could_not_connect));
+        try {
+            Util.showErrorToast(ctx, ctx.getString(R.string.error_could_not_connect));
+        } catch(Exception e) {
+            // TODO: what to do if we cannot show a toast?
+        }
     }
 }

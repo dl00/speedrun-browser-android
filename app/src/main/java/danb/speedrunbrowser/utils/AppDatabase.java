@@ -3,10 +3,7 @@ package danb.speedrunbrowser.utils;
 
 import android.content.Context;
 
-import java.util.List;
-
 import androidx.annotation.NonNull;
-import androidx.room.ColumnInfo;
 import androidx.room.Dao;
 import androidx.room.Database;
 import androidx.room.Delete;
@@ -21,7 +18,6 @@ import androidx.room.RoomDatabase;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
-import io.reactivex.Single;
 
 @Database(entities = {AppDatabase.WatchHistoryEntry.class}, version = 1)
 public abstract class AppDatabase extends RoomDatabase {

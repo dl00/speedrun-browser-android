@@ -5,13 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.appcompat.widget.Toolbar;
-
-import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
@@ -29,13 +22,19 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.security.ProviderInstaller;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.RecyclerView;
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
+import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.utils.DownloadImageTask;
-import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.utils.PreCachingGridLayoutManager;
 import danb.speedrunbrowser.utils.Util;
 import danb.speedrunbrowser.views.ProgressSpinnerView;
@@ -45,15 +44,6 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.subjects.PublishSubject;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 /**
  * An activity representing a list of Games. This activity
@@ -216,9 +206,12 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher {
                     public void accept(Throwable throwable) throws Exception {
                         Log.w(TAG, "Could not download autocomplete results:" + throwable.getMessage(), throwable);
 
-                        Util.showErrorToast(GameListActivity.this, getString(R.string.error_could_not_connect));
-
-                        finish();
+                        try {
+                            Util.showErrorToast(GameListActivity.this, getString(R.string.error_could_not_connect));
+                            finish();
+                        } catch(Exception e) {
+                            Log.w(TAG, "Could not elegantly warn and exit app:", e);
+                        }
                     }
                 });
     }

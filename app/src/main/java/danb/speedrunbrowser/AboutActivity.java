@@ -4,16 +4,13 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-
-import androidx.appcompat.app.AppCompatActivity;
-import danb.speedrunbrowser.utils.Util;
-
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.io.File;
+import androidx.appcompat.app.AppCompatActivity;
+import danb.speedrunbrowser.utils.Util;
 
 public class AboutActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = LeaderboardFragment.class.getSimpleName();

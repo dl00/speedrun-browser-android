@@ -22,6 +22,7 @@ import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.Level;
 import danb.speedrunbrowser.api.objects.Variable;
+import danb.speedrunbrowser.utils.ConnectionErrorConsumer;
 import danb.speedrunbrowser.utils.DownloadImageTask;
 import danb.speedrunbrowser.utils.LeaderboardPagerAdapter;
 import danb.speedrunbrowser.utils.Util;
@@ -127,15 +128,7 @@ public class GameDetailFragment extends Fragment implements DialogInterface.OnDi
                         mGame = gameAPIResponse.data.get(0);
                         setViewData();
                     }
-                }, new Consumer<Throwable>() {
-                    @Override
-                    public void accept(Throwable throwable) throws Exception {
-
-                        Log.e(TAG, "Could not download game data:", throwable);
-
-                        Util.showErrorToast(getContext(), getString(R.string.error_missing_game, gameId));
-                    }
-                });
+                }, new ConnectionErrorConsumer(getContext()));
     }
 
     @Override

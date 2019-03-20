@@ -6,11 +6,9 @@ import com.google.gson.GsonBuilder;
 
 import java.util.List;
 
-import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.GameAssets;
 import danb.speedrunbrowser.api.objects.Leaderboard;
-import danb.speedrunbrowser.api.objects.Level;
 import danb.speedrunbrowser.api.objects.MediaLink;
 import danb.speedrunbrowser.api.objects.Platform;
 import danb.speedrunbrowser.api.objects.Region;

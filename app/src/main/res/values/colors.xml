@@ -8,4 +8,6 @@
     <color name="colorPrimaryTranslucent">#e0222222</color>
 
     <color name="colorLinkText">#0000ff</color>
+
+    <color name="colorBackgroundError">#331111</color>
 </resources>

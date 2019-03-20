@@ -31,7 +31,7 @@ public class ProgressSpinnerView extends View {
     private int mAnimBoxSize = 20;
 
     /// Rounded corners radius for the boxes
-    private int mAnimBoxRoundedCornerRadius = 15;
+    private int mAnimBoxRoundedCornerRadius = 5;
 
     /// The amount of padding between each animation box
     private int mAnimBoxPadding = 10;
@@ -207,7 +207,7 @@ public class ProgressSpinnerView extends View {
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                c.drawRoundRect(x0, y0, x1, y1, mAnimBoxRoundedCornerRadius, mAnimBoxRoundedCornerRadius, mDrawPaint);
+                c.drawRoundRect(x0, y0, x1, y1, mAnimBoxRoundedCornerRadius * mDensity, mAnimBoxRoundedCornerRadius * mDensity, mDrawPaint);
             }
             else {
                 c.drawRect(x0, y0, x1, y1, mDrawPaint);

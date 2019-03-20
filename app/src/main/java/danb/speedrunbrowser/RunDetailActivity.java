@@ -2,39 +2,27 @@ package danb.speedrunbrowser;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
-import android.os.PersistableBundle;
-import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
-import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
-import android.webkit.ValueCallback;
-import android.webkit.WebView;
-import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.android.flexbox.FlexboxLayout;
-import com.google.android.youtube.player.YouTubeInitializationResult;
-import com.google.android.youtube.player.YouTubePlayer;
-import com.google.android.youtube.player.YouTubePlayerSupportFragment;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
-import java.util.Observable;
 import java.util.concurrent.TimeUnit;
 
+import androidx.appcompat.app.AppCompatActivity;
 import danb.speedrunbrowser.api.SpeedrunAPI;
 import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
@@ -43,13 +31,13 @@ import danb.speedrunbrowser.api.objects.MediaLink;
 import danb.speedrunbrowser.api.objects.Run;
 import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.utils.AppDatabase;
-import danb.speedrunbrowser.utils.Constants;
+import danb.speedrunbrowser.utils.ConnectionErrorConsumer;
 import danb.speedrunbrowser.utils.DownloadImageTask;
 import danb.speedrunbrowser.utils.NoopConsumer;
 import danb.speedrunbrowser.utils.Util;
+import danb.speedrunbrowser.views.MultiVideoView;
 import danb.speedrunbrowser.views.ProgressSpinnerView;
-import io.reactivex.Scheduler;
-import io.reactivex.Single;
+import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
@@ -58,7 +46,7 @@ import io.reactivex.functions.Consumer;
 import io.reactivex.internal.operators.flowable.FlowableInterval;
 import io.reactivex.schedulers.Schedulers;
 
-public class RunDetailActivity extends AppCompatActivity implements YouTubePlayer.OnInitializedListener {
+public class RunDetailActivity extends AppCompatActivity implements MultiVideoView.Listener {
     private static final String TAG = RunDetailActivity.class.getSimpleName();
 
     public static final String EXTRA_GAME = "game";
@@ -73,6 +61,9 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
     /// how often to save the current watch position/time to the watch history db
     private static final int BACKGROUND_SEEK_SAVE_START = 15;
     private static final int BACKGROUND_SEEK_SAVE_PERIOD = 30;
+
+    /// amount of time to hold the screen in a certain rotation after pressing the fullscreen button
+    private static final int SCREEN_LOCK_ROTATE_PERIOD = 5;
 
     LinearLayout mRootView;
 
@@ -104,9 +95,7 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
     /**
      * Video views
      */
-    FrameLayout mVideoFrame;
-    YouTubePlayer mYoutubePlayer;
-    WebView mTwitchWebView;
+    MultiVideoView mVideoFrame;
 
     AppDatabase mDB;
 
@@ -114,10 +103,6 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
     Category mCategory;
     Level mLevel;
     Run mRun;
-
-    MediaLink mShownLink;
-
-    long mSeekPos = 0;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -146,6 +131,8 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
         mRunEmptySplits = findViewById(R.id.emptySplits);
 
         Bundle args = getIntent().getExtras();
+
+        assert args != null;
 
         if(args.getString(EXTRA_RUN_ID) != null) {
             loadRun(args.getString(EXTRA_RUN_ID));
@@ -197,15 +184,7 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
 
                     onDataReady();
                 }
-            }, new Consumer<Throwable>() {
-                @Override
-                public void accept(Throwable throwable) throws Exception {
-
-                    Log.e(TAG, "Could not download game data:", throwable);
-
-                    Util.showErrorToast(RunDetailActivity.this, getString(R.string.error_missing_run, runId));
-                }
-            }));
+            }, new ConnectionErrorConsumer(this)));
     }
 
     @Override
@@ -220,6 +199,11 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
                 @Override
                 public void accept(Long aLong) throws Exception {
                     recordStartPlaybackTime();
+                }
+            }, new Consumer<Throwable>() {
+                @Override
+                public void accept(Throwable throwable) throws Exception {
+                    Log.w(TAG, "Problem running background save interval: ", throwable);
                 }
             });
     }
@@ -253,7 +237,7 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
                     @Override
                     public void accept(AppDatabase.WatchHistoryEntry historyEntry) throws Exception {
                         Log.d(TAG, "Got seek record for run: " + mRun.id);
-                        mSeekPos = historyEntry.seekPos;
+                        mVideoFrame.setSeekTime((int)historyEntry.seekPos);
                         onVideoReady();
                     }
                 }, new NoopConsumer<Throwable>(), new Action() {
@@ -267,140 +251,26 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
 
     public void onVideoReady() {
 
+        mVideoFrame.setListener(this);
+
         if (mRun.videos == null || mRun.videos.links == null || mRun.videos.links.isEmpty()) {
-            LinearLayout ll = new LinearLayout(this);
-            ll.setOrientation(LinearLayout.VERTICAL);
-            ll.setGravity(Gravity.CENTER);
-            ll.setBackground(new ColorDrawable(getResources().getColor(R.color.colorPrimaryDark)));
-
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            lp.gravity = Gravity.CENTER;
-            lp.topMargin = getResources().getDimensionPixelSize(R.dimen.half_fab_margin);
-
-            TextView tv = new TextView(this);
-            tv.setLayoutParams(lp);
-            tv.setText(R.string.msg_no_video);
-
-            ll.addView(tv);
-
-            mVideoFrame.addView(ll);
+            mVideoFrame.setVideoNotAvailable();
 
             return;
         }
 
-        mShownLink = mRun.videos.links.get(0);
-
-        // find the first available youtube video we can recognize
-        for (final MediaLink m : mRun.videos.links) {
-
-            Log.d(TAG, "Trying to find YT/Twitch video: " + m.uri);
-
-            if (m.isYoutube()) {
-                setVideoFrameYT(m);
+        // find the first available video recognized
+        for(MediaLink ml : mRun.videos.links) {
+            if(mVideoFrame.loadVideo(ml))
                 break;
-            } else if (m.isTwitch()) {
-                setVideoFrameTwitch(m);
-            } else {
-                setVideoFrameOther(m);
-                writeWatchToDb(0);
-            }
         }
 
-        if(!mShownLink.isYoutube() && !mShownLink.isTwitch()) {
+        if(!mVideoFrame.hasLoadedVideo()) {
+            Log.w(TAG, "Could not play a video for this run");
             // just record the fact that the video page was accessed
+            mVideoFrame.setVideoFrameOther(mRun.videos.links.get(0));
             writeWatchToDb(0);
         }
-    }
-
-    public void setVideoFrameYT(MediaLink m) {
-        Log.d(TAG, "Load YouTube video: " + m.uri);
-
-        YouTubePlayerSupportFragment ytFrag = new YouTubePlayerSupportFragment();
-
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.videoFrame, ytFrag)
-                .commit();
-
-        ytFrag.initialize(Constants.YOUTUBE_DEVELOPER_KEY, this);
-
-        mVideoFrame.removeAllViews();
-        mShownLink = m;
-    }
-
-    @SuppressLint("SetJavaScriptEnabled")
-    public void setVideoFrameTwitch(MediaLink m) {
-        String videoId = m.getTwitchVideoID();
-
-        Log.d(TAG, "Show Twitch video ID: " + videoId);
-
-        // start a web view and load custom content
-        mTwitchWebView = new WebView(this);
-
-        // configure the webview to support playing video
-        mTwitchWebView.getSettings().setAppCacheMaxSize(10 * 1024 * 1024); // 50MB
-        mTwitchWebView.getSettings().setJavaScriptEnabled(true);
-        mTwitchWebView.getSettings().setMediaPlaybackRequiresUserGesture(false);
-
-        float scaleFactor = 1.0f;
-        String pageContent;
-        try {
-            pageContent = String.format(Locale.US, Util.readToString(getClass().getResourceAsStream(Constants.TWITCH_EMBED_SNIPPET_FILE)), scaleFactor, videoId, mSeekPos);
-        } catch (IOException e) {
-
-            Util.showErrorToast(this, getString(R.string.error_twitch));
-
-            finish();
-            return;
-        }
-
-        Log.d(TAG, pageContent);
-
-        mTwitchWebView.getSettings().setUseWideViewPort(true);
-        mTwitchWebView.getSettings().setLoadWithOverviewMode(true);
-
-        mTwitchWebView.loadDataWithBaseURL("https://twitch.tv", pageContent,
-                "text/html",
-                null,
-                null);
-
-        mVideoFrame.removeAllViews();
-        mVideoFrame.addView(mTwitchWebView);
-        mShownLink = m;
-    }
-
-    public void setVideoFrameOther(final MediaLink m) {
-        LinearLayout ll = new LinearLayout(this);
-        ll.setOrientation(LinearLayout.VERTICAL);
-        ll.setGravity(Gravity.CENTER);
-        ll.setBackground(new ColorDrawable(getResources().getColor(R.color.colorPrimaryDark)));
-
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.gravity = Gravity.CENTER;
-        lp.topMargin = getResources().getDimensionPixelSize(R.dimen.half_fab_margin);
-
-        TextView tv = new TextView(this);
-        tv.setLayoutParams(lp);
-        tv.setText(R.string.msg_cannot_play_video);
-
-        ll.addView(tv);
-
-        Button btn = new Button(this);
-        btn.setLayoutParams(lp);
-        btn.setText(R.string.btn_open_browser);
-        btn.setBackground(new ColorDrawable(getResources().getColor(R.color.colorPrimary)));
-        btn.setPadding(getResources().getDimensionPixelSize(R.dimen.half_fab_margin), 0, getResources().getDimensionPixelSize(R.dimen.half_fab_margin), 0);
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(m.uri.toString()));
-                startActivity(intent);
-            }
-        });
-
-        ll.addView(btn);
-
-        mVideoFrame.removeAllViews();
-        mVideoFrame.addView(ll);
     }
 
     @Override
@@ -440,64 +310,9 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
         }
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
-        super.onSaveInstanceState(outState, outPersistentState);
-
-        long playbackTime = 0;
-        if(mYoutubePlayer != null) {
-            mYoutubePlayer.getCurrentTimeMillis();
-        }
-        else if(mTwitchWebView != null) {
-            // TODO
-        }
-
-        outState.putLong(SAVED_PLAYBACK_TIME, playbackTime);
-    }
-
-    // youtube initialization
-    @Override
-    public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer youTubePlayer, boolean wasRestored) {
-        if(!wasRestored) {
-            Log.d(TAG, "Show YT video ID: " + mShownLink.getYoutubeVideoID());
-
-            mYoutubePlayer = youTubePlayer;
-            mYoutubePlayer.setShowFullscreenButton(false);
-            mYoutubePlayer.loadVideo(mShownLink.getYoutubeVideoID(), (int) mSeekPos);
-        }
-    }
-
-    @Override
-    public void onInitializationFailure(YouTubePlayer.Provider provider, YouTubeInitializationResult youTubeInitializationResult) {
-
-        Log.w(TAG, "Could not initialize youtube player: " + youTubeInitializationResult.name());
-
-        // this might happen if the installed youtube app is out of date or there is some problem
-        // with the person's phone
-        if(youTubeInitializationResult.isUserRecoverableError()) {
-            youTubeInitializationResult.getErrorDialog(this, 0).show();
-        }
-    }
-
     private void recordStartPlaybackTime() {
-        if(mYoutubePlayer != null) {
-            writeWatchToDb(mYoutubePlayer.getCurrentTimeMillis());
-        }
-        else if(mTwitchWebView != null) {
-            mTwitchWebView.evaluateJavascript("player.getCurrentTime()", new ValueCallback<String>() {
-                @Override
-                public void onReceiveValue(String value) {
-                    try {
-                        long seekPos = (long)Math.floor(Float.parseFloat(value));
-
-                        writeWatchToDb(seekPos);
-                    }
-                    catch(NumberFormatException e) {
-                        // ignored
-                    }
-                }
-            });
-        }
+        if(mVideoFrame.hasLoadedVideo())
+            writeWatchToDb(mVideoFrame.getSeekTime());
     }
 
     private void writeWatchToDb(long seekTime) {
@@ -561,5 +376,23 @@ public class RunDetailActivity extends AppCompatActivity implements YouTubePlaye
         intent.putExtra(PlayerDetailActivity.ARG_PLAYER_ID, player.id);
 
         startActivity(intent);
+    }
+
+    @Override
+    public void onFullscreenToggleListener() {
+        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE)
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        else
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+
+        // prevent screen rotation from being locked
+        mDisposables.add(Observable.timer(SCREEN_LOCK_ROTATE_PERIOD, TimeUnit.SECONDS)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(new Consumer<Long>() {
+                @Override
+                public void accept(Long aLong) throws Exception {
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+                }
+            }));
     }
 }

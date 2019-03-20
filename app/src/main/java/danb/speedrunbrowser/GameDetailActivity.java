@@ -1,15 +1,12 @@
 package danb.speedrunbrowser;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
-
-import androidx.appcompat.widget.Toolbar;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.ActionBar;
-
 import android.util.Log;
 import android.view.MenuItem;
+
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
 
 /**
  * An activity representing a single Game detail screen. This

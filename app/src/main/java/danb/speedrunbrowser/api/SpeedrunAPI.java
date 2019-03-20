@@ -6,9 +6,7 @@ import com.google.gson.GsonBuilder;
 
 import java.util.List;
 
-import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.GameAssets;
-import danb.speedrunbrowser.api.objects.Leaderboard;
 import danb.speedrunbrowser.api.objects.MediaLink;
 import danb.speedrunbrowser.api.objects.Platform;
 import danb.speedrunbrowser.api.objects.Region;
@@ -21,7 +19,6 @@ import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
-import retrofit2.http.Query;
 
 public class SpeedrunAPI {
 

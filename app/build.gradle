@@ -6,7 +6,7 @@ android {
         applicationId "danb.speedrunbrowser"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 2
+        versionCode 4
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -27,20 +27,19 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation 'androidx.appcompat:appcompat:1.1.0-alpha02'
+    implementation 'androidx.appcompat:appcompat:1.1.0-alpha03'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
-    implementation 'androidx.recyclerview:recyclerview:1.1.0-alpha02'
+    implementation 'androidx.recyclerview:recyclerview:1.1.0-alpha03'
 
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.2'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.1.2-alpha02'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0-alpha02'
 
-    implementation 'androidx.room:room-runtime:2.1.0-alpha04'
-    annotationProcessor 'androidx.room:room-compiler:2.1.0-alpha04'
-    implementation 'androidx.room:room-rxjava2:2.1.0-alpha04'
-    testImplementation 'androidx.room:room-testing:2.1.0-alpha04'
+    implementation 'androidx.room:room-runtime:2.1.0-alpha05'
+    annotationProcessor 'androidx.room:room-compiler:2.1.0-alpha05'
+    implementation 'androidx.room:room-rxjava2:2.1.0-alpha05'
+    testImplementation 'androidx.room:room-testing:2.1.0-alpha05'
 
     implementation 'com.google.android.gms:play-services-auth:16.0.1'
 

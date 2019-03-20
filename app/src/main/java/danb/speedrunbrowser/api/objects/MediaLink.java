@@ -24,13 +24,10 @@ public class MediaLink implements Serializable {
     public int height;
 
     public boolean isYoutube() {
-        return uri.getHost().contains("youtu.be") || uri.getHost().contains("youtube.com");
+        return (uri.getHost().contains("youtu.be") || uri.getHost().contains("youtube.com")) && getYoutubeVideoID() != null;
     }
 
     public String getYoutubeVideoID() {
-        if(!isYoutube())
-            return null;
-
         String f = uri.getFile().substring(1);
 
         if(f.indexOf("watch?") == 0) {
@@ -51,15 +48,13 @@ public class MediaLink implements Serializable {
     }
 
     public boolean isTwitch() {
-        return uri.getHost().contains("twitch.tv");
+        return uri.getHost().contains("twitch.tv") && getTwitchVideoID() != null;
     }
 
     public String getTwitchVideoID() {
-        if(!isTwitch())
-            return null;
-
-        // video is always 9 numbers
-        Pattern p = Pattern.compile("\\d{9}");
+        // video is always numbers
+        // TODO: this is very naive
+        Pattern p = Pattern.compile("\\d{9}|\\d{8}");
         Matcher m = p.matcher(uri.toString());
 
         if(!m.find())

@@ -1,0 +1,36 @@
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://www.youtube.com/iframe_api"></script>
+</head>
+<body style="margin: 0; padding: 0; background-color: white;">
+<div style="margin: 0; padding: 0;" id="player"></div>
+<script type="text/javascript">
+
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+            width: window.innerWidth,
+            height: window.innerHeight,
+
+            events: {
+                onReady: function() {
+                    player.loadVideoById("%2$s", %3$d);
+                }
+            },
+
+            playerVars: {
+                fs: 0
+            }
+        });
+
+        window.onresize = function(event) {
+            var iframe = document.getElementsByTagName("iframe")[0];
+            iframe.width = window.innerWidth;
+            iframe.height = window.innerHeight;
+        }
+
+        window.player = player;
+    }
+    </script>
+</body>
+</html>

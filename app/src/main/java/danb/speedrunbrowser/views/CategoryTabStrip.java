@@ -1,11 +1,7 @@
 package danb.speedrunbrowser.views;
 
-import android.animation.Animator;
 import android.content.Context;
 import android.graphics.Typeface;
-import androidx.fragment.app.FragmentManager;
-import androidx.viewpager.widget.ViewPager;
-
 import android.graphics.drawable.ColorDrawable;
 import android.util.AttributeSet;
 import android.view.Gravity;
@@ -15,6 +11,8 @@ import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.fragment.app.FragmentManager;
+import androidx.viewpager.widget.ViewPager;
 import danb.speedrunbrowser.GameListActivity;
 import danb.speedrunbrowser.R;
 import danb.speedrunbrowser.api.objects.Category;
