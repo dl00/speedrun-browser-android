@@ -8,6 +8,8 @@ import * as speedrun_api from './speedrun-api';
 export const locs: {[index: string]: string} = {
     game_rank: 'game_rank',
     game_abbrs: 'game_abbrs',
+    player_abbrs: 'player_abbrs',
+    latest_run: 'latest_run',
     games: 'games',
     runs: 'runs',
     categories: 'categories',

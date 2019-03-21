@@ -38,6 +38,12 @@ const BASE_TASKS: Task[] = [
         module: 'gamelist',
         exec: 'list_all_games',
         repeat: moment.duration(7, 'days')
+    },
+    {
+        name: 'pull_latest_runs',
+        module: 'latest-runs',
+        exec: 'pull_latest_runs',
+        repeat: moment.duration(5, 'minutes')
     }
 ];
 
@@ -161,7 +167,7 @@ export function spawn_task(task: Task) {
 
 async function init_task(task: Task) {
 
-    let runid = generate_unique_id(DB.ID_LENGTH)
+    let runid = task.name + '/' + generate_unique_id(DB.ID_LENGTH)
 
     await push_call({
         runid: runid,
@@ -230,15 +236,16 @@ export async function run(config: Config) {
 
         if(ptask) {
             let ptaskParts = ptask.split(':');
-            let rtime = moment(ptaskParts[1]);
-
+            ptaskParts.shift(); // removes first (unneeded) argument
+            let rtime = moment(ptaskParts.join(':'));
 
             if(rtime.isAfter(moment())) {
                 // schedule for the time difference
-                console.log('[SCHED]', task.name, rtime.diff(moment()));
+                let sched_ms = rtime.diff(moment());
+                console.log('[SCHED]', task.name, sched_ms);
                 setTimeout(() => {
                     init_task(task);
-                }, rtime.diff(moment()));
+                }, sched_ms);
                 continue;
             }
         }
