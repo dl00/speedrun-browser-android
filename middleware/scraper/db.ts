@@ -14,5 +14,7 @@ export function split(str: string) {
 export const locs = {
     pending_tasks: 'pending_tasks',
     running_tasks: 'running_tasks',
+
+    task_calls: 'task_calls',
     callqueue: 'queue'
 }

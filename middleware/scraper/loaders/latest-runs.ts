@@ -12,7 +12,7 @@ import * as scraper from '../index';
 
 export async function pull_latest_runs(runid: string, options: any) {
     try {
-        let res = await request(speedrun_api.API_PREFIX + `/runs?status=verified&orderby=verify-date&direction=desc&offset=${options.offset || 0}`);
+        let res = await request(speedrun_api.API_PREFIX + `/runs?status=verified&orderby=verify-date&direction=desc&offset=${options.offset || 0}&max=200`);
 
         let runs: speedrun_api.Run[] = res.data;
 

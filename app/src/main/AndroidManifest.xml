@@ -14,7 +14,19 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:targetApi="n">
-        <activity android:name=".PlayerDetailActivity"></activity>
+
+        <service
+            android:name=".MessagingService"
+            android:enabled="true"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+
+        </service>
+
+        <activity android:name=".PlayerDetailActivity" />
         <activity
             android:name=".AboutActivity"
             android:label="@string/title_activity_about"
