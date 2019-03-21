@@ -147,11 +147,12 @@ async function pop_call() {
         exec: d[2],
         options: JSON.parse(d.slice(3).join(':'))
     };
-    
+
     let task_name = call.runid.split('/')[0];
     await rdb!.multi()
         .rpush(DB.locs.running_tasks, raw_running_task)
-        .srem(`${DB.locs.task_calls}:${task_name}`, call.runid);
+        .srem(`${DB.locs.task_calls}:${task_name}`, call.runid)
+        .exec();
 
     console.log('[POP C]', call.module, call.exec, call.runid);
 
