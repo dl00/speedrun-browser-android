@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "299347661817",
+    "firebase_url": "https://speedrun-browser-4cc82.firebaseio.com",
+    "project_id": "speedrun-browser-4cc82",
+    "storage_bucket": "speedrun-browser-4cc82.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:299347661817:android:77738ce37910044f",
+        "android_client_info": {
+          "package_name": "danb.speedrunbrowser"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "299347661817-98tk48v6jtu8kcj1ghva2qtjn6df02ui.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "danb.speedrunbrowser",
+            "certificate_hash": "af37fad21a2e96cba618c66345ab5e6bce0c8082"
+          }
+        },
+        {
+          "client_id": "299347661817-05k1hhtds62d1ll83ss3uatkotupvpbh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJ556Acfigt9ysaYoffqQrHUwu66-aA2E"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "299347661817-05k1hhtds62d1ll83ss3uatkotupvpbh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
