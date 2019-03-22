@@ -96,6 +96,9 @@ export async function rescore_game(db: ioredis.Redis, indexer: any, game: speedr
     }
 
     let indexes: { text: string, score: number, namespace?: string }[] = [];
+
+    indexes.push({ text: game.abbreviation.toLowerCase(), score: game_score });
+    
     for(let name in game.names) {
 
         if(!game.names[name])

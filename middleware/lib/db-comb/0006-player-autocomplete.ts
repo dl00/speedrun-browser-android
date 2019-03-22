@@ -33,7 +33,7 @@ export default async function(db: ioredis.Redis, config: Config) {
                 if(!player.names[name])
                     continue;
 
-                let idx: any = { text: player.names[name].toLowerCase(), score: 1 };
+                let idx: any = { text: player.names[name].toLowerCase(), score: 100 - player.names[name].length };
 
                 if(name != 'international')
                     idx.namespace = name;

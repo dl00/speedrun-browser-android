@@ -51,7 +51,7 @@ export async function pull_leaderboard(_runid: string, options: any) {
                 if(!player.names[name])
                     continue;
 
-                let idx: any = { text: player.names[name].toLowerCase(), score: 1 };
+                let idx: any = { text: player.names[name].toLowerCase(), score: 100 - player.names[name].length };
 
                 if(name != 'international')
                     idx.namespace = name;
