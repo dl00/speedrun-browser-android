@@ -282,7 +282,7 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher {
     public void afterTextChanged(Editable editable) {
         String q = mGameFilter.getText().toString().trim();
 
-        if(q.isEmpty() || q.length() > SpeedrunMiddlewareAPI.MIN_AUTOCOMPLETE_LENGTH) {
+        if(q.isEmpty() || q.length() >= SpeedrunMiddlewareAPI.MIN_AUTOCOMPLETE_LENGTH) {
             mGameFilterSearchSubject.onNext(q);
             mSpinner.setVisibility(View.VISIBLE);
         }
