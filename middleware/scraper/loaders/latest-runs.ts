@@ -49,7 +49,7 @@ export async function pull_latest_runs(runid: string, options: any) {
         await scraper.push_call({
             runid: runid,
             module: 'latest-runs',
-            exec: 'latest_runs',
+            exec: 'pull_latest_runs',
             options: {
                 offset: res.pagination.offset + res.pagination.size,
                 latest_run: latest_run
