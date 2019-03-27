@@ -26,6 +26,7 @@ import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
 import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.utils.ConnectionErrorConsumer;
+import danb.speedrunbrowser.utils.Constants;
 import danb.speedrunbrowser.utils.DownloadImageTask;
 import danb.speedrunbrowser.utils.Util;
 import danb.speedrunbrowser.views.ProgressSpinnerView;
@@ -38,8 +39,6 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
 
     public static final String ARG_PLAYER = "player";
     public static final String ARG_PLAYER_ID = "player_id";
-
-    private static final String AVATAR_IMG_LOCATION = "https://www.speedrun.com/themes/user/%s/image.png";
 
     CompositeDisposable mDisposables = new CompositeDisposable();
 
@@ -129,7 +128,7 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
         if(!mPlayer.isGuest()) {
             try {
                 mBestsFrame.setVisibility(View.VISIBLE);
-                new DownloadImageTask(this, mPlayerIcon).clear(true).execute(new URL(String.format(AVATAR_IMG_LOCATION, mPlayer.getName())));
+                new DownloadImageTask(this, mPlayerIcon).clear(true).execute(new URL(String.format(Constants.AVATAR_IMG_LOCATION, mPlayer.name)));
             } catch (MalformedURLException e) {
                 Log.w(TAG, "Chould not show player logo:", e);
                 mBestsFrame.setVisibility(View.GONE);

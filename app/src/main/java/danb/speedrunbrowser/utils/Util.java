@@ -1,6 +1,10 @@
 package danb.speedrunbrowser.utils;
 
 import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
+import android.view.Menu;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
@@ -9,6 +13,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.concurrent.TimeUnit;
 
+import danb.speedrunbrowser.R;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;

@@ -33,4 +33,7 @@
     <string name="label_personal_bests">Personal Bests</string>
     <string name="label_you_can_click">Select a run to watch:</string>
     <string name="error_cannot_play_video">Something went wrong running the player.</string>
+    <string name="missing_watch_history">Runs will appear here as you watch them.</string>
+    <string name="menu_history">Watch History</string>
+    <string name="title_activity_history">Watch History</string>
 </resources>

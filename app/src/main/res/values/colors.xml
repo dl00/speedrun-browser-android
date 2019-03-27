@@ -10,4 +10,6 @@
     <color name="colorLinkText">#0000ff</color>
 
     <color name="colorBackgroundError">#331111</color>
+
+    <color name="colorMenuIconTint">#ffffff</color>
 </resources>

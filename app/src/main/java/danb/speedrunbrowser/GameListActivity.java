@@ -143,6 +143,10 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher {
             showAbout();
             return true;
         }
+        else if(item.getItemId() == R.id.menu_history) {
+            showWatchHistory();
+            return true;
+        }
 
         return false;
     }
@@ -266,6 +270,11 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher {
 
     public void showAbout() {
         Intent intent = new Intent(this, AboutActivity.class);
+        startActivity(intent);
+    }
+
+    public void showWatchHistory() {
+        Intent intent = new Intent(this, HistoryActivity.class);
         startActivity(intent);
     }
 

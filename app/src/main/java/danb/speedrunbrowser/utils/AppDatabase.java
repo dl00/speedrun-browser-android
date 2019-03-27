@@ -55,8 +55,8 @@ public abstract class AppDatabase extends RoomDatabase {
 
     @Dao
     public interface WatchHistoryDao {
-        @Query("SELECT * FROM WatchHistoryEntry ORDER BY watchDate DESC")
-        Flowable<WatchHistoryEntry> getAll();
+        @Query("SELECT * FROM WatchHistoryEntry ORDER BY watchDate DESC LIMIT 100 OFFSET :offset")
+        Flowable<WatchHistoryEntry> getMany(int offset);
 
         @Query("SELECT * FROM WatchHistoryEntry WHERE runId = :runId")
         Maybe<WatchHistoryEntry> get(String runId);

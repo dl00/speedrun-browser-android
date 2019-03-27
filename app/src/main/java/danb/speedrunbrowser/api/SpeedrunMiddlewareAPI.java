@@ -9,6 +9,7 @@ import java.util.List;
 import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.GameAssets;
 import danb.speedrunbrowser.api.objects.Leaderboard;
+import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
 import danb.speedrunbrowser.api.objects.MediaLink;
 import danb.speedrunbrowser.api.objects.Platform;
 import danb.speedrunbrowser.api.objects.Region;
@@ -96,5 +97,9 @@ public class SpeedrunMiddlewareAPI {
         // Leaderboards
         @GET("leaderboards/{leaderboardId}")
         Observable<APIResponse<Leaderboard>> listLeaderboards(@Path("leaderboardId") String categoryId);
+
+        // Runs
+        @GET("runs/{ids}")
+        Observable<APIResponse<LeaderboardRunEntry>> listRuns(@Path("runs") String runId);
     }
 }

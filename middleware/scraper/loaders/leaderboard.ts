@@ -9,6 +9,7 @@ import * as speedrun_db from '../../lib/speedrun-db';
 import request from '../../lib/request';
 
 import * as scraper from '../index';
+import * as push_notify from '../push-notify';
 
 export async function pull_leaderboard(_runid: string, options: any) {
     try {
@@ -17,6 +18,15 @@ export async function pull_leaderboard(_runid: string, options: any) {
 
         let lb: speedrun_api.Leaderboard = res.data;
 
+        let res2 = await scraper.storedb!.multi()
+            .hget(speedrun_db.locs.games, <string>lb.game)
+            .hget(speedrun_db.locs.categories, <string>lb.game)
+            .hget(speedrun_db.locs.levels, <string>lb.game)
+            .exec();
+
+        let game = JSON.parse(res2[0][1]);
+        let category = JSON.parse(res2[1][1]);
+        let level = JSON.parse(res2[2][1]);
 
         let updated_players: {[id: string]: speedrun_api.User} = {};
         if(lb.players != null && _.isArray(lb.players.data)) {
@@ -41,7 +51,7 @@ export async function pull_leaderboard(_runid: string, options: any) {
         
         // record players
         // this applies players as well as set their personal best
-        await speedrun_db.apply_leaderboard_bests(scraper.storedb!, lb, updated_players);
+        let new_records = await speedrun_db.apply_leaderboard_bests(scraper.storedb!, lb, updated_players);
 
         for(let player_id in updated_players) {
             let player: speedrun_api.User = (<any>updated_players)[player_id];
@@ -65,6 +75,19 @@ export async function pull_leaderboard(_runid: string, options: any) {
         // write the leaderboard to db (excluding the players)
         speedrun_api.normalize_leaderboard(lb);
         await scraper.storedb!.hset(speedrun_db.locs.leaderboards, options.category_id + (options.level_id ? '_' + options.level_id : ''), JSON.stringify(_.omit(lb, 'players')));
+
+        // send push notifications as needed. All notifications are triggered by a player record change
+        for(let nr of new_records) {
+            if(nr.new_run.place == 1) {
+                // new record on this category/level, send notification
+                push_notify.notify_game_record(nr, game, category, level);
+            }
+
+            // this should be a personal best. send notification to all attached players
+            for(let pid of nr.new_run.run.players) {
+                push_notify.notify_player_record(nr, updated_players[pid.id], game, category, level);
+            }
+        }
     }
     catch(err) {
         console.error('loader/leaderboard: could not retrieve and process leaderboard/players:', options, err.statusCode || err);

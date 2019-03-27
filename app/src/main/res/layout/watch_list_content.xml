@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:layout_height="@dimen/game_cover_height">
+
+    <ImageView
+        android:id="@+id/imgPlayerIcon"
+        android:layout_width="@dimen/player_icon_width"
+        android:layout_height="@dimen/player_icon_height"
+        android:layout_marginStart="@dimen/half_fab_margin"
+        android:layout_gravity="center" />
+
+    <FrameLayout
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <include layout="@layout/leaderboard_list_content" />
+
+    </FrameLayout>
+
+    <ImageView
+        android:id="@+id/imgGameIcon"
+        android:layout_width="@dimen/game_cover_width"
+        android:layout_height="@dimen/game_cover_height"
+        android:layout_marginEnd="@dimen/half_fab_margin" />
+
+</LinearLayout>

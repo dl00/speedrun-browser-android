@@ -39,6 +39,13 @@ export interface Config {
 
         /// Number of seconds before a running task is considered stalled/lost
         runningTaskTimeout: number
+
+        /// 
+        push_notify: {
+            enabled: boolean
+    
+            credentialFile: string
+        }
     }
 
     /// Settings for the indexing engine--used for autocomplete and any title search
@@ -79,6 +86,11 @@ export const DEFAULT_CONFIG: Config = {
 
         redis: {
             db: 1
+        },
+
+        push_notify: {
+            enabled: false,
+            credentialFile: '/speedrunbrowser-middleware/secrets/firebase-service-account.json'
         }
     },
 

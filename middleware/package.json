@@ -25,6 +25,7 @@
     "@types/request": "^2.48.1",
     "@types/request-promise-native": "^1.0.15",
     "express": "^4.16.4",
+    "firebase-admin": "^7.1.1",
     "ioredis": "^4.6.2",
     "lodash": "^4.17.11",
     "moment": "^2.24.0",

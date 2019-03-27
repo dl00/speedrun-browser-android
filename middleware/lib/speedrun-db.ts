@@ -4,6 +4,12 @@ import * as ioredis from 'ioredis';
 
 import * as speedrun_api from './speedrun-api';
 
+/// information about a new PB from a player
+export interface NewRecord {
+    old_run: speedrun_api.LeaderboardRunEntry,
+    new_run: speedrun_api.LeaderboardRunEntry
+}
+
 /// key values/prefixes for which datasets can be found
 export const locs: {[index: string]: string} = {
     game_rank: 'game_rank',
@@ -120,7 +126,11 @@ export async function rescore_game(db: ioredis.Redis, indexer: any, game: speedr
 }
 
 // add/update the given personal best entry for the given user
-export async function apply_personal_best(player: speedrun_api.User, game: speedrun_api.Game, category: speedrun_api.Category, level: speedrun_api.Level|null, lb: speedrun_api.Leaderboard, index: number) {
+export function apply_personal_best(player: speedrun_api.User, 
+            game: speedrun_api.Game, category: speedrun_api.Category, 
+            level: speedrun_api.Level|null, 
+            lb: speedrun_api.Leaderboard, 
+            index: number): NewRecord|null {
 
     let category_run: speedrun_api.CategoryPersonalBests = {
         id: category.id,
@@ -140,7 +150,14 @@ export async function apply_personal_best(player: speedrun_api.User, game: speed
         run: lb.runs[index].run
     };
 
+    let old_run = null;
+
     if(level) {
+
+        old_run = _.get(player, `bests["${game.id}"].categories["${category.id}"].levels["${level.id}"].run`);
+        if(old_run.run.id == best_run.run.id)
+            return null;
+
         let level_run: speedrun_api.LevelPersonalBests = {
             id: level.id,
             name: level.name,
@@ -152,6 +169,10 @@ export async function apply_personal_best(player: speedrun_api.User, game: speed
         category_run.levels[level.id] = level_run;
     }
     else {
+        old_run = _.get(player, `bests["${game.id}"].categories["${category.id}"].run.run.id`);
+        if(old_run.run.id == best_run.run.id)
+            return null;
+
         category_run.run = best_run;
     }
 
@@ -161,10 +182,15 @@ export async function apply_personal_best(player: speedrun_api.User, game: speed
 
     new_bests[game.id] = game_run;
 
-    return _.merge(player, {bests: new_bests});
+    _.merge(player, {bests: new_bests});
+
+    return {
+        old_run: old_run,
+        new_run: best_run
+    };
 }
 
-export async function apply_leaderboard_bests(db: ioredis.Redis, lb: speedrun_api.Leaderboard, updated_players: {[id: string]: speedrun_api.User}) {
+export async function apply_leaderboard_bests(db: ioredis.Redis, lb: speedrun_api.Leaderboard, updated_players: {[id: string]: speedrun_api.User}): Promise<NewRecord[]> {
 
     let player_ids = _.chain(lb.runs)
         .map(v => _.map(v.run.players, 'id'))
@@ -174,7 +200,7 @@ export async function apply_leaderboard_bests(db: ioredis.Redis, lb: speedrun_ap
         .value();
 
     if(!player_ids.length)
-        return; // nothing to do
+        return []; // nothing to do
 
     let game_id = (<any>lb.game).id || lb.game;
     let category_id = (<any>lb.category).id || lb.category;
@@ -192,7 +218,7 @@ export async function apply_leaderboard_bests(db: ioredis.Redis, lb: speedrun_ap
     let level: speedrun_api.Level = _.find(JSON.parse(res[2][1]), v => v.id == level_id);
 
     if(!category)
-        return;
+        return [];
 
     // store/update player information
     // TODO: not sure why, but typescript errors with wrong value here?
@@ -206,12 +232,14 @@ export async function apply_leaderboard_bests(db: ioredis.Redis, lb: speedrun_ap
     _.merge(players, updated_players);
 
     if(!_.keys(players).length) {
-        return; // still nothing
+        return []; // still nothing
     }
+
+    let new_records: (NewRecord|null)[] = [];
 
     for(let i = 0;i < lb.runs.length;i++) {
         for(let player of lb.runs[i].run.players) {
-            apply_personal_best(players[player.id], game, category, level, lb, i);
+            new_records.push(apply_personal_best(players[player.id], game, category, level, lb, i));
         }
     }
     
@@ -222,4 +250,6 @@ export async function apply_leaderboard_bests(db: ioredis.Redis, lb: speedrun_ap
         .value();
 
     await db.hmset(locs.players, ...<[string, string]>flat_players);
+
+    return <NewRecord[]>_.reject(new_records, _.isNil);
 }
