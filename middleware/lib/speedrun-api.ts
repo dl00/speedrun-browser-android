@@ -104,15 +104,22 @@ export function normalize_game(d: Game) {
     }
 }
 
-export interface Category extends BaseMiddleware {
+export interface BulkCategory {
     id: string
     name: string
     type: string
+}
+
+export interface Category extends BulkCategory, BaseMiddleware {
     weblink: string
     rules: string
     miscellaneous: boolean
 
     variables: UpstreamData<Variable>|Variable[]
+}
+
+export function category_to_bulk(category: Category): BulkCategory {
+    return _.pick(category, 'id', 'name', 'type');
 }
 
 export function normalize_category(d: Category) {
@@ -131,9 +138,15 @@ export interface Variable extends BaseMiddleware {
     
 }
 
-export interface Level extends BaseMiddleware {
+export interface BulkLevel {
     id: string
     name: string
+}
+
+export interface Level extends BulkLevel, BaseMiddleware {}
+
+export function level_to_bulk(level: Level): BulkLevel {
+    return _.pick(level, 'id', 'name');
 }
 
 export interface LeaderboardRunEntry {
@@ -212,6 +225,13 @@ export function normalize_run(d: Run) {
     if(d.players) {
         d.players.map(<any>user_to_bulk);
     }
+
+    if(typeof d.game === 'object')
+        game_to_bulk(d.game);
+    if(typeof d.category === 'object')
+        category_to_bulk(d.category);
+    if(typeof d.level === 'object')
+        level_to_bulk(d.level);
 }
 
 /// TODO: Use decorators

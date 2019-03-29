@@ -35,7 +35,10 @@ export async function pull_leaderboard(_runid: string, options: any) {
 
         // record runs
         for(let run of lb.runs) {
-            run.run.players.map(v => v.id ? updated_players[v.id] : v);
+            run.run.players = run.run.players.map(v => v.id ? updated_players[v.id] : v);
+            (<speedrun_api.Run>run.run).game = game;
+            (<speedrun_api.Run>run.run).category = category;
+            (<speedrun_api.Run>run.run).level = level;
             speedrun_api.normalize_run(<any>run.run);
         }
 
