@@ -200,9 +200,9 @@ export interface BulkRun {
 
 export interface Run extends BulkRun, BaseMiddleware {
     weblink: string
-    game: Game|string
-    level: string
-    category: Category|string
+    game: BulkGame|string
+    level: BulkLevel|string
+    category: BulkCategory|string
     submitted: string
     videos: {
         text: string
@@ -223,15 +223,15 @@ export function normalize_run(d: Run) {
     normalize(d);
 
     if(d.players) {
-        d.players.map(<any>user_to_bulk);
+        d.players = d.players.map(<any>user_to_bulk);
     }
 
     if(typeof d.game === 'object')
-        game_to_bulk(d.game);
+        d.game = game_to_bulk(<Game>d.game);
     if(typeof d.category === 'object')
-        category_to_bulk(d.category);
+        d.category = category_to_bulk(<Category>d.category);
     if(typeof d.level === 'object')
-        level_to_bulk(d.level);
+        d.level = level_to_bulk(<Level>d.level);
 }
 
 /// TODO: Use decorators

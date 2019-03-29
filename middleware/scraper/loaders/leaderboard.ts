@@ -25,17 +25,17 @@ export async function pull_leaderboard(_runid: string, options: any) {
             .exec();
 
         let game = JSON.parse(res2[0][1]);
-        let category = JSON.parse(res2[1][1]);
-        let level = JSON.parse(res2[2][1]);
+        let category = _.find(JSON.parse(res2[1][1]), v => v.id === options.category_id);
+        let level = _.find(JSON.parse(res2[2][1]), v => v.id === options.level_id);
 
         let updated_players: {[id: string]: speedrun_api.User} = {};
         if(lb.players != null && _.isArray(lb.players.data)) {
-            updated_players = _.keyBy(lb.players.data);
+            updated_players = _.keyBy(lb.players.data, player => player.id || '');
         }
 
         // record runs
         for(let run of lb.runs) {
-            run.run.players = run.run.players.map(v => v.id ? updated_players[v.id] : v);
+            run.run.players = run.run.players.map(v => v.id && updated_players[v.id] ? updated_players[v.id] : v);
             (<speedrun_api.Run>run.run).game = game;
             (<speedrun_api.Run>run.run).category = category;
             (<speedrun_api.Run>run.run).level = level;
