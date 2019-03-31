@@ -14,7 +14,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:targetApi="n">
-        <activity android:name=".HistoryActivity" android:label="@string/title_activity_history" />
+        <activity android:name=".HistoryActivity"
+            android:label="@string/title_activity_history"
+            android:parentActivityName=".GameListActivity" />
 
         <service
             android:name=".MessagingService"

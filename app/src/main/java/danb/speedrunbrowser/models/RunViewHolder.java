@@ -63,19 +63,21 @@ public class RunViewHolder extends RecyclerView.ViewHolder {
         mRunDate.setText(entry.run.date);
         mRank.setText(entry.getPlaceName());
 
-        if(entry.place == 1 && game.assets.trophy1st != null) {
-            new DownloadImageTask(context, mRankImg).execute(game.assets.trophy1st.uri);
+        if(game.assets != null) {
+            if(entry.place == 1 && game.assets.trophy1st != null) {
+                new DownloadImageTask(context, mRankImg).execute(game.assets.trophy1st.uri);
+            }
+            if(entry.place == 2 && game.assets.trophy2nd != null) {
+                new DownloadImageTask(context, mRankImg).execute(game.assets.trophy2nd.uri);
+            }
+            if(entry.place == 3 && game.assets.trophy3rd != null) {
+                new DownloadImageTask(context, mRankImg).execute(game.assets.trophy3rd.uri);
+            }
+            if(entry.place == 4 && game.assets.trophy4th != null) {
+                new DownloadImageTask(context, mRankImg).execute(game.assets.trophy4th.uri);
+            }
+            else
+                mRankImg.setImageDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
-        if(entry.place == 2 && game.assets.trophy2nd != null) {
-            new DownloadImageTask(context, mRankImg).execute(game.assets.trophy2nd.uri);
-        }
-        if(entry.place == 3 && game.assets.trophy3rd != null) {
-            new DownloadImageTask(context, mRankImg).execute(game.assets.trophy3rd.uri);
-        }
-        if(entry.place == 4 && game.assets.trophy4th != null) {
-            new DownloadImageTask(context, mRankImg).execute(game.assets.trophy4th.uri);
-        }
-        else
-            mRankImg.setImageDrawable(new ColorDrawable(Color.TRANSPARENT));
     }
 }

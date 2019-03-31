@@ -3,8 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center"
-    android:layout_marginBottom="@dimen/half_fab_margin"
-    android:layout_marginTop="@dimen/half_fab_margin">
+    android:paddingTop="@dimen/half_fab_margin"
+    android:paddingBottom="@dimen/half_fab_margin">
     <TextView
         android:id="@+id/txtRunCategory"
         android:maxWidth="75dp" />
@@ -13,6 +13,7 @@
         android:gravity="center">
         <ImageView
             android:id="@+id/imgPlace"
+            android:layout_marginEnd="@dimen/half_fab_margin"
             android:layout_width="20dp"
             android:layout_height="20dp" />
         <TextView

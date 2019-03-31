@@ -7,6 +7,7 @@ import android.view.MenuItem;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import danb.speedrunbrowser.utils.Util;
 
 /**
  * An activity representing a single Game detail screen. This

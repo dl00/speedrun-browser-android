@@ -7,12 +7,19 @@ import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -21,10 +28,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
 import danb.speedrunbrowser.api.objects.User;
+import danb.speedrunbrowser.utils.AppDatabase;
 import danb.speedrunbrowser.utils.ConnectionErrorConsumer;
 import danb.speedrunbrowser.utils.Constants;
 import danb.speedrunbrowser.utils.DownloadImageTask;
@@ -32,7 +41,9 @@ import danb.speedrunbrowser.utils.Util;
 import danb.speedrunbrowser.views.ProgressSpinnerView;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 
 public class PlayerDetailActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = PlayerDetailActivity.class.getSimpleName();
@@ -40,9 +51,14 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
     public static final String ARG_PLAYER = "player";
     public static final String ARG_PLAYER_ID = "player_id";
 
-    CompositeDisposable mDisposables = new CompositeDisposable();
+    private CompositeDisposable mDisposables = new CompositeDisposable();
+
+    private AppDatabase mDB;
 
     private User mPlayer;
+    private AppDatabase.Subscription mSubscription;
+
+    private Menu mMenu;
 
     private ProgressSpinnerView mSpinner;
     private View mPlayerHead;
@@ -63,6 +79,10 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player_detail);
+
+        setTitle(R.string.title_loading);
+
+        mDB = AppDatabase.make(this);
 
         mSpinner = findViewById(R.id.spinner);
         mPlayerHead = findViewById(R.id.layoutPlayerHeader);
@@ -85,37 +105,172 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
         Bundle args = getIntent().getExtras();
 
         if(args != null && (mPlayer = (User)args.getSerializable(ARG_PLAYER)) != null) {
+            loadSubscription(mPlayer.id);
             setViewData();
         }
         else if(args != null && args.getString(ARG_PLAYER_ID) != null) {
-            loadPlayer(args.getString(ARG_PLAYER_ID));
+            String pid = args.getString(ARG_PLAYER_ID);
+            loadSubscription(pid);
+            loadPlayer(pid);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        mDisposables.dispose();
+        mDB.close();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.player, menu);
+        mMenu = menu;
+        setMenu();
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId() == R.id.menu_subscribe) {
+            toggleSubscribed();
+            return true;
+        }
+
+        return false;
+    }
+
+    private void loadSubscription(final String playerId) {
+        mDisposables.add(mDB.subscriptionDao().get(playerId)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(new Consumer<AppDatabase.Subscription>() {
+                @Override
+                public void accept(AppDatabase.Subscription subscription) throws Exception {
+                    mSubscription = subscription;
+                    setMenu();
+                }
+            }));
     }
 
     private void loadPlayer(final String playerId) {
         Log.d(TAG, "Download playerId: " + playerId);
+
+        /// TODO: ideally this would be zipped/run in parallel
         mDisposables.add(SpeedrunMiddlewareAPI.make().listPlayers(playerId)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<SpeedrunMiddlewareAPI.APIResponse<User>>() {
-                    @Override
-                    public void accept(SpeedrunMiddlewareAPI.APIResponse<User> gameAPIResponse) throws Exception {
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(new Consumer<SpeedrunMiddlewareAPI.APIResponse<User>>() {
+                @Override
+                public void accept(SpeedrunMiddlewareAPI.APIResponse<User> gameAPIResponse) throws Exception {
 
-                        if (gameAPIResponse.data == null || gameAPIResponse.data.isEmpty()) {
-                            // game was not able to be found for some reason?
-                            Util.showErrorToast(PlayerDetailActivity.this, getString(R.string.error_missing_game, playerId));
-                            return;
-                        }
-
-                        mPlayer = gameAPIResponse.data.get(0);
-
-                        setViewData();
+                    if (gameAPIResponse.data == null || gameAPIResponse.data.isEmpty()) {
+                        // game was not able to be found for some reason?
+                        Util.showErrorToast(PlayerDetailActivity.this, getString(R.string.error_missing_game, playerId));
+                        return;
                     }
-                }, new ConnectionErrorConsumer(this)));
+
+                    mPlayer = gameAPIResponse.data.get(0);
+
+                    setViewData();
+                }
+            }, new ConnectionErrorConsumer(PlayerDetailActivity.this)));
+    }
+
+    private boolean toggleSubscribed() {
+
+        MenuItem subscribeMenuItem = mMenu.findItem(R.id.menu_subscribe);
+
+        ProgressSpinnerView psv = new ProgressSpinnerView(this, null);
+        psv.setDirection(ProgressSpinnerView.Direction.RIGHT);
+        psv.setScale(0.5f);
+
+        subscribeMenuItem.setActionView(psv);
+
+
+
+
+        final Consumer<Throwable> errorAction = new Consumer<Throwable>() {
+            @Override
+            public void accept(Throwable throwable) throws Exception {
+                Log.w(TAG, "Could not add or remove subscription record from DB:", throwable);
+            }
+        };
+
+        if(mSubscription != null) {
+            FirebaseMessaging.getInstance().unsubscribeFromTopic(mSubscription.getFCMTopic())
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+
+                        Log.d(TAG, "Unsubscribe: " + mSubscription.getFCMTopic());
+                        mDisposables.add(mDB.subscriptionDao().unsubscribe(mSubscription)
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .doOnError(errorAction)
+                                .subscribe(new Action() {
+                                    @Override
+                                    public void run() throws Exception {
+                                        mSubscription = null;
+                                        setMenu();
+                                        Util.showMsgToast(PlayerDetailActivity.this, getString(R.string.success_subscription));
+                                    }
+                                }));
+                    }
+                });
+        }
+        else if(mPlayer != null) {
+            mSubscription = new AppDatabase.Subscription("player", mPlayer.id);
+
+            FirebaseMessaging.getInstance().subscribeToTopic(mSubscription.getFCMTopic())
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        Log.d(TAG, "Subscribe: " + mSubscription.getFCMTopic());
+
+                        mDisposables.add(mDB.subscriptionDao().subscribe(mSubscription)
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .doOnError(errorAction)
+                                .subscribe(new Action() {
+                                    @Override
+                                    public void run() throws Exception {
+                                        setMenu();
+                                        Util.showMsgToast(PlayerDetailActivity.this, getString(R.string.success_subscription));
+                                    }
+                                }));
+                    }
+                });
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private void setMenu() {
+        if(mMenu == null)
+            return;
+
+        MenuItem subscribeItem = mMenu.findItem(R.id.menu_subscribe);
+        subscribeItem.setActionView(null);
+        if(mSubscription != null) {
+            subscribeItem.setIcon(R.drawable.baseline_star_24);
+            subscribeItem.setTitle(R.string.menu_unsubscribe);
+        }
+        else {
+            subscribeItem.setIcon(R.drawable.baseline_star_border_24);
+            subscribeItem.setTitle(R.string.menu_subscribe);
+        }
     }
 
     private void setViewData() {
 
         setTitle(mPlayer.getName());
+
+        // find out if we are subscribed
+        setMenu();
 
         mPlayer.applyTextView(mPlayerName);
 
@@ -128,7 +283,7 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
         if(!mPlayer.isGuest()) {
             try {
                 mBestsFrame.setVisibility(View.VISIBLE);
-                new DownloadImageTask(this, mPlayerIcon).clear(true).execute(new URL(String.format(Constants.AVATAR_IMG_LOCATION, mPlayer.name)));
+                new DownloadImageTask(this, mPlayerIcon).clear(true).execute(new URL(String.format(Constants.AVATAR_IMG_LOCATION, mPlayer.names.get("international"))));
             } catch (MalformedURLException e) {
                 Log.w(TAG, "Chould not show player logo:", e);
                 mBestsFrame.setVisibility(View.GONE);

@@ -22,7 +22,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.security.ProviderInstaller;
+import com.google.firebase.crash.FirebaseCrash;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -84,6 +86,8 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_list);
+
+        FirebaseCrash.setCrashCollectionEnabled(!BuildConfig.DEBUG);
 
         // might need to update certificates/connection modes on older android versions
         // TODO: this is the synchronous call, may block user interation when installing provider. Consider using async

@@ -58,6 +58,9 @@ public class ProgressSpinnerView extends View {
     /// The last measured density of the display
     private float mDensity = 1;
 
+    // configurable size
+    private float mScale = 1;
+
     public ProgressSpinnerView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
 
@@ -107,8 +110,8 @@ public class ProgressSpinnerView extends View {
         float w = mAnimBoxSize + mAnimBoxPadding * 2;
         float h = mAnimBoxSize * mAnimBoxCount + mAnimBoxPadding * (mAnimBoxCount + 1);
 
-        w *= mDensity;
-        h *= mDensity;
+        w *= mDensity * mScale;
+        h *= mDensity * mScale;
 
         mDrawRegion.left = centerX - w / 2;
         mDrawRegion.right = centerX + w / 2;
@@ -164,29 +167,31 @@ public class ProgressSpinnerView extends View {
             float cx = mDrawRegion.centerX();
             float cy = mDrawRegion.centerY();
 
+            float scale = mScale * mDensity;
+
             // first and last boxes may have special
             if(i == 0) {
-                y0 = mDrawRegion.top + mAnimBoxPadding * mDensity;
-                y1 = ease(y0 + mAnimBoxSize * mDensity, y0, animProgress);
+                y0 = mDrawRegion.top + mAnimBoxPadding * scale;
+                y1 = ease(y0 + mAnimBoxSize * scale, y0, animProgress);
 
-                x0 = ease(mDrawRegion.left + mAnimBoxPadding * mDensity, cx, animProgress);
-                x1 = ease(mDrawRegion.right - mAnimBoxPadding * mDensity, cx, animProgress);
+                x0 = ease(mDrawRegion.left + mAnimBoxPadding * scale, cx, animProgress);
+                x1 = ease(mDrawRegion.right - mAnimBoxPadding * scale, cx, animProgress);
             }
             else if(i == mAnimBoxCount) {
-                y1 = mDrawRegion.bottom - mAnimBoxPadding * mDensity;
-                y0 = ease(y1, y1 - mAnimBoxSize * mDensity, animProgress);
+                y1 = mDrawRegion.bottom - mAnimBoxPadding * scale;
+                y0 = ease(y1, y1 - mAnimBoxSize * scale, animProgress);
 
-                x0 = ease(cx, mDrawRegion.left + mAnimBoxPadding * mDensity, animProgress);
-                x1 = ease(cx, mDrawRegion.right - mAnimBoxPadding * mDensity, animProgress);
+                x0 = ease(cx, mDrawRegion.left + mAnimBoxPadding * scale, animProgress);
+                x1 = ease(cx, mDrawRegion.right - mAnimBoxPadding * scale, animProgress);
             }
             else {
-                x0 = mDrawRegion.left + mAnimBoxPadding * mDensity;
-                x1 = mDrawRegion.right - mAnimBoxPadding * mDensity;
+                x0 = mDrawRegion.left + mAnimBoxPadding * scale;
+                x1 = mDrawRegion.right - mAnimBoxPadding * scale;
 
 
-                float y0_base = mDrawRegion.top + (mAnimBoxPadding * (1 + i) + mAnimBoxSize * i) * mDensity;
-                y0 = ease(y0_base, y0_base - (mAnimBoxSize + mAnimBoxPadding) * mDensity, animProgress);
-                y1 = y0 + mAnimBoxSize * mDensity;
+                float y0_base = mDrawRegion.top + (mAnimBoxPadding * (1 + i) + mAnimBoxSize * i) * scale;
+                y0 = ease(y0_base, y0_base - (mAnimBoxSize + mAnimBoxPadding) * scale, animProgress);
+                y1 = y0 + mAnimBoxSize * scale;
             }
 
             // transform rotate
@@ -207,7 +212,7 @@ public class ProgressSpinnerView extends View {
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                c.drawRoundRect(x0, y0, x1, y1, mAnimBoxRoundedCornerRadius * mDensity, mAnimBoxRoundedCornerRadius * mDensity, mDrawPaint);
+                c.drawRoundRect(x0, y0, x1, y1, mAnimBoxRoundedCornerRadius * scale, mAnimBoxRoundedCornerRadius * scale, mDrawPaint);
             }
             else {
                 c.drawRect(x0, y0, x1, y1, mDrawPaint);
@@ -215,6 +220,14 @@ public class ProgressSpinnerView extends View {
         }
 
         postInvalidateOnAnimation();
+    }
+
+    public void setDirection(Direction direction) {
+        mDirection = direction;
+    }
+
+    public void setScale(float scale) {
+        mScale = scale;
     }
 
     public enum Direction {

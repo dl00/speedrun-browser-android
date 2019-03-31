@@ -38,6 +38,9 @@ export interface BulkGame {
     names: Names
     abbreviation: string
     weblink: string
+    assets: BulkGameAssets
+    platforms: string[]|UpstreamData<Platform>|Platform[]
+    'release-date': string
 }
 
 export interface GameAssets {
@@ -69,9 +72,7 @@ export function game_assets_to_bulk(game_assets: GameAssets): BulkGameAssets {
 
 export interface Game extends BulkGame, BaseMiddleware {
     released: number
-    'release-date': string
     romhack: boolean
-    platforms: string[]|UpstreamData<Platform>|Platform[]
     regions: string[]|UpstreamData<Region>|Region[]
     genres: string[]
     developers: string[]
@@ -82,7 +83,11 @@ export interface Game extends BulkGame, BaseMiddleware {
 
 /// TODO: Use decorators
 export function game_to_bulk(game: Game): BulkGame {
-    return _.pick(game, 'id', 'names', 'abbreviation', 'weblink');
+    let bulkGame: BulkGame = _.pick(game, 'id', 'names', 'abbreviation', 'weblink', 'assets', 'platforms', 'release-date');
+
+    bulkGame.assets = game_assets_to_bulk(game.assets);
+
+    return bulkGame
 }
 
 export function normalize_game(d: Game) {

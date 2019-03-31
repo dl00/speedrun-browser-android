@@ -8,6 +8,9 @@ import * as ioredis from 'ioredis';
 let Indexer: any = require('@13013/indexer');
 
 export interface Config {
+
+    stackName: string,
+
     listen: {
         /// Hostname to accept connections from. Use 0.0.0.0 for all interfaces.
         host: string
@@ -40,10 +43,12 @@ export interface Config {
         /// Number of seconds before a running task is considered stalled/lost
         runningTaskTimeout: number
 
-        /// 
-        push_notify: {
+        /// Settings for dispatching push notification
+        pushNotify: {
+            /// Whether or not to send out push notifications
             enabled: boolean
     
+            /// Authentication JSON file as provided by firebase
             credentialFile: string
         }
     }
@@ -64,6 +69,9 @@ export interface Config {
 }
 
 export const DEFAULT_CONFIG: Config = {
+
+    stackName: 'dev',
+
     listen: {
         host: '0.0.0.0',
         port: 3500
@@ -88,7 +96,7 @@ export const DEFAULT_CONFIG: Config = {
             db: 1
         },
 
-        push_notify: {
+        pushNotify: {
             enabled: false,
             credentialFile: '/speedrunbrowser-middleware/secrets/firebase-service-account.json'
         }

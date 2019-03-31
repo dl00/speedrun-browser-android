@@ -8,16 +8,19 @@ import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
 import danb.speedrunbrowser.models.RunViewHolder;
 import danb.speedrunbrowser.models.WatchRunViewHolder;
 import danb.speedrunbrowser.utils.AppDatabase;
+import danb.speedrunbrowser.utils.ConnectionErrorConsumer;
 import danb.speedrunbrowser.views.ProgressSpinnerView;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,9 +51,9 @@ public class HistoryActivity extends AppCompatActivity {
 
         mRunEntries = new ArrayList<>(0);
 
+        mHistoryList.setAdapter(new WatchHistoryAdapter());
 
-        //loadRunData(0);
-        setViewData();
+        loadRunData(0);
     }
 
     @Override
@@ -63,31 +66,36 @@ public class HistoryActivity extends AppCompatActivity {
     public void loadRunData(int offset) {
         AppDatabase db = AppDatabase.make(this);
 
-        final List<String> runIds = new ArrayList<>();
-
         mDisposables.add(db.watchHistoryDao().getMany(offset)
                 .observeOn(AndroidSchedulers.mainThread())
-                .doFinally(new Action() {
+                .subscribeOn(Schedulers.io())
+                .subscribe(new Consumer<List<AppDatabase.WatchHistoryEntry>>() {
                     @Override
-                    public void run() throws Exception {
+                    public void accept(List<AppDatabase.WatchHistoryEntry> watchHistoryEntries) throws Exception {
+
+                        if(watchHistoryEntries.isEmpty()) {
+                            setViewData();
+                            return;
+                        }
+
+                        final List<String> runIds = new ArrayList<>(watchHistoryEntries.size());
+
+                        for(AppDatabase.WatchHistoryEntry whe : watchHistoryEntries) {
+                            runIds.add(whe.runId);
+                        }
+
                         String runs = TextUtils.join(",", runIds);
 
                         mDisposables.add(SpeedrunMiddlewareAPI.make().listRuns(runs)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(new Consumer<SpeedrunMiddlewareAPI.APIResponse<LeaderboardRunEntry>>() {
-                                @Override
-                                public void accept(SpeedrunMiddlewareAPI.APIResponse<LeaderboardRunEntry> runAPIResponse) throws Exception {
-                                    mRunEntries = runAPIResponse.data;
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(new Consumer<SpeedrunMiddlewareAPI.APIResponse<LeaderboardRunEntry>>() {
+                                    @Override
+                                    public void accept(SpeedrunMiddlewareAPI.APIResponse<LeaderboardRunEntry> runAPIResponse) throws Exception {
+                                        mRunEntries = runAPIResponse.data;
 
-                                    setViewData();
-                                }
-                            }));
-                    }
-                })
-                .subscribe(new Consumer<AppDatabase.WatchHistoryEntry>() {
-                    @Override
-                    public void accept(AppDatabase.WatchHistoryEntry watchHistoryEntry) throws Exception {
-                        runIds.add(watchHistoryEntry.runId);
+                                        setViewData();
+                                    }
+                                }, new ConnectionErrorConsumer(HistoryActivity.this)));
                     }
                 }));
     }
@@ -98,15 +106,21 @@ public class HistoryActivity extends AppCompatActivity {
         }
         else {
             mNoHistoryText.setVisibility(View.GONE);
-
-            if(mHistoryList.getAdapter() == null) {
-
-            }
-
-            mHistoryList.getAdapter().notifyDataSetChanged();
+            Objects.requireNonNull(mHistoryList.getAdapter()).notifyDataSetChanged();
         }
 
         mProgressSpinner.setVisibility(View.GONE);
+    }
+
+    private void showRun(LeaderboardRunEntry run) {
+        Intent intent = new Intent(this, RunDetailActivity.class);
+
+        intent.putExtra(RunDetailActivity.EXTRA_RUN, run.run);
+        intent.putExtra(RunDetailActivity.EXTRA_GAME, run.run.game);
+        intent.putExtra(RunDetailActivity.EXTRA_CATEGORY, run.run.category);
+        intent.putExtra(RunDetailActivity.EXTRA_LEVEL, run.run.level);
+
+        startActivity(intent);
     }
 
     private class WatchHistoryAdapter extends RecyclerView.Adapter<WatchRunViewHolder> {
@@ -119,20 +133,20 @@ public class HistoryActivity extends AppCompatActivity {
         @NonNull
         @Override
         public WatchRunViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View v = inflater.inflate(R.layout.leaderboard_list_content, parent, false);
+            View v = inflater.inflate(R.layout.watch_list_content, parent, false);
             return new WatchRunViewHolder(v);
         }
 
         @Override
         public void onBindViewHolder(@NonNull WatchRunViewHolder holder, int position) {
-            LeaderboardRunEntry run = mRunEntries.get(position);
+            final LeaderboardRunEntry run = mRunEntries.get(position);
 
             holder.apply(HistoryActivity.this, run.run.game, run);
 
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
+                    showRun(run);
                 }
             });
             holder.itemView.setTag(run);

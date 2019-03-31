@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -20,6 +21,7 @@ public class WatchRunViewHolder extends RecyclerView.ViewHolder {
 
     private RunViewHolder mLeaderboardHolder;
 
+    private TextView mGameName;
     private ImageView mPlayerImage;
     private ImageView mGameImage;
 
@@ -28,6 +30,7 @@ public class WatchRunViewHolder extends RecyclerView.ViewHolder {
 
         mLeaderboardHolder = new RunViewHolder(v);
 
+        mGameName = v.findViewById(R.id.txtGameName);
         mPlayerImage = v.findViewById(R.id.imgPlayerIcon);
         mGameImage = v.findViewById(R.id.imgGameIcon);
     }
@@ -36,12 +39,12 @@ public class WatchRunViewHolder extends RecyclerView.ViewHolder {
 
         mLeaderboardHolder.apply(context, game, entry);
 
+        mGameName.setText(entry.run.game.names.get("international"));
 
-
-        if(!entry.run.players.isEmpty() && entry.run.players.get(0).name != null) {
+        if(!entry.run.players.isEmpty() && entry.run.players.get(0).names.get("international") != null) {
             mPlayerImage.setVisibility(View.VISIBLE);
             try {
-                new DownloadImageTask(context, mPlayerImage).execute(new URL(String.format(Constants.AVATAR_IMG_LOCATION, entry.run.players.get(0).name)));
+                new DownloadImageTask(context, mPlayerImage).execute(new URL(String.format(Constants.AVATAR_IMG_LOCATION, entry.run.players.get(0).names.get("international"))));
             }
             catch(MalformedURLException e) {
                 Log.w(TAG, "Could not generate player image URL:", e);
@@ -50,7 +53,7 @@ public class WatchRunViewHolder extends RecyclerView.ViewHolder {
         else
             mPlayerImage.setVisibility(View.GONE);
 
-        if(entry.run.game != null && entry.run.game.assets.coverLarge != null) {
+        if(entry.run.game != null && entry.run.game.assets != null && entry.run.game.assets.coverLarge != null) {
             mGameImage.setVisibility(View.VISIBLE);
             try {
                 new DownloadImageTask(context, mGameImage).execute(new URL(String.format(Constants.AVATAR_IMG_LOCATION, entry.run.game.assets.coverLarge.uri)));

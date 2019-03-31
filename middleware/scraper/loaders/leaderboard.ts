@@ -11,7 +11,7 @@ import request from '../../lib/request';
 import * as scraper from '../index';
 import * as push_notify from '../push-notify';
 
-export async function pull_leaderboard(_runid: string, options: any) {
+export async function pull_leaderboard(runid: string, options: any) {
     try {
         let res = await request(speedrun_api.API_PREFIX + '/leaderboards/' + options.game_id + 
             (options.level_id ? '/level/' + options.level_id + '/' + options.category_id : '/category/' + options.category_id) + '?embed=players');
@@ -27,6 +27,20 @@ export async function pull_leaderboard(_runid: string, options: any) {
         let game = JSON.parse(res2[0][1]);
         let category = _.find(JSON.parse(res2[1][1]), v => v.id === options.category_id);
         let level = _.find(JSON.parse(res2[2][1]), v => v.id === options.level_id);
+
+        if(!game) {
+            // this is a new game, bail and download the new game
+            await scraper.push_call({
+                runid: scraper.join_runid([runid, <string>lb.game]),
+                module: 'gamelist',
+                exec: 'pull_game',
+                options: {
+                    id: lb.game
+                }
+            }, 1);
+
+            return;
+        }
 
         let updated_players: {[id: string]: speedrun_api.User} = {};
         if(lb.players != null && _.isArray(lb.players.data)) {
@@ -86,9 +100,10 @@ export async function pull_leaderboard(_runid: string, options: any) {
                 push_notify.notify_game_record(nr, game, category, level);
             }
 
-            // this should be a personal best. send notification to all attached players
+            // this should be a personal best. send notification to all attached players who are regular users
             for(let pid of nr.new_run.run.players) {
-                push_notify.notify_player_record(nr, updated_players[pid.id], game, category, level);
+                if(updated_players[pid.id])
+                    push_notify.notify_player_record(nr, updated_players[pid.id], game, category, level);
             }
         }
     }
