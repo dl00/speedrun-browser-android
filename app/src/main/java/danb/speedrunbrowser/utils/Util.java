@@ -17,6 +17,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import androidx.core.app.NotificationCompat;
@@ -27,6 +28,9 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class Util {
+
+    private static final String NOTIFICATION_GROUP = "records";
+
     public static void showErrorToast(Context ctx, CharSequence msg) {
         Toast.makeText(ctx, msg, Toast.LENGTH_LONG).show();
     }
@@ -89,6 +93,7 @@ public class Util {
                         .setContentTitle(title)
                         .setContentText(message)
                         .setAutoCancel(true)
+                        .setGroup(Util.NOTIFICATION_GROUP)
                         .setContentIntent(pendingIntent);
 
         NotificationManager notificationManager =
@@ -102,6 +107,6 @@ public class Util {
             notificationManager.createNotificationChannel(channel);
         }
 
-        notificationManager.notify(0, notificationBuilder.build());
+        notificationManager.notify(new Random().nextInt(), notificationBuilder.build());
     }
 }

@@ -43,4 +43,7 @@
     <string name="success_subscription">Notification settings updated!</string>
     <string name="default_notification_channel_id">default</string>
     <string name="notification_channel_title">Subscribed Players/Games</string>
+
+    <string name="notify_title_player_record">New Personal Best from %1s in %2s</string>
+    <string name="notify_msg_player_record">%1s &#x2022; %2s &#x2022; %3s\n%4s -> %5s</string>
 </resources>
