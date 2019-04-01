@@ -39,9 +39,10 @@ public class WatchRunViewHolder extends RecyclerView.ViewHolder {
 
         mLeaderboardHolder.apply(context, game, entry);
 
-        mGameName.setText(entry.run.game.names.get("international"));
+        if(entry.run.game.names != null)
+            mGameName.setText(entry.run.game.names.get("international"));
 
-        if(!entry.run.players.isEmpty() && entry.run.players.get(0).names.get("international") != null) {
+        if(!entry.run.players.isEmpty() && entry.run.players.get(0).names != null && entry.run.players.get(0).names.get("international") != null) {
             mPlayerImage.setVisibility(View.VISIBLE);
             try {
                 new DownloadImageTask(context, mPlayerImage).execute(new URL(String.format(Constants.AVATAR_IMG_LOCATION, entry.run.players.get(0).names.get("international"))));
@@ -55,12 +56,7 @@ public class WatchRunViewHolder extends RecyclerView.ViewHolder {
 
         if(entry.run.game != null && entry.run.game.assets != null && entry.run.game.assets.coverLarge != null) {
             mGameImage.setVisibility(View.VISIBLE);
-            try {
-                new DownloadImageTask(context, mGameImage).execute(new URL(String.format(Constants.AVATAR_IMG_LOCATION, entry.run.game.assets.coverLarge.uri)));
-            }
-            catch(MalformedURLException e) {
-                Log.w(TAG, "Could not use game cover asset URL is malformed:", e);
-            }
+            new DownloadImageTask(context, mGameImage).execute(entry.run.game.assets.coverLarge.uri);
         }
         else
             mGameImage.setVisibility(View.GONE);

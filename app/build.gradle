@@ -28,6 +28,10 @@ android {
         androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
     }
 
+    configurations.all {
+        all*.exclude group: 'com.google.guava', module: 'listenablefuture'
+    }
+
 }
 
 dependencies {
@@ -42,6 +46,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-messaging:17.5.0'
     implementation 'com.crashlytics.sdk.android:crashlytics:2.9.9'
     implementation 'com.google.firebase:firebase-crash:16.2.1'
+
     implementation 'com.google.firebase:firebase-inappmessaging-display:17.1.1'
 
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
