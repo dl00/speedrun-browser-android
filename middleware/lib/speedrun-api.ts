@@ -38,6 +38,9 @@ export interface BulkGame {
     names: Names
     abbreviation: string
     weblink: string
+    assets: BulkGameAssets
+    platforms: string[]|UpstreamData<Platform>|Platform[]
+    'release-date': string
 }
 
 export interface GameAssets {
@@ -69,9 +72,7 @@ export function game_assets_to_bulk(game_assets: GameAssets): BulkGameAssets {
 
 export interface Game extends BulkGame, BaseMiddleware {
     released: number
-    'release-date': string
     romhack: boolean
-    platforms: string[]|UpstreamData<Platform>|Platform[]
     regions: string[]|UpstreamData<Region>|Region[]
     genres: string[]
     developers: string[]
@@ -82,7 +83,11 @@ export interface Game extends BulkGame, BaseMiddleware {
 
 /// TODO: Use decorators
 export function game_to_bulk(game: Game): BulkGame {
-    return _.pick(game, 'id', 'names', 'abbreviation', 'weblink');
+    let bulkGame: BulkGame = _.pick(game, 'id', 'names', 'abbreviation', 'weblink', 'assets', 'platforms', 'release-date');
+
+    bulkGame.assets = game_assets_to_bulk(game.assets);
+
+    return bulkGame
 }
 
 export function normalize_game(d: Game) {
@@ -104,15 +109,22 @@ export function normalize_game(d: Game) {
     }
 }
 
-export interface Category extends BaseMiddleware {
+export interface BulkCategory {
     id: string
     name: string
     type: string
+}
+
+export interface Category extends BulkCategory, BaseMiddleware {
     weblink: string
     rules: string
     miscellaneous: boolean
 
     variables: UpstreamData<Variable>|Variable[]
+}
+
+export function category_to_bulk(category: Category): BulkCategory {
+    return _.pick(category, 'id', 'name', 'type');
 }
 
 export function normalize_category(d: Category) {
@@ -131,9 +143,15 @@ export interface Variable extends BaseMiddleware {
     
 }
 
-export interface Level extends BaseMiddleware {
+export interface BulkLevel {
     id: string
     name: string
+}
+
+export interface Level extends BulkLevel, BaseMiddleware {}
+
+export function level_to_bulk(level: Level): BulkLevel {
+    return _.pick(level, 'id', 'name');
 }
 
 export interface LeaderboardRunEntry {
@@ -187,9 +205,9 @@ export interface BulkRun {
 
 export interface Run extends BulkRun, BaseMiddleware {
     weblink: string
-    game: Game|string
-    level: string
-    category: Category|string
+    game: BulkGame|string
+    level: BulkLevel|string
+    category: BulkCategory|string
     submitted: string
     videos: {
         text: string
@@ -210,8 +228,15 @@ export function normalize_run(d: Run) {
     normalize(d);
 
     if(d.players) {
-        d.players.map(<any>user_to_bulk);
+        d.players = d.players.map(<any>user_to_bulk);
     }
+
+    if(typeof d.game === 'object')
+        d.game = game_to_bulk(<Game>d.game);
+    if(typeof d.category === 'object')
+        d.category = category_to_bulk(<Category>d.category);
+    if(typeof d.level === 'object')
+        d.level = level_to_bulk(<Level>d.level);
 }
 
 /// TODO: Use decorators

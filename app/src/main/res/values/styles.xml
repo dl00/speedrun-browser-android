@@ -10,6 +10,8 @@
         <item name="android:colorBackground">@color/colorPrimary</item>
         <item name="android:textColor">@android:color/white</item>
         <item name="android:textColorHint">@android:color/darker_gray</item>
+
+        <item name="android:itemBackground">@color/colorPrimary</item>
     </style>
 
     <style name="AppTheme.NoActionBar">

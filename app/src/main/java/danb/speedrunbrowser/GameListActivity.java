@@ -22,7 +22,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.security.ProviderInstaller;
+import com.google.firebase.crash.FirebaseCrash;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -85,6 +87,8 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_list);
 
+        FirebaseCrash.setCrashCollectionEnabled(!BuildConfig.DEBUG);
+
         // might need to update certificates/connection modes on older android versions
         // TODO: this is the synchronous call, may block user interation when installing provider. Consider using async
         try {
@@ -141,6 +145,10 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher {
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.menu_about) {
             showAbout();
+            return true;
+        }
+        else if(item.getItemId() == R.id.menu_history) {
+            showWatchHistory();
             return true;
         }
 
@@ -266,6 +274,11 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher {
 
     public void showAbout() {
         Intent intent = new Intent(this, AboutActivity.class);
+        startActivity(intent);
+    }
+
+    public void showWatchHistory() {
+        Intent intent = new Intent(this, HistoryActivity.class);
         startActivity(intent);
     }
 

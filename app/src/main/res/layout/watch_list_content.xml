@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:gravity="center"
+    android:layout_height="@dimen/game_cover_height">
+
+    <ImageView
+        android:id="@+id/imgGameIcon"
+        android:layout_width="@dimen/game_cover_width"
+        android:layout_height="@dimen/game_cover_height"
+        android:layout_marginEnd="@dimen/half_fab_margin" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/txtGameName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="The Legend of Zelda: Breath of the Wild"
+            android:layout_gravity="center"
+            tools:ignore="HardcodedText" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <include layout="@layout/leaderboard_list_content" />
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/imgPlayerIcon"
+        android:layout_width="@dimen/player_icon_width"
+        android:layout_height="@dimen/player_icon_height"
+        android:layout_marginStart="@dimen/half_fab_margin"
+        android:layout_gravity="center" />
+
+</LinearLayout>

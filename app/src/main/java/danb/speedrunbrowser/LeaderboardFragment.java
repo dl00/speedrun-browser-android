@@ -4,19 +4,14 @@ import android.animation.Animator;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import com.google.android.flexbox.FlexboxLayout;
 
 import java.util.List;
 import java.util.Objects;
@@ -32,8 +27,8 @@ import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
 import danb.speedrunbrowser.api.objects.Level;
 import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.api.objects.Variable;
+import danb.speedrunbrowser.models.RunViewHolder;
 import danb.speedrunbrowser.utils.ConnectionErrorConsumer;
-import danb.speedrunbrowser.utils.DownloadImageTask;
 import danb.speedrunbrowser.utils.Util;
 import danb.speedrunbrowser.views.ProgressSpinnerView;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -291,7 +286,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         }
     }
 
-    public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardFragment.RunViewHolder> {
+    public class LeaderboardAdapter extends RecyclerView.Adapter<RunViewHolder> {
 
         private final LayoutInflater inflater;
 
@@ -307,7 +302,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         };
 
         public LeaderboardAdapter() {
-            inflater = (LayoutInflater)getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            inflater = (LayoutInflater) Objects.requireNonNull(getContext()).getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
 
         @NonNull
@@ -321,7 +316,8 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         public void onBindViewHolder(@NonNull RunViewHolder holder, int position) {
             LeaderboardRunEntry run = mFilteredLeaderboardRuns.get(position);
 
-            holder.apply(getContext(), mGame, run, mLeaderboard);
+            holder.apply(getContext(), mGame, run);
+
             holder.itemView.setOnClickListener(mOnClickListener);
             holder.itemView.setTag(run);
         }
@@ -332,68 +328,4 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         }
     }
 
-    public static class RunViewHolder extends RecyclerView.ViewHolder {
-
-        private FlexboxLayout mPlayerNames;
-        private TextView mRunTime;
-        private TextView mRunDate;
-        private TextView mRank;
-
-        private ImageView mRankImg;
-
-        public RunViewHolder(View v) {
-            super(v);
-
-            mPlayerNames = v.findViewById(R.id.txtPlayerNames);
-            mRunTime = v.findViewById(R.id.txtRunTime);
-            mRunDate = v.findViewById(R.id.txtRunDate);
-            mRank = v.findViewById(R.id.txtRank);
-            mRankImg = v.findViewById(R.id.imgRank);
-        }
-
-        public void apply(Context context, Game game, LeaderboardRunEntry entry, Leaderboard lb) {
-
-            mPlayerNames.removeAllViews();
-            boolean first = true;
-            for(User pid : entry.run.players) {
-
-                // find the matching player
-                User player = resolvePlayer(lb, pid);
-
-                TextView tv = new TextView(context);
-                tv.setTextSize(16);
-                player.applyTextView(tv);
-
-                if(!first) {
-                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                    lp.setMargins(context.getResources().getDimensionPixelSize(R.dimen.half_fab_margin), 0, 0, 0);
-                    tv.setLayoutParams(lp);
-                }
-                else
-                    first = false;
-
-
-                mPlayerNames.addView(tv);
-            }
-
-            mRunTime.setText(entry.run.times.formatTime());
-            mRunDate.setText(entry.run.date);
-            mRank.setText(entry.getPlaceName());
-
-            if(entry.place == 1 && game.assets.trophy1st != null) {
-                new DownloadImageTask(context, mRankImg).execute(game.assets.trophy1st.uri);
-            }
-            if(entry.place == 2 && game.assets.trophy2nd != null) {
-                new DownloadImageTask(context, mRankImg).execute(game.assets.trophy2nd.uri);
-            }
-            if(entry.place == 3 && game.assets.trophy3rd != null) {
-                new DownloadImageTask(context, mRankImg).execute(game.assets.trophy3rd.uri);
-            }
-            if(entry.place == 4 && game.assets.trophy4th != null) {
-                new DownloadImageTask(context, mRankImg).execute(game.assets.trophy4th.uri);
-            }
-            else
-                mRankImg.setImageDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
-    }
 }

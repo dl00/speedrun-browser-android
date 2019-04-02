@@ -76,21 +76,19 @@ export function template_call(call: Call, obj: any) {
 export async function push_call(call: Call, priority: number) {
     console.log('[PUSHC]', call.module, call.exec, call.runid);
 
-    let task_name = call.runid.split('/')[0];
-
     await rdb!.multi()
-        .sadd(`${DB.locs.task_calls}:${task_name}`, call.runid)
         .rpush(`${DB.locs.callqueue}:${priority}`, DB.join([
             call.runid,
             call.module,
             call.exec,
+            call.retry ? call.retry.toString() : '0',
             JSON.stringify(call.options) || '{}'
         ]))
         .exec();
 
 }
 
-async function do_call(call: Call) {
+async function do_call(call: Call, priority: number) {
     let loader = require(`./loaders/${call.module}`);
 
     try {
@@ -106,7 +104,7 @@ async function do_call(call: Call) {
                 return;
             }
 
-            await push_call(call, 15);
+            await push_call(call, priority);
         }
         else {
             console.error('[DROPC]', call.runid, err);
@@ -137,6 +135,7 @@ async function pop_call() {
     if(!rawc)
         return null;
     
+    let priority = rawc[0].split(':')[1];
     let raw_running_task = DB.join([Date.now(), rawc[1]]);
 
     let d = rawc[1].split(':');
@@ -145,18 +144,17 @@ async function pop_call() {
         runid: d[0],
         module: d[1],
         exec: d[2],
-        options: JSON.parse(d.slice(3).join(':'))
+        retry: parseInt(d[3]),
+        options: JSON.parse(d.slice(4).join(':'))
     };
 
-    let task_name = call.runid.split('/')[0];
     await rdb!.multi()
         .rpush(DB.locs.running_tasks, raw_running_task)
-        .srem(`${DB.locs.task_calls}:${task_name}`, call.runid)
         .exec();
 
     console.log('[POP C]', call.module, call.exec, call.runid);
 
-    let ret = await do_call(call);
+    let ret = await do_call(call, priority);
 
     // when the call returns we can safely remove from running tasks
     rdb!.lrem(DB.locs.running_tasks, 1, raw_running_task);
@@ -180,37 +178,24 @@ export function spawn_task(task: Task) {
 }
 
 async function init_task(task: Task) {
+    let runid = task.name + '/' + generate_unique_id(DB.ID_LENGTH)
 
-    // make sure the task does not still have pending tasks
-    let still_running: number = await rdb!.scard(`${DB.locs.task_calls}:${task.name}`);
-    if(still_running > 0) {
-        console.log('[DELAY]', task.name, still_running);
+    await push_call({
+        runid: runid,
+        module: task.module,
+        exec: task.exec,
+        options: task.options
+    }, 0);
 
-        // wait some time before trying again
+    await rdb!.hset(DB.locs.pending_tasks, task.name, DB.join([
+        runid,
+        moment().add(task.repeat).toISOString()
+    ]));
+    
+    if(task.repeat) {
         setTimeout(async () => {
             init_task(task);
-        }, 30 * 60 * 1000);
-    }
-    else {
-        let runid = task.name + '/' + generate_unique_id(DB.ID_LENGTH)
-
-        await push_call({
-            runid: runid,
-            module: task.module,
-            exec: task.exec,
-            options: task.options
-        }, 0);
-
-        await rdb!.hset(DB.locs.pending_tasks, task.name, DB.join([
-            runid,
-            moment().add(task.repeat).toISOString()
-        ]));
-        
-        if(task.repeat) {
-            setTimeout(async () => {
-                init_task(task);
-            }, task.repeat.asMilliseconds());
-        }
+        }, task.repeat.asMilliseconds());
     }
 }
 

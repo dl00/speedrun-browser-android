@@ -14,16 +14,17 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:targetApi="n">
+        <activity android:name=".HistoryActivity"
+            android:label="@string/title_activity_history"
+            android:parentActivityName=".GameListActivity" />
 
         <service
             android:name=".MessagingService"
             android:enabled="true"
             android:exported="true">
-
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
-
         </service>
 
         <activity android:name=".PlayerDetailActivity" />

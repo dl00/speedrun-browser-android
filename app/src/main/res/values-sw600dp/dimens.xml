@@ -6,4 +6,10 @@
 
     <dimen name="game_big_cover_width">200dp</dimen>
     <dimen name="game_big_cover_height">320dp</dimen>
+
+    <dimen name="player_icon_width">60dp</dimen>
+    <dimen name="player_icon_height">60dp</dimen>
+
+    <dimen name="player_big_icon_width">120dp</dimen>
+    <dimen name="player_big_icon_height">120dp</dimen>
 </resources>

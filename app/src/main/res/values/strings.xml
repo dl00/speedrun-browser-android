@@ -3,6 +3,7 @@
     <string name="title_game_detail">View Game Leaderboards</string>
     <string name="enter_game_name">Enter Game or Player&#8230;</string>
     <string name="label_key_platforms">Platforms</string>
+    <string name="empty" />
 
     <string name="error_missing_game">Error: Game not Found: %1$s</string>
     <string name="error_missing_leaderboard">Error: Leaderboard not Found: %1$s</string>
@@ -33,4 +34,16 @@
     <string name="label_personal_bests">Personal Bests</string>
     <string name="label_you_can_click">Select a run to watch:</string>
     <string name="error_cannot_play_video">Something went wrong running the player.</string>
+    <string name="missing_watch_history">Runs will appear here as you watch them.</string>
+    <string name="menu_history">Watch History</string>
+    <string name="title_activity_history">Watch History</string>
+    <string name="title_loading">Loading&#8230;</string>
+    <string name="menu_subscribe">Subscribe</string>
+    <string name="menu_unsubscribe">Unsubscribe</string>
+    <string name="success_subscription">Notification settings updated!</string>
+    <string name="default_notification_channel_id">default</string>
+    <string name="notification_channel_title">Subscribed Players/Games</string>
+
+    <string name="notify_title_player_record">New Personal Best from %1s in %2s</string>
+    <string name="notify_msg_player_record">%1s &#x2022; %2s &#x2022; %3s\n%4s -> %5s</string>
 </resources>

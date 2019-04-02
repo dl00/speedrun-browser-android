@@ -24,8 +24,10 @@ import java.util.concurrent.TimeUnit;
 
 import androidx.appcompat.app.AppCompatActivity;
 import danb.speedrunbrowser.api.SpeedrunAPI;
+import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
+import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
 import danb.speedrunbrowser.api.objects.Level;
 import danb.speedrunbrowser.api.objects.MediaLink;
 import danb.speedrunbrowser.api.objects.Run;
@@ -134,7 +136,16 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
 
         assert args != null;
 
-        if(args.getString(EXTRA_RUN_ID) != null) {
+        if(args.getSerializable(EXTRA_RUN) != null) {
+            mRun = (Run)args.getSerializable(EXTRA_RUN);
+
+            mGame = (Game)args.getSerializable(EXTRA_GAME);
+            mCategory = (Category)args.getSerializable(EXTRA_CATEGORY);
+            mLevel = (Level)args.getSerializable(EXTRA_LEVEL);
+
+            onDataReady();
+        }
+        else if(args.getString(EXTRA_RUN_ID) != null) {
             loadRun(args.getString(EXTRA_RUN_ID));
         }
         else if(getIntent().getData() != null) {
@@ -165,11 +176,11 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
 
     private void loadRun(final String runId) {
         Log.d(TAG, "Download runId: " + runId);
-        mDisposables.add(SpeedrunAPI.make().getRun(runId)
+        mDisposables.add(SpeedrunMiddlewareAPI.make().listRuns(runId)
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(new Consumer<SpeedrunAPI.APIResponse<Run>>() {
+            .subscribe(new Consumer<SpeedrunMiddlewareAPI.APIResponse<LeaderboardRunEntry>>() {
                 @Override
-                public void accept(SpeedrunAPI.APIResponse<Run> gameAPIResponse) throws Exception {
+                public void accept(SpeedrunMiddlewareAPI.APIResponse<LeaderboardRunEntry> gameAPIResponse) throws Exception {
 
                     if (gameAPIResponse.data == null) {
                         // game was not able to be found for some reason?
@@ -177,7 +188,7 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
                         return;
                     }
 
-                    mRun = gameAPIResponse.data;
+                    mRun = gameAPIResponse.data.get(0).run;
                     mGame = mRun.game;
                     mCategory = mRun.category;
                     mLevel = mRun.level;
@@ -329,16 +340,21 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
         mReleaseDate.setText(mGame.releaseDate);
 
         // we have to join the string manually because it is java 7
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0;i < mGame.platforms.size();i++) {
-            sb.append(mGame.platforms.get(i).getName());
-            if(i < mGame.platforms.size() - 1)
-                sb.append(", ");
+        if(mGame.platforms != null) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0;i < mGame.platforms.size();i++) {
+                sb.append(mGame.platforms.get(i).getName());
+                if(i < mGame.platforms.size() - 1)
+                    sb.append(", ");
+            }
+
+            mPlatformList.setText(sb.toString());
+        }
+        else {
+            mPlatformList.setText("");
         }
 
-        mPlatformList.setText(sb.toString());
-
-        if(mGame.assets.coverLarge != null)
+        if(mGame.assets != null && mGame.assets.coverLarge != null)
             new DownloadImageTask(this, mCover).clear(false).execute(mGame.assets.coverLarge.uri);
 
         mPlayerNames.removeAllViews();

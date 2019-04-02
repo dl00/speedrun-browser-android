@@ -26,22 +26,34 @@ export async function pull_latest_runs(runid: string, options: any) {
         }
 
         // trigger a leaderboard update for each affected run
+        let lb_pulls: {[key: string]: boolean} = {};
+
         for(let run of runs) {
             if(run.id == latest_run) {
                 return;
             }
 
-            console.log('loader/latest-runs: [SCHED]', run.id);
+            let rid = scraper.join_runid(
+                [runid, <string>run.game, run.category + (run.level ? '_' + run.level : ''), 
+                'leaderboard']
+            );
+
+            if(lb_pulls[rid])
+                continue;
+
+            lb_pulls[rid] = true;
+            
+            let options = {
+                game_id: run.game,
+                category_id: run.category,
+                level_id: run.level
+            };
             
             await scraper.push_call({
-                runid: scraper.join_runid([runid, <string>run.game, run.category + (run.level ? '_' + run.level : ''), 'leaderboard']),
+                runid: rid,
                 module: 'leaderboard',
                 exec: 'pull_leaderboard',
-                options: {
-                    game_id: run.game,
-                    category_id: run.category,
-                    level_id: run.level
-                }
+                options: options
             }, 5);
         }
 

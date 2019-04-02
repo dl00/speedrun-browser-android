@@ -5,10 +5,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.util.List;
+import java.util.Objects;
 
+import danb.speedrunbrowser.BuildConfig;
 import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.GameAssets;
 import danb.speedrunbrowser.api.objects.Leaderboard;
+import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
 import danb.speedrunbrowser.api.objects.MediaLink;
 import danb.speedrunbrowser.api.objects.Platform;
 import danb.speedrunbrowser.api.objects.Region;
@@ -26,6 +29,15 @@ import retrofit2.http.Query;
 
 public class SpeedrunMiddlewareAPI {
     public static final int MIN_AUTOCOMPLETE_LENGTH = 3;
+
+    public static String getBaseUrl() {
+        if(BuildConfig.DEBUG) {
+            return "https://sr-browser-develop.dbeal.dev/api/v1/";
+        }
+        else {
+            return "https://sr-browser.dbeal.dev/api/v1/";
+        }
+    }
 
     public static Gson getGson() {
         GsonBuilder gson = new GsonBuilder();
@@ -48,10 +60,10 @@ public class SpeedrunMiddlewareAPI {
 
     public static Endpoints make() {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://sr-browser.dbeal.dev/api/v1/")
+                .baseUrl(getBaseUrl())
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
                 .addConverterFactory(GsonConverterFactory.create(getGson()))
-                .client(Util.getHTTPClient())
+                .client(Objects.requireNonNull(Util.getHTTPClient()))
                 .build();
 
         return retrofit.create(Endpoints.class);
@@ -96,5 +108,9 @@ public class SpeedrunMiddlewareAPI {
         // Leaderboards
         @GET("leaderboards/{leaderboardId}")
         Observable<APIResponse<Leaderboard>> listLeaderboards(@Path("leaderboardId") String categoryId);
+
+        // Runs
+        @GET("runs/{ids}")
+        Observable<APIResponse<LeaderboardRunEntry>> listRuns(@Path("ids") String runIds);
     }
 }
