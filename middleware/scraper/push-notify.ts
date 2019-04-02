@@ -74,11 +74,9 @@ export async function notify_player_record(record: NewRecord, player: speedrun_a
     console.log('[NOTIF]', PLAYER_RECORD_TOPIC);
 
     try {
-        let res = await fb_admin.messaging().sendToTopic(PLAYER_RECORD_TOPIC, {
+        await fb_admin.messaging().sendToTopic(PLAYER_RECORD_TOPIC, {
             data: <{[key: string]: string}>run_notification_data
         });
-
-        console.log(res.messageId);
     }
     catch(e) {
         console.error('[ERROR] Failed to send push notification:', e, run_notification_data);
