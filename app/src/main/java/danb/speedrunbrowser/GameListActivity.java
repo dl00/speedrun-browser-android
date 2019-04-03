@@ -89,6 +89,8 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher {
 
         FirebaseCrash.setCrashCollectionEnabled(!BuildConfig.DEBUG);
 
+        Util.showNewFeaturesDialog(this);
+
         // might need to update certificates/connection modes on older android versions
         // TODO: this is the synchronous call, may block user interation when installing provider. Consider using async
         try {

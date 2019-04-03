@@ -1,10 +1,13 @@
 package danb.speedrunbrowser.utils;
 
+import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
@@ -21,6 +24,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import androidx.core.app.NotificationCompat;
+import danb.speedrunbrowser.BuildConfig;
 import danb.speedrunbrowser.R;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -108,5 +112,25 @@ public class Util {
         }
 
         notificationManager.notify(new Random().nextInt(), notificationBuilder.build());
+    }
+
+    public static void showNewFeaturesDialog(Context ctx) {
+        SharedPreferences prefs = ctx.getSharedPreferences(Constants.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
+
+        String lastVersion = prefs.getString(Constants.PREF_LAST_APP_VERSION, "1.3");
+
+        if(lastVersion.equals(BuildConfig.VERSION_NAME)) {
+            return;
+        }
+
+        AlertDialog dialog = new AlertDialog.Builder(ctx, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+                .setTitle(R.string.dialog_title_release_notes)
+                .setMessage(R.string.dialog_msg_release_notes)
+                .setPositiveButton(R.string.button_got_it, null)
+                .create();
+
+        dialog.show();
+
+        prefs.edit().putString(Constants.PREF_LAST_APP_VERSION, BuildConfig.VERSION_NAME).apply();
     }
 }

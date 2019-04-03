@@ -46,4 +46,22 @@
 
     <string name="notify_title_player_record">New Personal Best from %1s in %2s</string>
     <string name="notify_msg_player_record">%1s &#x2022; %2s &#x2022; %3s\n%4s -> %5s</string>
+    <string name="button_got_it">Got it!</string>
+
+    <!-- release notes: edit for each release for now -->
+    <string name="dialog_title_release_notes">New Features in 1.4!</string>
+    <string name="dialog_msg_release_notes">
+        Thanks for being one of the first to use this app!\n
+        \n
+        There are some new features you should know:\n
+        * Watch history is now able to bring you to recently watched runs\n
+        * You can now receive push notifications when a runner posts a new
+          personal best. Just click the star on the player\'s page.\n
+        \n
+        More new features are coming down the pipe
+        to subscribe to games and browse subscriptions. Should be ready in a couple weeks.\n
+        \n
+        As always, feel free to submit feedback through the Play Store
+        or through the thread on the Speedrun.com forum. It\'s really appreciated!
+    </string>
 </resources>
