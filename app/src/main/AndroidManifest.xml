@@ -15,9 +15,6 @@
         android:theme="@style/AppTheme"
         tools:targetApi="n">
         
-        <!-- have to disable this or else google will complain I collect sensitive privacy info -->
-        <meta-data android:name="google_analytics_adid_collection_enabled" android:value="false" />
-        
         <activity android:name=".HistoryActivity"
             android:label="@string/title_activity_history"
             android:parentActivityName=".GameListActivity" />

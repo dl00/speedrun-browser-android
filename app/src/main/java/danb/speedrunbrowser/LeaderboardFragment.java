@@ -27,7 +27,7 @@ import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
 import danb.speedrunbrowser.api.objects.Level;
 import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.api.objects.Variable;
-import danb.speedrunbrowser.models.RunViewHolder;
+import danb.speedrunbrowser.holders.RunViewHolder;
 import danb.speedrunbrowser.utils.ConnectionErrorConsumer;
 import danb.speedrunbrowser.utils.Util;
 import danb.speedrunbrowser.views.ProgressSpinnerView;
@@ -308,7 +308,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         @NonNull
         @Override
         public RunViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View v = inflater.inflate(R.layout.leaderboard_list_content, parent, false);
+            View v = inflater.inflate(R.layout.content_leaderboard_list, parent, false);
             return new RunViewHolder(v);
         }
 

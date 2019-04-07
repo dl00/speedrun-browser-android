@@ -100,6 +100,10 @@ public abstract class AppDatabase extends RoomDatabase {
         @Query("SELECT * FROM Subscription WHERE resourceId = :resourceId")
         Maybe<Subscription> get(String resourceId);
 
+
+        @Query("SELECT * FROM Subscription WHERE type = type LIMIT 20")
+        Single<List<Subscription>> listOfType(String type);
+
         @Insert(onConflict = OnConflictStrategy.REPLACE)
         Completable subscribe(Subscription... subscriptions);
 

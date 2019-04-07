@@ -63,6 +63,34 @@
                 android:textSize="20sp" />
 
             <TextView
+                android:id="@+id/linkTermsAndConditions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="50dp"
+                android:paddingTop="@dimen/half_fab_margin"
+                android:paddingBottom="@dimen/half_fab_margin"
+                android:text="@string/label_about_terms_and_conditions"
+                android:textAlignment="center"
+                android:typeface="monospace"
+                android:textStyle="bold"
+                android:textColor="@color/colorLinkText"
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/linkPrivacyPolicy"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="50dp"
+                android:paddingTop="@dimen/half_fab_margin"
+                android:paddingBottom="@dimen/half_fab_margin"
+                android:text="@string/label_about_privacy_policy"
+                android:textAlignment="center"
+                android:typeface="monospace"
+                android:textStyle="bold"
+                android:textColor="@color/colorLinkText"
+                android:textSize="20sp" />
+
+            <TextView
                 android:id="@+id/linkOpenSourceLicenses"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

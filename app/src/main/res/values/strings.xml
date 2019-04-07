@@ -64,4 +64,9 @@
         As always, feel free to submit feedback through the Play Store
         or through the thread on the Speedrun.com forum. It\'s really appreciated!
     </string>
+    <string name="label_about_privacy_policy">Privacy Policy</string>
+    <string name="label_about_terms_and_conditions"><![CDATA[Terms & Conditions]]></string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

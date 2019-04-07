@@ -17,11 +17,16 @@ public class AboutActivity extends AppCompatActivity implements View.OnClickList
 
     private static final Uri SPEEDRUN_COM_ABOUT = Uri.parse("https://www.speedrun.com/about");
 
+    private static final Uri TERMS_AND_CONDITIONS = Uri.parse("https://speedrun-browser-4cc82.firebaseapp.com/terms.html");
+    private static final Uri PRIVACY_POLICY = Uri.parse("https://speedrun-browser-4cc82.firebaseapp.com/privacy-policy.html");
+
     private static final String OPENSOURCE_LICENSES_FILE = "/assets/licenses.txt";
 
     ImageView mLinkSpeedrunComTrophy;
     ImageView mLinkSpeedrunComLogo;
 
+    TextView mLinkTermsAndConditions;
+    TextView mLinkPrivacyPolicy;
     TextView mLinkOpenSourceLicenses;
 
     @Override
@@ -31,16 +36,21 @@ public class AboutActivity extends AppCompatActivity implements View.OnClickList
 
         mLinkSpeedrunComTrophy = findViewById(R.id.linkSpeedrunComTrophy);
         mLinkSpeedrunComLogo = findViewById(R.id.linkSpeedrunComWebsite);
+        mLinkPrivacyPolicy = findViewById(R.id.linkPrivacyPolicy);
+        mLinkTermsAndConditions = findViewById(R.id.linkTermsAndConditions);
         mLinkOpenSourceLicenses = findViewById(R.id.linkOpenSourceLicenses);
+
 
         mLinkSpeedrunComTrophy.setOnClickListener(this);
         mLinkSpeedrunComLogo.setOnClickListener(this);
+        mLinkTermsAndConditions.setOnClickListener(this);
+        mLinkPrivacyPolicy.setOnClickListener(this);
         mLinkOpenSourceLicenses.setOnClickListener(this);
 
     }
 
-    private void openSpeedrunComAbout() {
-        Intent intent = new Intent(Intent.ACTION_VIEW, SPEEDRUN_COM_ABOUT);
+    private void openLink(Uri link) {
+        Intent intent = new Intent(Intent.ACTION_VIEW, link);
         startActivity(intent);
     }
 
@@ -66,7 +76,11 @@ public class AboutActivity extends AppCompatActivity implements View.OnClickList
     @Override
     public void onClick(View v) {
         if(v == mLinkSpeedrunComTrophy || v == mLinkSpeedrunComLogo)
-            openSpeedrunComAbout();
+            openLink(SPEEDRUN_COM_ABOUT);
+        else if(v == mLinkTermsAndConditions)
+            openLink(TERMS_AND_CONDITIONS);
+        else if(v == mLinkPrivacyPolicy)
+            openLink(PRIVACY_POLICY);
         else if(v == mLinkOpenSourceLicenses)
             viewOpenSourceLicenses();
     }

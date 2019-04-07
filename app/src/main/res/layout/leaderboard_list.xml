@@ -36,7 +36,7 @@
             android:layout_marginRight="16dp"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             tools:context=".GameListActivity"
-            tools:listitem="@layout/leaderboard_list_content">
+            tools:listitem="@layout/content_leaderboard_list">
 
         </androidx.recyclerview.widget.RecyclerView>
 

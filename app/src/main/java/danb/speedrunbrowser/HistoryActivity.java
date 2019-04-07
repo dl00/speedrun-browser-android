@@ -5,14 +5,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
-import danb.speedrunbrowser.models.RunViewHolder;
-import danb.speedrunbrowser.models.WatchRunViewHolder;
+import danb.speedrunbrowser.holders.WatchRunViewHolder;
 import danb.speedrunbrowser.utils.AppDatabase;
 import danb.speedrunbrowser.utils.ConnectionErrorConsumer;
 import danb.speedrunbrowser.views.ProgressSpinnerView;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
@@ -20,7 +18,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -133,7 +130,7 @@ public class HistoryActivity extends AppCompatActivity {
         @NonNull
         @Override
         public WatchRunViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View v = inflater.inflate(R.layout.watch_list_content, parent, false);
+            View v = inflater.inflate(R.layout.content_watch_list, parent, false);
             return new WatchRunViewHolder(v);
         }
 

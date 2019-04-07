@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".ItemListFragment">
+
+    <TextView
+        android:id="@+id/txtSubscribed"
+        android:visibility="gone"
+        android:layout_margin="@dimen/half_fab_margin"
+        android:text="@string/label_player_search"
+        android:textSize="20sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/listSubscribedItems"
+        android:name="danb.speedrunbrowser.GameListFragment"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:context=".GameListActivity"
+        tools:listitem="@layout/content_game_cover" />
+
+    <TextView
+        android:id="@+id/listSearchItems"
+        android:visibility="gone"
+        android:layout_margin="@dimen/half_fab_margin"
+        android:text="@string/label_game_search"
+        android:textSize="20sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/listGame"
+        android:name="danb.speedrunbrowser.GameListFragment"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:context=".GameListActivity"
+        tools:listitem="@layout/content_game_cover" />
+
+</ScrollView>

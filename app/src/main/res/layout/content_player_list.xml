@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="5dp">
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/half_fab_margin"
+        android:tint="@android:color/white"
+        android:visibility="invisible"
+        android:src="@drawable/baseline_star_24" />
+
+    <ImageView
+        android:id="@+id/imgPlayerIcon"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="center"
+        android:layout_marginStart="@dimen/half_fab_margin"
+        android:layout_marginTop="@dimen/half_fab_margin"
+        android:layout_marginBottom="@dimen/half_fab_margin"
+        android:layout_marginEnd="@dimen/fab_margin"
+        app:srcCompat="@android:color/transparent" />
+
+    <TextView
+        android:id="@+id/txtPlayerName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="gymnast86"
+        android:textSize="18sp"
+        android:textAlignment="viewStart"
+        tools:ignore="HardcodedText" />
+
+</LinearLayout>

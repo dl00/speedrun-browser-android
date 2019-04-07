@@ -1,4 +1,4 @@
-package danb.speedrunbrowser.models;
+package danb.speedrunbrowser.holders;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -11,10 +11,8 @@ import android.widget.TextView;
 import com.google.android.flexbox.FlexboxLayout;
 
 import androidx.recyclerview.widget.RecyclerView;
-import danb.speedrunbrowser.LeaderboardFragment;
 import danb.speedrunbrowser.R;
 import danb.speedrunbrowser.api.objects.Game;
-import danb.speedrunbrowser.api.objects.Leaderboard;
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
 import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.utils.DownloadImageTask;

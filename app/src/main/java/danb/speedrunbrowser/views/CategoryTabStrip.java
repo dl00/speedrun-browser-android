@@ -22,7 +22,6 @@ import danb.speedrunbrowser.api.objects.Variable;
 import danb.speedrunbrowser.utils.LeaderboardPagerAdapter;
 
 public class CategoryTabStrip extends LinearLayout implements ViewPager.OnPageChangeListener {
-    private static final String TAG = GameListActivity.class.getSimpleName();
 
     private Game mGame;
 

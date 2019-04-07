@@ -1,4 +1,4 @@
-package danb.speedrunbrowser.models;
+package danb.speedrunbrowser.holders;
 
 import android.content.Context;
 import android.util.Log;
