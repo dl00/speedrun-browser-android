@@ -15,7 +15,8 @@ export const locs: {[index: string]: string} = {
     game_rank: 'game_rank',
     game_abbrs: 'game_abbrs',
     player_abbrs: 'player_abbrs',
-    latest_run: 'latest_run',
+    latest_run: 'latest_run', // for db sync cursor
+    verified_runs: 'verified_runs', // for showing list of latest verified runs
     games: 'games',
     runs: 'runs',
     categories: 'categories',

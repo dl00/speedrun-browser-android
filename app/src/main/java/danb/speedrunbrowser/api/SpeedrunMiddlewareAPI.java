@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -77,6 +78,10 @@ public class SpeedrunMiddlewareAPI {
     public static class APIResponse<T> {
         public List<T> data;
         public Error error;
+
+        public APIResponse() {
+            data = new ArrayList<>();
+        }
     }
 
     public static class APISearchData {
@@ -111,6 +116,9 @@ public class SpeedrunMiddlewareAPI {
         Observable<APIResponse<Leaderboard>> listLeaderboards(@Path("leaderboardId") String categoryId);
 
         // Runs
+        @GET("runs/latest")
+        Observable<APIResponse<LeaderboardRunEntry>> listLatestRuns(@Query("start") int offset);
+
         @GET("runs/{ids}")
         Observable<APIResponse<LeaderboardRunEntry>> listRuns(@Path("ids") String runIds);
     }

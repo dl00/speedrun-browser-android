@@ -25,9 +25,9 @@ public class PlayerViewHolder extends RecyclerView.ViewHolder {
     public PlayerViewHolder(View v) {
         super(v);
 
-        mSubscribedIndicator = v.findViewById(R.id.txtGameName);
+        mSubscribedIndicator = v.findViewById(R.id.imgSubscribedIndicator);
         mPlayerImage = v.findViewById(R.id.imgPlayerIcon);
-        mPlayerName = v.findViewById(R.id.imgGameIcon);
+        mPlayerName = v.findViewById(R.id.txtPlayerName);
     }
 
     public void apply(Context context, User user, boolean subscribed) {

@@ -51,6 +51,12 @@ export interface Config {
             /// Authentication JSON file as provided by firebase
             credentialFile: string
         }
+
+        /// Settings for storing data in the database
+        db: {
+            /// The number of runs to keep as marked "latest"
+            latestRunsLength: number
+        }
     }
 
     /// Settings for the indexing engine--used for autocomplete and any title search
@@ -99,6 +105,10 @@ export const DEFAULT_CONFIG: Config = {
         pushNotify: {
             enabled: false,
             credentialFile: '/speedrunbrowser-middleware/secrets/firebase-service-account.json'
+        },
+
+        db: {
+            latestRunsLength: 10000
         }
     },
 

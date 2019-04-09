@@ -1,51 +1,29 @@
 package danb.speedrunbrowser;
 
 import android.app.ActivityOptions;
-import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.EditText;
-import android.widget.HorizontalScrollView;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
-import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.security.ProviderInstaller;
 import com.google.firebase.crash.FirebaseCrash;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.RecyclerView;
-import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
-import danb.speedrunbrowser.api.objects.Game;
-import danb.speedrunbrowser.api.objects.User;
-import danb.speedrunbrowser.utils.DownloadImageTask;
-import danb.speedrunbrowser.utils.PreCachingGridLayoutManager;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 import danb.speedrunbrowser.utils.Util;
-import danb.speedrunbrowser.views.ProgressSpinnerView;
-import io.reactivex.ObservableSource;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Function;
-import io.reactivex.subjects.PublishSubject;
+import danb.speedrunbrowser.views.SimpleTabStrip;
 
 /**
  * An activity representing a list of Games. This activity
@@ -55,32 +33,13 @@ import io.reactivex.subjects.PublishSubject;
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class GameListActivity extends AppCompatActivity implements TextWatcher {
+public class GameListActivity extends AppCompatActivity implements TextWatcher, ItemListFragment.OnFragmentInteractionListener {
     private static final String TAG = GameListActivity.class.getSimpleName();
-
-    /**
-     * The list of games we are presenting on the list to the user
-     */
-    private List<Game> mGames;
-    private List<User> mPlayers;
-
-    /**
-     * A reference to the renderer for the game list items
-     */
-    private GameListAdapter mAdapter;
-
 
     private EditText mGameFilter;
 
-    private TextView mGameResultsLabel;
-    private TextView mPlayerResultsLabel;
-
-    private ProgressSpinnerView mSpinner;
-    private RecyclerView mGameListView;
-    private HorizontalScrollView mPlayerHsv;
-    private LinearLayout mPlayerListView;
-
-    private PublishSubject<CharSequence> mGameFilterSearchSubject;
+    private SimpleTabStrip mTabs;
+    private ViewPager mViewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,40 +59,14 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher {
         }
 
         mGameFilter = findViewById(R.id.editGameFilter);
-        mSpinner = findViewById(R.id.spinner);
-        mGameListView = findViewById(R.id.listGame);
-        mPlayerHsv = findViewById(R.id.hsvPlayers);
-        mPlayerListView = findViewById(R.id.layoutPlayerSearchResults);
-        mGameResultsLabel = findViewById(R.id.txtGamesSearch);
-        mPlayerResultsLabel = findViewById(R.id.txtPlayersSearch);
+
+        mViewPager = findViewById(R.id.pager);
+        mViewPager.setAdapter(new PagerAdapter(getSupportFragmentManager()));
+
+        mTabs = findViewById(R.id.tabsType);
+        mTabs.setup(mViewPager);
 
         mGameFilter.addTextChangedListener(this);
-
-        mGameFilterSearchSubject = PublishSubject.create();
-
-        mAdapter = new GameListAdapter();
-        mGameListView.setAdapter(mAdapter);
-
-
-        findViewById(android.R.id.content)
-                .getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-
-            int lastMeasuredWidth = 0;
-
-            @Override
-            public void onGlobalLayout() {
-                int mw = findViewById(android.R.id.content).getMeasuredWidth();
-                if (lastMeasuredWidth != mw)
-                    setupRecyclerView(mGameListView);
-
-                lastMeasuredWidth = mw;
-            }
-        });
-
-        setupGameDownloader();
-
-        // force initial load
-        mGameFilterSearchSubject.onNext(mGameFilter.getText());
     }
 
     @Override
@@ -165,115 +98,6 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher {
         return findViewById(R.id.game_detail_container) != null;
     }
 
-    private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
-
-        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-
-        // set number of columns based on screen width
-        recyclerView.setLayoutManager(new PreCachingGridLayoutManager(this,
-                Math.max((int)Math.ceil(
-                        findViewById(android.R.id.content).getMeasuredWidth() / (512.0f)
-                ), 3)));
-    }
-
-    private Disposable setupGameDownloader() {
-        return mGameFilterSearchSubject
-                .debounce(250, TimeUnit.MILLISECONDS)
-                .switchMap(new Function<CharSequence, ObservableSource<?>>() {
-                    @Override
-                    public ObservableSource<?> apply(CharSequence q) throws Exception {
-                        if(q.length() > 0) {
-                            return SpeedrunMiddlewareAPI.make().autocomplete(q.toString());
-                        }
-                        else {
-                            return SpeedrunMiddlewareAPI.make().listGames(0);
-                        }
-                    }
-                })
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<Object>() {
-                    @Override
-                    public void accept(Object res) throws Exception {
-                        List<Game> games = new ArrayList<>(0);
-                        List<User> players = new ArrayList<>(0);
-                        if (res instanceof SpeedrunMiddlewareAPI.APISearchResponse) {
-                            games = ((SpeedrunMiddlewareAPI.APISearchResponse) res).search.games;
-                            players = ((SpeedrunMiddlewareAPI.APISearchResponse) res).search.players;
-
-                        } else if (res instanceof SpeedrunMiddlewareAPI.APIResponse) {
-                            games = ((SpeedrunMiddlewareAPI.APIResponse<Game>) res).data;
-                        }
-
-                        mGames = games;
-                        mPlayers = players;
-                        mGameListView.scrollToPosition(0);
-
-                        setPlayerSearchResults();
-                        setGameSearchResults();
-                    }
-                }, new Consumer<Throwable>() {
-                    @Override
-                    public void accept(Throwable throwable) throws Exception {
-                        Log.w(TAG, "Could not download autocomplete results:" + throwable.getMessage(), throwable);
-
-                        try {
-                            Util.showErrorToast(GameListActivity.this, getString(R.string.error_could_not_connect));
-                            finish();
-                        } catch(Exception e) {
-                            Log.w(TAG, "Could not elegantly warn and exit app:", e);
-                        }
-                    }
-                });
-    }
-
-    private void setPlayerSearchResults() {
-        mPlayerListView.removeAllViews();
-
-        if(mPlayers != null && !mPlayers.isEmpty()) {
-            for(final User player : mPlayers) {
-                TextView tv = new TextView(this);
-                tv.setTextSize(18);
-                player.applyTextView(tv);
-
-                int padding = getResources().getDimensionPixelSize(R.dimen.half_fab_margin);
-                tv.setPadding(padding, padding, padding, padding);
-
-                tv.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Intent intent = new Intent(GameListActivity.this, PlayerDetailActivity.class);
-                        intent.putExtra(PlayerDetailActivity.ARG_PLAYER, player);
-
-                        startActivity(intent);
-                    }
-                });
-
-                mPlayerListView.addView(tv);
-            }
-
-            mPlayerHsv.setVisibility(View.VISIBLE);
-            mPlayerHsv.setHorizontalScrollBarEnabled(false);
-            mPlayerHsv.scrollTo(0, 0);
-            mPlayerResultsLabel.setVisibility(View.VISIBLE);
-        }
-        else {
-            mPlayerHsv.setVisibility(View.GONE);
-            mPlayerResultsLabel.setVisibility(View.GONE);
-        }
-    }
-
-    private void setGameSearchResults() {
-        mAdapter.notifyDataSetChanged();
-
-        if(mPlayers != null && !mPlayers.isEmpty() && mGames != null && !mGames.isEmpty())
-            mGameResultsLabel.setVisibility(View.VISIBLE);
-        else
-            mGameResultsLabel.setVisibility(View.GONE);
-
-        if(mGames == null || mGames.isEmpty())
-            mSpinner.setVisibility(View.GONE);
-    }
-
     public void showAbout() {
         Intent intent = new Intent(this, AboutActivity.class);
         startActivity(intent);
@@ -297,9 +121,118 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher {
     public void afterTextChanged(Editable editable) {
         String q = mGameFilter.getText().toString().trim();
 
-        if(q.isEmpty() || q.length() >= SpeedrunMiddlewareAPI.MIN_AUTOCOMPLETE_LENGTH) {
-            mGameFilterSearchSubject.onNext(q);
-            mSpinner.setVisibility(View.VISIBLE);
+        if(mViewPager.getAdapter() != null)
+            ((PagerAdapter)mViewPager.getAdapter()).setSearchFilter(q);
+    }
+
+    private void showGame(String id, Fragment fragment, ActivityOptions transitionOptions) {
+        if(isTwoPane()) {
+            Bundle arguments = new Bundle();
+            arguments.putString(GameDetailFragment.ARG_GAME_ID, id);
+
+            GameDetailFragment newFrag = new GameDetailFragment();
+            newFrag.setArguments(arguments);
+
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.game_detail_container, fragment)
+                    .commit();
+        }
+        else {
+            Intent intent = new Intent(this, GameDetailActivity.class);
+            intent.putExtra(GameDetailFragment.ARG_GAME_ID, id);
+
+            startActivityFromFragment(fragment, intent, 0, transitionOptions.toBundle());
+
+        }
+    }
+
+    private void showPlayer(String id, Fragment fragment, ActivityOptions transitionOptions) {
+        Intent intent = new Intent(this, PlayerDetailActivity.class);
+        intent.putExtra(PlayerDetailActivity.ARG_PLAYER_ID, id);
+        startActivityFromFragment(fragment, intent, 0, transitionOptions.toBundle());
+    }
+
+    @Override
+    public void onItemSelected(ItemListFragment.ItemType itemType, String itemId, Fragment fragment, ActivityOptions transitionOptions) {
+        switch(itemType) {
+            case GAMES:
+                showGame(itemId, fragment, transitionOptions);
+                break;
+            case PLAYERS:
+                showPlayer(itemId, fragment, transitionOptions);
+                break;
+        }
+    }
+
+    private class PagerAdapter extends FragmentPagerAdapter implements SimpleTabStrip.IconPagerAdapter {
+
+        private ItemListFragment[] fragments;
+
+        public PagerAdapter(@NonNull FragmentManager fm) {
+            super(fm);
+
+            fragments = new ItemListFragment[3];
+
+            fragments[0] = new ItemListFragment();
+            Bundle args = new Bundle();
+            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemListFragment.ItemType.GAMES);
+            fragments[0].setArguments(args);
+
+            fragments[1] = new ItemListFragment();
+            args = new Bundle();
+            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemListFragment.ItemType.PLAYERS);
+            fragments[1].setArguments(args);
+
+            fragments[2] = new ItemListFragment();
+            args = new Bundle();
+            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemListFragment.ItemType.RUNS);
+            fragments[2].setArguments(args);
+        }
+
+        @NonNull
+        @Override
+        public Fragment getItem(int position) {
+            return fragments[position];
+        }
+
+        @Override
+        public int getCount() {
+            return fragments.length;
+        }
+
+        @Nullable
+        @Override
+        public CharSequence getPageTitle(int position) {
+            switch(position) {
+                case 0:
+                    return getString(R.string.title_tab_games);
+                case 1:
+                    return getString(R.string.title_tab_players);
+                case 2:
+                    return getString(R.string.title_tab_latest_runs);
+                default:
+                    return "";
+            }
+        }
+
+        @Override
+        public Drawable getPageIcon(int position) {
+            switch(position) {
+                case 0:
+                    return getResources().getDrawable(R.drawable.baseline_videogame_asset_24);
+                case 1:
+                    return getResources().getDrawable(R.drawable.baseline_person_24);
+                case 2:
+                    return getResources().getDrawable(R.drawable.baseline_play_circle_filled_24);
+                default:
+                    return null;
+            }
+        }
+
+        public void setSearchFilter(String searchFilter) {
+            for(ItemListFragment frag : fragments) {
+                frag.setSearchFilter(searchFilter);
+            }
         }
     }
 }

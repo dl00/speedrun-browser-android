@@ -9,14 +9,6 @@
     android:padding="5dp">
 
     <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/half_fab_margin"
-        android:tint="@android:color/white"
-        android:visibility="invisible"
-        android:src="@drawable/baseline_star_24" />
-
-    <ImageView
         android:id="@+id/imgPlayerIcon"
         android:layout_width="50dp"
         android:layout_height="50dp"
@@ -36,5 +28,14 @@
         android:textSize="18sp"
         android:textAlignment="viewStart"
         tools:ignore="HardcodedText" />
+
+    <ImageView
+        android:id="@+id/imgSubscribedIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/half_fab_margin"
+        android:tint="@android:color/white"
+        android:visibility="invisible"
+        android:src="@drawable/baseline_star_24" />
 
 </LinearLayout>

@@ -8,11 +8,11 @@ android {
         applicationId "danb.speedrunbrowser"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 6
-        versionName "1.4"
+        versionCode 7
+        versionName "1.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        //multiDexEnabled true
+        multiDexEnabled false
 
         javaCompileOptions {
             annotationProcessorOptions {
@@ -25,6 +25,10 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+
+        debug {
+            minifyEnabled false
+        }
     }
     sourceSets {
         androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
@@ -33,13 +37,12 @@ android {
     configurations.all {
         all*.exclude group: 'com.google.guava', module: 'listenablefuture'
     }
-
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation 'com.android.support:multidex:1.0.3'
+    //implementation 'com.android.support:multidex:1.0.3'
 
     implementation 'androidx.appcompat:appcompat:1.1.0-alpha03'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'

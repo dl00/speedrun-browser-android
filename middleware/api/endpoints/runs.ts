@@ -10,6 +10,49 @@ import * as api_response from '../response';
 
 const router = Router();
 
+router.get('/latest', async (req, res) => {
+    let start = 0;
+
+    if(req.query.start) {
+        start = parseInt(req.query.start);
+    }
+
+    let end = start + api.config!.api.maxItems - 1;
+    if(req.query.count)
+        end = start + parseInt(req.query.count) - 1;
+
+    if(isNaN(start) || start < 0)
+        return api_response.error(res, api_response.err.INVALID_PARAMS(['start']));
+
+    if(isNaN(end) || end < start || end - start + 1 > api.config!.api.maxItems)
+        return api_response.error(res, api_response.err.INVALID_PARAMS(['count']));
+
+    let total = await api.storedb!.zcard(speedrun_db.locs.verified_runs);
+
+    if(start > total - 1)
+        return api_response.error(res, api_response.err.INVALID_PARAMS(['start'], 'past the end of list'));
+    
+    end = Math.min(end, total - 1);
+
+    try {
+        let ids = await api.storedb!.zrevrange(speedrun_db.locs.verified_runs, start, end);
+        let runs_raw = await api.storedb!.hmget(speedrun_db.locs.runs, ...ids);
+
+        let runs = _.chain(runs_raw)
+            .reject(_.isNil)
+            .map(JSON.parse)
+            .value();
+
+        return api_response.complete(res, runs, {
+            code: ((end + 1) % total).toString(),
+            total: total
+        });
+    } catch(err) {
+        console.error('api/games: could not send latest runs:', err);
+        return api_response.error(res, api_response.err.INTERNAL_ERROR());
+    }
+});
+
 // retrieve one or more runs by id
 router.get('/:ids', async (req, res) => {
     let ids = req.params.ids.split(',');

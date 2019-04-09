@@ -19,22 +19,12 @@
         android:textColor="@android:color/white"
         android:inputType="textPersonName" />
 
-    <danb.speedrunbrowser.views.ProgressSpinnerView
-        android:id="@+id/spinner"
-        android:name="danb.speedrunbrowser.GameListFragment"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        app:direction="right"
-        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-        tools:context=".GameListActivity"
-        tools:listitem="@layout/content_game_cover" />
-
     <danb.speedrunbrowser.views.SimpleTabStrip
         android:id="@+id/tabsType"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <android.support.v4.view.ViewPager
+    <androidx.viewpager.widget.ViewPager
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/pager"
         android:layout_width="match_parent"

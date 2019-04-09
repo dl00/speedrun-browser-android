@@ -4,10 +4,12 @@ import android.content.Context;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.provider.CalendarContract;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -17,7 +19,7 @@ import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 import danb.speedrunbrowser.R;
 
-public class SimpleTabStrip extends LinearLayout implements ViewPager.OnPageChangeListener {
+public class SimpleTabStrip extends FrameLayout implements ViewPager.OnPageChangeListener {
 
     private HorizontalScrollView mHsv;
     private LinearLayout mLayout;
@@ -29,13 +31,20 @@ public class SimpleTabStrip extends LinearLayout implements ViewPager.OnPageChan
     public SimpleTabStrip(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        setOrientation(VERTICAL);
+        setForegroundGravity(Gravity.CENTER);
 
         mHsv = new HorizontalScrollView(context);
         mHsv.setHorizontalScrollBarEnabled(false);
 
-        mLayout= new LinearLayout(context);
-        mLayout.setOrientation(HORIZONTAL);
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        lp.gravity = Gravity.CENTER;
+        mHsv.setLayoutParams(lp);
+
+        mLayout = new LinearLayout(context);
+        mLayout.setOrientation(LinearLayout.HORIZONTAL);
 
         mHsv.addView(mLayout);
 
@@ -79,13 +88,6 @@ public class SimpleTabStrip extends LinearLayout implements ViewPager.OnPageChan
 
             final int pos = i;
 
-            tv.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    mPager.setCurrentItem(pos);
-                }
-            });
-
             if(adapter instanceof IconPagerAdapter) {
                 Drawable icon = ((IconPagerAdapter)adapter).getPageIcon(i);
 
@@ -99,34 +101,50 @@ public class SimpleTabStrip extends LinearLayout implements ViewPager.OnPageChan
 
                 iv.setLayoutParams(lp);
 
+                iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
                 LinearLayout verticalLayout = new LinearLayout(getContext());
-                verticalLayout.setOrientation(VERTICAL);
+                verticalLayout.setOrientation(LinearLayout.VERTICAL);
                 verticalLayout.setGravity(Gravity.CENTER);
 
                 verticalLayout.addView(iv);
                 verticalLayout.addView(tv);
 
+                verticalLayout.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mPager.setCurrentItem(pos);
+                    }
+                });
+
                 mLayout.addView(verticalLayout);
             }
             else {
+                tv.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        mPager.setCurrentItem(pos);
+                    }
+                });
+
                 mLayout.addView(tv);
             }
         }
     }
 
-    private int getCenterScrollPosition(HorizontalScrollView hsv, int pos) {
-        View child = hsv.getChildAt(pos);
+    private int getCenterScrollPosition(int pos) {
+        View child = mLayout.getChildAt(pos);
 
-        return child.getLeft() + child.getWidth() / 2 - hsv.getWidth() / 2;
+        return child.getLeft() + child.getWidth() / 2 - mHsv.getWidth() / 2;
     }
 
     private void setScroll(int pos, float offset) {
         // we want the tab to be as center aligned as possible.
-        int x1 = getCenterScrollPosition(mHsv, pos);
+        int x1 = getCenterScrollPosition(pos);
 
         int x2 = x1;
         if(mLayout.getChildCount() > pos + 1 && (pos == -1 || pos + 1 >= mLayout.getChildCount()))
-            x2 = getCenterScrollPosition(mHsv, pos);
+            x2 = getCenterScrollPosition(pos);
 
         mHsv.scrollTo(x1 + (int)Math.floor((float)(x2 - x1) * offset), 0);
     }
@@ -147,7 +165,7 @@ public class SimpleTabStrip extends LinearLayout implements ViewPager.OnPageChan
     public void onPageScrollStateChanged(int state) {
     }
 
-    public abstract class IconPagerAdapter extends PagerAdapter {
-        public abstract Drawable getPageIcon(int position);
+    public interface IconPagerAdapter {
+        Drawable getPageIcon(int position);
     }
 }

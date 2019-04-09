@@ -76,7 +76,7 @@
 
             <ImageView
                 android:id="@+id/imgCover"
-                android:transitionName="gameCover"
+                android:transitionName="@string/transition_feature_img"
                 android:layout_width="@dimen/game_big_cover_width"
                 android:layout_height="@dimen/game_big_cover_height"
                 android:contentDescription="@string/desc_game_cover"

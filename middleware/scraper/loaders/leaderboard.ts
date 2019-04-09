@@ -3,6 +3,7 @@
 // * Autocomplete (indexer) indexing
 
 import * as _ from 'lodash';
+import * as moment from 'moment';
 
 import * as speedrun_api from '../../lib/speedrun-api';
 import * as speedrun_db from '../../lib/speedrun-db';
@@ -95,6 +96,12 @@ export async function pull_leaderboard(runid: string, options: any) {
 
         // send push notifications as needed. All notifications are triggered by a player record change
         for(let nr of new_records) {
+            await scraper.storedb!.multi()
+                .zadd(speedrun_db.locs.verified_runs, moment((<speedrun_api.Run>nr.new_run.run).status['verify-date']).unix().toString(), nr.new_run.run.id)
+                .zremrangebyrank(speedrun_db.locs.verified_runs, 0, -scraper.config.scraper.db.latestRunsLength - 1)
+                .exec();
+
+
             if(nr.new_run.place == 1) {
                 // new record on this category/level, send notification
                 push_notify.notify_game_record(nr, game, category, level);

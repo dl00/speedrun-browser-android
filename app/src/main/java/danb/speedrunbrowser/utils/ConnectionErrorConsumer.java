@@ -17,7 +17,7 @@ public class ConnectionErrorConsumer implements io.reactivex.functions.Consumer<
     @Override
     public void accept(Throwable throwable) {
 
-        Log.w(TAG, "Could not download dashboard:", throwable);
+        Log.w(TAG, "Could not download something:", throwable);
         try {
             Util.showErrorToast(ctx, ctx.getString(R.string.error_could_not_connect));
         } catch(Exception e) {
