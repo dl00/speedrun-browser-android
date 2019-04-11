@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="horizontal" android:layout_width="match_parent"
     android:gravity="center"
+    android:layout_marginTop="@dimen/half_fab_margin"
+    android:layout_marginBottom="@dimen/half_fab_margin"
     android:layout_height="@dimen/game_cover_height">
 
     <ImageView
@@ -34,12 +36,5 @@
         </FrameLayout>
 
     </LinearLayout>
-
-    <ImageView
-        android:id="@+id/imgPlayerIcon"
-        android:layout_width="@dimen/player_icon_width"
-        android:layout_height="@dimen/player_icon_height"
-        android:layout_marginStart="@dimen/half_fab_margin"
-        android:layout_gravity="center" />
 
 </LinearLayout>

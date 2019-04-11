@@ -102,13 +102,17 @@ public class ProgressSpinnerView extends View {
     }
 
     private void recalculateDrawRect() {
-        float centerX = (float)getWidth() / 2;
-        float centerY = (float)getHeight() / 2;
 
         mDensity = getResources().getDisplayMetrics().density;
 
         float w = mAnimBoxSize + mAnimBoxPadding * 2;
         float h = mAnimBoxSize * mAnimBoxCount + mAnimBoxPadding * (mAnimBoxCount + 1);
+
+        setMinimumWidth((int)(w * mDensity));
+        setMinimumHeight((int)(h * mDensity));
+
+        float centerX = (float)getWidth() / 2;
+        float centerY = (float)getHeight() / 2;
 
         w *= mDensity * mScale;
         h *= mDensity * mScale;

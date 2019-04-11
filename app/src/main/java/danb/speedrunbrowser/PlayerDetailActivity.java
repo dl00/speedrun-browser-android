@@ -221,7 +221,7 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
                 });
         }
         else if(mPlayer != null) {
-            mSubscription = new AppDatabase.Subscription("player", mPlayer.id);
+            mSubscription = new AppDatabase.Subscription("player", mPlayer.id, mPlayer.getName());
 
             FirebaseMessaging.getInstance().subscribeToTopic(mSubscription.getFCMTopic())
                 .addOnCompleteListener(new OnCompleteListener<Void>() {

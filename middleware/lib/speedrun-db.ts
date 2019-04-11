@@ -124,6 +124,11 @@ export async function rescore_game(db: ioredis.Redis, indexer: any, game: speedr
 
     // install master rank list
     await db.zadd(locs.game_rank, game_score.toString(), game.id);
+
+    // install on category lists
+    for(let genre of game.genres) {
+        await db.zadd(locs.game_rank + ':' + genre, game_score.toString(), game.id);
+    }
 }
 
 // add/update the given personal best entry for the given user

@@ -78,4 +78,5 @@
     <string name="empty_no_games">No games found.</string>
     <string name="title_tab_latest_runs">Latest Runs</string>
     <string name="transition_feature_img">featureImg</string>
+    <string name="title_tab_recently_watched">Recently Watched</string>
 </resources>

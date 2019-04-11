@@ -22,4 +22,5 @@
     <dimen name="player_big_icon_height">60dp</dimen>
     <dimen name="tab_icon_width">30dp</dimen>
     <dimen name="tab_icon_height">30dp</dimen>
+    <dimen name="min_progress_spinner_height">75dp</dimen>
 </resources>

@@ -8,6 +8,8 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.api.objects.Game;
@@ -15,17 +17,16 @@ import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
 import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.holders.GameCoverViewHolder;
 import danb.speedrunbrowser.holders.PlayerViewHolder;
+import danb.speedrunbrowser.holders.ProgressSpinnerViewHolder;
 import danb.speedrunbrowser.holders.WatchRunViewHolder;
-import danb.speedrunbrowser.utils.AppDatabase;
 import danb.speedrunbrowser.utils.ConnectionErrorConsumer;
 import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
-import io.reactivex.functions.Predicate;
-import io.reactivex.subjects.PublishSubject;
+import io.reactivex.schedulers.Schedulers;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,7 +35,6 @@ import android.view.ViewGroup;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 
 public class ItemListFragment extends Fragment {
@@ -42,16 +42,9 @@ public class ItemListFragment extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     public static final String ARG_ITEM_TYPE = "item_type";
 
-    private static final String SAVED_SEARCH_FILTER = "search_filter";
-    private static final String SAVED_SHOW_SUBSCRIBED = "show_subscribed";
-    private static final int DEBOUNCE_SEARCH_DELAY = 500;
-
-    private String mSearchFilter = "";
     private ItemType mItemType;
-    private boolean mShowSubscribed;
 
     private CompositeDisposable mDisposables;
-    private AppDatabase mDB;
 
     private OnFragmentInteractionListener mListener;
 
@@ -59,7 +52,7 @@ public class ItemListFragment extends Fragment {
 
     private RecyclerView mSearchItemsView;
 
-    private PublishSubject<String> mGameFilterSearchSubject;
+    private ItemSource mItemSource;
 
     public ItemListFragment() {
         super();
@@ -71,37 +64,13 @@ public class ItemListFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         mDisposables = new CompositeDisposable();
-        mSearchFilter = "";
 
-        if(savedInstanceState != null) {
-            mSearchFilter = savedInstanceState.getString(SAVED_SEARCH_FILTER);
-            mShowSubscribed = savedInstanceState.getBoolean(SAVED_SHOW_SUBSCRIBED);
-        }
 
         Bundle args = getArguments();
 
         if (args != null) {
             mItemType = (ItemType)args.getSerializable(ARG_ITEM_TYPE);
         }
-
-        mGameFilterSearchSubject = PublishSubject.create();
-
-        mDisposables.add(mGameFilterSearchSubject
-            .distinctUntilChanged()
-            .filter(new Predicate<String>() {
-                @Override
-                public boolean test(String s) throws Exception {
-                    return s != null && (s.isEmpty() || s.length() >= SpeedrunMiddlewareAPI.MIN_AUTOCOMPLETE_LENGTH);
-                }
-            })
-            .throttleLatest(DEBOUNCE_SEARCH_DELAY, TimeUnit.MILLISECONDS)
-            .subscribe(new Consumer<String>() {
-                @Override
-                public void accept(String res) throws Exception {
-                    mSearchFilter = res;
-                    downloadItems();
-                }
-            }));
 
     }
 
@@ -113,7 +82,7 @@ public class ItemListFragment extends Fragment {
 
         mSearchItemsView = v.findViewById(R.id.listSearchItems);
 
-        mAdapter = new ItemListAdapter(getContext(), new View.OnClickListener() {
+        mAdapter = new ItemListAdapter(getContext(), mSearchItemsView, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(mListener != null) {
@@ -125,6 +94,9 @@ public class ItemListFragment extends Fragment {
                         case PLAYERS:
                             id = ((User)v.getTag()).id;
                             break;
+                        case RUNS:
+                            id = ((LeaderboardRunEntry)v.getTag()).run.id;
+                            break;
                     }
 
                     mListener.onItemSelected(mItemType, id, ItemListFragment.this,
@@ -133,8 +105,6 @@ public class ItemListFragment extends Fragment {
             }
         });
         mSearchItemsView.setAdapter(mAdapter);
-
-        downloadItems();
 
         return v;
     }
@@ -148,16 +118,12 @@ public class ItemListFragment extends Fragment {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
-
-
-        mDB = AppDatabase.make(context);
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
         mListener = null;
-        mDB.close();
     }
 
     @Override
@@ -166,88 +132,11 @@ public class ItemListFragment extends Fragment {
         mDisposables.dispose();
     }
 
-    private void downloadItems() {
+    public void setItemsSource(ItemSource source) {
+        mItemSource = source;
 
-        ItemSource itemSource;
-
-        if(mShowSubscribed) {
-            itemSource = new ItemSource() {
-                @Override
-                public Observable<SpeedrunMiddlewareAPI.APIResponse<Object>> list(final int offset) {
-                    return mDB.subscriptionDao()
-                        .listOfType(mItemType.name)
-                        .flatMapObservable(new Function<List<AppDatabase.Subscription>, ObservableSource<SpeedrunMiddlewareAPI.APIResponse<Object>>>() {
-                            @Override
-                            public ObservableSource<SpeedrunMiddlewareAPI.APIResponse<Object>> apply(List<AppDatabase.Subscription> subscriptions) throws Exception {
-
-                                if(subscriptions.isEmpty())
-                                    return Observable.just(new SpeedrunMiddlewareAPI.APIResponse<>());
-
-                                StringBuilder builder = new StringBuilder(subscriptions.size());
-                                for(AppDatabase.Subscription sub : subscriptions)
-                                    builder.append(sub);
-
-                                return mItemType.listRequest(builder.toString(), offset);
-                            }
-                        });
-                }
-            };
-        }
-        else if(!mSearchFilter.isEmpty()) {
-            itemSource = new ItemSource() {
-                @Override
-                public Observable<SpeedrunMiddlewareAPI.APIResponse<Object>> list(int offset) {
-                    return SpeedrunMiddlewareAPI.make().autocomplete(mSearchFilter)
-                        .map(new Function<SpeedrunMiddlewareAPI.APISearchResponse, SpeedrunMiddlewareAPI.APIResponse<Object>>() {
-                            @Override
-                            public SpeedrunMiddlewareAPI.APIResponse<Object> apply(SpeedrunMiddlewareAPI.APISearchResponse apiSearchResponse) throws Exception {
-                                SpeedrunMiddlewareAPI.APIResponse<Object> res = new SpeedrunMiddlewareAPI.APIResponse<>();
-
-                                switch(mItemType) {
-                                    case GAMES:
-                                        if(apiSearchResponse.search.games != null)
-                                            res.data.addAll(apiSearchResponse.search.games);
-                                        break;
-                                    case PLAYERS:
-                                        if(apiSearchResponse.search.players != null)
-                                            res.data.addAll(apiSearchResponse.search.players);
-                                        break;
-                                    default:
-                                        break; // leave empty for now
-                                }
-
-                                return res;
-                            }
-                        });
-                }
-            };
-        }
-        else {
-            itemSource = new ItemSource() {
-                @Override
-                public Observable<SpeedrunMiddlewareAPI.APIResponse<Object>> list(int offset) {
-                    return mItemType.listRequest("", offset);
-                }
-            };
-        }
-
-        mAdapter.setItemsSource(itemSource);
-    }
-
-    public void setSearchFilter(String newSearchFilter) {
-        if(mGameFilterSearchSubject != null)
-            mGameFilterSearchSubject.onNext(newSearchFilter);
-    }
-
-    public String getSearchFilter() {
-        return mSearchFilter;
-    }
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-
-        outState.putString(SAVED_SEARCH_FILTER, mSearchFilter);
+        if(mAdapter != null)
+            mAdapter.loadListTop();
     }
 
     public class ItemListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -258,52 +147,117 @@ public class ItemListFragment extends Fragment {
 
         private final View.OnClickListener onClickListener;
 
-        private ItemSource itemSource;
+        private Disposable currentLoading;
+        private boolean isAtEndOfList;
 
         private List<Object> items;
 
-        public ItemListAdapter(Context ctx, View.OnClickListener onClickListener) {
+        public ItemListAdapter(Context ctx, final RecyclerView rv, View.OnClickListener onClickListener) {
             this.ctx = ctx;
             this.items = new ArrayList<>();
             this.onClickListener = onClickListener;
 
             inflater = (LayoutInflater)ctx.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+            if(mItemSource != null)
+                loadListTop();
+
+            rv.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                @Override
+                public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                    RecyclerView.LayoutManager lm = rv.getLayoutManager();
+                    int visibleItemPosition = 0;
+                    if(lm instanceof LinearLayoutManager)
+                        visibleItemPosition = ((LinearLayoutManager)lm).findLastVisibleItemPosition();
+
+                    if(visibleItemPosition == items.size() - 1)
+                        loadListMore();
+                }
+            });
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            if(items == null || items.size() > position)
+                return 0;
+            else
+                return 1;
         }
 
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return mItemType.newViewHolder(getContext(), parent);
+            if(viewType == 0)
+                return mItemType.newViewHolder(getContext(), parent);
+            else
+                return new ProgressSpinnerViewHolder(getContext());
         }
 
         @Override
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-            mItemType.applyToViewHolder(getContext(), holder, items.get(position));
-            holder.itemView.setOnClickListener(onClickListener);
-            holder.itemView.setTag(items.get(position));
+
+            if(getItemViewType(position) == 0) {
+                mItemType.applyToViewHolder(getContext(), holder, items.get(position));
+                holder.itemView.setOnClickListener(onClickListener);
+                holder.itemView.setTag(items.get(position));
+            }
         }
 
         @Override
         public int getItemCount() {
-            return items != null ? items.size() : 0;
+            int count = items != null ? items.size() : 0;
+
+            if(currentLoading != null)
+                count++;
+
+            return count;
         }
 
-        public void setItems(List<Object> items) {
-            this.items = items;
+        public void loadListTop() {
+
+            if(currentLoading != null)
+                currentLoading.dispose();
+
+            currentLoading = mItemSource.list(0)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Consumer<SpeedrunMiddlewareAPI.APIResponse<Object>>() {
+                        @Override
+                        public void accept(SpeedrunMiddlewareAPI.APIResponse<Object> objectAPIResponse) throws Exception {
+                            currentLoading = null;
+                            items = objectAPIResponse.data;
+                            isAtEndOfList = items.isEmpty();
+                            notifyDataSetChanged();
+                        }
+                    }, new ConnectionErrorConsumer(getContext()));
             notifyDataSetChanged();
         }
 
-        public void setItemsSource(ItemSource source) {
-            itemSource = source;
+        public void loadListMore() {
 
-            mDisposables.add(itemSource.list(0)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<SpeedrunMiddlewareAPI.APIResponse<Object>>() {
-                    @Override
-                    public void accept(SpeedrunMiddlewareAPI.APIResponse<Object> objectAPIResponse) throws Exception {
-                        items = objectAPIResponse.data;
-                        notifyDataSetChanged();
-                    }
-                }, new ConnectionErrorConsumer(getContext())));
+            if(isAtEndOfList || currentLoading != null)
+                return;
+
+            currentLoading = mItemSource.list(items.size())
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Consumer<SpeedrunMiddlewareAPI.APIResponse<Object>>() {
+                        @Override
+                        public void accept(SpeedrunMiddlewareAPI.APIResponse<Object> objectAPIResponse) throws Exception {
+                            currentLoading = null;
+                            if(objectAPIResponse.data.isEmpty()) {
+                                isAtEndOfList = true;
+                                notifyItemRemoved(items.size());
+                            }
+                            else {
+                                int prevSize = items.size();
+                                items.addAll(objectAPIResponse.data);
+                                notifyItemChanged(prevSize);
+                                notifyItemRangeInserted(prevSize + 1, objectAPIResponse.data.size() - 1);
+                            }
+                        }
+                    }, new ConnectionErrorConsumer(getContext()));
+
+            notifyItemChanged(items.size());
         }
     }
 
@@ -370,47 +324,28 @@ public class ItemListFragment extends Fragment {
                         transitionView = v.findViewById(R.id.imgPlayerIcon);
                         transitionView.setTransitionName(activity.getString(R.string.transition_feature_img));
                         return ActivityOptions.makeSceneTransitionAnimation(activity, transitionView, activity.getString(R.string.transition_feature_img));
+                    case RUNS:
+                        return ActivityOptions.makeSceneTransitionAnimation(activity, v, activity.getString(R.string.transition_feature_img));
                 }
             }
 
             return null;
         }
 
-        public Observable<SpeedrunMiddlewareAPI.APIResponse<Object>> listRequest(String ids, int offset) {
-            switch(this) {
-                case GAMES:
-                    if(ids == null || ids.isEmpty())
-                        return SpeedrunMiddlewareAPI.make().listGames(offset).map(new GenericMapper<Game>());
-                    else
-                        return SpeedrunMiddlewareAPI.make().listGames(ids).map(new GenericMapper<Game>());
-
-                case PLAYERS:
-                    if(ids == null || ids.isEmpty())
-                        return Observable.just(new SpeedrunMiddlewareAPI.APIResponse<Object>());
-                    else
-                        return SpeedrunMiddlewareAPI.make().listPlayers(ids).map(new GenericMapper<User>());
-                case RUNS:
-                    if(ids == null || ids.isEmpty())
-                        return SpeedrunMiddlewareAPI.make().listLatestRuns(offset).map(new GenericMapper<LeaderboardRunEntry>());
-                default:
-                    return null;
-            }
-        }
-
         @Override
         public String toString() {
             return name;
         }
+    }
 
-        private class GenericMapper<T> implements Function<SpeedrunMiddlewareAPI.APIResponse<T>, SpeedrunMiddlewareAPI.APIResponse<Object>> {
+    public static class GenericMapper<T> implements Function<SpeedrunMiddlewareAPI.APIResponse<T>, SpeedrunMiddlewareAPI.APIResponse<Object>> {
 
-            @Override
-            public SpeedrunMiddlewareAPI.APIResponse<Object> apply(SpeedrunMiddlewareAPI.APIResponse<T> res) throws Exception {
-                SpeedrunMiddlewareAPI.APIResponse<Object> obj = new SpeedrunMiddlewareAPI.APIResponse<>();
-                obj.data.addAll(res.data);
-                obj.error = res.error;
-                return obj;
-            }
+        @Override
+        public SpeedrunMiddlewareAPI.APIResponse<Object> apply(SpeedrunMiddlewareAPI.APIResponse<T> res) throws Exception {
+            SpeedrunMiddlewareAPI.APIResponse<Object> obj = new SpeedrunMiddlewareAPI.APIResponse<>();
+            obj.data.addAll(res.data);
+            obj.error = res.error;
+            return obj;
         }
     }
 }

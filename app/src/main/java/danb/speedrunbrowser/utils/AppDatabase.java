@@ -24,7 +24,7 @@ import io.reactivex.Completable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 
-@Database(entities = {AppDatabase.WatchHistoryEntry.class, AppDatabase.Subscription.class}, version = 2)
+@Database(entities = {AppDatabase.WatchHistoryEntry.class, AppDatabase.Subscription.class}, version = 3)
 public abstract class AppDatabase extends RoomDatabase {
 
     public static final Migration MIGRATION_1_2 = new Migration(1, 2) {
@@ -34,10 +34,18 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     };
 
+    public static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE `Subscription` ADD COLUMN `name` TEXT NOT NULL DEFAULT '';");
+        }
+    };
+
     public static AppDatabase make(Context ctx) {
         return Room.databaseBuilder(ctx, AppDatabase.class, "appdb")
                 .addMigrations(
-                        MIGRATION_1_2
+                        MIGRATION_1_2,
+                        MIGRATION_2_3
                 )
                 .build();
     }
@@ -50,9 +58,10 @@ public abstract class AppDatabase extends RoomDatabase {
         Subscription() {}
 
         @Ignore
-        public Subscription(@NonNull String type, @NonNull String resourceId) {
+        public Subscription(@NonNull String type, @NonNull String resourceId, @NonNull String name) {
             this.resourceId = resourceId;
             this.type = type;
+            this.name = name;
         }
 
         @PrimaryKey
@@ -61,6 +70,9 @@ public abstract class AppDatabase extends RoomDatabase {
 
         @NonNull
         public String type;
+
+        @NonNull
+        public String name;
 
         public String getFCMTopic() {
             if(BuildConfig.DEBUG) {
@@ -100,9 +112,11 @@ public abstract class AppDatabase extends RoomDatabase {
         @Query("SELECT * FROM Subscription WHERE resourceId = :resourceId")
         Maybe<Subscription> get(String resourceId);
 
+        @Query("SELECT * FROM Subscription WHERE type = :type ORDER BY name LIMIT 50 OFFSET :offset")
+        Single<List<Subscription>> listOfType(String type, int offset);
 
-        @Query("SELECT * FROM Subscription WHERE type = :type LIMIT 20")
-        Single<List<Subscription>> listOfType(String type);
+        @Query("SELECT * FROM Subscription WHERE type = :type AND name LIKE :filter ORDER BY name LIMIT 50 OFFSET :offset")
+        Single<List<Subscription>> listOfTypeWithFilter(String type, String filter, int offset);
 
         @Insert(onConflict = OnConflictStrategy.REPLACE)
         Completable subscribe(Subscription... subscriptions);
