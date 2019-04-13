@@ -87,11 +87,20 @@ public class SpeedrunMiddlewareAPI {
     public static class APISearchData {
         public List<Game> games;
         public List<User> players;
+
+        public APISearchData() {
+            games = new ArrayList<>(0);
+            players = new ArrayList<>(0);
+        }
     }
 
     public static class APISearchResponse {
         public APISearchData search;
         public Error error;
+
+        public APISearchResponse() {
+            search = new APISearchData();
+        }
     }
 
     public interface Endpoints {

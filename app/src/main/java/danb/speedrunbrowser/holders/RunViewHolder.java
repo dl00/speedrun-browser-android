@@ -15,7 +15,9 @@ import danb.speedrunbrowser.R;
 import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
 import danb.speedrunbrowser.api.objects.User;
-import danb.speedrunbrowser.utils.DownloadImageTask;
+import danb.speedrunbrowser.utils.ImageLoader;
+import danb.speedrunbrowser.utils.ImageViewPlacerConsumer;
+import io.reactivex.disposables.CompositeDisposable;
 
 public class RunViewHolder extends RecyclerView.ViewHolder {
 
@@ -36,7 +38,7 @@ public class RunViewHolder extends RecyclerView.ViewHolder {
         mRankImg = v.findViewById(R.id.imgRank);
     }
 
-    public void apply(Context context, Game game, LeaderboardRunEntry entry) {
+    public void apply(Context context, CompositeDisposable disposables, Game game, LeaderboardRunEntry entry) {
 
         mPlayerNames.removeAllViews();
         boolean first = true;
@@ -61,18 +63,24 @@ public class RunViewHolder extends RecyclerView.ViewHolder {
         mRunDate.setText(entry.run.date);
         mRank.setText(entry.getPlaceName());
 
+        ImageLoader il = new ImageLoader(context);
+
         if(game.assets != null) {
             if(entry.place == 1 && game.assets.trophy1st != null) {
-                new DownloadImageTask(context, mRankImg).execute(game.assets.trophy1st.uri);
+                disposables.add(il.loadImage(game.assets.trophy1st.uri)
+                    .subscribe(new ImageViewPlacerConsumer(mRankImg)));
             }
             if(entry.place == 2 && game.assets.trophy2nd != null) {
-                new DownloadImageTask(context, mRankImg).execute(game.assets.trophy2nd.uri);
+                disposables.add(il.loadImage(game.assets.trophy2nd.uri)
+                        .subscribe(new ImageViewPlacerConsumer(mRankImg)));
             }
             if(entry.place == 3 && game.assets.trophy3rd != null) {
-                new DownloadImageTask(context, mRankImg).execute(game.assets.trophy3rd.uri);
+                disposables.add(il.loadImage(game.assets.trophy3rd.uri)
+                        .subscribe(new ImageViewPlacerConsumer(mRankImg)));
             }
             if(entry.place == 4 && game.assets.trophy4th != null) {
-                new DownloadImageTask(context, mRankImg).execute(game.assets.trophy4th.uri);
+                disposables.add(il.loadImage(game.assets.trophy4th.uri)
+                        .subscribe(new ImageViewPlacerConsumer(mRankImg)));
             }
             else
                 mRankImg.setImageDrawable(new ColorDrawable(Color.TRANSPARENT));

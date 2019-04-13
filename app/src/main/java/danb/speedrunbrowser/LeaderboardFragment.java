@@ -32,6 +32,7 @@ import danb.speedrunbrowser.utils.ConnectionErrorConsumer;
 import danb.speedrunbrowser.utils.Util;
 import danb.speedrunbrowser.views.ProgressSpinnerView;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 
@@ -48,6 +49,8 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
     public static final String ARG_GAME = "game";
     public static final String ARG_CATEGORY = "category";
     public static final String ARG_LEVEL = "level";
+
+    private CompositeDisposable mDisposables;
 
     private Game mGame;
     private Category mCategory;
@@ -80,6 +83,8 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        mDisposables = new CompositeDisposable();
+
         Bundle args = Objects.requireNonNull(getArguments());
 
         mGame = (Game)args.getSerializable(ARG_GAME);
@@ -93,6 +98,12 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
 
         if(!leaderboardId.isEmpty())
             loadLeaderboard(leaderboardId);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mDisposables.dispose();
     }
 
     private String calculateLeaderboardId() {
@@ -316,7 +327,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         public void onBindViewHolder(@NonNull RunViewHolder holder, int position) {
             LeaderboardRunEntry run = mFilteredLeaderboardRuns.get(position);
 
-            holder.apply(getContext(), mGame, run);
+            holder.apply(getContext(), mDisposables, mGame, run);
 
             holder.itemView.setOnClickListener(mOnClickListener);
             holder.itemView.setTag(run);

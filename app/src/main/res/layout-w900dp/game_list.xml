@@ -33,6 +33,12 @@
             android:textColor="@android:color/white"
             android:inputType="textPersonName" />
 
+        <ListView
+            android:id="@+id/listAutoCompleteResults"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
         <danb.speedrunbrowser.views.SimpleTabStrip
             android:id="@+id/tabsType"
             android:layout_width="match_parent"

@@ -36,7 +36,8 @@ import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.utils.AppDatabase;
 import danb.speedrunbrowser.utils.ConnectionErrorConsumer;
 import danb.speedrunbrowser.utils.Constants;
-import danb.speedrunbrowser.utils.DownloadImageTask;
+import danb.speedrunbrowser.utils.ImageLoader;
+import danb.speedrunbrowser.utils.ImageViewPlacerConsumer;
 import danb.speedrunbrowser.utils.Util;
 import danb.speedrunbrowser.views.ProgressSpinnerView;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -267,6 +268,8 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
 
     private void setViewData() {
 
+        ImageLoader il = new ImageLoader(this);
+
         setTitle(mPlayer.getName());
 
         // find out if we are subscribed
@@ -283,7 +286,8 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
         if(!mPlayer.isGuest()) {
             try {
                 mBestsFrame.setVisibility(View.VISIBLE);
-                new DownloadImageTask(this, mPlayerIcon).clear(true).execute(new URL(String.format(Constants.AVATAR_IMG_LOCATION, mPlayer.names.get("international"))));
+                mDisposables.add(il.loadImage(new URL(String.format(Constants.AVATAR_IMG_LOCATION, mPlayer.names.get("international"))))
+                        .subscribe(new ImageViewPlacerConsumer(mPlayerIcon)));
             } catch (MalformedURLException e) {
                 Log.w(TAG, "Chould not show player logo:", e);
                 mBestsFrame.setVisibility(View.GONE);
@@ -292,7 +296,7 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
         else
             mBestsFrame.setVisibility(View.GONE);
 
-        populateBestsFrame();
+        populateBestsFrame(il);
 
         mSpinner.setVisibility(View.GONE);
         mPlayerHead.setVisibility(View.VISIBLE);
@@ -305,7 +309,7 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
     }
 
     @SuppressLint("SetTextI18n")
-    private void populateBestsFrame() {
+    private void populateBestsFrame(ImageLoader il) {
         if(mPlayer.bests == null)
             return;
 
@@ -332,7 +336,8 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
 
             if(gameBests.assets.coverLarge != null) {
                 ImageView imgView = gameLayout.findViewById(R.id.imgGameCover);
-                new DownloadImageTask(this, imgView).clear(true).execute(gameBests.assets.coverLarge.uri);
+                mDisposables.add(il.loadImage(gameBests.assets.coverLarge.uri)
+                    .subscribe(new ImageViewPlacerConsumer(imgView)));
             }
 
             List<PersonalBestRunRow> runsToAdd = new ArrayList<>();
@@ -367,19 +372,23 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
                 TableRow rowPersonalBest = (TableRow)getLayoutInflater().inflate(R.layout.content_row_personal_best, null);
                 ((TextView)rowPersonalBest.findViewById(R.id.txtRunCategory)).setText(row.label);
 
-                View placeImg = rowPersonalBest.findViewById(R.id.imgPlace);
+                ImageView placeImg = rowPersonalBest.findViewById(R.id.imgPlace);
 
                 if(row.re.place == 1 && gameBests.assets.trophy1st != null) {
-                    new DownloadImageTask(this, placeImg).execute(gameBests.assets.trophy1st.uri);
+                    mDisposables.add(il.loadImage(gameBests.assets.trophy1st.uri)
+                            .subscribe(new ImageViewPlacerConsumer(placeImg)));
                 }
                 if(row.re.place == 2 && gameBests.assets.trophy2nd != null) {
-                    new DownloadImageTask(this, placeImg).execute(gameBests.assets.trophy2nd.uri);
+                    mDisposables.add(il.loadImage(gameBests.assets.trophy2nd.uri)
+                            .subscribe(new ImageViewPlacerConsumer(placeImg)));
                 }
                 if(row.re.place == 3 && gameBests.assets.trophy3rd != null) {
-                    new DownloadImageTask(this, placeImg).execute(gameBests.assets.trophy3rd.uri);
+                    mDisposables.add(il.loadImage(gameBests.assets.trophy3rd.uri)
+                            .subscribe(new ImageViewPlacerConsumer(placeImg)));
                 }
                 if(row.re.place == 4 && gameBests.assets.trophy4th != null) {
-                    new DownloadImageTask(this, placeImg).execute(gameBests.assets.trophy4th.uri);
+                    mDisposables.add(il.loadImage(gameBests.assets.trophy4th.uri)
+                            .subscribe(new ImageViewPlacerConsumer(placeImg)));
                 }
                 else
                     ((ImageView)placeImg).setImageDrawable(new ColorDrawable(Color.TRANSPARENT));

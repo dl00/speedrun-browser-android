@@ -1,9 +1,6 @@
 package danb.speedrunbrowser.api.objects;
 
-import android.content.Context;
-import android.graphics.LinearGradient;
 import android.graphics.Rect;
-import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.widget.TextView;
 
@@ -16,7 +13,7 @@ class UserLocation implements Serializable {
     public HashMap<String, String> names;
 }
 
-public class User implements Serializable {
+public class User implements Serializable, SearchResultItem {
     public String id;
     public HashMap<String, String> names;
     // guests just have a simple "name" field
@@ -46,6 +43,10 @@ public class User implements Serializable {
         else {
             return id;
         }
+    }
+
+    public String getTypeName() {
+        return "runner";
     }
 
     // creates a text view with name and appropriate formatting

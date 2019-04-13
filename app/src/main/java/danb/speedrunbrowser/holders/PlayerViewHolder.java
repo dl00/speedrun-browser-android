@@ -13,7 +13,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import danb.speedrunbrowser.R;
 import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.utils.Constants;
-import danb.speedrunbrowser.utils.DownloadImageTask;
+import danb.speedrunbrowser.utils.ImageLoader;
+import danb.speedrunbrowser.utils.ImageViewPlacerConsumer;
+import io.reactivex.disposables.CompositeDisposable;
 
 public class PlayerViewHolder extends RecyclerView.ViewHolder {
     private static final String TAG = WatchRunViewHolder.class.getSimpleName();
@@ -30,14 +32,15 @@ public class PlayerViewHolder extends RecyclerView.ViewHolder {
         mPlayerName = v.findViewById(R.id.txtPlayerName);
     }
 
-    public void apply(Context context, User user, boolean subscribed) {
+    public void apply(Context context, CompositeDisposable disposables, User user, boolean subscribed) {
 
         mSubscribedIndicator.setVisibility(subscribed ? View.VISIBLE : View.INVISIBLE);
 
         if(user.names != null && user.names.get("international") != null) {
             mPlayerImage.setVisibility(View.VISIBLE);
             try {
-                new DownloadImageTask(context, mPlayerImage).execute(new URL(String.format(Constants.AVATAR_IMG_LOCATION, user.names.get("international"))));
+                disposables.add(new ImageLoader(context).loadImage(new URL(String.format(Constants.AVATAR_IMG_LOCATION, user.names.get("international"))))
+                    .subscribe(new ImageViewPlacerConsumer(mPlayerImage)));
             }
             catch(MalformedURLException e) {
                 Log.w(TAG, "Could not generate player image URL:", e);

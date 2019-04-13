@@ -1,13 +1,13 @@
 package danb.speedrunbrowser.api.objects;
 
+import android.widget.TextView;
+
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import danb.speedrunbrowser.api.SpeedrunAPI;
-
-public class Game implements Serializable {
+public class Game implements Serializable, SearchResultItem {
     public String id;
     public HashMap<String, String> names;
     public String abbreviation;
@@ -35,5 +35,13 @@ public class Game implements Serializable {
     public String getName() {
         String n = names.get("international");
         return n != null ? n : "? Unknown Name ?";
+    }
+
+    public String getTypeName() {
+        return "game";
+    }
+
+    public void applyTextView(TextView tv) {
+        tv.setText(getName());
     }
 }

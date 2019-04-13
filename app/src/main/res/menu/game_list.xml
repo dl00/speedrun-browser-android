@@ -1,12 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item android:id="@+id/menu_history"
-        android:icon="@drawable/baseline_list_24"
-        android:title="@string/menu_history"
-        app:showAsAction="ifRoom" />
     <item android:id="@+id/menu_about"
         android:icon="@drawable/baseline_info_24"
         android:title="@string/menu_about"
-        app:showAsAction="never" />
+        app:showAsAction="ifRoom" />
 </menu>

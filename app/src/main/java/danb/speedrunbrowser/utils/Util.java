@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import androidx.core.app.NotificationCompat;
 import danb.speedrunbrowser.BuildConfig;
 import danb.speedrunbrowser.R;
+import io.reactivex.Single;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -34,6 +35,7 @@ import okhttp3.Response;
 public class Util {
 
     private static final String NOTIFICATION_GROUP = "records";
+    private static OkHttpClient httpClient;
 
     public static void showErrorToast(Context ctx, CharSequence msg) {
         Toast.makeText(ctx, msg, Toast.LENGTH_LONG).show();
@@ -45,9 +47,12 @@ public class Util {
 
     public static OkHttpClient getHTTPClient() {
 
+        if(httpClient != null)
+            return httpClient;
+
         try {
 
-            return new OkHttpClient.Builder()
+            httpClient = new OkHttpClient.Builder()
                     // lower timeout--the middleware should respond pretty quickly
                     .readTimeout(15, TimeUnit.SECONDS)
                     .connectTimeout(3, TimeUnit.SECONDS)
@@ -63,6 +68,8 @@ public class Util {
                         }
                     })
                     .build();
+
+            return httpClient;
         }
         catch(Exception e) {
             return null;

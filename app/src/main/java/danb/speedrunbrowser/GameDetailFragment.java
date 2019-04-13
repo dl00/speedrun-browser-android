@@ -23,12 +23,14 @@ import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.Level;
 import danb.speedrunbrowser.api.objects.Variable;
 import danb.speedrunbrowser.utils.ConnectionErrorConsumer;
-import danb.speedrunbrowser.utils.DownloadImageTask;
+import danb.speedrunbrowser.utils.ImageLoader;
+import danb.speedrunbrowser.utils.ImageViewPlacerConsumer;
 import danb.speedrunbrowser.utils.LeaderboardPagerAdapter;
 import danb.speedrunbrowser.utils.Util;
 import danb.speedrunbrowser.views.CategoryTabStrip;
 import danb.speedrunbrowser.views.ProgressSpinnerView;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 
@@ -67,6 +69,8 @@ public class GameDetailFragment extends Fragment implements DialogInterface.OnDi
     private ProgressSpinnerView mSpinner;
     private View mGameHeader;
 
+    private CompositeDisposable mDisposables;
+
     private TextView mGameName;
     private TextView mReleaseDate;
     private TextView mPlatformList;
@@ -93,6 +97,8 @@ public class GameDetailFragment extends Fragment implements DialogInterface.OnDi
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        mDisposables = new CompositeDisposable();
+
         if(getArguments() == null) {
             Log.e(TAG, "No arguments provided");
             return;
@@ -109,6 +115,12 @@ public class GameDetailFragment extends Fragment implements DialogInterface.OnDi
         else {
             mGame = (Game)savedInstanceState.getSerializable(SAVED_GAME);
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mDisposables.dispose();
     }
 
     public Disposable loadGame(final String gameId) {
@@ -228,10 +240,15 @@ public class GameDetailFragment extends Fragment implements DialogInterface.OnDi
 
             Context ctx;
             if((ctx = getContext()) != null) {
+
+                ImageLoader il = new ImageLoader(ctx);
+
                 if(mGame.assets.coverLarge != null)
-                    new DownloadImageTask(ctx, mCover).execute(mGame.assets.coverLarge.uri);
+                    mDisposables.add(il.loadImage(mGame.assets.coverLarge.uri)
+                        .subscribe(new ImageViewPlacerConsumer(mCover)));
                 if(mGame.assets.background != null && mBackground != null)
-                    new DownloadImageTask(ctx, mBackground).execute(mGame.assets.background.uri);
+                    mDisposables.add(il.loadImage(mGame.assets.background.uri)
+                            .subscribe(new ImageViewPlacerConsumer(mBackground)));
             }
 
             mSpinner.setVisibility(View.GONE);

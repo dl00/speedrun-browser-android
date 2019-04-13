@@ -196,7 +196,7 @@ public class ItemListFragment extends Fragment {
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
 
             if(getItemViewType(position) == 0) {
-                mItemType.applyToViewHolder(getContext(), holder, items.get(position));
+                mItemType.applyToViewHolder(getContext(), mDisposables, holder, items.get(position));
                 holder.itemView.setOnClickListener(onClickListener);
                 holder.itemView.setTag(items.get(position));
             }
@@ -297,16 +297,16 @@ public class ItemListFragment extends Fragment {
             }
         }
 
-        public void applyToViewHolder(Context ctx, RecyclerView.ViewHolder holder, Object toApply) {
+        public void applyToViewHolder(Context ctx, CompositeDisposable disposables, RecyclerView.ViewHolder holder, Object toApply) {
             switch(this) {
                 case GAMES:
-                    ((GameCoverViewHolder)holder).apply(ctx, (Game)toApply);
+                    ((GameCoverViewHolder)holder).apply(ctx, disposables, (Game)toApply);
                     break;
                 case PLAYERS:
-                    ((PlayerViewHolder)holder).apply(ctx, (User)toApply, false);
+                    ((PlayerViewHolder)holder).apply(ctx, disposables, (User)toApply, false);
                     break;
                 case RUNS:
-                    ((WatchRunViewHolder)holder).apply(ctx, ((LeaderboardRunEntry)toApply).run.game, (LeaderboardRunEntry)toApply);
+                    ((WatchRunViewHolder)holder).apply(ctx, disposables, ((LeaderboardRunEntry)toApply).run.game, (LeaderboardRunEntry)toApply);
                     break;
             }
         }

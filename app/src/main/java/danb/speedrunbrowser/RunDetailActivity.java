@@ -23,7 +23,6 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import androidx.appcompat.app.AppCompatActivity;
-import danb.speedrunbrowser.api.SpeedrunAPI;
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
@@ -34,7 +33,8 @@ import danb.speedrunbrowser.api.objects.Run;
 import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.utils.AppDatabase;
 import danb.speedrunbrowser.utils.ConnectionErrorConsumer;
-import danb.speedrunbrowser.utils.DownloadImageTask;
+import danb.speedrunbrowser.utils.ImageLoader;
+import danb.speedrunbrowser.utils.ImageViewPlacerConsumer;
 import danb.speedrunbrowser.utils.NoopConsumer;
 import danb.speedrunbrowser.utils.Util;
 import danb.speedrunbrowser.views.MultiVideoView;
@@ -355,7 +355,9 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
         }
 
         if(mGame.assets != null && mGame.assets.coverLarge != null)
-            new DownloadImageTask(this, mCover).clear(false).execute(mGame.assets.coverLarge.uri);
+            mDisposables.add(
+                    new ImageLoader(this).loadImage(mGame.assets.coverLarge.uri)
+                            .subscribe(new ImageViewPlacerConsumer(mCover)));
 
         mPlayerNames.removeAllViews();
         for(final User player : mRun.players) {

@@ -1,19 +1,16 @@
 package danb.speedrunbrowser.holders;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import androidx.recyclerview.widget.RecyclerView;
-import danb.speedrunbrowser.GameListActivity;
 import danb.speedrunbrowser.R;
 import danb.speedrunbrowser.api.objects.Game;
-import danb.speedrunbrowser.utils.DownloadImageTask;
+import danb.speedrunbrowser.utils.ImageLoader;
+import danb.speedrunbrowser.utils.ImageViewPlacerConsumer;
+import io.reactivex.disposables.CompositeDisposable;
 
 public class GameCoverViewHolder extends RecyclerView.ViewHolder {
     private TextView mName;
@@ -31,14 +28,14 @@ public class GameCoverViewHolder extends RecyclerView.ViewHolder {
         mCover = v.findViewById(R.id.imgGameCover);
     }
 
-    public void apply(Context ctx, Game game) {
+    public void apply(Context ctx, CompositeDisposable disposables, Game game) {
         mName.setText(game.names.get("international"));
         mDate.setText(game.releaseDate);
         mRunnersCount.setText("");
 
         if(game.assets.coverLarge != null)
-            new DownloadImageTask(ctx, mCover)
-                    .execute(game.assets.coverLarge.uri);
+            disposables.add(new ImageLoader(ctx).loadImage(game.assets.coverLarge.uri)
+                .subscribe(new ImageViewPlacerConsumer(mCover)));
         else {}
         // TODO: In the extremely unlikely case there is no cover, might have to replace with dummy image
     }
