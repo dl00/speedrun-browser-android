@@ -61,7 +61,7 @@ public class Util {
                         @Override
                         public Response intercept(Chain chain) throws IOException {
                             Request newReq = chain.request().newBuilder()
-                                    .addHeader("User-Agent", "SpeedrunAndroidMiddlewareClient (report@danb.email)")
+                                    .addHeader("User-Agent", "SpeedrunAndroidMiddlewareClient/" + BuildConfig.VERSION_NAME + " (report@danb.email)")
                                     .build();
 
                             return chain.proceed(newReq);

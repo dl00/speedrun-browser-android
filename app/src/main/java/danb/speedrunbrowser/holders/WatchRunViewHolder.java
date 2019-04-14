@@ -36,8 +36,16 @@ public class WatchRunViewHolder extends RecyclerView.ViewHolder {
 
         mLeaderboardHolder.apply(context, disposables, game, entry);
 
-        if(entry.run.game.names != null)
-            mGameName.setText(entry.run.game.names.get("international"));
+        if(entry.run.game.names != null) {
+            String gameAndCategoryText = entry.run.game.names.get("international");
+
+            gameAndCategoryText += " \u2022 " + entry.run.category.name;
+
+            if(entry.run.level != null)
+                gameAndCategoryText += " \u2022 " + entry.run.level.name;
+
+            mGameName.setText(gameAndCategoryText);
+        }
 
         if(entry.run.game != null && entry.run.game.assets != null && entry.run.game.assets.coverLarge != null) {
             mGameImage.setVisibility(View.VISIBLE);

@@ -3,6 +3,7 @@ package danb.speedrunbrowser.api.objects;
 import android.widget.TextView;
 
 import java.io.Serializable;
+import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +40,10 @@ public class Game implements Serializable, SearchResultItem {
 
     public String getTypeName() {
         return "game";
+    }
+
+    public URL getIconUrl() {
+        return assets.coverLarge.uri;
     }
 
     public void applyTextView(TextView tv) {

@@ -12,7 +12,6 @@ import java.net.URL;
 import androidx.recyclerview.widget.RecyclerView;
 import danb.speedrunbrowser.R;
 import danb.speedrunbrowser.api.objects.User;
-import danb.speedrunbrowser.utils.Constants;
 import danb.speedrunbrowser.utils.ImageLoader;
 import danb.speedrunbrowser.utils.ImageViewPlacerConsumer;
 import io.reactivex.disposables.CompositeDisposable;
@@ -39,7 +38,7 @@ public class PlayerViewHolder extends RecyclerView.ViewHolder {
         if(user.names != null && user.names.get("international") != null) {
             mPlayerImage.setVisibility(View.VISIBLE);
             try {
-                disposables.add(new ImageLoader(context).loadImage(new URL(String.format(Constants.AVATAR_IMG_LOCATION, user.names.get("international"))))
+                disposables.add(new ImageLoader(context).loadImage(user.getIconUrl())
                     .subscribe(new ImageViewPlacerConsumer(mPlayerImage)));
             }
             catch(MalformedURLException e) {

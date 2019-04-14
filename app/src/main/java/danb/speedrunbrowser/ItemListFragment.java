@@ -105,6 +105,8 @@ public class ItemListFragment extends Fragment {
             }
         });
         mSearchItemsView.setAdapter(mAdapter);
+        if(mItemSource != null)
+            mAdapter.loadListTop();
 
         return v;
     }
@@ -158,9 +160,6 @@ public class ItemListFragment extends Fragment {
             this.onClickListener = onClickListener;
 
             inflater = (LayoutInflater)ctx.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-            if(mItemSource != null)
-                loadListTop();
 
             rv.addOnScrollListener(new RecyclerView.OnScrollListener() {
                 @Override

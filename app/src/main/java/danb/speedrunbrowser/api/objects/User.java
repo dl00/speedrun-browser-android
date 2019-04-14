@@ -5,8 +5,12 @@ import android.graphics.Typeface;
 import android.widget.TextView;
 
 import java.io.Serializable;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
+
+import danb.speedrunbrowser.utils.Constants;
 
 class UserLocation implements Serializable {
     public String code;
@@ -47,6 +51,10 @@ public class User implements Serializable, SearchResultItem {
 
     public String getTypeName() {
         return "runner";
+    }
+
+    public URL getIconUrl() throws MalformedURLException {
+        return new URL(String.format(Constants.AVATAR_IMG_LOCATION, names.get("international")));
     }
 
     // creates a text view with name and appropriate formatting

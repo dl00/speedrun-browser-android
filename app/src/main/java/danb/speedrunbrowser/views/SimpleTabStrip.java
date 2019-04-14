@@ -79,6 +79,8 @@ public class SimpleTabStrip extends FrameLayout implements ViewPager.OnPageChang
         mLayout.removeAllViews();
 
         PagerAdapter adapter = mPager.getAdapter();
+        if(adapter == null)
+            return;
 
         for(int i = 0;i < adapter.getCount();i++) {
             TextView tv = new TextView(getContext());

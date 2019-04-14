@@ -84,7 +84,9 @@ public class ImageLoader {
         Response res = client.newCall(req).execute();
 
         if(!res.isSuccessful())
-            throw new IOException();
+            // TODO properly throw this error
+            //throw new IOException();
+            Log.w(TAG, "failed to download image: " + res.body().string());
 
 
         byte[] data = res.body().bytes();
@@ -107,17 +109,22 @@ public class ImageLoader {
         return Single.create(new SingleOnSubscribe<Bitmap>() {
             @Override
             public void subscribe(SingleEmitter<Bitmap> emitter) throws Exception {
-                // try to load from cache first
-                InputStream strm = loadFromCache(url);
+                try {
+                    // try to load from cache first
+                    InputStream strm = loadFromCache(url);
 
-                if(strm == null) {
-                    strm = downloadImage(url);
+                    if(strm == null) {
+                        strm = downloadImage(url);
+                    }
+
+                    Bitmap b = BitmapFactory.decodeStream(strm); // will trigger an IOException to log the message otherwise
+                    strm.close();
+
+                    emitter.onSuccess(b);
                 }
-
-                Bitmap b = BitmapFactory.decodeStream(strm); // will trigger an IOException to log the message otherwise
-                strm.close();
-
-                emitter.onSuccess(b);
+                catch(Exception e) {
+                    Log.w(TAG, "Could not download image: ", e);
+                }
             }
         })
                 .subscribeOn(Schedulers.io())

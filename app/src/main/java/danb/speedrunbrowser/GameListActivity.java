@@ -11,7 +11,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AutoCompleteTextView;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
 
@@ -39,11 +40,8 @@ import danb.speedrunbrowser.views.SimpleTabStrip;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.Single;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Function;
-import io.reactivex.functions.Predicate;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 
@@ -55,8 +53,10 @@ import io.reactivex.subjects.PublishSubject;
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class GameListActivity extends AppCompatActivity implements TextWatcher, ItemListFragment.OnFragmentInteractionListener {
+public class GameListActivity extends AppCompatActivity implements TextWatcher, ItemListFragment.OnFragmentInteractionListener, AdapterView.OnItemClickListener {
     private static final String TAG = GameListActivity.class.getSimpleName();
+
+    private static final String SAVED_MAIN_PAGER = "main_pager";
 
     private AppDatabase mDB;
 
@@ -68,12 +68,14 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
     private SimpleTabStrip mTabs;
     private ViewPager mViewPager;
 
-    private boolean mShowSubscribed;
+    private CompositeDisposable mDisposables;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_list);
+
+        mDisposables = new CompositeDisposable();
 
         mDB = AppDatabase.make(this);
 
@@ -104,14 +106,16 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
 
         mGameFilterSearchSubject = PublishSubject.create();
 
-        AutoCompleteAdapter autoCompleteAdapter = new AutoCompleteAdapter(this);
+        AutoCompleteAdapter autoCompleteAdapter = new AutoCompleteAdapter(this, mDisposables);
         autoCompleteAdapter.setPublishSubject(mGameFilterSearchSubject);
         mAutoCompleteResults.setAdapter(autoCompleteAdapter);
+        mAutoCompleteResults.setOnItemClickListener(this);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mDisposables.dispose();
     }
 
     @Override
@@ -129,6 +133,30 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
         }
 
         return false;
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putParcelable(SAVED_MAIN_PAGER, mViewPager.onSaveInstanceState());
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        if(savedInstanceState != null) {
+            mViewPager.onRestoreInstanceState(savedInstanceState.getParcelable(SAVED_MAIN_PAGER));
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(mGameFilter.getText().length() == 0)
+            finish();
+        else
+            mGameFilter.setText("");
     }
 
     protected boolean isTwoPane() {
@@ -176,7 +204,10 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
             Intent intent = new Intent(this, GameDetailActivity.class);
             intent.putExtra(GameDetailFragment.ARG_GAME_ID, id);
 
-            startActivityFromFragment(fragment, intent, 0, transitionOptions.toBundle());
+            if(fragment != null && transitionOptions != null)
+                startActivityFromFragment(fragment, intent, 0, transitionOptions.toBundle());
+            else
+                startActivity(intent);
 
         }
     }
@@ -184,13 +215,21 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
     private void showPlayer(String id, Fragment fragment, ActivityOptions transitionOptions) {
         Intent intent = new Intent(this, PlayerDetailActivity.class);
         intent.putExtra(PlayerDetailActivity.ARG_PLAYER_ID, id);
-        startActivityFromFragment(fragment, intent, 0, transitionOptions.toBundle());
+
+        if(fragment != null && transitionOptions != null)
+            startActivityFromFragment(fragment, intent, 0, transitionOptions.toBundle());
+        else
+            startActivity(intent);
     }
 
     private void showRun(String id, Fragment fragment, ActivityOptions transitionOptions) {
         Intent intent = new Intent(this, RunDetailActivity.class);
         intent.putExtra(RunDetailActivity.EXTRA_RUN_ID, id);
-        startActivityFromFragment(fragment, intent, 0, transitionOptions.toBundle());
+
+        if(fragment != null && transitionOptions != null)
+            startActivityFromFragment(fragment, intent, 0, transitionOptions.toBundle());
+        else
+            startActivity(intent);
     }
 
     @Override
@@ -208,6 +247,18 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
         }
     }
 
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        Object item = parent.getAdapter().getItem(position);
+        System.out.println(item);
+        if(item instanceof User) {
+            showPlayer(((User)item).id, null, null);
+        }
+        else if(item instanceof Game) {
+            showGame(((Game)item).id, null, null);
+        }
+    }
+
     private class PagerAdapter extends FragmentPagerAdapter implements SimpleTabStrip.IconPagerAdapter {
 
         private ItemListFragment[] fragments;
@@ -215,7 +266,7 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
         public PagerAdapter(@NonNull FragmentManager fm) {
             super(fm);
 
-            fragments = new ItemListFragment[3];
+            fragments = new ItemListFragment[5];
 
             fragments[0] = new ItemListFragment();
             Bundle args = new Bundle();
@@ -232,13 +283,34 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
             args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemListFragment.ItemType.RUNS);
             fragments[2].setArguments(args);
 
-            setSearchFilter("");
+            fragments[3] = new ItemListFragment();
+            args = new Bundle();
+            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemListFragment.ItemType.GAMES);
+            fragments[3].setArguments(args);
+
+            fragments[4] = new ItemListFragment();
+            args = new Bundle();
+            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemListFragment.ItemType.PLAYERS);
+            fragments[4].setArguments(args);
+
+            for(int i = 0;i < getCount();i++)
+                initializePage(i);
         }
 
         @NonNull
         @Override
         public Fragment getItem(int position) {
             return fragments[position];
+        }
+
+        @Override
+        public void setPrimaryItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
+            if(fragments[position] != object) {
+                fragments[position] = ((ItemListFragment)object);
+                initializePage(position);
+            }
+
+            super.setPrimaryItem(container, position, object);
         }
 
         @Override
@@ -256,6 +328,10 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
                     return getString(R.string.title_tab_latest_runs);
                 case 2:
                     return getString(R.string.title_tab_recently_watched);
+                case 3:
+                    return getString(R.string.title_tab_subscribed_games);
+                case 4:
+                    return getString(R.string.title_tab_subscribed_players);
                 default:
                     return "";
             }
@@ -270,24 +346,70 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
                     return getResources().getDrawable(R.drawable.baseline_play_circle_filled_24);
                 case 2:
                     return getResources().getDrawable(R.drawable.baseline_list_24);
+                case 3:
+                    return getResources().getDrawable(R.drawable.baseline_videogame_asset_24);
+                case 4:
+                    return getResources().getDrawable(R.drawable.baseline_person_24);
                 default:
                     return null;
             }
         }
 
-        public void setSearchFilter(final String searchFilter) {
-            if(mShowSubscribed) {
-                fragments[0].setItemsSource(new ItemListFragment.ItemSource() {
-                    @Override
-                    public Observable<SpeedrunMiddlewareAPI.APIResponse<Object>> list(int offset) {
-                        Single<List<AppDatabase.Subscription>> subs = mDB.subscriptionDao()
-                            .listOfType(ItemListFragment.ItemType.GAMES.name, offset);
+        private void initializePage(int position) {
 
-                        if(searchFilter != null && !searchFilter.isEmpty())
-                            subs = mDB.subscriptionDao()
-                                    .listOfTypeWithFilter(ItemListFragment.ItemType.GAMES.name, searchFilter, offset);
+            switch(position) {
+                case 0:
+                    fragments[0].setItemsSource(new ItemListFragment.ItemSource() {
+                        @Override
+                        public Observable<SpeedrunMiddlewareAPI.APIResponse<Object>> list(int offset) {
+                            return SpeedrunMiddlewareAPI.make().listGames(offset).map(new ItemListFragment.GenericMapper<Game>());
+                        }
+                    });
+                    break;
+                case 1:
+                    fragments[1].setItemsSource(new ItemListFragment.ItemSource() {
+                        @Override
+                        public Observable<SpeedrunMiddlewareAPI.APIResponse<Object>> list(int offset) {
+                            return SpeedrunMiddlewareAPI.make().listLatestRuns(offset).map(new ItemListFragment.GenericMapper<LeaderboardRunEntry>());
+                        }
+                    });
+                    break;
+                case 2:
+                    fragments[2].setItemsSource(new ItemListFragment.ItemSource() {
+                        @Override
+                        public Observable<SpeedrunMiddlewareAPI.APIResponse<Object>> list(int offset) {
+                            Single<List<AppDatabase.WatchHistoryEntry>> entries = mDB.watchHistoryDao()
+                                    .getMany(offset)
+                                    .subscribeOn(Schedulers.io());
 
-                        return subs.flatMapObservable(new Function<List<AppDatabase.Subscription>, ObservableSource<SpeedrunMiddlewareAPI.APIResponse<Object>>>() {
+                            return entries.flatMapObservable(new Function<List<AppDatabase.WatchHistoryEntry>, ObservableSource<SpeedrunMiddlewareAPI.APIResponse<Object>>>() {
+                                @Override
+                                public ObservableSource<SpeedrunMiddlewareAPI.APIResponse<Object>> apply(List<AppDatabase.WatchHistoryEntry> entries) throws Exception {
+
+                                    if(entries.isEmpty())
+                                        return Observable.just(new SpeedrunMiddlewareAPI.APIResponse<>());
+
+                                    StringBuilder builder = new StringBuilder(entries.size());
+                                    for(AppDatabase.WatchHistoryEntry whe : entries) {
+                                        if(builder.length() != 0)
+                                            builder.append(",");
+                                        builder.append(whe.runId);
+                                    }
+
+                                    return SpeedrunMiddlewareAPI.make().listRuns(builder.toString()).map(new ItemListFragment.GenericMapper<LeaderboardRunEntry>());
+                                }
+                            });
+                        }
+                    });
+                    break;
+                case 3:
+                    fragments[3].setItemsSource(new ItemListFragment.ItemSource() {
+                        @Override
+                        public Observable<SpeedrunMiddlewareAPI.APIResponse<Object>> list(int offset) {
+                            Single<List<AppDatabase.Subscription>> subs = mDB.subscriptionDao()
+                                    .listOfType("game", offset);
+
+                            return subs.flatMapObservable(new Function<List<AppDatabase.Subscription>, ObservableSource<SpeedrunMiddlewareAPI.APIResponse<Object>>>() {
                                 @Override
                                 public ObservableSource<SpeedrunMiddlewareAPI.APIResponse<Object>> apply(List<AppDatabase.Subscription> subscriptions) throws Exception {
 
@@ -298,64 +420,43 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
                                     for(AppDatabase.Subscription sub : subscriptions) {
                                         if(builder.length() != 0)
                                             builder.append(",");
-                                        builder.append(sub);
+                                        builder.append(sub.resourceId);
                                     }
 
                                     return SpeedrunMiddlewareAPI.make().listGames(builder.toString()).map(new ItemListFragment.GenericMapper<Game>());
                                 }
                             });
-                    }
-                });
-
-                fragments[1].setItemsSource(new ItemListFragment.ItemSource() {
-                    @Override
-                    public Observable<SpeedrunMiddlewareAPI.APIResponse<Object>> list(int offset) {
-                        return SpeedrunMiddlewareAPI.make().listLatestRuns(offset).map(new ItemListFragment.GenericMapper<LeaderboardRunEntry>());
-                    }
-                });
-            }
-            else {
-                fragments[0].setItemsSource(new ItemListFragment.ItemSource() {
-                    @Override
-                    public Observable<SpeedrunMiddlewareAPI.APIResponse<Object>> list(int offset) {
-                        return SpeedrunMiddlewareAPI.make().listGames(offset).map(new ItemListFragment.GenericMapper<Game>());
-                    }
-                });
-
-                fragments[1].setItemsSource(new ItemListFragment.ItemSource() {
-                    @Override
-                    public Observable<SpeedrunMiddlewareAPI.APIResponse<Object>> list(int offset) {
-                        return SpeedrunMiddlewareAPI.make().listLatestRuns(offset).map(new ItemListFragment.GenericMapper<LeaderboardRunEntry>());
-                    }
-                });
-            }
-
-            fragments[2].setItemsSource(new ItemListFragment.ItemSource() {
-                @Override
-                public Observable<SpeedrunMiddlewareAPI.APIResponse<Object>> list(int offset) {
-                    Single<List<AppDatabase.WatchHistoryEntry>> entries = mDB.watchHistoryDao()
-                            .getMany(offset)
-                            .subscribeOn(Schedulers.io());
-
-                    return entries.flatMapObservable(new Function<List<AppDatabase.WatchHistoryEntry>, ObservableSource<SpeedrunMiddlewareAPI.APIResponse<Object>>>() {
-                        @Override
-                        public ObservableSource<SpeedrunMiddlewareAPI.APIResponse<Object>> apply(List<AppDatabase.WatchHistoryEntry> entries) throws Exception {
-
-                            if(entries.isEmpty())
-                                return Observable.just(new SpeedrunMiddlewareAPI.APIResponse<>());
-
-                            StringBuilder builder = new StringBuilder(entries.size());
-                            for(AppDatabase.WatchHistoryEntry whe : entries) {
-                                if(builder.length() != 0)
-                                    builder.append(",");
-                                builder.append(whe.runId);
-                            }
-
-                            return SpeedrunMiddlewareAPI.make().listRuns(builder.toString()).map(new ItemListFragment.GenericMapper<LeaderboardRunEntry>());
                         }
                     });
-                }
-            });
+                    break;
+                case 4:
+                    fragments[4].setItemsSource(new ItemListFragment.ItemSource() {
+                        @Override
+                        public Observable<SpeedrunMiddlewareAPI.APIResponse<Object>> list(int offset) {
+                            Single<List<AppDatabase.Subscription>> subs = mDB.subscriptionDao()
+                                    .listOfType("player", offset);
+
+                            return subs.flatMapObservable(new Function<List<AppDatabase.Subscription>, ObservableSource<SpeedrunMiddlewareAPI.APIResponse<Object>>>() {
+                                @Override
+                                public ObservableSource<SpeedrunMiddlewareAPI.APIResponse<Object>> apply(List<AppDatabase.Subscription> subscriptions) throws Exception {
+
+                                    if(subscriptions.isEmpty())
+                                        return Observable.just(new SpeedrunMiddlewareAPI.APIResponse<>());
+
+                                    StringBuilder builder = new StringBuilder(subscriptions.size());
+                                    for(AppDatabase.Subscription sub : subscriptions) {
+                                        if(builder.length() != 0)
+                                            builder.append(",");
+                                        builder.append(sub.resourceId);
+                                    }
+
+                                    return SpeedrunMiddlewareAPI.make().listPlayers(builder.toString()).map(new ItemListFragment.GenericMapper<User>());
+                                }
+                            });
+                        }
+                    });
+                    break;
+            }
         }
     }
 }

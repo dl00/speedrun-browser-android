@@ -1,6 +1,7 @@
 package danb.speedrunbrowser.utils;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +10,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,26 +26,28 @@ import danb.speedrunbrowser.api.objects.User;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
 import io.reactivex.subjects.Subject;
 
 public class AutoCompleteAdapter extends BaseAdapter implements Consumer<SpeedrunMiddlewareAPI.APISearchResponse> {
+    private static final String TAG = AutoCompleteAdapter.class.getSimpleName();
 
     private static final int DEBOUNCE_SEARCH_DELAY = 500;
 
     private Context ctx;
 
-    private Disposable disposableRequest;
+    private CompositeDisposable disposables;
 
     private String query;
 
     private List<SearchResultItem> searchResults;
 
-    public AutoCompleteAdapter(@NonNull Context context) {
+    public AutoCompleteAdapter(@NonNull Context context, CompositeDisposable disposables) {
         ctx = context;
+        this.disposables = disposables;
         searchResults = new ArrayList<>();
     }
 
@@ -101,6 +106,17 @@ public class AutoCompleteAdapter extends BaseAdapter implements Consumer<Speedru
         LinearLayout viewName = convertView.findViewById(R.id.txtItemName);
         TextView viewType = convertView.findViewById(R.id.txtItemType);
 
+        try {
+            URL iconUrl;
+            if((iconUrl = item.getIconUrl()) != null) {
+                disposables.add(new ImageLoader(ctx).loadImage(iconUrl)
+                        .subscribe(new ImageViewPlacerConsumer(viewIcon)));
+            }
+        }
+        catch(MalformedURLException e) {
+            Log.w(TAG, "Malformed icon for search icon: ", e);
+        }
+
         viewName.removeAllViews();
 
         TextView tv = new TextView(ctx);
@@ -113,7 +129,7 @@ public class AutoCompleteAdapter extends BaseAdapter implements Consumer<Speedru
     }
 
     public void setPublishSubject(Subject<String> subj) {
-        disposableRequest = subj
+        disposables.add(subj
             .distinctUntilChanged()
             .filter(new Predicate<String>() {
                 @Override
@@ -132,7 +148,7 @@ public class AutoCompleteAdapter extends BaseAdapter implements Consumer<Speedru
                 }
             })
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(this);
+            .subscribe(this));
     }
 
     @Override

@@ -12,6 +12,7 @@
         android:layout_height="50dp" />
 
     <LinearLayout
+        android:layout_marginStart="@dimen/fab_margin"
         android:id="@+id/txtItemName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
