@@ -13,6 +13,8 @@
 
         <item name="android:itemBackground">@color/colorPrimary</item>
 
+        <item name="actionBarStyle">@style/AppTheme.ActionBar</item>
+
 
         <!-- Transitions -->
         <!-- enable window content transitions -->

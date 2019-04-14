@@ -7,10 +7,12 @@ import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TableLayout;
@@ -27,9 +29,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
 import danb.speedrunbrowser.api.objects.User;
@@ -46,8 +50,8 @@ import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
-public class PlayerDetailActivity extends AppCompatActivity implements View.OnClickListener {
-    private static final String TAG = PlayerDetailActivity.class.getSimpleName();
+public class PlayerDetailFragment extends Fragment implements View.OnClickListener {
+    private static final String TAG = PlayerDetailFragment.class.getSimpleName();
 
     public static final String ARG_PLAYER = "player";
     public static final String ARG_PLAYER_ID = "player_id";
@@ -77,33 +81,16 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
     private LinearLayout mBestsFrame;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_player_detail);
 
-        setTitle(R.string.title_loading);
+        setHasOptionsMenu(true);
 
-        mDB = AppDatabase.make(this);
+        mDB = AppDatabase.make(getContext());
 
-        mSpinner = findViewById(R.id.spinner);
-        mPlayerHead = findViewById(R.id.layoutPlayerHeader);
-        mScrollBests = findViewById(R.id.scrollPlayerBests);
-        mFrameBests = findViewById(R.id.framePlayerBests);
+        Objects.requireNonNull(getActivity()).setTitle(R.string.title_loading);
 
-        mPlayerIcon = findViewById(R.id.imgAvatar);
-        mPlayerName = findViewById(R.id.txtPlayerName);
-        mIconTwitch = findViewById(R.id.iconTwitch);
-        mIconTwitter = findViewById(R.id.iconTwitter);
-        mIconYoutube = findViewById(R.id.iconYoutube);
-        mIconZSR = findViewById(R.id.iconZSR);
-        mBestsFrame = findViewById(R.id.bestsLayout);
-
-        mIconTwitch.setOnClickListener(this);
-        mIconTwitter.setOnClickListener(this);
-        mIconYoutube.setOnClickListener(this);
-        mIconZSR.setOnClickListener(this);
-
-        Bundle args = getIntent().getExtras();
+        Bundle args = getArguments();
 
         if(args != null && (mPlayer = (User)args.getSerializable(ARG_PLAYER)) != null) {
             loadSubscription(mPlayer.id);
@@ -117,20 +104,47 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
     }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         super.onDestroy();
 
         mDisposables.dispose();
         mDB.close();
     }
 
+    @Nullable
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+
+        View rootView = inflater.inflate(R.layout.activity_player_detail, container, false);
+
+        mSpinner = rootView.findViewById(R.id.spinner);
+        mPlayerHead = rootView.findViewById(R.id.layoutPlayerHeader);
+        mScrollBests = rootView.findViewById(R.id.scrollPlayerBests);
+        mFrameBests = rootView.findViewById(R.id.framePlayerBests);
+
+        mPlayerIcon = rootView.findViewById(R.id.imgAvatar);
+        mPlayerName = rootView.findViewById(R.id.txtPlayerName);
+        mIconTwitch = rootView.findViewById(R.id.iconTwitch);
+        mIconTwitter = rootView.findViewById(R.id.iconTwitter);
+        mIconYoutube = rootView.findViewById(R.id.iconYoutube);
+        mIconZSR = rootView.findViewById(R.id.iconZSR);
+        mBestsFrame = rootView.findViewById(R.id.bestsLayout);
+
+        mIconTwitch.setOnClickListener(this);
+        mIconTwitter.setOnClickListener(this);
+        mIconYoutube.setOnClickListener(this);
+        mIconZSR.setOnClickListener(this);
+
+        setViewData();
+
+        return rootView;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.player, menu);
         mMenu = menu;
         setMenu();
-        return true;
     }
 
     @Override
@@ -168,7 +182,7 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
 
                     if (gameAPIResponse.data == null || gameAPIResponse.data.isEmpty()) {
                         // game was not able to be found for some reason?
-                        Util.showErrorToast(PlayerDetailActivity.this, getString(R.string.error_missing_game, playerId));
+                        Util.showErrorToast(getContext(), getString(R.string.error_missing_game, playerId));
                         return;
                     }
 
@@ -176,14 +190,14 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
 
                     setViewData();
                 }
-            }, new ConnectionErrorConsumer(PlayerDetailActivity.this)));
+            }, new ConnectionErrorConsumer(getContext())));
     }
 
     private boolean toggleSubscribed() {
 
         MenuItem subscribeMenuItem = mMenu.findItem(R.id.menu_subscribe);
 
-        ProgressSpinnerView psv = new ProgressSpinnerView(this, null);
+        ProgressSpinnerView psv = new ProgressSpinnerView(getContext(), null);
         psv.setDirection(ProgressSpinnerView.Direction.RIGHT);
         psv.setScale(0.5f);
 
@@ -215,7 +229,7 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
                                     public void run() throws Exception {
                                         mSubscription = null;
                                         setMenu();
-                                        Util.showMsgToast(PlayerDetailActivity.this, getString(R.string.success_subscription));
+                                        Util.showMsgToast(getContext(), getString(R.string.success_subscription));
                                     }
                                 }));
                     }
@@ -238,7 +252,7 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
                                     @Override
                                     public void run() throws Exception {
                                         setMenu();
-                                        Util.showMsgToast(PlayerDetailActivity.this, getString(R.string.success_subscription));
+                                        Util.showMsgToast(getContext(), getString(R.string.success_subscription));
                                     }
                                 }));
                     }
@@ -267,45 +281,45 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void setViewData() {
+        if(mPlayer != null) {
+            ImageLoader il = new ImageLoader(Objects.requireNonNull(getContext()));
 
-        ImageLoader il = new ImageLoader(this);
+            Objects.requireNonNull(getActivity()).setTitle(mPlayer.getName());
 
-        setTitle(mPlayer.getName());
+            // find out if we are subscribed
+            setMenu();
 
-        // find out if we are subscribed
-        setMenu();
+            mPlayer.applyTextView(mPlayerName);
 
-        mPlayer.applyTextView(mPlayerName);
-
-        mIconTwitch.setVisibility(mPlayer.twitch != null ? View.VISIBLE : View.GONE);
-        mIconTwitter.setVisibility(mPlayer.twitter != null ? View.VISIBLE : View.GONE);
-        mIconYoutube.setVisibility(mPlayer.youtube != null ? View.VISIBLE : View.GONE);
-        mIconZSR.setVisibility(mPlayer.speedrunslive != null ? View.VISIBLE : View.GONE);
+            mIconTwitch.setVisibility(mPlayer.twitch != null ? View.VISIBLE : View.GONE);
+            mIconTwitter.setVisibility(mPlayer.twitter != null ? View.VISIBLE : View.GONE);
+            mIconYoutube.setVisibility(mPlayer.youtube != null ? View.VISIBLE : View.GONE);
+            mIconZSR.setVisibility(mPlayer.speedrunslive != null ? View.VISIBLE : View.GONE);
 
 
-        if(!mPlayer.isGuest()) {
-            try {
-                mBestsFrame.setVisibility(View.VISIBLE);
-                mDisposables.add(il.loadImage(new URL(String.format(Constants.AVATAR_IMG_LOCATION, mPlayer.names.get("international"))))
-                        .subscribe(new ImageViewPlacerConsumer(mPlayerIcon)));
-            } catch (MalformedURLException e) {
-                Log.w(TAG, "Chould not show player logo:", e);
-                mBestsFrame.setVisibility(View.GONE);
+            if(!mPlayer.isGuest()) {
+                try {
+                    mBestsFrame.setVisibility(View.VISIBLE);
+                    mDisposables.add(il.loadImage(new URL(String.format(Constants.AVATAR_IMG_LOCATION, mPlayer.names.get("international"))))
+                            .subscribe(new ImageViewPlacerConsumer(mPlayerIcon)));
+                } catch (MalformedURLException e) {
+                    Log.w(TAG, "Chould not show player logo:", e);
+                    mBestsFrame.setVisibility(View.GONE);
+                }
             }
+            else
+                mBestsFrame.setVisibility(View.GONE);
+
+            populateBestsFrame(il);
+
+            mSpinner.setVisibility(View.GONE);
+            mPlayerHead.setVisibility(View.VISIBLE);
+
+            if(mScrollBests != null)
+                mScrollBests.setVisibility(View.VISIBLE);
+            if(mFrameBests != null)
+                mFrameBests.setVisibility(View.VISIBLE);
         }
-        else
-            mBestsFrame.setVisibility(View.GONE);
-
-        populateBestsFrame(il);
-
-        mSpinner.setVisibility(View.GONE);
-        mPlayerHead.setVisibility(View.VISIBLE);
-
-        if(mScrollBests != null)
-            mScrollBests.setVisibility(View.VISIBLE);
-        if(mFrameBests != null)
-            mFrameBests.setVisibility(View.VISIBLE);
-
     }
 
     @SuppressLint("SetTextI18n")
@@ -433,7 +447,7 @@ public class PlayerDetailActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void viewRun(String runId) {
-        Intent intent = new Intent(this, RunDetailActivity.class);
+        Intent intent = new Intent(getContext(), RunDetailActivity.class);
         intent.putExtra(RunDetailActivity.EXTRA_RUN_ID, runId);
         startActivity(intent);
     }

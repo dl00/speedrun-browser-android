@@ -38,16 +38,6 @@
             android:layout_weight="1"
             android:layout_height="wrap_content">
 
-            <TextView
-                android:id="@+id/txtGameName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="The Legend of Zelda: Breath of the Wild"
-                android:textAlignment="center"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                tools:ignore="HardcodedText" />
-
             <TableLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">

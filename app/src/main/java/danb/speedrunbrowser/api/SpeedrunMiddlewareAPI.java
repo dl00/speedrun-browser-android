@@ -20,6 +20,7 @@ import danb.speedrunbrowser.api.objects.Region;
 import danb.speedrunbrowser.api.objects.Run;
 import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.api.objects.Variable;
+import danb.speedrunbrowser.api.objects.WhatIsEntry;
 import danb.speedrunbrowser.utils.Util;
 import io.reactivex.Observable;
 import retrofit2.Retrofit;
@@ -130,5 +131,9 @@ public class SpeedrunMiddlewareAPI {
 
         @GET("runs/{ids}")
         Observable<APIResponse<LeaderboardRunEntry>> listRuns(@Path("ids") String runIds);
+
+        // What is
+        @GET("whatis/{ids}")
+        Observable<APIResponse<WhatIsEntry>> whatAreThese(@Path("ids") String thingIds);
     }
 }

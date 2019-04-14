@@ -20,7 +20,6 @@ import com.google.android.gms.security.ProviderInstaller;
 import com.google.firebase.crash.FirebaseCrash;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -49,7 +48,7 @@ import io.reactivex.subjects.PublishSubject;
  * An activity representing a list of Games. This activity
  * has different presentations for handset and tablet-size devices. On
  * handsets, the activity presents a list of items, which when touched,
- * lead to a {@link GameDetailActivity} representing
+ * lead to a {@link ItemDetailActivity} representing
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
@@ -201,7 +200,8 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
                     .commit();
         }
         else {
-            Intent intent = new Intent(this, GameDetailActivity.class);
+            Intent intent = new Intent(this, ItemDetailActivity.class);
+            intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.GAMES);
             intent.putExtra(GameDetailFragment.ARG_GAME_ID, id);
 
             if(fragment != null && transitionOptions != null)
@@ -213,8 +213,9 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
     }
 
     private void showPlayer(String id, Fragment fragment, ActivityOptions transitionOptions) {
-        Intent intent = new Intent(this, PlayerDetailActivity.class);
-        intent.putExtra(PlayerDetailActivity.ARG_PLAYER_ID, id);
+        Intent intent = new Intent(this, ItemDetailActivity.class);
+        intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.PLAYERS);
+        intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, id);
 
         if(fragment != null && transitionOptions != null)
             startActivityFromFragment(fragment, intent, 0, transitionOptions.toBundle());

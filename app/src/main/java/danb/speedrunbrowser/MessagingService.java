@@ -1,31 +1,19 @@
 package danb.speedrunbrowser;
 
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.RingtoneManager;
-import android.net.Uri;
-import android.os.Build;
-import android.os.IBinder;
 import android.util.Log;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
-import java.io.ByteArrayInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import androidx.core.app.NotificationCompat;
 import danb.speedrunbrowser.api.PushNotificationData;
 import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.utils.Constants;
@@ -114,8 +102,8 @@ public class MessagingService extends FirebaseMessagingService {
                 data.game.getName(), categoryAndLevelName,
                 data.old_run != null ? data.old_run.run.times.formatTime() : "", data.new_run.run.times.formatTime());
 
-        Intent intent = new Intent(this, PlayerDetailActivity.class);
-        intent.putExtra(PlayerDetailActivity.ARG_PLAYER_ID, players.get(0).id);
+        Intent intent = new Intent(this, PlayerDetailFragment.class);
+        intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, players.get(0).id);
 
         Util.postNotification(this, intent, title, msg, featureImg);
     }

@@ -390,8 +390,9 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
     }
 
     private void viewPlayer(User player) {
-        Intent intent = new Intent(this, PlayerDetailActivity.class);
-        intent.putExtra(PlayerDetailActivity.ARG_PLAYER_ID, player.id);
+        Intent intent = new Intent(this, ItemDetailActivity.class);
+        intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.PLAYERS);
+        intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, player.id);
 
         startActivity(intent);
     }

@@ -88,6 +88,9 @@ export async function pull_leaderboard(runid: string, options: any) {
             }
 
             await scraper.indexer_players.add(player_id, indexes);
+            
+            if(player.names && player.names['international'])
+                await scraper.storedb!.hset(speedrun_db.locs.player_abbrs, player.names['international'], player_id)
         }
 
         // write the leaderboard to db (excluding the players)

@@ -17,6 +17,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.Objects;
+
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
@@ -37,7 +39,7 @@ import io.reactivex.functions.Consumer;
 /**
  * A fragment representing a single Game detail screen.
  * This fragment is either contained in a {@link GameListActivity}
- * in two-pane mode (on tablets) or a {@link GameDetailActivity}
+ * in two-pane mode (on tablets) or a {@link ItemDetailActivity}
  * on handsets.
  */
 public class GameDetailFragment extends Fragment implements DialogInterface.OnDismissListener {
@@ -71,7 +73,6 @@ public class GameDetailFragment extends Fragment implements DialogInterface.OnDi
 
     private CompositeDisposable mDisposables;
 
-    private TextView mGameName;
     private TextView mReleaseDate;
     private TextView mPlatformList;
 
@@ -165,8 +166,6 @@ public class GameDetailFragment extends Fragment implements DialogInterface.OnDi
         mSpinner = rootView.findViewById(R.id.spinner);
         mGameHeader = rootView.findViewById(R.id.gameInfoHead);
 
-
-        mGameName = rootView.findViewById(R.id.txtGameName);
         mReleaseDate = rootView.findViewById(R.id.txtReleaseDate);
         mPlatformList = rootView.findViewById(R.id.txtPlatforms);
 
@@ -218,9 +217,10 @@ public class GameDetailFragment extends Fragment implements DialogInterface.OnDi
     }
 
     private void setViewData() {
-        if(mGame != null && mGameName != null) {
+        if(mGame != null) {
 
-            mGameName.setText(mGame.getName());
+            Objects.requireNonNull(getActivity()).setTitle(mGame.getName());
+
             mReleaseDate.setText(mGame.releaseDate);
 
             // we have to join the string manually because it is java 7

@@ -23,4 +23,6 @@
     <dimen name="tab_icon_width">30dp</dimen>
     <dimen name="tab_icon_height">30dp</dimen>
     <dimen name="min_progress_spinner_height">75dp</dimen>
+
+    <dimen name="bar_height">35dp</dimen>
 </resources>

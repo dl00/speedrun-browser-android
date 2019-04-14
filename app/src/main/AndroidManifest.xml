@@ -14,10 +14,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:targetApi="n">
-        
-        <activity android:name=".HistoryActivity"
-            android:label="@string/title_activity_history"
-            android:parentActivityName=".GameListActivity" />
 
         <service
             android:name=".MessagingService"
@@ -28,7 +24,6 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".PlayerDetailActivity" />
         <activity
             android:name=".AboutActivity"
             android:label="@string/title_activity_about"
@@ -49,10 +44,10 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".GameDetailActivity"
-            android:label="@string/title_game_detail"
+            android:name=".ItemDetailActivity"
+            android:label="@string/title_item_detail"
             android:parentActivityName=".GameListActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme">
             <tools:validation testUrl="https://www.speedrun.com/botw" />
 
             <meta-data
@@ -75,11 +70,11 @@
             android:name=".RunDetailActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_run_detail"
-            android:parentActivityName=".GameDetailActivity"
+            android:parentActivityName=".ItemDetailActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="danb.speedrunbrowser.GameDetailActivity" />
+                android:value="danb.speedrunbrowser.ItemDetailActivity" />
 
             <intent-filter android:order="2">
                 <action android:name="android.intent.action.VIEW" />
