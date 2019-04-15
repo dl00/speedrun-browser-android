@@ -141,6 +141,10 @@ public class ItemDetailActivity extends AppCompatActivity implements Consumer<Sp
                 showRun(entry.id);
             }
         }
+        else {
+            Util.showErrorToast(this, getString(R.string.error_could_not_find, getIntent().getDataString()));
+            finish();
+        }
 
         if(frag != null)
             showFragment(frag, args);

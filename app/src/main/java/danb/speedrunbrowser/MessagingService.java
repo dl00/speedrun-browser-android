@@ -40,8 +40,11 @@ public class MessagingService extends FirebaseMessagingService {
 
             PushNotificationData data = new PushNotificationData(rawData);
 
-            if(remoteMessage.getFrom().startsWith("/topics/debug_player")) {
+            if(remoteMessage.getFrom().startsWith("/topics/" + getBuildVariant() + "_player")) {
                 makePlayerNotification(data);
+            }
+            else if(remoteMessage.getFrom().startsWith("/topics/" + getBuildVariant() + "_game")) {
+                makeGameNotification(data);
             }
 
         }
@@ -108,7 +111,67 @@ public class MessagingService extends FirebaseMessagingService {
         Util.postNotification(this, intent, title, msg, featureImg);
     }
 
-    private void makeGameNotification(PushNotificationData data, Bitmap featureImg) {
-        // TODO
+    private void makeGameNotification(PushNotificationData data) {
+        List<User> players = data.new_run.run.players;
+
+        if(players.isEmpty()) {
+            Log.w(TAG, "Received notification of run with no players! Cancelling notification.");
+            return;
+        }
+
+        // download feature image from the internet
+        // TODO: Utilize in-app cache in the future
+        Bitmap featureImg = null;
+        try {
+
+            URL gameCoverUrl = data.game.assets.coverLarge.uri;
+
+            Log.d(TAG, "Download player img from:" + gameCoverUrl);
+
+            Request req = new Request.Builder()
+                    .url(gameCoverUrl)
+                    .build();
+
+            Response res = Objects.requireNonNull(Util.getHTTPClient()).newCall(req).execute();
+
+            if(!res.isSuccessful())
+                throw new IOException();
+
+
+            featureImg = BitmapFactory.decodeStream(res.body().byteStream());
+        } catch(IOException e) {
+            Log.e(TAG, "Could not download player feature img:", e);
+        }
+
+        String playerNames = players.get(0).names.get("international");
+
+        if(players.size() == 2)
+            playerNames += " and " + players.get(1).names.get("international");
+        else if(players.size() >= 3) {
+            for(int i = 1;i < players.size() - 1;i++)
+                playerNames += ", " + players.get(i).names.get("international");
+
+            playerNames += ", and " + players.get(players.size() - 1).names.get("international");
+        }
+
+        String title = getString(R.string.notify_title_game_record, data.game.getName(), playerNames);
+
+        String categoryAndLevelName = data.category.name;
+
+        if(data.level != null)
+            categoryAndLevelName += " - " + data.level.name;
+
+        String msg = getString(R.string.notify_msg_game_record, data.new_run.getPlaceName() + " place",
+                data.game.getName(), categoryAndLevelName,
+                data.old_run != null ? data.old_run.run.times.formatTime() : "", data.new_run.run.times.formatTime());
+
+        Intent intent = new Intent(this, GameDetailFragment.class);
+        intent.putExtra(GameDetailFragment.ARG_GAME_ID, data.game.id);
+
+        Util.postNotification(this, intent, title, msg, featureImg);
+    }
+
+    private String getBuildVariant() {
+        return BuildConfig.DEBUG ? "debug" : "release";
     }
 }

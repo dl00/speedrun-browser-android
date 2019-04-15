@@ -202,10 +202,6 @@ public class PlayerDetailFragment extends Fragment implements View.OnClickListen
         psv.setScale(0.5f);
 
         subscribeMenuItem.setActionView(psv);
-
-
-
-
         final Consumer<Throwable> errorAction = new Consumer<Throwable>() {
             @Override
             public void accept(Throwable throwable) throws Exception {
@@ -236,7 +232,7 @@ public class PlayerDetailFragment extends Fragment implements View.OnClickListen
                 });
         }
         else if(mPlayer != null) {
-            mSubscription = new AppDatabase.Subscription("player", mPlayer.id, mPlayer.getName());
+            mSubscription = new AppDatabase.Subscription("player", mPlayer.id, mPlayer.getName().toLowerCase());
 
             FirebaseMessaging.getInstance().subscribeToTopic(mSubscription.getFCMTopic())
                 .addOnCompleteListener(new OnCompleteListener<Void>() {

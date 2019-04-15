@@ -19,6 +19,7 @@ import android.widget.ListView;
 import com.google.android.gms.security.ProviderInstaller;
 import com.google.firebase.crash.FirebaseCrash;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -163,7 +164,7 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
         // large-screen layouts (res/values-w900dp).
         // If this view is present, then the
         // activity should be in two-pane mode.
-        return findViewById(R.id.game_detail_container) != null;
+        return findViewById(R.id.detail_container) != null;
     }
 
     public void showAbout() {
@@ -196,7 +197,7 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
             newFrag.setArguments(arguments);
 
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.game_detail_container, fragment)
+                    .replace(R.id.detail_container, newFrag)
                     .commit();
         }
         else {
@@ -213,14 +214,27 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
     }
 
     private void showPlayer(String id, Fragment fragment, ActivityOptions transitionOptions) {
-        Intent intent = new Intent(this, ItemDetailActivity.class);
-        intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.PLAYERS);
-        intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, id);
+        if(isTwoPane()) {
+            Bundle arguments = new Bundle();
+            arguments.putString(PlayerDetailFragment.ARG_PLAYER_ID, id);
 
-        if(fragment != null && transitionOptions != null)
-            startActivityFromFragment(fragment, intent, 0, transitionOptions.toBundle());
-        else
-            startActivity(intent);
+            PlayerDetailFragment newFrag = new PlayerDetailFragment();
+            newFrag.setArguments(arguments);
+
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.detail_container, newFrag)
+                    .commit();
+        }
+        else {
+            Intent intent = new Intent(this, ItemDetailActivity.class);
+            intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.PLAYERS);
+            intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, id);
+
+            if(fragment != null && transitionOptions != null)
+                startActivityFromFragment(fragment, intent, 0, transitionOptions.toBundle());
+            else
+                startActivity(intent);
+        }
     }
 
     private void showRun(String id, Fragment fragment, ActivityOptions transitionOptions) {
@@ -407,6 +421,11 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
                     fragments[3].setItemsSource(new ItemListFragment.ItemSource() {
                         @Override
                         public Observable<SpeedrunMiddlewareAPI.APIResponse<Object>> list(int offset) {
+
+                            // TODO: hack for now
+                            if(offset != 0)
+                                return Observable.just(new SpeedrunMiddlewareAPI.APIResponse<>());
+
                             Single<List<AppDatabase.Subscription>> subs = mDB.subscriptionDao()
                                     .listOfType("game", offset);
 
@@ -417,11 +436,23 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
                                     if(subscriptions.isEmpty())
                                         return Observable.just(new SpeedrunMiddlewareAPI.APIResponse<>());
 
-                                    StringBuilder builder = new StringBuilder(subscriptions.size());
+                                    List<String> ids = new ArrayList<>();
+
                                     for(AppDatabase.Subscription sub : subscriptions) {
+                                        System.out.println(sub.getFCMTopic());
+                                        String id = sub.resourceId.substring(0, sub.resourceId.indexOf('_'));
+
+                                        if(!ids.isEmpty() && id.equals(ids.get(ids.size() - 1)))
+                                            continue;
+
+                                        ids.add(id);
+                                    }
+
+                                    StringBuilder builder = new StringBuilder(subscriptions.size());
+                                    for(String id : ids) {
                                         if(builder.length() != 0)
                                             builder.append(",");
-                                        builder.append(sub.resourceId);
+                                        builder.append(id);
                                     }
 
                                     return SpeedrunMiddlewareAPI.make().listGames(builder.toString()).map(new ItemListFragment.GenericMapper<Game>());

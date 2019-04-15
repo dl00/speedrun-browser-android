@@ -44,8 +44,12 @@
     <string name="default_notification_channel_id">default</string>
     <string name="notification_channel_title">Subscribed Players/Games</string>
 
-    <string name="notify_title_player_record">New Personal Best from %1s in %2s</string>
+    <string name="notify_title_player_record">New PB from %1s in %2s</string>
     <string name="notify_msg_player_record">%1s &#x2022; %2s &#x2022; %3s\n%4s -> %5s</string>
+
+    <string name="notify_title_game_record">New WR in %1s from %2s</string>
+    <string name="notify_msg_game_record">%1s &#x2022; %2s &#x2022; %3s\n%4s -> %5s</string>
+
     <string name="button_got_it">Got it!</string>
 
     <!-- release notes: edit for each release for now -->
@@ -81,4 +85,9 @@
     <string name="title_tab_recently_watched">Recently Watched</string>
     <string name="error_could_not_find">Could not find data: %1$s</string>
     <string name="title_item_detail">Speedrun.com Browser (Unofficial)</string>
+    <string name="dialog_msg_choose_categories">Select categories/levels you want to receive notifications for new records. Choose "Select None" to unsubscribe.</string>
+    <string name="button_select_all">Select All</string>
+    <string name="button_select_none">Select None</string>
+    <string name="button_save">Save</string>
+    <string name="render_level_category">%1$s &#x2022; %2$s</string>
 </resources>

@@ -6,6 +6,7 @@ import android.content.Context;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.room.Dao;
 import androidx.room.Database;
 import androidx.room.Delete;
@@ -81,6 +82,16 @@ public abstract class AppDatabase extends RoomDatabase {
             else
                 return "release_" + type + "_" + resourceId;
         }
+
+        @Override
+        public boolean equals(@Nullable Object obj) {
+            return obj instanceof Subscription && ((Subscription)obj).resourceId.equals(resourceId);
+        }
+
+        @Override
+        public int hashCode() {
+            return resourceId.hashCode();
+        }
     }
 
     @Entity
@@ -114,6 +125,9 @@ public abstract class AppDatabase extends RoomDatabase {
 
         @Query("SELECT * FROM Subscription WHERE type = :type ORDER BY name LIMIT 50 OFFSET :offset")
         Single<List<Subscription>> listOfType(String type, int offset);
+
+        @Query("SELECT * FROM Subscription WHERE type = :type AND resourceId LIKE :idPrefix || '%'")
+        Single<List<Subscription>> listOfTypeWithIDPrefix(String type, String idPrefix);
 
         @Query("SELECT * FROM Subscription WHERE type = :type AND name LIKE :filter ORDER BY name LIMIT 50 OFFSET :offset")
         Single<List<Subscription>> listOfTypeWithFilter(String type, String filter, int offset);

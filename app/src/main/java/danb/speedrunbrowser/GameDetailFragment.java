@@ -11,30 +11,44 @@ import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.Level;
 import danb.speedrunbrowser.api.objects.Variable;
+import danb.speedrunbrowser.utils.AppDatabase;
 import danb.speedrunbrowser.utils.ConnectionErrorConsumer;
 import danb.speedrunbrowser.utils.ImageLoader;
 import danb.speedrunbrowser.utils.ImageViewPlacerConsumer;
 import danb.speedrunbrowser.utils.LeaderboardPagerAdapter;
+import danb.speedrunbrowser.utils.SubscriptionChanger;
 import danb.speedrunbrowser.utils.Util;
 import danb.speedrunbrowser.views.CategoryTabStrip;
 import danb.speedrunbrowser.views.ProgressSpinnerView;
+import io.reactivex.CompletableSource;
+import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * A fragment representing a single Game detail screen.
@@ -42,7 +56,7 @@ import io.reactivex.functions.Consumer;
  * in two-pane mode (on tablets) or a {@link ItemDetailActivity}
  * on handsets.
  */
-public class GameDetailFragment extends Fragment implements DialogInterface.OnDismissListener {
+public class GameDetailFragment extends Fragment {
 
     public static final String TAG = GameDetailFragment.class.getSimpleName();
 
@@ -58,12 +72,16 @@ public class GameDetailFragment extends Fragment implements DialogInterface.OnDi
     private static final String SAVED_GAME = "game";
     private static final String SAVED_PAGER = "pager";
 
+    private AppDatabase mDB;
+
     /**
      * The dummy content this fragment is presenting.
      */
     private Game mGame;
     private Variable.VariableSelections mVariableSelections;
+    private GameSubscription mSubscription;
 
+    private Menu mMenu;
 
     /**
      * Game detail view views
@@ -98,6 +116,10 @@ public class GameDetailFragment extends Fragment implements DialogInterface.OnDi
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        setHasOptionsMenu(true);
+
+        mDB = AppDatabase.make(getContext());
+
         mDisposables = new CompositeDisposable();
 
         if(getArguments() == null) {
@@ -122,6 +144,40 @@ public class GameDetailFragment extends Fragment implements DialogInterface.OnDi
     public void onDestroy() {
         super.onDestroy();
         mDisposables.dispose();
+        mDB.close();
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.game, menu);
+        mMenu = menu;
+        setMenu();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if(item.getItemId() == R.id.menu_subscribe) {
+            openSubscriptionDialog();
+            return true;
+        }
+
+        return false;
+    }
+
+    private void setMenu() {
+        if(mMenu == null)
+            return;
+
+        MenuItem subscribeItem = mMenu.findItem(R.id.menu_subscribe);
+        subscribeItem.setActionView(null);
+        if(mSubscription != null && !mSubscription.isEmpty()) {
+            subscribeItem.setIcon(R.drawable.baseline_star_24);
+            subscribeItem.setTitle(R.string.menu_unsubscribe);
+        }
+        else {
+            subscribeItem.setIcon(R.drawable.baseline_star_border_24);
+            subscribeItem.setTitle(R.string.menu_subscribe);
+        }
     }
 
     public Disposable loadGame(final String gameId) {
@@ -139,9 +195,25 @@ public class GameDetailFragment extends Fragment implements DialogInterface.OnDi
                         }
 
                         mGame = gameAPIResponse.data.get(0);
+                        loadSubscription();
                         setViewData();
                     }
                 }, new ConnectionErrorConsumer(getContext()));
+    }
+
+    private void loadSubscription() {
+        System.out.println("Load subscription " + mGame.id);
+        mDisposables.add(mDB.subscriptionDao().listOfTypeWithIDPrefix("game", mGame.id)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<List<AppDatabase.Subscription>>() {
+                    @Override
+                    public void accept(List<AppDatabase.Subscription> subscriptions) throws Exception {
+                        System.out.println(subscriptions);
+                        mSubscription = new GameSubscription(mGame, subscriptions);
+                        setMenu();
+                    }
+                }));
     }
 
     @Override
@@ -152,9 +224,6 @@ public class GameDetailFragment extends Fragment implements DialogInterface.OnDi
             mLeaderboardPager.onRestoreInstanceState(savedInstanceState.getParcelable(SAVED_PAGER));
 
             Log.d(TAG, "Loaded from saved instance state");
-        }
-        else {
-
         }
     }
 
@@ -263,11 +332,103 @@ public class GameDetailFragment extends Fragment implements DialogInterface.OnDi
 
         dialog.show();
 
-        dialog.setOnDismissListener(this);
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                mCategoryTabStrip.getPagerAdapter().notifyFilterChanged();
+            }
+        });
     }
 
-    @Override
-    public void onDismiss(DialogInterface dialog) {
-        mCategoryTabStrip.getPagerAdapter().notifyFilterChanged();
+    private void openSubscriptionDialog() {
+        final GameSubscribeDialog dialog = new GameSubscribeDialog(getContext(), (GameSubscription)mSubscription.clone());
+
+        dialog.show();
+
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface _dialog) {
+
+                final Set<AppDatabase.Subscription> newSubs = dialog.getSubscriptions().getBaseSubscriptions();
+                Set<AppDatabase.Subscription> oldSubs = mSubscription.getBaseSubscriptions();
+                Set<AppDatabase.Subscription> delSubs = new HashSet<>(oldSubs);
+
+                delSubs.removeAll(newSubs);
+                newSubs.removeAll(oldSubs);
+
+                System.out.println("Started the subscription changer: " + newSubs + ", " + delSubs);
+
+                if(newSubs.isEmpty() && delSubs.isEmpty()) {
+                    // no change
+                    return;
+                }
+
+                ProgressSpinnerView psv = new ProgressSpinnerView(getContext(), null);
+                psv.setDirection(ProgressSpinnerView.Direction.RIGHT);
+                psv.setScale(0.5f);
+
+                mMenu.findItem(R.id.menu_subscribe).setActionView(psv);
+
+                final SubscriptionChanger sc = new SubscriptionChanger(getContext(), mDB);
+
+                // change all the subscriptions async in one go
+                mDisposables.add(Observable.fromIterable(delSubs)
+                        .flatMapCompletable(new Function<AppDatabase.Subscription, CompletableSource>() {
+                            @Override
+                            public CompletableSource apply(AppDatabase.Subscription subscription) throws Exception {
+                                return sc.unsubscribeFrom(subscription);
+                            }
+                        })
+                        .mergeWith(Observable.fromIterable(newSubs)
+                            .flatMapCompletable(new Function<AppDatabase.Subscription, CompletableSource>() {
+                                @Override
+                                public CompletableSource apply(AppDatabase.Subscription subscription) throws Exception {
+                                    return sc.subscribeTo(subscription);
+                                }
+                            }))
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new Action() {
+                            @Override
+                            public void run() throws Exception {
+                                mMenu.findItem(R.id.menu_subscribe).setActionView(null);
+                                Util.showMsgToast(getContext(), getString(R.string.success_subscription));
+                                mSubscription = dialog.getSubscriptions();
+                                setMenu();
+                            }
+                        }));
+            }
+        });
+    }
+
+    public static class GameSubscription extends HashSet<String> {
+        private Game game;
+
+        public GameSubscription(Game game) {
+            this.game = game;
+        }
+
+        public GameSubscription(Game game, Collection<AppDatabase.Subscription> subs) {
+            this.game = game;
+
+            for(AppDatabase.Subscription sub : subs) {
+                add(sub.resourceId.substring(sub.resourceId.indexOf('_') + 1));
+            }
+        }
+
+        public Set<AppDatabase.Subscription> getBaseSubscriptions() {
+
+            Set<AppDatabase.Subscription> subs = new HashSet<>(size());
+
+            for(String sub : this) {
+                subs.add(new AppDatabase.Subscription("game", game.id + "_" + sub, game.getName().toLowerCase()));
+            }
+
+            return subs;
+        }
+
+        public Game getGame() {
+            return game;
+        }
     }
 }
