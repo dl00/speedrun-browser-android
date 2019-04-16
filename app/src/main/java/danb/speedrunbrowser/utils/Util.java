@@ -92,8 +92,10 @@ public class Util {
     }
 
     public static void postNotification(Context c, Intent intent, String title, String message, Bitmap largeIcon) {
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(c, 0, intent,
+        int requestId = (int) System.currentTimeMillis();
+
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(c, requestId, intent,
                 PendingIntent.FLAG_ONE_SHOT);
 
         String channelId = c.getString(R.string.default_notification_channel_id);
