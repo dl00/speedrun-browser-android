@@ -123,13 +123,13 @@ public abstract class AppDatabase extends RoomDatabase {
         @Query("SELECT * FROM Subscription WHERE resourceId = :resourceId")
         Maybe<Subscription> get(String resourceId);
 
-        @Query("SELECT * FROM Subscription WHERE type = :type ORDER BY name LIMIT 50 OFFSET :offset")
+        @Query("SELECT * FROM Subscription WHERE type = :type ORDER BY name LIMIT 40 OFFSET :offset")
         Single<List<Subscription>> listOfType(String type, int offset);
 
         @Query("SELECT * FROM Subscription WHERE type = :type AND resourceId LIKE :idPrefix || '%'")
         Single<List<Subscription>> listOfTypeWithIDPrefix(String type, String idPrefix);
 
-        @Query("SELECT * FROM Subscription WHERE type = :type AND name LIKE :filter ORDER BY name LIMIT 50 OFFSET :offset")
+        @Query("SELECT * FROM Subscription WHERE type = :type AND name LIKE :filter ORDER BY name LIMIT 40 OFFSET :offset")
         Single<List<Subscription>> listOfTypeWithFilter(String type, String filter, int offset);
 
         @Insert(onConflict = OnConflictStrategy.REPLACE)
