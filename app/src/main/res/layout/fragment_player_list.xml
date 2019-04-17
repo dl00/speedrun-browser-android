@@ -19,8 +19,9 @@
         android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/fab_margin"
+        android:layout_margin="@dimen/fab_margin"
         android:textSize="14sp"
+        android:textAlignment="center"
         android:text="@string/empty_no_players" />
 
     <androidx.recyclerview.widget.RecyclerView

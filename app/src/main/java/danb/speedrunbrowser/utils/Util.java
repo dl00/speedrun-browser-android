@@ -91,10 +91,10 @@ public class Util {
         return sb.toString();
     }
 
-    public static void postNotification(Context c, Intent intent, String title, String message, Bitmap largeIcon) {
+    public static void postNotification(Context c, Intent intent, String subjectId, String title, String message, Bitmap largeIcon) {
         int requestId = (int) System.currentTimeMillis();
 
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(c, requestId, intent,
                 PendingIntent.FLAG_ONE_SHOT);
 
@@ -120,7 +120,7 @@ public class Util {
             notificationManager.createNotificationChannel(channel);
         }
 
-        notificationManager.notify(new Random().nextInt(), notificationBuilder.build());
+        notificationManager.notify(subjectId.hashCode(), notificationBuilder.build());
     }
 
     public static void showNewFeaturesDialog(Context ctx) {

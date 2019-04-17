@@ -52,6 +52,8 @@ public class ItemListFragment extends Fragment {
 
     private RecyclerView mSearchItemsView;
 
+    private View mEmptyView;
+
     private ItemSource mItemSource;
 
     public ItemListFragment() {
@@ -81,6 +83,7 @@ public class ItemListFragment extends Fragment {
         View v =  inflater.inflate(mItemType.layout, container, false);
 
         mSearchItemsView = v.findViewById(R.id.listSearchItems);
+        mEmptyView = v.findViewById(R.id.empty);
 
         mAdapter = new ItemListAdapter(getContext(), mSearchItemsView, new View.OnClickListener() {
             @Override
@@ -225,6 +228,12 @@ public class ItemListFragment extends Fragment {
                             currentLoading = null;
                             items = objectAPIResponse.data;
                             isAtEndOfList = items.isEmpty();
+
+                            if(isAtEndOfList)
+                                mEmptyView.setVisibility(View.VISIBLE);
+                            else
+                                mEmptyView.setVisibility(View.GONE);
+
                             notifyDataSetChanged();
                         }
                     }, new ConnectionErrorConsumer(getContext()));

@@ -35,13 +35,15 @@ import io.reactivex.subjects.Subject;
 public class AutoCompleteAdapter extends BaseAdapter implements Consumer<SpeedrunMiddlewareAPI.APISearchResponse> {
     private static final String TAG = AutoCompleteAdapter.class.getSimpleName();
 
-    private static final int DEBOUNCE_SEARCH_DELAY = 500;
+    private static final int DEBOUNCE_SEARCH_DELAY = 300;
 
     private Context ctx;
 
     private CompositeDisposable disposables;
 
     private String query;
+
+    private SpeedrunMiddlewareAPI.APISearchData rawSearchData;
 
     private List<SearchResultItem> searchResults;
 
@@ -51,29 +53,35 @@ public class AutoCompleteAdapter extends BaseAdapter implements Consumer<Speedru
         searchResults = new ArrayList<>();
     }
 
-    public void setSearchData(@NonNull String q, @NonNull SpeedrunMiddlewareAPI.APISearchData sd) {
+    public void setSearchQuery(String q) {
+        this.query = q.toLowerCase();
+    }
+
+    public void recalculateSearchResults() {
         searchResults = new LinkedList<>();
 
-        searchResults.addAll(sd.games);
+        searchResults.addAll(rawSearchData.games);
 
         if(!searchResults.isEmpty()) {
             ListIterator<SearchResultItem> sr = searchResults.listIterator();
             SearchResultItem cur = sr.next();
-            for(User player : sd.players) {
+            for(User player : rawSearchData.players) {
                 // select the longest matching substring
-                //String lcsp = longestCommonSubstring(q, player.getName());
+                LCSMatcher lcsp = new LCSMatcher(query, player.getName().toLowerCase(), 3);
 
-                //String lcsg;
-                //do {
-                //    lcsg = longestCommonSubstring(q, cur.getName());
-                //} while((cur = sr.next()) != null && lcsg.length() > lcsp.length());
+                LCSMatcher lcsg;
+                do {
+                    lcsg = new LCSMatcher(query, cur.getName().toLowerCase(), 3);
+                    System.out.println("LCSG (" + cur.getName() + ", " + player.getName() + "): " + lcsg.getMaxMatchLength() + ", " + lcsp.getMaxMatchLength());
+                } while(lcsg.getMaxMatchLength() >= lcsp.getMaxMatchLength() && sr.hasNext() && (cur = sr.next()) != null);
 
-                //sr.previous();
+                sr.previous();
                 sr.add(player);
+                sr.next();
             }
         }
 
-        searchResults.addAll(sd.players);
+        searchResults.addAll(rawSearchData.players);
 
         searchResults = new ArrayList<>(searchResults);
 
@@ -129,14 +137,24 @@ public class AutoCompleteAdapter extends BaseAdapter implements Consumer<Speedru
     }
 
     public void setPublishSubject(Subject<String> subj) {
-        disposables.add(subj
-            .distinctUntilChanged()
-            .filter(new Predicate<String>() {
-                @Override
-                public boolean test(String s) throws Exception {
-                    return s != null && (s.isEmpty() || s.length() >= SpeedrunMiddlewareAPI.MIN_AUTOCOMPLETE_LENGTH);
-                }
-            })
+
+        Observable<String> obs = subj
+                .distinctUntilChanged()
+                .filter(new Predicate<String>() {
+                    @Override
+                    public boolean test(String s) throws Exception {
+                        return s != null && (s.isEmpty() || s.length() >= SpeedrunMiddlewareAPI.MIN_AUTOCOMPLETE_LENGTH);
+                    }
+                });
+
+        disposables.add(obs.subscribe(new Consumer<String>() {
+            @Override
+            public void accept(String s) throws Exception {
+                query = s;
+            }
+        }));
+
+        disposables.add(obs
             .debounce(DEBOUNCE_SEARCH_DELAY, TimeUnit.MILLISECONDS)
             .switchMap(new Function<String, ObservableSource<SpeedrunMiddlewareAPI.APISearchResponse>>() {
                 @Override
@@ -155,6 +173,7 @@ public class AutoCompleteAdapter extends BaseAdapter implements Consumer<Speedru
     public void accept(SpeedrunMiddlewareAPI.APISearchResponse apiSearchResponse) {
         // TODO: Handle error
 
-        setSearchData("", apiSearchResponse.search);
+        rawSearchData = apiSearchResponse.search;
+        recalculateSearchResults();
     }
 }

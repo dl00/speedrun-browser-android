@@ -71,6 +71,11 @@ public class ItemDetailActivity extends AppCompatActivity implements Consumer<Sp
             else if(intent.getData() != null) {
                 List<String> segs = intent.getData().getPathSegments();
 
+                if(segs.isEmpty()) {
+                    showMainPage();
+                    return;
+                }
+
                 String id = segs.get(segs.size() - 1);
 
                 Log.d(TAG, "Decoded game or player ID: " + id + ", from URL: " + intent.getData());
@@ -153,8 +158,16 @@ public class ItemDetailActivity extends AppCompatActivity implements Consumer<Sp
     private void showRun(String id) {
         Intent intent = new Intent(this, RunDetailActivity.class);
         intent.putExtra(RunDetailActivity.EXTRA_RUN_ID, id);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
+        finish();
+    }
+
+    private void showMainPage() {
+        Intent intent = new Intent(this, GameListActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();
     }
 
     private void showFragment(Fragment frag, Bundle args) {

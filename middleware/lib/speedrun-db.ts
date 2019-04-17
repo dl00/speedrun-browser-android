@@ -161,7 +161,7 @@ export function apply_personal_best(player: speedrun_api.User,
     if(level) {
 
         old_run = _.get(player, `bests["${game.id}"].categories["${category.id}"].levels["${level.id}"].run`);
-        if(old_run && old_run.run.id == best_run.run.id)
+        if(old_run && (old_run.run.id == best_run.run.id || old_run.place > best_run.place))
             return null;
 
         let level_run: speedrun_api.LevelPersonalBests = {
@@ -176,7 +176,7 @@ export function apply_personal_best(player: speedrun_api.User,
     }
     else {
         old_run = _.get(player, `bests["${game.id}"].categories["${category.id}"].run`);
-        if(old_run && old_run.run.id == best_run.run.id)
+        if(old_run && (old_run.run.id == best_run.run.id || old_run.place > best_run.place))
             return null;
 
         category_run.run = best_run;

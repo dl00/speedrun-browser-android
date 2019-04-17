@@ -53,21 +53,24 @@
     <string name="button_got_it">Got it!</string>
 
     <!-- release notes: edit for each release for now -->
-    <string name="dialog_title_release_notes">New Features in 1.4!</string>
+    <string name="dialog_title_release_notes">New Features in 1.5!</string>
     <string name="dialog_msg_release_notes">
-        Thanks for being one of the first to use this app!\n
+        * Front page has a ton of updates, including viewing list of latest verified runs,
+          your recent watches, and subscriptions.\n
+        * Searching for players and games has gotten much easier and more fluid.\n
+        * You can now receive push notifications for new WRs for any category/level
+          in a game.\n
+        * Fix link handlers to work
+        * Major performance improvements especially when it comes to image loading.\n
         \n
-        There are some new features you should know:\n
-        * Watch history is now able to bring you to recently watched runs\n
-        * You can now receive push notifications when a runner posts a new
-          personal best. Just click the star on the player\'s page.\n
-        \n
-        More new features are coming down the pipe
-        to subscribe to games and browse subscriptions. Should be ready in a couple weeks.\n
+        This will probably be the last beta release.\n
         \n
         As always, feel free to submit feedback through the Play Store
-        or through the thread on the Speedrun.com forum. It\'s really appreciated!
+        or through the thread on the Speedrun.com forum. It\'s really appreciated!\n
+        \n
+        Thanks for being one of the first to use this app!\n
     </string>
+
     <string name="label_about_privacy_policy">Privacy Policy</string>
     <string name="label_about_terms_and_conditions"><![CDATA[Terms & Conditions]]></string>
 

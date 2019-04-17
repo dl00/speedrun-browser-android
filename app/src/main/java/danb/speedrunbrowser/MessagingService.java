@@ -105,10 +105,11 @@ public class MessagingService extends FirebaseMessagingService {
                 data.game.getName(), categoryAndLevelName,
                 data.old_run != null ? data.old_run.run.times.formatTime() : "", data.new_run.run.times.formatTime());
 
-        Intent intent = new Intent(this, PlayerDetailFragment.class);
+        Intent intent = new Intent(this, ItemDetailActivity.class);
+        intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.PLAYERS);
         intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, players.get(0).id);
 
-        Util.postNotification(this, intent, title, msg, featureImg);
+        Util.postNotification(this, intent, players.get(0).id, title, msg, featureImg);
     }
 
     private void makeGameNotification(PushNotificationData data) {
@@ -165,10 +166,11 @@ public class MessagingService extends FirebaseMessagingService {
                 data.game.getName(), categoryAndLevelName,
                 data.old_run != null ? data.old_run.run.times.formatTime() : "", data.new_run.run.times.formatTime());
 
-        Intent intent = new Intent(this, GameDetailFragment.class);
+        Intent intent = new Intent(this, ItemDetailActivity.class);
+        intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.GAMES);
         intent.putExtra(GameDetailFragment.ARG_GAME_ID, data.game.id);
 
-        Util.postNotification(this, intent, title, msg, featureImg);
+        Util.postNotification(this, intent, data.game.id, title, msg, featureImg);
     }
 
     private String getBuildVariant() {
