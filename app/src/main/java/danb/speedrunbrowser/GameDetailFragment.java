@@ -169,7 +169,7 @@ public class GameDetailFragment extends Fragment {
             return;
 
         MenuItem subscribeItem = mMenu.findItem(R.id.menu_subscribe);
-        subscribeItem.setActionView(null);
+        subscribeItem.setVisible(mSubscription != null);
         if(mSubscription != null && !mSubscription.isEmpty()) {
             subscribeItem.setIcon(R.drawable.baseline_star_24);
             subscribeItem.setTitle(R.string.menu_unsubscribe);
@@ -341,6 +341,7 @@ public class GameDetailFragment extends Fragment {
     }
 
     private void openSubscriptionDialog() {
+
         final GameSubscribeDialog dialog = new GameSubscribeDialog(getContext(), (GameSubscription)mSubscription.clone());
 
         dialog.show();
