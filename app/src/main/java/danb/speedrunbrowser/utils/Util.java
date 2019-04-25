@@ -121,6 +121,8 @@ public class Util {
         }
 
         notificationManager.notify(subjectId.hashCode(), notificationBuilder.build());
+
+        Analytics.logDeliverNotification(c, subjectId);
     }
 
     public static void showNewFeaturesDialog(Context ctx) {

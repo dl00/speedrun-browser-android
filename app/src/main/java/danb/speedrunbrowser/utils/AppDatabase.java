@@ -141,7 +141,7 @@ public abstract class AppDatabase extends RoomDatabase {
 
     @Dao
     public interface WatchHistoryDao {
-        @Query("SELECT * FROM WatchHistoryEntry ORDER BY watchDate DESC LIMIT 100 OFFSET :offset")
+        @Query("SELECT * FROM WatchHistoryEntry ORDER BY watchDate DESC LIMIT 40 OFFSET :offset")
         Single<List<WatchHistoryEntry>> getMany(int offset);
 
         @Query("SELECT * FROM WatchHistoryEntry WHERE runId = :runId")

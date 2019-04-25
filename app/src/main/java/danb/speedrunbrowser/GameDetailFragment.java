@@ -31,6 +31,7 @@ import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.Level;
 import danb.speedrunbrowser.api.objects.Variable;
+import danb.speedrunbrowser.utils.Analytics;
 import danb.speedrunbrowser.utils.AppDatabase;
 import danb.speedrunbrowser.utils.ConnectionErrorConsumer;
 import danb.speedrunbrowser.utils.ImageLoader;
@@ -197,6 +198,9 @@ public class GameDetailFragment extends Fragment {
                         mGame = gameAPIResponse.data.get(0);
                         loadSubscription();
                         setViewData();
+
+                        Analytics.logItemView(getContext(), "game", gameId);
+
                     }
                 }, new ConnectionErrorConsumer(getContext()));
     }

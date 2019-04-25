@@ -37,11 +37,13 @@ import androidx.fragment.app.Fragment;
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
 import danb.speedrunbrowser.api.objects.User;
+import danb.speedrunbrowser.utils.Analytics;
 import danb.speedrunbrowser.utils.AppDatabase;
 import danb.speedrunbrowser.utils.ConnectionErrorConsumer;
 import danb.speedrunbrowser.utils.Constants;
 import danb.speedrunbrowser.utils.ImageLoader;
 import danb.speedrunbrowser.utils.ImageViewPlacerConsumer;
+import danb.speedrunbrowser.utils.SubscriptionChanger;
 import danb.speedrunbrowser.utils.Util;
 import danb.speedrunbrowser.views.ProgressSpinnerView;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -189,6 +191,10 @@ public class PlayerDetailFragment extends Fragment implements View.OnClickListen
                     mPlayer = gameAPIResponse.data.get(0);
 
                     setViewData();
+
+
+                    Analytics.logItemView(getContext(), "player", playerId);
+
                 }
             }, new ConnectionErrorConsumer(getContext())));
     }
@@ -209,50 +215,32 @@ public class PlayerDetailFragment extends Fragment implements View.OnClickListen
             }
         };
 
-        if(mSubscription != null) {
-            FirebaseMessaging.getInstance().unsubscribeFromTopic(mSubscription.getFCMTopic())
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
+        SubscriptionChanger sc = new SubscriptionChanger(getContext(), mDB);
 
-                        Log.d(TAG, "Unsubscribe: " + mSubscription.getFCMTopic());
-                        mDisposables.add(mDB.subscriptionDao().unsubscribe(mSubscription)
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .doOnError(errorAction)
-                                .subscribe(new Action() {
-                                    @Override
-                                    public void run() throws Exception {
-                                        mSubscription = null;
-                                        setMenu();
-                                        Util.showMsgToast(getContext(), getString(R.string.success_subscription));
-                                    }
-                                }));
-                    }
-                });
+        if(mSubscription != null) {
+            mDisposables.add(sc.unsubscribeFrom(mSubscription)
+                    .subscribe(new Action() {
+                        @Override
+                        public void run() throws Exception {
+                            mSubscription = null;
+                            setMenu();
+                            Util.showMsgToast(getContext(), getString(R.string.success_subscription));
+                        }
+                    }));
+
+            return true;
         }
         else if(mPlayer != null) {
             mSubscription = new AppDatabase.Subscription("player", mPlayer.id, mPlayer.getName().toLowerCase());
 
-            FirebaseMessaging.getInstance().subscribeToTopic(mSubscription.getFCMTopic())
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        Log.d(TAG, "Subscribe: " + mSubscription.getFCMTopic());
-
-                        mDisposables.add(mDB.subscriptionDao().subscribe(mSubscription)
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .doOnError(errorAction)
-                                .subscribe(new Action() {
-                                    @Override
-                                    public void run() throws Exception {
-                                        setMenu();
-                                        Util.showMsgToast(getContext(), getString(R.string.success_subscription));
-                                    }
-                                }));
-                    }
-                });
+            mDisposables.add(sc.subscribeTo(mSubscription)
+                    .subscribe(new Action() {
+                        @Override
+                        public void run() throws Exception {
+                            setMenu();
+                            Util.showMsgToast(getContext(), getString(R.string.success_subscription));
+                        }
+                    }));
 
             return true;
         }

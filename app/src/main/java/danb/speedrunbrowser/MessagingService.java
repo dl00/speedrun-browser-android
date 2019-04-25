@@ -83,21 +83,9 @@ public class MessagingService extends FirebaseMessagingService {
             Log.e(TAG, "Could not download player feature img:", e);
         }
 
-        String playerNames = players.get(0).names.get("international");
-
-        if(players.size() == 2)
-            playerNames += " and " + players.get(1).names.get("international");
-        else if(players.size() >= 3) {
-            for(int i = 1;i < players.size() - 1;i++)
-                playerNames += ", " + players.get(i).names.get("international");
-
-            playerNames += ", and " + players.get(players.size() - 1).names.get("international");
-        }
-
-        String title = getString(R.string.notify_title_player_record, playerNames, data.game.getName());
+        String title = getString(R.string.notify_title_player_record, User.printPlayerNames(players), data.game.getName());
 
         String categoryAndLevelName = data.category.name;
-
         if(data.level != null)
             categoryAndLevelName += " - " + data.level.name;
 
@@ -144,18 +132,7 @@ public class MessagingService extends FirebaseMessagingService {
             Log.e(TAG, "Could not download player feature img:", e);
         }
 
-        String playerNames = players.get(0).names.get("international");
-
-        if(players.size() == 2)
-            playerNames += " and " + players.get(1).names.get("international");
-        else if(players.size() >= 3) {
-            for(int i = 1;i < players.size() - 1;i++)
-                playerNames += ", " + players.get(i).names.get("international");
-
-            playerNames += ", and " + players.get(players.size() - 1).names.get("international");
-        }
-
-        String title = getString(R.string.notify_title_game_record, data.game.getName(), playerNames);
+        String title = getString(R.string.notify_title_game_record, data.game.getName(), User.printPlayerNames(players));
 
         String categoryAndLevelName = data.category.name;
 

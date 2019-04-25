@@ -9,6 +9,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 import danb.speedrunbrowser.utils.Constants;
 
@@ -47,6 +48,24 @@ public class User implements Serializable, SearchResultItem {
         else {
             return id;
         }
+    }
+
+    public static String printPlayerNames(List<User> players) {
+        StringBuilder playerNames = new StringBuilder();
+
+        playerNames.append(players.get(0).getName());
+
+        if(players.size() == 2)
+            playerNames.append(" and ").append(players.get(1).getName());
+
+        else if(players.size() >= 3) {
+            for(int i = 1;i < players.size() - 1;i++)
+                playerNames.append(", ").append(players.get(i).getName());
+
+            playerNames.append(", and ").append(players.get(players.size() - 1).getName());
+        }
+
+        return playerNames.toString();
     }
 
     public String getTypeName() {

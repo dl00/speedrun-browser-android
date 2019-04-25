@@ -15,24 +15,27 @@ public class ImageViewPlacerConsumer implements Consumer<Bitmap> {
 
     public ImageViewPlacerConsumer(ImageView view) {
         this.view = view;
+        view.setTag(this);
         view.setImageDrawable(new ColorDrawable(Color.TRANSPARENT));
     }
 
     @Override
     public void accept(Bitmap bitmap) throws Exception {
-        view.setImageDrawable(new BitmapDrawable(bitmap));
 
-        // fade in gracefully
-        int animTime = view.getResources().getInteger(
-                android.R.integer.config_shortAnimTime);
+        if(view.getTag() == this) {
+            view.setImageDrawable(new BitmapDrawable(bitmap));
 
-        view.setAlpha(0.0f);
-        view.setVisibility(View.VISIBLE);
+            // fade in gracefully
+            int animTime = view.getResources().getInteger(
+                    android.R.integer.config_shortAnimTime);
 
-        view.animate()
-                .alpha(1.0f)
-                .setDuration(animTime)
-                .setListener(null);
+            view.setAlpha(0.0f);
+            view.setVisibility(View.VISIBLE);
 
+            view.animate()
+                    .alpha(1.0f)
+                    .setDuration(animTime)
+                    .setListener(null);
+        }
     }
 }

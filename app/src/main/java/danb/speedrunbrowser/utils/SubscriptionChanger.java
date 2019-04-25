@@ -29,6 +29,9 @@ public class SubscriptionChanger {
         return Completable.create(new CompletableOnSubscribe() {
             @Override
             public void subscribe(final CompletableEmitter emitter) throws Exception {
+
+                Analytics.logSubscribeChange(ctx, sub, true);
+
                 FirebaseMessaging.getInstance().subscribeToTopic(sub.getFCMTopic())
                     .addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
@@ -49,6 +52,9 @@ public class SubscriptionChanger {
         return Completable.create(new CompletableOnSubscribe() {
             @Override
             public void subscribe(final CompletableEmitter emitter) throws Exception {
+
+                Analytics.logSubscribeChange(ctx, sub, false);
+
                 FirebaseMessaging.getInstance().unsubscribeFromTopic(sub.getFCMTopic())
                     .addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override

@@ -12,12 +12,15 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InvalidObjectException;
 import java.net.URL;
 
 import io.reactivex.Single;
 import io.reactivex.SingleEmitter;
 import io.reactivex.SingleOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -116,13 +119,24 @@ public class ImageLoader {
                     Bitmap b = BitmapFactory.decodeStream(strm); // will trigger an IOException to log the message otherwise
                     strm.close();
 
+                    if(b == null) {
+                        throw new InvalidObjectException("could not decode bitmap");
+                    }
+
                     emitter.onSuccess(b);
                 }
                 catch(Exception e) {
                     Log.w(TAG, "Could not download image: ", e);
+                    emitter.onError(e);
                 }
             }
         })
+                .onErrorReturn(new Function<Throwable, Bitmap>() {
+                    @Override
+                    public Bitmap apply(Throwable throwable) throws Exception {
+                        return Bitmap.createBitmap(1,1, Bitmap.Config.ALPHA_8);
+                    }
+                })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
     }

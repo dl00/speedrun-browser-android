@@ -144,6 +144,10 @@ public class ItemListFragment extends Fragment {
             mAdapter.loadListTop();
     }
 
+    public ItemType getItemType() {
+        return mItemType;
+    }
+
     public class ItemListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         private final Context ctx;

@@ -31,6 +31,7 @@ import danb.speedrunbrowser.api.objects.Level;
 import danb.speedrunbrowser.api.objects.MediaLink;
 import danb.speedrunbrowser.api.objects.Run;
 import danb.speedrunbrowser.api.objects.User;
+import danb.speedrunbrowser.utils.Analytics;
 import danb.speedrunbrowser.utils.AppDatabase;
 import danb.speedrunbrowser.utils.ConnectionErrorConsumer;
 import danb.speedrunbrowser.utils.ImageLoader;
@@ -237,6 +238,8 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
 
         setViewData();
         mSpinner.setVisibility(View.GONE);
+
+        Analytics.logItemView(this, "run", mRun.id);
 
         onConfigurationChanged(getResources().getConfiguration());
 

@@ -33,6 +33,7 @@ import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
 import danb.speedrunbrowser.api.objects.User;
+import danb.speedrunbrowser.utils.Analytics;
 import danb.speedrunbrowser.utils.AppDatabase;
 import danb.speedrunbrowser.utils.AutoCompleteAdapter;
 import danb.speedrunbrowser.utils.Util;
@@ -310,6 +311,38 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
 
             for(int i = 0;i < getCount();i++)
                 initializePage(i);
+
+            mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+                @Override
+                public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
+
+                @Override
+                public void onPageSelected(int position) {
+
+                    String type = fragments[position].getItemType().name;
+
+                    String listName = "";
+                    switch(position) {
+                        case 0:
+                            listName = "popular";
+                            break;
+                        case 1:
+                            listName = "latest";
+                            break;
+                        case 2:
+                            listName = "subscribed";
+                            break;
+                        case 3:
+                            listName = "subscribed";
+                            break;
+                    }
+
+                    Analytics.logItemView(GameListActivity.this, type, listName);
+                }
+
+                @Override
+                public void onPageScrollStateChanged(int state) {}
+            });
         }
 
         @NonNull
