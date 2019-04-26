@@ -53,6 +53,10 @@ public class FiltersDialog extends AlertDialog implements CompoundButton.OnCheck
         filterLayout.addView(titleTv);
 
         for(Variable v : mVariables) {
+
+            if(v.isSubcategory)
+                continue; // handled elsewhere
+
             TextView filterTv = new TextView(getContext());
             filterTv.setText(v.name);
             filterTv.setPadding(paddingSize, paddingSize, paddingSize, paddingSize);

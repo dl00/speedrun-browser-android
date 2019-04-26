@@ -1,52 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <danb.speedrunbrowser.views.ProgressSpinnerView
-        android:id="@+id/progress"
+    <HorizontalScrollView
+        android:id="@+id/hsvSubcategories"
         android:layout_width="match_parent"
-        android:layout_height="200dp" />
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/half_fab_margin"
+        android:layout_marginBottom="@dimen/half_fab_margin" />
 
-    <LinearLayout android:orientation="vertical"
-        android:id="@+id/contentLayout"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone">
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
-        <TextView
-            android:id="@+id/emptyRuns"
-            android:visibility="gone"
+        <danb.speedrunbrowser.views.ProgressSpinnerView
+            android:id="@+id/progress"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="@dimen/fab_margin"
-            android:text="@string/empty_no_runs"
-            android:textAlignment="center" />
+            android:layout_height="200dp" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/leaderboardList"
-            android:name="danb.speedrunbrowser.LeaderboardFragment"
+        <LinearLayout android:orientation="vertical"
+            android:id="@+id/contentLayout"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:layout_marginLeft="16dp"
-            android:layout_marginRight="16dp"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            tools:context=".GameListActivity"
-            tools:listitem="@layout/content_leaderboard_list">
+            android:layout_height="match_parent"
+            android:visibility="gone">
 
-        </androidx.recyclerview.widget.RecyclerView>
+            <TextView
+                android:id="@+id/emptyRuns"
+                android:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/fab_margin"
+                android:text="@string/empty_no_runs"
+                android:textAlignment="center" />
 
-        <Button
-            android:id="@+id/viewRulesButton"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:background="@color/colorAccent"
-            android:text="@string/button_view_rules" />
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/leaderboardList"
+                android:name="danb.speedrunbrowser.LeaderboardFragment"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:context=".GameListActivity"
+                tools:listitem="@layout/content_leaderboard_list">
 
-    </LinearLayout>
+            </androidx.recyclerview.widget.RecyclerView>
 
-</FrameLayout>
+        </LinearLayout>
+
+    </FrameLayout>
+
+    <Button
+        android:id="@+id/viewRulesButton"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@color/colorAccent"
+        android:text="@string/button_view_rules" />
+
+</LinearLayout>

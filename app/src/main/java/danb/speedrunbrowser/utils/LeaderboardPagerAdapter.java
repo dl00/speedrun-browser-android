@@ -9,13 +9,15 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.viewpager.widget.ViewPager;
+
 import danb.speedrunbrowser.LeaderboardFragment;
 import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.Level;
 import danb.speedrunbrowser.api.objects.Variable;
 
-public class LeaderboardPagerAdapter extends FragmentPagerAdapter {
+public class LeaderboardPagerAdapter extends FragmentPagerAdapter implements ViewPager.OnPageChangeListener {
 
     private final Game game;
 
@@ -27,7 +29,9 @@ public class LeaderboardPagerAdapter extends FragmentPagerAdapter {
 
     private final LeaderboardFragment[] existingFragments;
 
-    public LeaderboardPagerAdapter(FragmentManager fm, Game game, Variable.VariableSelections selections) {
+    private int selectedFragment = 0;
+
+    public LeaderboardPagerAdapter(FragmentManager fm, Game game, Variable.VariableSelections selections, ViewPager vp) {
         super(fm);
 
         this.game = game;
@@ -57,6 +61,8 @@ public class LeaderboardPagerAdapter extends FragmentPagerAdapter {
         assert perLevelCategories.isEmpty() || !levels.isEmpty();
 
         existingFragments = new LeaderboardFragment[getCount()];
+
+        vp.addOnPageChangeListener(this);
     }
 
     public Category getCategoryOfIndex(int position) {
@@ -143,9 +149,19 @@ public class LeaderboardPagerAdapter extends FragmentPagerAdapter {
     }
 
     public void notifyFilterChanged() {
-        for(LeaderboardFragment frag : existingFragments) {
-            if(frag != null)
-                frag.notifyFilterChanged();
-        }
+        if(existingFragments[selectedFragment] != null)
+            existingFragments[selectedFragment].notifyFilterChanged();
     }
+
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) { }
+
+    @Override
+    public void onPageSelected(int position) {
+        selectedFragment = position;
+        notifyFilterChanged();
+    }
+
+    @Override
+    public void onPageScrollStateChanged(int state) {}
 }

@@ -6,19 +6,28 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
+
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
@@ -65,7 +74,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
     private Leaderboard mLeaderboard;
     private List<LeaderboardRunEntry> mFilteredLeaderboardRuns;
 
-    private RecyclerView mLeaderboardList;
+    private HorizontalScrollView mHsvSubcategories;
 
     private TextView mEmptyRuns;
 
@@ -90,6 +99,9 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         mGame = (Game)args.getSerializable(ARG_GAME);
         mCategory = (Category)args.getSerializable(ARG_CATEGORY);
         mLevel = (Level)args.getSerializable(ARG_LEVEL);
+
+        if(mVariableSelections != null)
+            mVariableSelections.setDefaults(mCategory.variables);
 
         assert mGame != null;
         assert mCategory != null;
@@ -131,14 +143,19 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.leaderboard_list, container, false);
 
-        mProgressSpinner = rootView.findViewById(R.id.progress);
         mContentLayout = rootView.findViewById(R.id.contentLayout);
 
-        mLeaderboardList = rootView.findViewById(R.id.leaderboardList);
+        mHsvSubcategories = rootView.findViewById(R.id.hsvSubcategories);
+        mHsvSubcategories.setHorizontalScrollBarEnabled(false);
+        updateSubcategorySelections();
+
+        mProgressSpinner = rootView.findViewById(R.id.progress);
+
+        RecyclerView leaderboardList = rootView.findViewById(R.id.leaderboardList);
         mEmptyRuns = rootView.findViewById(R.id.emptyRuns);
 
         mRunsListAdapter = new LeaderboardAdapter();
-        mLeaderboardList.setAdapter(mRunsListAdapter);
+        leaderboardList.setAdapter(mRunsListAdapter);
 
         Button viewRulesButton = rootView.findViewById(R.id.viewRulesButton);
 
@@ -154,6 +171,83 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         Log.d(TAG, "create leaderboard list");
 
         return rootView;
+    }
+
+    private void populateSubcategories() {
+
+        mHsvSubcategories.removeAllViews();
+
+        LinearLayout layout = new LinearLayout(getContext());
+        layout.setOrientation(LinearLayout.HORIZONTAL);
+        layout.setGravity(Gravity.CENTER_VERTICAL);
+
+        for(final Variable var : mCategory.variables) {
+            if(!var.isSubcategory)
+                continue;
+
+            ChipGroup cg = new ChipGroup(Objects.requireNonNull(getContext()));
+            cg.setTag(var.id);
+
+            cg.setSingleSelection(true);
+
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            lp.leftMargin = getResources().getDimensionPixelSize(R.dimen.half_fab_margin);
+            lp.rightMargin = getResources().getDimensionPixelSize(R.dimen.half_fab_margin);
+            cg.setLayoutParams(lp);
+
+            for(final String vv : var.values.keySet()) {
+                Chip cv = new Chip(getContext(), null, R.style.Widget_MaterialComponents_Chip_Choice);
+                cv.setText(Objects.requireNonNull(var.values.get(vv)).label);
+                cv.setChipBackgroundColor(getContext().getResources().getColorStateList(R.color.filter));
+                cv.setCheckedIconVisible(false);
+                cv.setTag(vv);
+
+                cv.setClickable(true);
+                cv.setCheckable(true);
+
+                cv.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mVariableSelections.selectOnly(var.id, vv);
+                        notifyFilterChanged();
+                    }
+                });
+
+                cg.addView(cv);
+            }
+
+            layout.addView(cg);
+        }
+
+        mHsvSubcategories.addView(layout);
+
+        updateSubcategorySelections();
+    }
+
+    private void updateSubcategorySelections() {
+
+        if(mHsvSubcategories == null || mVariableSelections == null)
+            return;
+
+        if(mHsvSubcategories.getChildCount() == 0)
+            populateSubcategories();
+
+        LinearLayout layout = (LinearLayout)mHsvSubcategories.getChildAt(0);
+
+        for(int i = 0;i < layout.getChildCount();i++) {
+            ChipGroup cg = (ChipGroup)layout.getChildAt(i);
+
+            for(int j = 0;j < cg.getChildCount();j++) {
+                View v = cg.getChildAt(j);
+
+                System.out.println("IS SELECTED " + cg.getTag() + ", " + v.getTag());
+
+                if(mVariableSelections.isSelected((String)cg.getTag(), (String)v.getTag())) {
+                    cg.check(v.getId());
+                    break;
+                }
+            }
+        }
     }
 
     @Override
@@ -177,16 +271,34 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
     // show game rules as a Alert Dialog
     private void viewRules() {
 
-        String rulesText = "";
+        StringBuilder rulesText = new StringBuilder();
 
         if(mCategory.rules != null)
-            rulesText = mCategory.rules.trim();
+            rulesText.append(mCategory.rules.trim());
 
-        if(rulesText.isEmpty())
-            rulesText = getString(R.string.msg_no_rules_content);
+        // add variable rules as necessary
+        for(Variable var : mCategory.variables) {
+            if(!var.isSubcategory)
+                break;
+
+            Set<String> selections = mVariableSelections.getSelections(var.id);
+
+            if(selections.isEmpty())
+                continue;
+
+            String moreRules = Objects.requireNonNull(var.values.get(selections.iterator().next())).rules;
+
+            if(moreRules != null)
+                rulesText.append("\n\n").append(moreRules);
+        }
+
+        String finishedRulesText = rulesText.toString().trim();
+
+        if(finishedRulesText.isEmpty())
+            finishedRulesText = getString(R.string.msg_no_rules_content);
 
         AlertDialog dialog = new AlertDialog.Builder(getContext(), AlertDialog.THEME_DEVICE_DEFAULT_DARK)
-                .setMessage(rulesText)
+                .setMessage(finishedRulesText)
                 .setNeutralButton(android.R.string.ok, null)
                 .create();
 
@@ -274,13 +386,25 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
 
     public void setFilter(Variable.VariableSelections selections) {
         mVariableSelections = selections;
+
+        if(mCategory != null)
+            mVariableSelections.setDefaults(mCategory.variables);
+
         notifyFilterChanged();
     }
 
     public void notifyFilterChanged() {
+
+        updateSubcategorySelections();
+
         if(mLeaderboard != null) {
-            if(mVariableSelections != null)
+            if(mVariableSelections != null) {
+
+                // set the subcategory indicators
+                //mContentLayout.findViewWithTag(mVariableSelections.getSelection())
+
                 mFilteredLeaderboardRuns = mVariableSelections.filterLeaderboardRuns(mLeaderboard, mCategory.variables);
+            }
             else
                 mFilteredLeaderboardRuns = mLeaderboard.runs;
 

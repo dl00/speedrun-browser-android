@@ -65,11 +65,11 @@ public class CategoryTabStrip extends LinearLayout implements ViewPager.OnPageCh
 
     public void setup(Game game, Variable.VariableSelections selections, ViewPager vp, FragmentManager fm) {
         mPager = vp;
-        mPager.setOnPageChangeListener(this);
+        mPager.addOnPageChangeListener(this);
 
         mGame = game;
 
-        mPagerAdapter = new LeaderboardPagerAdapter(fm, mGame, selections);
+        mPagerAdapter = new LeaderboardPagerAdapter(fm, mGame, selections, mPager);
         mPager.setAdapter(mPagerAdapter);
 
         applyTabs();

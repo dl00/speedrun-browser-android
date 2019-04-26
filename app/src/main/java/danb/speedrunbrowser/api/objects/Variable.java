@@ -1,6 +1,5 @@
 package danb.speedrunbrowser.api.objects;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -28,10 +27,13 @@ public class Variable implements Serializable {
 
     public String deflt;
 
+    public boolean isSubcategory;
+
     public Map<String, VariableValue> values;
 
     public static class VariableValue implements Serializable {
         public String label;
+        public String rules;
     }
 
     public static class VariableSelections implements Serializable {
@@ -39,6 +41,14 @@ public class Variable implements Serializable {
 
         public VariableSelections() {
             selections = new HashMap<>();
+        }
+
+        public void setDefaults(List<Variable> vars) {
+            for(Variable var : vars) {
+                if(!selections.containsKey(var.id) && var.isSubcategory && !var.values.isEmpty()) {
+                    select(var.id, var.values.keySet().iterator().next(), true);
+                }
+            }
         }
 
         public boolean shouldShowRun(Run run, List<Variable> activeVariables) {
@@ -101,6 +111,15 @@ public class Variable implements Serializable {
                 selections.put(variableId, newSet);
             }
         }
+
+        public void selectOnly(String variableId, String valueId) {
+            selections.remove(variableId);
+            select(variableId, valueId, true);
+        }
+
+        public Set<String> getSelections(String variableId) {
+            return selections.get(variableId);
+        }
     }
 
     // need custom serializer/deserializer due to occasionally the object is just a string
@@ -113,6 +132,7 @@ public class Variable implements Serializable {
             obj.addProperty("mandatory", src.mandatory);
             obj.addProperty("obsoletes", src.obsoletes);
             obj.addProperty("default", src.deflt);
+            obj.addProperty("is-subcategory", src.isSubcategory);
 
             obj.add("values", context.serialize(src.values));
 
@@ -128,6 +148,7 @@ public class Variable implements Serializable {
             v.name = obj.get("name").getAsString();
             v.mandatory = obj.get("mandatory").getAsBoolean();
             v.obsoletes = obj.get("mandatory").getAsBoolean();
+            v.isSubcategory = obj.get("is-subcategory").getAsBoolean();
 
             if(obj.has("default"))
                 v.deflt = obj.get("default").getAsString();
