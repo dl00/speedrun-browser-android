@@ -101,11 +101,20 @@ export async function pull_leaderboard(runid: string, options: any) {
 
         // send push notifications as needed. All notifications are triggered by a player record change
         for(let nr of new_records) {
-            await scraper.storedb!.multi()
-                .zadd(speedrun_db.locs.verified_runs, moment((<speedrun_api.Run>nr.new_run.run).status['verify-date']).unix().toString(), nr.new_run.run.id)
-                .zremrangebyrank(speedrun_db.locs.verified_runs, 0, -scraper.config.scraper.db.latestRunsLength - 1)
-                .exec();
 
+            let date_score = moment((<speedrun_api.Run>nr.new_run.run).status['verify-date']).unix().toString();
+
+            let m = scraper.storedb!.multi()
+                .zadd(speedrun_db.locs.verified_runs, date_score, nr.new_run.run.id)
+                .zremrangebyrank(speedrun_db.locs.verified_runs, 0, -scraper.config.scraper.db.latestRunsLength - 1)
+
+            for(let genre of game.genres) {
+                let genre_runs = speedrun_db.locs.verified_runs + ':' + genre;
+                m.zadd(genre_runs, date_score, nr.new_run.run.id)
+                    .zremrangebyrank(genre_runs, 0, -scraper.config.scraper.db.latestGenreRunsLength - 1);
+            }
+
+            await m.exec();
 
             if(nr.new_run.place == 1) {
                 // new record on this category/level, send notification

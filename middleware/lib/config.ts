@@ -47,7 +47,7 @@ export interface Config {
         pushNotify: {
             /// Whether or not to send out push notifications
             enabled: boolean
-    
+
             /// Authentication JSON file as provided by firebase
             credentialFile: string
         }
@@ -56,6 +56,9 @@ export interface Config {
         db: {
             /// The number of runs to keep as marked "latest"
             latestRunsLength: number
+
+            /// The number of gnere-specific runs to keep marked as "latest"
+            latestGenreRunsLength: number
         }
     }
 
@@ -108,7 +111,8 @@ export const DEFAULT_CONFIG: Config = {
         },
 
         db: {
-            latestRunsLength: 10000
+            latestRunsLength: 10000,
+            latestGenreRunsLength: 1000
         }
     },
 

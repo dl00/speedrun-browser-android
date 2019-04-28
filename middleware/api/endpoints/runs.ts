@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 
 import * as speedrun_api from '../../lib/speedrun-api'
 import * as speedrun_db from '../../lib/speedrun-db';
@@ -10,7 +10,7 @@ import * as api_response from '../response';
 
 const router = Router();
 
-router.get('/latest', async (req, res) => {
+async function get_latest_runs(req: Request, res: Response) {
     let start = 0;
 
     if(req.query.start) {
@@ -27,15 +27,22 @@ router.get('/latest', async (req, res) => {
     if(isNaN(end) || end < start || end - start + 1 > api.config!.api.maxItems)
         return api_response.error(res, api_response.err.INVALID_PARAMS(['count']));
 
-    let total = await api.storedb!.zcard(speedrun_db.locs.verified_runs);
+    let db_key = speedrun_db.locs.verified_runs;
+
+    if(req.params.id) {
+        // filter by genre
+        db_key += ':' + req.params.id;
+    }
+
+    let total = await api.storedb!.zcard(db_key);
 
     if(start > total - 1)
         return api_response.error(res, api_response.err.INVALID_PARAMS(['start'], 'past the end of list'));
-    
+
     end = Math.min(end, total - 1);
 
     try {
-        let ids = await api.storedb!.zrevrange(speedrun_db.locs.verified_runs, start, end);
+        let ids = await api.storedb!.zrevrange(db_key, start, end);
         let runs_raw = await api.storedb!.hmget(speedrun_db.locs.runs, ...ids);
 
         let runs = _.chain(runs_raw)
@@ -51,7 +58,10 @@ router.get('/latest', async (req, res) => {
         console.error('api/games: could not send latest runs:', err);
         return api_response.error(res, api_response.err.INTERNAL_ERROR());
     }
-});
+}
+
+router.get('/latest/genre/:id', get_latest_runs);
+router.get('/latest', get_latest_runs);
 
 // retrieve one or more runs by id
 router.get('/:ids', async (req, res) => {
