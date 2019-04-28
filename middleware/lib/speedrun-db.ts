@@ -16,6 +16,7 @@ export const locs: {[index: string]: string} = {
     game_abbrs: 'game_abbrs',
     player_abbrs: 'player_abbrs',
     latest_run: 'latest_run', // for db sync cursor
+    latest_run_verify_date: 'latest_run_verify_date',
     verified_runs: 'verified_runs', // for showing list of latest verified runs
     games: 'games',
     runs: 'runs',
@@ -33,17 +34,17 @@ export async function list_leaderboards(db: ioredis.Redis, game_id: string) {
     let categories_raw = await db.hget(locs.categories, game_id);
     if(categories_raw)
         categories = JSON.parse(categories_raw);
-    
+
     if(!categories.length)
         return [];
-    
+
     let levels = [];
     let levels_raw = await db.hget(locs.levels, game_id);
     if(levels_raw)
         levels = JSON.parse(levels_raw);
-    
+
     let grouped_categories = _.groupBy(categories, 'type');
-    
+
     let leaderboard_ids = _.map(grouped_categories['per-game'], 'id') || [];
 
     if(grouped_categories['per-level']) {
@@ -105,7 +106,7 @@ export async function rescore_game(db: ioredis.Redis, indexer: any, game: speedr
     let indexes: { text: string, score: number, namespace?: string }[] = [];
 
     indexes.push({ text: game.abbreviation.toLowerCase(), score: game_score });
-    
+
     for(let name in game.names) {
 
         if(!game.names[name])
@@ -115,7 +116,7 @@ export async function rescore_game(db: ioredis.Redis, indexer: any, game: speedr
 
         if(name != 'international')
             idx.namespace = name;
-        
+
         indexes.push(idx);
     }
 
@@ -132,10 +133,10 @@ export async function rescore_game(db: ioredis.Redis, indexer: any, game: speedr
 }
 
 // add/update the given personal best entry for the given user
-export function apply_personal_best(player: speedrun_api.User, 
-            game: speedrun_api.Game, category: speedrun_api.Category, 
-            level: speedrun_api.Level|null, 
-            lb: speedrun_api.Leaderboard, 
+export function apply_personal_best(player: speedrun_api.User,
+            game: speedrun_api.Game, category: speedrun_api.Category,
+            level: speedrun_api.Level|null,
+            lb: speedrun_api.Leaderboard,
             index: number): NewRecord|null {
 
     let category_run: speedrun_api.CategoryPersonalBests = {
@@ -218,7 +219,7 @@ export async function apply_leaderboard_bests(db: ioredis.Redis, lb: speedrun_ap
         .hget(locs.levels, game_id)
         .hmget(locs.players, ...player_ids)
         .exec();
-    
+
     let game: speedrun_api.Game = JSON.parse(res[0][1]);
     let category: speedrun_api.Category = _.find(JSON.parse(res[1][1]), v => v.id == category_id);
     let level: speedrun_api.Level = _.find(JSON.parse(res[2][1]), v => v.id == level_id);
@@ -248,7 +249,7 @@ export async function apply_leaderboard_bests(db: ioredis.Redis, lb: speedrun_ap
             new_records.push(apply_personal_best(players[player.id], game, category, level, lb, i));
         }
     }
-    
+
     let flat_players: string[] = <any>_.chain(players)
         .mapValues(JSON.stringify)
         .toPairs()

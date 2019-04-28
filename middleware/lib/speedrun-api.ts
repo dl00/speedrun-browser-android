@@ -140,7 +140,8 @@ export function normalize_category(d: Category) {
 }
 
 export interface Variable extends BaseMiddleware {
-    
+    id: string
+    values: any[]
 }
 
 export interface BulkLevel {
@@ -156,7 +157,7 @@ export function level_to_bulk(level: Level): BulkLevel {
 
 export interface LeaderboardRunEntry {
     place: number
-    run: BulkRun 
+    run: BulkRun
 }
 
 export interface Leaderboard extends BaseMiddleware {
@@ -171,6 +172,30 @@ export interface Leaderboard extends BaseMiddleware {
     runs: LeaderboardRunEntry[]
 
     players: {[id: string]: User}|{data: User[]}
+}
+
+// leaderboards can have subcategories. correct the places returned by the speedrun
+// api to take these subcategories into account
+export function correct_leaderboard_run_places(d: Leaderboard, vars: Variable[]) {
+
+    let subcategory_vars = _.filter(vars, 'is-subcategory');
+
+    let last_places: {[key: string]: number} = {};
+
+    if(d.runs) {
+        for(let run of d.runs) {
+            let subcategory_id = '';
+
+            for(let v of subcategory_vars) {
+                subcategory_id += run.run.values[v.id];
+            }
+
+            last_places[subcategory_id] = last_places[subcategory_id] ?
+                last_places[subcategory_id] + 1 : 1;
+
+            run.place = last_places[subcategory_id];
+        }
+    }
 }
 
 export function normalize_leaderboard(d: Leaderboard) {
@@ -222,6 +247,8 @@ export interface Run extends BulkRun, BaseMiddleware {
         examiner?: User|string
         'verify-date': string
     }
+
+    values: {[key: string]: string}
 }
 
 export function normalize_run(d: Run) {
@@ -269,7 +296,7 @@ export interface CategoryPersonalBests {
 export interface LevelPersonalBests {
     id: string
     name: string
-    
+
     run: LeaderboardRunEntry
 }
 

@@ -14,7 +14,7 @@ import * as push_notify from '../push-notify';
 
 export async function pull_leaderboard(runid: string, options: any) {
     try {
-        let res = await request(speedrun_api.API_PREFIX + '/leaderboards/' + options.game_id + 
+        let res = await request(speedrun_api.API_PREFIX + '/leaderboards/' + options.game_id +
             (options.level_id ? '/level/' + options.level_id + '/' + options.category_id : '/category/' + options.category_id) + '?embed=players');
 
         let lb: speedrun_api.Leaderboard = res.data;
@@ -29,8 +29,8 @@ export async function pull_leaderboard(runid: string, options: any) {
         let category = _.find(JSON.parse(res2[1][1]), v => v.id === options.category_id);
         let level = _.find(JSON.parse(res2[2][1]), v => v.id === options.level_id);
 
-        if(!game) {
-            // this is a new game, bail and download the new game
+        if(!game || !category) {
+            // this is a new game/category, bail and refresh the new
             await scraper.push_call({
                 runid: scraper.join_runid([runid, <string>lb.game]),
                 module: 'gamelist',
@@ -48,6 +48,8 @@ export async function pull_leaderboard(runid: string, options: any) {
             updated_players = _.keyBy(lb.players.data, player => player.id || '');
         }
 
+        speedrun_api.correct_leaderboard_run_places(lb, category.variables);
+
         // record runs
         for(let run of lb.runs) {
             run.run.players = run.run.players.map(v => v.id && updated_players[v.id] ? updated_players[v.id] : v);
@@ -63,10 +65,10 @@ export async function pull_leaderboard(runid: string, options: any) {
             .toPairs()
             .flatten()
             .value();
-        
+
         if(set_run_vals.length)
             await scraper.storedb!.hmset(speedrun_db.locs.runs, ...set_run_vals);
-        
+
         // record players
         // this applies players as well as set their personal best
         let new_records = await speedrun_db.apply_leaderboard_bests(scraper.storedb!, lb, updated_players);
@@ -83,12 +85,12 @@ export async function pull_leaderboard(runid: string, options: any) {
 
                 if(name != 'international')
                     idx.namespace = name;
-                
+
                 indexes.push(idx);
             }
 
             await scraper.indexer_players.add(player_id, indexes);
-            
+
             if(player.names && player.names['international'])
                 await scraper.storedb!.hset(speedrun_db.locs.player_abbrs, player.names['international'], player_id)
         }
