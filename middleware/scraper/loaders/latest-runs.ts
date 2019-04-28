@@ -19,9 +19,11 @@ export async function pull_latest_runs(runid: string, options: any) {
         if(!runs.length)
             return;
 
-        let latest_run: string|null = options.latest_run || await scraper.storedb!.getset(speedrun_db.locs.latest_run, runs[0].id);
+        let latest_run_verify_date: string|null = options.latest_run_verify_date ||
+            await scraper.storedb!.getset(speedrun_db.locs.latest_run_verify_date,
+                runs[0].status['verify-date']);
 
-        if(!latest_run) {
+        if(!latest_run_verify_date) {
             return;
         }
 
@@ -29,12 +31,12 @@ export async function pull_latest_runs(runid: string, options: any) {
         let lb_pulls: {[key: string]: boolean} = {};
 
         for(let run of runs) {
-            if(run.id == latest_run) {
+            if(run.status['verify-date'] <= latest_run_verify_date) {
                 return;
             }
 
             let rid = scraper.join_runid(
-                [runid, <string>run.game, run.category + (run.level ? '_' + run.level : ''), 
+                [runid, <string>run.game, run.category + (run.level ? '_' + run.level : ''),
                 'leaderboard']
             );
 
@@ -42,13 +44,13 @@ export async function pull_latest_runs(runid: string, options: any) {
                 continue;
 
             lb_pulls[rid] = true;
-            
+
             let options = {
                 game_id: run.game,
                 category_id: run.category,
                 level_id: run.level
             };
-            
+
             await scraper.push_call({
                 runid: rid,
                 module: 'leaderboard',
@@ -64,7 +66,7 @@ export async function pull_latest_runs(runid: string, options: any) {
             exec: 'pull_latest_runs',
             options: {
                 offset: res.pagination.offset + res.pagination.size,
-                latest_run: latest_run
+                latest_run_verify_date: latest_run_verify_date
             }
         }, 1);
     }

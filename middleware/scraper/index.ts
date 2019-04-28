@@ -43,7 +43,7 @@ const BASE_TASKS: Task[] = [
         name: 'pull_latest_runs',
         module: 'latest-runs',
         exec: 'pull_latest_runs',
-        repeat: moment.duration(5, 'minutes')
+        repeat: moment.duration(1, 'minutes')
     }
 ];
 
@@ -63,7 +63,7 @@ export function template_call(call: Call, obj: any) {
 
     // do a fun regex function replace of the fields of the call
     call.runid = _.replace(call.runid, TEMPL_REPLACE, rpl);
-    
+
     for(let option in call.options) {
         if(typeof call.options[option] == 'string')
             call.options[option] = _.replace(call.options[option], TEMPL_REPLACE, rpl);
@@ -134,7 +134,7 @@ async function pop_call() {
 
     if(!rawc)
         return null;
-    
+
     let priority = rawc[0].split(':')[1];
     let raw_running_task = DB.join([Date.now(), rawc[1]]);
 
@@ -191,7 +191,7 @@ async function init_task(task: Task) {
         runid,
         moment().add(task.repeat).toISOString()
     ]));
-    
+
     if(task.repeat) {
         setTimeout(async () => {
             init_task(task);
