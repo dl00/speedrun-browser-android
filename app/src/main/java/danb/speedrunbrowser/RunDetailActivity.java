@@ -17,6 +17,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.android.flexbox.FlexboxLayout;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
 
 import java.util.List;
 import java.util.Objects;
@@ -29,8 +31,11 @@ import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
 import danb.speedrunbrowser.api.objects.Level;
 import danb.speedrunbrowser.api.objects.MediaLink;
+import danb.speedrunbrowser.api.objects.Platform;
+import danb.speedrunbrowser.api.objects.Region;
 import danb.speedrunbrowser.api.objects.Run;
 import danb.speedrunbrowser.api.objects.User;
+import danb.speedrunbrowser.api.objects.Variable;
 import danb.speedrunbrowser.utils.Analytics;
 import danb.speedrunbrowser.utils.AppDatabase;
 import danb.speedrunbrowser.utils.ConnectionErrorConsumer;
@@ -87,6 +92,7 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
     ImageView mCover;
 
     TextView mCategoryName;
+    ChipGroup mVariableChips;
     FlexboxLayout mPlayerNames;
     TextView mRunTime;
 
@@ -124,6 +130,7 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
         mPlatformList = findViewById(R.id.txtPlatforms);
         mCover = findViewById(R.id.imgCover);
         mCategoryName = findViewById(R.id.txtCategoryName);
+        mVariableChips = findViewById(R.id.chipsVariables);
         mPlayerNames = findViewById(R.id.txtPlayerNames);
         mRunTime = findViewById(R.id.txtRunTime);
         mVideoFrame = findViewById(R.id.videoFrame);
@@ -173,6 +180,13 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
 
             onDataReady();
         }
+
+        mGameInfoPane.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                viewGame();
+            }
+        });
     }
 
     private void loadRun(final String runId) {
@@ -357,6 +371,51 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
             mPlatformList.setText("");
         }
 
+        mVariableChips.removeAllViews();
+
+        StringBuilder fullCategoryName = new StringBuilder(mCategory.name);
+        if(mLevel != null)
+            fullCategoryName.append(" \u2022 ").append(mLevel.name);
+
+        if(mGame.shouldShowPlatformFilter() && mRun.system != null) {
+            Chip chip = new Chip(this);
+
+            for(Platform p : mGame.platforms) {
+                if(p.id.equals(mRun.system.platform)) {
+                    chip.setText(p.name);
+                    mVariableChips.addView(chip);
+                    break;
+                }
+            }
+        }
+
+        if(mGame.shouldShowRegionFilter() && mRun.system != null) {
+            Chip chip = new Chip(this);
+
+            for(Region r : mGame.regions) {
+                if(r.id.equals(mRun.system.region)) {
+                    chip.setText(r.name);
+                    mVariableChips.addView(chip);
+                    break;
+                }
+            }
+
+            mVariableChips.addView(chip);
+        }
+
+        if(mCategory.variables != null) {
+            for(Variable var : mCategory.variables) {
+                if(mRun.values.containsKey(var.id) && !var.isSubcategory && var.values.containsKey(mRun.values.get(var.id))) {
+                    Chip chip = new Chip(this);
+                    chip.setText(Objects.requireNonNull(var.values.get(mRun.values.get(var.id))).label);
+                    mVariableChips.addView(chip);
+                }
+                else if(var.isSubcategory && var.values.containsKey(mRun.values.get(var.id))) {
+                    fullCategoryName.append(" \u2022 ").append(Objects.requireNonNull(var.values.get(mRun.values.get(var.id))).label);
+                }
+            }
+        }
+
         if(mGame.assets != null && mGame.assets.coverLarge != null)
             mDisposables.add(
                     new ImageLoader(this).loadImage(mGame.assets.coverLarge.uri)
@@ -382,7 +441,7 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
             mPlayerNames.addView(tv);
         }
 
-        mCategoryName.setText(mCategory.name);
+        mCategoryName.setText(fullCategoryName);
         mRunTime.setText(mRun.times.formatTime());
 
         mRunComment.setText(mRun.comment);
@@ -396,6 +455,16 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
         Intent intent = new Intent(this, ItemDetailActivity.class);
         intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.PLAYERS);
         intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, player.id);
+        intent.setFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
+
+        startActivity(intent);
+    }
+
+    private void viewGame() {
+        Intent intent = new Intent(this, ItemDetailActivity.class);
+        intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.GAMES);
+        intent.putExtra(GameDetailFragment.ARG_GAME_ID, mGame.id);
+        intent.setFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
 
         startActivity(intent);
     }

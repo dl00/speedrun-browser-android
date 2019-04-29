@@ -49,4 +49,12 @@ public class Game implements Serializable, SearchResultItem {
     public void applyTextView(TextView tv) {
         tv.setText(getName());
     }
+
+    public boolean shouldShowPlatformFilter() {
+        return platforms != null && platforms.size() > 1;
+    }
+
+    public boolean shouldShowRegionFilter() {
+        return regions != null && regions.size() > 1;
+    }
 }

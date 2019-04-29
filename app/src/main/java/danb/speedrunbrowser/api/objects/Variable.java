@@ -37,6 +37,9 @@ public class Variable implements Serializable {
     }
 
     public static class VariableSelections implements Serializable {
+        public static final String FILTER_KEY_PLATFORM = "platform";
+        public static final String FILTER_KEY_REGION = "region";
+
         private Map<String, Set<String>> selections;
 
         public VariableSelections() {
@@ -63,6 +66,14 @@ public class Variable implements Serializable {
 
                     if(!Objects.requireNonNull(selections.get(selection.id)).contains(run.values.get(selection.id)))
                         return false;
+                }
+
+                // platforms and regions can also be filtered if special keys are provided
+                if((selections.containsKey(FILTER_KEY_PLATFORM) && (run.system == null ||
+                        !Objects.requireNonNull(selections.get(FILTER_KEY_PLATFORM)).contains(run.system.platform))) ||
+                    selections.containsKey(FILTER_KEY_REGION) && (run.system == null ||
+                        !Objects.requireNonNull(selections.get(FILTER_KEY_REGION)).contains(run.system.region))) {
+                    return false;
                 }
             }
 

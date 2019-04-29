@@ -37,6 +37,14 @@ public class Run implements Serializable {
     public RunTimes times;
     public MediaLink splits;
 
+    public RunSystem system;
+
+    public static class RunSystem {
+        public String platform;
+        public boolean emulated;
+        public String region;
+    }
+
     public static class JsonConverter implements JsonDeserializer<Run> {
 
         public Run deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
@@ -67,6 +75,8 @@ public class Run implements Serializable {
 
             v.times = context.deserialize(obj.get("times"), RunTimes.class);
             v.splits = context.deserialize(obj.get("splits"), MediaLink.class);
+
+            v.system = context.deserialize(obj.get("system"), RunSystem.class);
 
             if(obj.has("game")) {
                 if(obj.get("game").isJsonObject()) {

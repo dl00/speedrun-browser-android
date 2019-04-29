@@ -12,6 +12,7 @@ import java.util.Objects;
 import danb.speedrunbrowser.BuildConfig;
 import danb.speedrunbrowser.api.objects.Game;
 import danb.speedrunbrowser.api.objects.GameAssets;
+import danb.speedrunbrowser.api.objects.Genre;
 import danb.speedrunbrowser.api.objects.Leaderboard;
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
 import danb.speedrunbrowser.api.objects.MediaLink;
@@ -109,6 +110,9 @@ public class SpeedrunMiddlewareAPI {
         // Autocomplete
         @GET("autocomplete")
         Observable<APISearchResponse> autocomplete(@Query("q") String query);
+
+        // Genres
+        Observable<APIResponse<Genre>> listGenres(@Query("q") String query);
 
         // Games
         @GET("games")

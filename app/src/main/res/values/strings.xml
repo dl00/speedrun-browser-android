@@ -2,6 +2,7 @@
     <string name="app_name">Speedrun.com Browser</string>
     <string name="title_game_detail">View Game Leaderboards</string>
     <string name="enter_game_name">Enter Game or Player&#8230;</string>
+    <string name="enter_genre_filter">Filter by genre&#8230;</string>
     <string name="label_key_platforms">Platforms</string>
     <string name="empty" />
 
@@ -25,6 +26,7 @@
     <string name="error_twitch">Could not load twitch player! Please try again later.</string>
     <string name="button_filters">Filters</string>
     <string name="dialog_title_choose_filters">Filter runs by:</string>
+    <string name="dialog_title_choose_genres">Show games/runs by genre:</string>
     <string name="empty_no_splits">No splits provided for this run.</string>
     <string name="empty_no_runs">No runs here (its free!)</string>
     <string name="msg_no_video">This run does not have a video.</string>
@@ -93,4 +95,7 @@
     <string name="button_select_none">Select None</string>
     <string name="button_save">Save</string>
     <string name="render_level_category">%1$s &#x2022; %2$s</string>
+    <string name="label_filter_platform">Platform</string>
+    <string name="label_filter_region">Region</string>
+    <string name="menu_genres">Genres</string>
 </resources>

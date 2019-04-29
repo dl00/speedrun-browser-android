@@ -25,6 +25,8 @@ public class AboutActivity extends AppCompatActivity implements View.OnClickList
     ImageView mLinkSpeedrunComTrophy;
     ImageView mLinkSpeedrunComLogo;
 
+    TextView mAppTitle;
+
     TextView mLinkTermsAndConditions;
     TextView mLinkPrivacyPolicy;
     TextView mLinkOpenSourceLicenses;
@@ -34,12 +36,12 @@ public class AboutActivity extends AppCompatActivity implements View.OnClickList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_about);
 
+        mAppTitle = findViewById(R.id.txtAppTitle);
         mLinkSpeedrunComTrophy = findViewById(R.id.linkSpeedrunComTrophy);
         mLinkSpeedrunComLogo = findViewById(R.id.linkSpeedrunComWebsite);
         mLinkPrivacyPolicy = findViewById(R.id.linkPrivacyPolicy);
         mLinkTermsAndConditions = findViewById(R.id.linkTermsAndConditions);
         mLinkOpenSourceLicenses = findViewById(R.id.linkOpenSourceLicenses);
-
 
         mLinkSpeedrunComTrophy.setOnClickListener(this);
         mLinkSpeedrunComLogo.setOnClickListener(this);
@@ -47,6 +49,7 @@ public class AboutActivity extends AppCompatActivity implements View.OnClickList
         mLinkPrivacyPolicy.setOnClickListener(this);
         mLinkOpenSourceLicenses.setOnClickListener(this);
 
+        mAppTitle.setText(mAppTitle.getText() + " v" + BuildConfig.VERSION_NAME);
     }
 
     private void openLink(Uri link) {

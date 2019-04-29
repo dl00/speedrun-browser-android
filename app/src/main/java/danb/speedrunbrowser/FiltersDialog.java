@@ -17,15 +17,21 @@ import com.google.android.material.chip.ChipGroup;
 import java.util.List;
 import java.util.Objects;
 
+import danb.speedrunbrowser.api.objects.Game;
+import danb.speedrunbrowser.api.objects.Platform;
+import danb.speedrunbrowser.api.objects.Region;
 import danb.speedrunbrowser.api.objects.Variable;
 
 public class FiltersDialog extends AlertDialog implements CompoundButton.OnCheckedChangeListener, View.OnClickListener {
 
-    public List<Variable> mVariables;
-    public Variable.VariableSelections mVariableSelections;
+    private Game mGame;
 
-    public FiltersDialog(Context ctx, List<Variable> variables, Variable.VariableSelections variableSelections) {
+    private List<Variable> mVariables;
+    private Variable.VariableSelections mVariableSelections;
+
+    public FiltersDialog(Context ctx, Game game, List<Variable> variables, Variable.VariableSelections variableSelections) {
         super(ctx, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
+        mGame = game;
         mVariables = variables;
         mVariableSelections = variableSelections;
     }
@@ -34,13 +40,12 @@ public class FiltersDialog extends AlertDialog implements CompoundButton.OnCheck
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        int paddingSize = getContext().getResources().getDimensionPixelSize(R.dimen.fab_margin);
-
         LinearLayout layout = new LinearLayout(getContext());
         layout.setOrientation(LinearLayout.VERTICAL);
 
         ScrollView scrollView = new ScrollView(getContext());
 
+        int paddingSize = getContext().getResources().getDimensionPixelSize(R.dimen.fab_margin);
         scrollView.setPadding(paddingSize, paddingSize, paddingSize, paddingSize);
 
         LinearLayout filterLayout = new LinearLayout(getContext());
@@ -52,35 +57,48 @@ public class FiltersDialog extends AlertDialog implements CompoundButton.OnCheck
 
         filterLayout.addView(titleTv);
 
+        if(mGame.shouldShowPlatformFilter()) {
+            TextView filterTv = makeFilterLabel();
+            filterTv.setText(getContext().getString(R.string.label_filter_platform));
+            filterLayout.addView(filterTv);
+
+            ChipGroup cgv = new ChipGroup(getContext());
+            for(Platform p : mGame.platforms) {
+                Chip cv = makeChip(Variable.VariableSelections.FILTER_KEY_PLATFORM, p.id);
+                cv.setText(p.name);
+                cgv.addView(cv);
+            }
+
+            filterLayout.addView(cgv);
+        }
+        if(mGame.shouldShowRegionFilter()) {
+            TextView filterTv = makeFilterLabel();
+            filterTv.setText(getContext().getString(R.string.label_filter_region));
+            filterLayout.addView(filterTv);
+
+            ChipGroup cgv = new ChipGroup(getContext());
+            for(Region r : mGame.regions) {
+                Chip cv = makeChip(Variable.VariableSelections.FILTER_KEY_REGION, r.id);
+                cv.setText(r.name);
+                cgv.addView(cv);
+            }
+
+            filterLayout.addView(cgv);
+        }
+
         for(Variable v : mVariables) {
 
             if(v.isSubcategory)
                 continue; // handled elsewhere
 
-            TextView filterTv = new TextView(getContext());
+            TextView filterTv = makeFilterLabel();
             filterTv.setText(v.name);
-            filterTv.setPadding(paddingSize, paddingSize, paddingSize, paddingSize);
-
             filterLayout.addView(filterTv);
 
             ChipGroup cgv = new ChipGroup(getContext());
-
             for(String vv : v.values.keySet()) {
-                Chip cv = new Chip(getContext(), null, R.style.Widget_MaterialComponents_Chip_Filter);
+                Chip cv = makeChip(v.id, vv);
                 cv.setText(Objects.requireNonNull(v.values.get(vv)).label);
-                cv.setChipBackgroundColor(getContext().getResources().getColorStateList(R.color.filter));
-                cv.setCheckedIconVisible(true);
-
-                cv.setClickable(true);
-                cv.setCheckable(true);
-
-                if(mVariableSelections.isSelected(v.id, vv))
-                    cv.setChecked(true);
-
-                cv.setOnCheckedChangeListener(this);
-
-                cv.setTag(v.id + "_" + vv);
-
                 cgv.addView(cv);
             }
 
@@ -107,6 +125,31 @@ public class FiltersDialog extends AlertDialog implements CompoundButton.OnCheck
         layout.addView(okButton);
 
         setContentView(layout);
+    }
+
+    private TextView makeFilterLabel() {
+        int paddingSize = getContext().getResources().getDimensionPixelSize(R.dimen.fab_margin);
+        TextView filterTv = new TextView(getContext());
+        filterTv.setPadding(paddingSize, paddingSize, paddingSize, paddingSize);
+        return filterTv;
+    }
+
+    private Chip makeChip(String filterKey, String filterValue) {
+        Chip cv = new Chip(getContext(), null, R.style.Widget_MaterialComponents_Chip_Filter);
+        cv.setChipBackgroundColor(getContext().getResources().getColorStateList(R.color.filter));
+        cv.setCheckedIconVisible(true);
+
+        cv.setClickable(true);
+        cv.setCheckable(true);
+
+        cv.setOnCheckedChangeListener(this);
+
+        cv.setTag(filterKey + "_" + filterValue);
+
+        if(mVariableSelections.isSelected(filterKey, filterValue))
+            cv.setChecked(true);
+
+        return cv;
     }
 
     @Override

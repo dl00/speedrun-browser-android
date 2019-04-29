@@ -331,7 +331,7 @@ public class GameDetailFragment extends Fragment {
     }
 
     private void openFiltersDialog() {
-        FiltersDialog dialog = new FiltersDialog(getContext(),
+        FiltersDialog dialog = new FiltersDialog(getContext(), mGame,
                 mCategoryTabStrip.getPagerAdapter().getCategoryOfIndex(mLeaderboardPager.getCurrentItem()).variables, mVariableSelections);
 
         dialog.show();

@@ -131,49 +131,6 @@ public class MultiVideoView extends FrameLayout {
 
         removeAllViews();
         addView(mTwitchWebView);
-
-
-        /*Log.d(TAG, "Load YouTube video: " + m.uri);
-
-        mYoutubePlayerView = new YouTubePlayerView(getContext());
-
-        mYoutubePlayerView.addYouTubePlayerListener(new AbstractYouTubePlayerListener() {
-            @Override
-            public void onReady(@NotNull YouTubePlayer youTubePlayer) {
-                Log.d(TAG, "Show YT video ID: " + mShownLink.getYoutubeVideoID());
-
-                mYoutubePlayer = youTubePlayer;
-
-                mYoutubePlayerView.getPlayerUiController().setFullScreenButtonClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-
-                        if(mListener != null)
-                            mListener.onFullscreenToggleListener();
-                    }
-                });
-
-                mYoutubePlayer.loadVideo(mShownLink.getYoutubeVideoID(), (int) mSeekTime);
-            }
-
-            @Override
-            public void onCurrentSecond(@NotNull YouTubePlayer youTubePlayer, float second) {
-                mSeekTime = (int)second;
-            }
-
-            @Override
-            public void onError(@NotNull YouTubePlayer youTubePlayer, @NotNull PlayerConstants.PlayerError error) {
-                if(error == PlayerConstants.PlayerError.VIDEO_NOT_FOUND ||
-                        error == PlayerConstants.PlayerError.VIDEO_NOT_PLAYABLE_IN_EMBEDDED_PLAYER)
-                    setVideoFrameOther(mShownLink);
-                else
-                    setVideoFrameError();
-            }
-        });
-
-        removeAllViews();
-        addView(mYoutubePlayerView);
-        mShownLink = m;*/
     }
 
     @SuppressLint("SetJavaScriptEnabled")

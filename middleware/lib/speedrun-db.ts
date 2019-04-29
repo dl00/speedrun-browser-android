@@ -14,11 +14,13 @@ export interface NewRecord {
 export const locs: {[index: string]: string} = {
     game_rank: 'game_rank',
     game_abbrs: 'game_abbrs',
+    genre_rank: 'genre_rank',
     player_abbrs: 'player_abbrs',
     latest_run: 'latest_run', // for db sync cursor
     latest_run_verify_date: 'latest_run_verify_date',
     verified_runs: 'verified_runs', // for showing list of latest verified runs
     games: 'games',
+    genres: 'genres',
     runs: 'runs',
     categories: 'categories',
     levels: 'levels',
@@ -104,16 +106,13 @@ export async function rescore_game(db: ioredis.Redis, indexer: any, game: speedr
     }
 
     let indexes: { text: string, score: number, namespace?: string }[] = [];
-
     indexes.push({ text: game.abbreviation.toLowerCase(), score: game_score });
 
     for(let name in game.names) {
-
         if(!game.names[name])
             continue;
 
         let idx: any = { text: game.names[name].toLowerCase(), score: game_score };
-
         if(name != 'international')
             idx.namespace = name;
 
@@ -127,9 +126,20 @@ export async function rescore_game(db: ioredis.Redis, indexer: any, game: speedr
     await db.zadd(locs.game_rank, game_score.toString(), game.id);
 
     // install on category lists
-    for(let genre of game.genres) {
-        await db.zadd(locs.game_rank + ':' + genre, game_score.toString(), game.id);
+    // TODO: switch to `speedrun_api.Genre[] instead of any[]`
+    for(let genre of <any[]>game.genres) {
+        await db.zadd(locs.game_rank + ':' + (genre.id || genre), game_score.toString(), game.id);
     }
+}
+
+export async function rescore_genre(db: ioredis.Redis, indexer: any, genre: speedrun_api.Genre) {
+    let score = await db.zcard(locs.game_rank + ':' + genre.id);
+
+    // install autocomplete entry
+    await indexer.add(genre.id, [{text: genre.name, score: score}]);
+
+    // install on master rank list
+    await db.zadd(locs.genre_rank, score.toString(), genre.id);
 }
 
 // add/update the given personal best entry for the given user

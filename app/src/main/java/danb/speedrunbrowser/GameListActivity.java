@@ -1,6 +1,8 @@
 package danb.speedrunbrowser;
 
 import android.app.ActivityOptions;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -18,7 +20,9 @@ import android.widget.ListView;
 
 import com.google.android.gms.security.ProviderInstaller;
 import com.google.firebase.crash.FirebaseCrash;
+import com.google.gson.reflect.TypeToken;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,11 +35,13 @@ import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
 import danb.speedrunbrowser.api.objects.Game;
+import danb.speedrunbrowser.api.objects.Genre;
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry;
 import danb.speedrunbrowser.api.objects.User;
 import danb.speedrunbrowser.utils.Analytics;
 import danb.speedrunbrowser.utils.AppDatabase;
 import danb.speedrunbrowser.utils.AutoCompleteAdapter;
+import danb.speedrunbrowser.utils.Constants;
 import danb.speedrunbrowser.utils.Util;
 import danb.speedrunbrowser.views.SimpleTabStrip;
 import io.reactivex.Observable;
@@ -130,6 +136,10 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.menu_about) {
             showAbout();
+            return true;
+        }
+        else if(item.getItemId() == R.id.menu_genres) {
+            showGenreFilterDialog();
             return true;
         }
 
@@ -246,6 +256,12 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
             startActivityFromFragment(fragment, intent, 0, transitionOptions.toBundle());
         else
             startActivity(intent);
+    }
+
+    private void showGenreFilterDialog() {
+        SelectGenreDialog dialog = new SelectGenreDialog(this, mDisposables);
+
+        dialog.show();
     }
 
     @Override

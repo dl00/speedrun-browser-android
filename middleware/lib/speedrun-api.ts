@@ -40,6 +40,8 @@ export interface BulkGame {
     weblink: string
     assets: BulkGameAssets
     platforms: string[]|UpstreamData<Platform>|Platform[]
+    regions: string[]|UpstreamData<Region>|Region[]
+    genres: string[]|UpstreamData<Genre>|Genre[]
     'release-date': string
 }
 
@@ -73,8 +75,6 @@ export function game_assets_to_bulk(game_assets: GameAssets): BulkGameAssets {
 export interface Game extends BulkGame, BaseMiddleware {
     released: number
     romhack: boolean
-    regions: string[]|UpstreamData<Region>|Region[]
-    genres: string[]
     developers: string[]
     publishers: string[]|Publisher[]
     created: string
@@ -83,7 +83,8 @@ export interface Game extends BulkGame, BaseMiddleware {
 
 /// TODO: Use decorators
 export function game_to_bulk(game: Game): BulkGame {
-    let bulkGame: BulkGame = _.pick(game, 'id', 'names', 'abbreviation', 'weblink', 'assets', 'platforms', 'release-date');
+    let bulkGame: BulkGame = _.pick(game, 'id', 'names', 'abbreviation', 'weblink',
+        'assets', 'platforms', 'regions', 'genres', 'release-date');
 
     bulkGame.assets = game_assets_to_bulk(game.assets);
 
@@ -101,11 +102,19 @@ export function normalize_game(d: Game) {
         d.regions = (<UpstreamData<Region>>d.regions).data;
     }
 
+    if(d.genres && (<UpstreamData<Genre>>d.genres).data) {
+        d.genres = (<UpstreamData<Genre>>d.genres).data;
+    }
+
     for(let platform in d.platforms) {
         normalize((<any>d.platforms)[platform]);
     }
     for(let region in d.regions) {
         normalize((<any>d.regions)[region]);
+    }
+
+    for(let genre in d.genres) {
+        normalize((<any>d.genres)[genre]);
     }
 }
 
@@ -113,18 +122,18 @@ export interface BulkCategory {
     id: string
     name: string
     type: string
+
+    variables: UpstreamData<Variable>|Variable[]
 }
 
 export interface Category extends BulkCategory, BaseMiddleware {
     weblink: string
     rules: string
     miscellaneous: boolean
-
-    variables: UpstreamData<Variable>|Variable[]
 }
 
 export function category_to_bulk(category: Category): BulkCategory {
-    return _.pick(category, 'id', 'name', 'type');
+    return _.pick(category, 'id', 'name', 'type', 'variables');
 }
 
 export function normalize_category(d: Category) {
@@ -220,11 +229,18 @@ export interface RunTimes {
     ingame: string
 }
 
+export interface RunSystem {
+    platform: string
+    emulated: boolean
+    region: string
+}
+
 export interface BulkRun {
     id: string
     date: string
     players: BulkUser[]
     times: RunTimes
+    system: RunSystem
     values: {[key: string]: string}
 }
 
@@ -268,7 +284,7 @@ export function normalize_run(d: Run) {
 
 /// TODO: Use decorators
 export function run_to_bulk(run: Run): BulkRun {
-    let newr = _.pick(run, 'id', 'date', 'players', 'times', 'values');
+    let newr = _.pick(run, 'id', 'date', 'players', 'times', 'system', 'values');
 
     newr.players = newr.players.map(v => user_to_bulk(<User>v));
 
@@ -337,6 +353,11 @@ export interface Region {
 }
 
 export interface Publisher {
-    id: string,
+    id: string
+    name: string
+}
+
+export interface Genre {
+    id: string
     name: string
 }

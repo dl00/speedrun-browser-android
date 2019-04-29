@@ -52,14 +52,25 @@ export async function list_all_games(runid: string, options: any) {
 
 export async function pull_game(runid: string, options: any) {
     try {
-        let res = await request(speedrun_api.API_PREFIX + '/games/' + options.id + '?embed=platforms,regions');
+        let res = await request(speedrun_api.API_PREFIX + '/games/' + options.id + '?embed=platforms,regions,genres');
 
         let game: speedrun_api.Game = res.data;
 
         // write the game to db
         speedrun_api.normalize_game(game);
-        await scraper.storedb!.hset(speedrun_db.locs.games, options.id, JSON.stringify(game));
-        await scraper.storedb!.hset(speedrun_db.locs.game_abbrs, game.abbreviation, game.id);
+
+        let m = scraper.storedb!.multi();
+
+        m.hset(speedrun_db.locs.games, options.id, JSON.stringify(game));
+        m.hset(speedrun_db.locs.game_abbrs, game.abbreviation, game.id);
+
+        // write any genres to the db
+        for(let genre of <speedrun_api.Genre[]>game.genres) {
+            m.hset(speedrun_db.locs.genres, genre.id, JSON.stringify(genre));
+            await speedrun_db.rescore_genre(scraper.storedb!, scraper.indexer_genres, genre);
+        }
+
+        await m.exec();
 
         // unfortunately we have to load the categories for a game in a separate request...
         await scraper.push_call({
@@ -72,7 +83,7 @@ export async function pull_game(runid: string, options: any) {
         }, 9);
     }
     catch(err) {
-        console.error('loader/gamelist: could not retrieve single game entry:', options, err.statusCode);
+        console.error('loader/gamelist: could not retrieve single game entry:', options, err.statusCode, err);
         throw 'reschedule';
     }
 }
@@ -102,7 +113,7 @@ export async function pull_game_categories(runid: string, options: any) {
                 }
             }, 9);
         }
-        
+
         if(grouped_categories['per-game']) {
             for(let category of grouped_categories['per-game']) {
                 await scraper.push_call({
