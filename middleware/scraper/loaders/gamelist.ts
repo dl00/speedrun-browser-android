@@ -66,7 +66,6 @@ export async function pull_game(runid: string, options: any) {
 
         // write any genres to the db
         for(let genre of <speedrun_api.Genre[]>game.genres) {
-            m.hset(speedrun_db.locs.genres, genre.id, JSON.stringify(genre));
             await speedrun_db.rescore_genre(scraper.storedb!, scraper.indexer_genres, genre);
         }
 

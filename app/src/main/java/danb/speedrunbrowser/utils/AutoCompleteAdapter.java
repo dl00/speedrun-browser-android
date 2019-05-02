@@ -35,7 +35,7 @@ import io.reactivex.subjects.Subject;
 public class AutoCompleteAdapter extends BaseAdapter implements Consumer<SpeedrunMiddlewareAPI.APISearchResponse> {
     private static final String TAG = AutoCompleteAdapter.class.getSimpleName();
 
-    private static final int DEBOUNCE_SEARCH_DELAY = 300;
+    private static final int DEBOUNCE_SEARCH_DELAY = 500;
 
     private Context ctx;
 
@@ -85,7 +85,7 @@ public class AutoCompleteAdapter extends BaseAdapter implements Consumer<Speedru
 
         searchResults = new ArrayList<>(searchResults);
 
-        notifyDataSetChanged();
+        notifyDataSetInvalidated();
     }
 
     @Override
@@ -155,7 +155,7 @@ public class AutoCompleteAdapter extends BaseAdapter implements Consumer<Speedru
         }));
 
         disposables.add(obs
-            .debounce(DEBOUNCE_SEARCH_DELAY, TimeUnit.MILLISECONDS)
+            .throttleLatest(DEBOUNCE_SEARCH_DELAY, TimeUnit.MILLISECONDS)
             .switchMap(new Function<String, ObservableSource<SpeedrunMiddlewareAPI.APISearchResponse>>() {
                 @Override
                 public ObservableSource<SpeedrunMiddlewareAPI.APISearchResponse> apply(String s) throws Exception {

@@ -13,6 +13,7 @@ import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.util.Log;
 import android.view.Menu;
 import android.widget.Toast;
 
@@ -27,6 +28,8 @@ import androidx.core.app.NotificationCompat;
 import danb.speedrunbrowser.BuildConfig;
 import danb.speedrunbrowser.R;
 import io.reactivex.Single;
+import io.reactivex.functions.Consumer;
+import io.reactivex.plugins.RxJavaPlugins;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -49,6 +52,15 @@ public class Util {
 
         if(httpClient != null)
             return httpClient;
+
+        // there is a lot of potential for lost network packets/application transitions to trigger an errer.
+        // this will make sure the application does not crash because of this
+        RxJavaPlugins.setErrorHandler(new Consumer<Throwable>() {
+            @Override
+            public void accept(Throwable throwable) throws Exception {
+                Log.w("RXJAVA_UNDELIVERED", throwable);
+            }
+        });
 
         try {
 

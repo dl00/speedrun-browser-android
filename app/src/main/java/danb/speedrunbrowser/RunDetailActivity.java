@@ -399,15 +399,13 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
                     break;
                 }
             }
-
-            mVariableChips.addView(chip);
         }
 
         if(mCategory.variables != null) {
             for(Variable var : mCategory.variables) {
                 if(mRun.values.containsKey(var.id) && !var.isSubcategory && var.values.containsKey(mRun.values.get(var.id))) {
                     Chip chip = new Chip(this);
-                    chip.setText(Objects.requireNonNull(var.values.get(mRun.values.get(var.id))).label);
+                    chip.setText(new StringBuilder(var.name).append(": ").append(Objects.requireNonNull(var.values.get(mRun.values.get(var.id))).label));
                     mVariableChips.addView(chip);
                 }
                 else if(var.isSubcategory && var.values.containsKey(mRun.values.get(var.id))) {

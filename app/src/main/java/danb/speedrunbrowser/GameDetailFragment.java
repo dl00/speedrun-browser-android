@@ -72,6 +72,7 @@ public class GameDetailFragment extends Fragment {
      */
     private static final String SAVED_GAME = "game";
     private static final String SAVED_PAGER = "pager";
+    private static final String SAVED_FILTERS = "variable_selections";
 
     private AppDatabase mDB;
 
@@ -122,6 +123,13 @@ public class GameDetailFragment extends Fragment {
         mDB = AppDatabase.make(getContext());
 
         mDisposables = new CompositeDisposable();
+
+        if(savedInstanceState != null) {
+            mVariableSelections = (Variable.VariableSelections)savedInstanceState.getSerializable(SAVED_FILTERS);
+        }
+        else {
+            mVariableSelections = new Variable.VariableSelections();
+        }
 
         if(getArguments() == null) {
             Log.e(TAG, "No arguments provided");
@@ -226,7 +234,6 @@ public class GameDetailFragment extends Fragment {
 
         if(savedInstanceState != null) {
             mLeaderboardPager.onRestoreInstanceState(savedInstanceState.getParcelable(SAVED_PAGER));
-
             Log.d(TAG, "Loaded from saved instance state");
         }
     }
@@ -275,6 +282,7 @@ public class GameDetailFragment extends Fragment {
 
         outState.putParcelable(SAVED_PAGER, mLeaderboardPager.onSaveInstanceState());
         outState.putSerializable(SAVED_GAME, mGame);
+        outState.putSerializable(SAVED_FILTERS, mVariableSelections);
     }
 
     private void setupTabStrip() {

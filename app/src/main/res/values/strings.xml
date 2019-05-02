@@ -55,22 +55,18 @@
     <string name="button_got_it">Got it!</string>
 
     <!-- release notes: edit for each release for now -->
-    <string name="dialog_title_release_notes">New Features in 1.5!</string>
+    <string name="dialog_title_release_notes">New Features in 1.6!</string>
     <string name="dialog_msg_release_notes">
-        * Front page has a ton of updates, including viewing list of latest verified runs,
-          your recent watches, and subscriptions.\n
-        * Searching for players and games has gotten much easier and more fluid.\n
-        * You can now receive push notifications for new WRs for any category/level
-          in a game.\n
-        * Fix link handlers to work
-        * Major performance improvements especially when it comes to image loading.\n
-        \n
-        This will probably be the last beta release.\n
+        Hi, and thanks for being one of the first people to use this app! Latest changes:\n
+        * Subcategories and everything about them should work now.\n
+        * Missing rules on certain games should appear now (thanks cpc2 on reddit).\n
+        * New filters available for Platform, Region, when relevant.\n
+        * Front page is now filterable by genres.\n
+        * Many other misc enhancements.\n
+        * Fixed ongoing bugs.\n
         \n
         As always, feel free to submit feedback through the Play Store
-        or through the thread on the Speedrun.com forum. It\'s really appreciated!\n
-        \n
-        Thanks for being one of the first to use this app!\n
+        or through the thread on the Speedrun.com forum. It\'s really appreciated!
     </string>
 
     <string name="label_about_privacy_policy">Privacy Policy</string>

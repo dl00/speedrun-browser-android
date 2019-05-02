@@ -25,6 +25,8 @@ public class Variable implements Serializable {
     public boolean mandatory;
     public boolean obsoletes;
 
+    public VariableScope scope;
+
     public String deflt;
 
     public boolean isSubcategory;
@@ -34,6 +36,12 @@ public class Variable implements Serializable {
     public static class VariableValue implements Serializable {
         public String label;
         public String rules;
+    }
+
+    public static class VariableScope implements Serializable {
+        public String type;
+        public String category;
+        public String level;
     }
 
     public static class VariableSelections implements Serializable {
@@ -58,8 +66,11 @@ public class Variable implements Serializable {
 
             if(run.values != null) {
                 for(Variable selection : activeVariables) {
-                    if(!run.values.containsKey(selection.id))
+                    if(!run.values.containsKey(selection.id)) {
+                        if(selection.isSubcategory)
+                            continue;
                         return false;
+                    }
 
                     if(!selections.containsKey(selection.id))
                         continue;
@@ -145,6 +156,7 @@ public class Variable implements Serializable {
             obj.addProperty("default", src.deflt);
             obj.addProperty("is-subcategory", src.isSubcategory);
 
+            obj.add("scope", context.serialize(src.scope));
             obj.add("values", context.serialize(src.values));
 
             return obj;
@@ -163,6 +175,9 @@ public class Variable implements Serializable {
 
             if(obj.has("default"))
                 v.deflt = obj.get("default").getAsString();
+
+            if(obj.has("scope"))
+                v.scope = context.deserialize(obj.get("scope"), VariableScope.class);
 
             JsonObject vObj = obj.getAsJsonObject("values");
 

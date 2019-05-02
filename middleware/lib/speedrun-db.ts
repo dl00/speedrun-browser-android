@@ -136,10 +136,13 @@ export async function rescore_genre(db: ioredis.Redis, indexer: any, genre: spee
     let score = await db.zcard(locs.game_rank + ':' + genre.id);
 
     // install autocomplete entry
-    await indexer.add(genre.id, [{text: genre.name, score: score}]);
+    await indexer.add(genre.id, [{text: genre.name.toLowerCase(), score: score}]);
 
     // install on master rank list
     await db.zadd(locs.genre_rank, score.toString(), genre.id);
+
+    // save score in actual genre in db
+    await db.hset(locs.genres, genre.id, JSON.stringify(_.defaults({count: score}, genre)));
 }
 
 // add/update the given personal best entry for the given user

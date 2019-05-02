@@ -21,7 +21,7 @@ public class Game implements Serializable, SearchResultItem {
     public List<String> gametypes;
     public List<Platform> platforms;
     public List<Region> regions;
-    public List<String> genres;
+    public List<Genre> genres;
     public List<String> engines;
     public List<String> developers;
     public List<String> publishers;

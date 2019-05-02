@@ -12,6 +12,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.io.InvalidObjectException;
 import java.net.URL;
 
@@ -76,32 +77,39 @@ public class ImageLoader {
     private InputStream downloadImage(URL url) throws IOException {
         Log.d(TAG, "Download Image Asset: " + url.toString());
 
-        Request req = new Request.Builder()
-                .url(url)
-                .build();
-
-        Response res = client.newCall(req).execute();
-
-        if(!res.isSuccessful())
-            // TODO properly throw this error
-            //throw new IOException();
-            Log.w(TAG, "failed to download image: " + res.body().string());
-
-
-        byte[] data = res.body().bytes();
-
-        FileOutputStream fo = new FileOutputStream(getCacheFile(url));
+        ByteArrayInputStream bais = null;
 
         try {
-            fo.write(data);
-            fo.close();
-        } catch(Exception e) {
-            // if something happens, try to delete the cache file. otherwise it could load invalid next time
-            Log.w(TAG, "Could not save cache file for downloaded image", e);
-            getCacheFile(url).delete();
-        }
+            Request req = new Request.Builder()
+                    .url(url)
+                    .build();
 
-        return new ByteArrayInputStream(data);
+            Response res = client.newCall(req).execute();
+
+            if(!res.isSuccessful())
+                // TODO properly throw this error
+                //throw new IOException();
+                Log.w(TAG, "failed to download image: " + res.body().string());
+
+
+            byte[] data = res.body().bytes();
+
+            FileOutputStream fo = new FileOutputStream(getCacheFile(url));
+
+            try {
+                fo.write(data);
+                fo.close();
+            } catch(Exception e) {
+                // if something happens, try to delete the cache file. otherwise it could load invalid next time
+                Log.w(TAG, "Could not save cache file for downloaded image", e);
+                getCacheFile(url).delete();
+            }
+
+            bais = new ByteArrayInputStream(data);
+        }
+        catch(InterruptedIOException _e) {}
+
+        return bais;
     }
 
     public Single<Bitmap> loadImage(final URL url) {

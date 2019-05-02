@@ -7,6 +7,7 @@ import com.google.gson.GsonBuilder;
 import java.util.List;
 
 import danb.speedrunbrowser.api.objects.GameAssets;
+import danb.speedrunbrowser.api.objects.Genre;
 import danb.speedrunbrowser.api.objects.MediaLink;
 import danb.speedrunbrowser.api.objects.Platform;
 import danb.speedrunbrowser.api.objects.Region;
@@ -31,6 +32,7 @@ public class SpeedrunAPI {
         gson.registerTypeAdapter(MediaLink.class, new MediaLink.JsonConverter());
         gson.registerTypeAdapter(Platform.class, new Platform.JsonConverter());
         gson.registerTypeAdapter(Region.class, new Region.JsonConverter());
+        gson.registerTypeAdapter(Genre.class, new Genre.JsonConverter());
         gson.registerTypeAdapter(Run.class, new Run.JsonConverter());
         gson.registerTypeAdapter(Variable.class, new Variable.JsonConverter());
 

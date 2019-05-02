@@ -52,10 +52,9 @@ public class SpeedrunMiddlewareAPI {
         gson.registerTypeAdapter(MediaLink.class, new MediaLink.JsonConverter());
         gson.registerTypeAdapter(Platform.class, new Platform.JsonConverter());
         gson.registerTypeAdapter(Region.class, new Region.JsonConverter());
+        gson.registerTypeAdapter(Genre.class, new Genre.JsonConverter());
         gson.registerTypeAdapter(Run.class, new Run.JsonConverter());
         gson.registerTypeAdapter(Variable.class, new Variable.JsonConverter());
-
-        gson.registerTypeAdapter(List.class, new NestedListDeserializer());
 
         // type adapters go here
 
@@ -112,6 +111,7 @@ public class SpeedrunMiddlewareAPI {
         Observable<APISearchResponse> autocomplete(@Query("q") String query);
 
         // Genres
+        @GET("genres")
         Observable<APIResponse<Genre>> listGenres(@Query("q") String query);
 
         // Games

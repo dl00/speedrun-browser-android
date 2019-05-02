@@ -182,7 +182,8 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         layout.setGravity(Gravity.CENTER_VERTICAL);
 
         for(final Variable var : mCategory.variables) {
-            if(!var.isSubcategory)
+            if(!var.isSubcategory ||
+                    (var.scope.type.equals("single-level") && (mLevel == null || !var.scope.level.equals(mLevel.id))))
                 continue;
 
             ChipGroup cg = new ChipGroup(Objects.requireNonNull(getContext()));
@@ -221,7 +222,13 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
 
         mHsvSubcategories.addView(layout);
 
-        updateSubcategorySelections();
+        if(layout.getChildCount() == 0) {
+            mHsvSubcategories.setVisibility(View.GONE);
+        }
+        else {
+            mHsvSubcategories.setVisibility(View.VISIBLE);
+            updateSubcategorySelections();
+        }
     }
 
     private void updateSubcategorySelections() {
@@ -239,8 +246,6 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
 
             for(int j = 0;j < cg.getChildCount();j++) {
                 View v = cg.getChildAt(j);
-
-                System.out.println("IS SELECTED " + cg.getTag() + ", " + v.getTag());
 
                 if(mVariableSelections.isSelected((String)cg.getTag(), (String)v.getTag())) {
                     cg.check(v.getId());
@@ -387,13 +392,18 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
     public void setFilter(Variable.VariableSelections selections) {
         mVariableSelections = selections;
 
-        if(mCategory != null)
+        if(mCategory != null && mVariableSelections != null)
             mVariableSelections.setDefaults(mCategory.variables);
 
         notifyFilterChanged();
     }
 
+    public Variable.VariableSelections getFilter() {
+        return mVariableSelections;
+    }
+
     public void notifyFilterChanged() {
+        Log.d(TAG, "Notified filter changed");
 
         updateSubcategorySelections();
 

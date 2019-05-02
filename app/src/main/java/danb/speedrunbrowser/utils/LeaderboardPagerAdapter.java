@@ -1,16 +1,21 @@
 package danb.speedrunbrowser.utils;
 
 import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
+import danb.speedrunbrowser.ItemListFragment;
 import danb.speedrunbrowser.LeaderboardFragment;
 import danb.speedrunbrowser.api.objects.Category;
 import danb.speedrunbrowser.api.objects.Game;
@@ -118,6 +123,14 @@ public class LeaderboardPagerAdapter extends FragmentPagerAdapter implements Vie
         existingFragments[position] = frag;
 
         return frag;
+    }
+
+    @Override
+    public void setPrimaryItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
+        if(object instanceof LeaderboardFragment && ((LeaderboardFragment)object).getFilter() == null) {
+            ((LeaderboardFragment)object).setFilter(filterSelections);
+            super.setPrimaryItem(container, position, object);
+        }
     }
 
     @Nullable

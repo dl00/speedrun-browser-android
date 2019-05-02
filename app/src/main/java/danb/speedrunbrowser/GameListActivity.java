@@ -335,6 +335,9 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
                 @Override
                 public void onPageSelected(int position) {
 
+                    if(fragments[position].getItemType() == null)
+                        return;
+
                     String type = fragments[position].getItemType().name;
 
                     String listName = "";
