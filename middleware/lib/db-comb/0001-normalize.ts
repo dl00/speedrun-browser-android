@@ -28,7 +28,7 @@ function do_normalize(type: string, d: any) {
 export default async function(db: ioredis.Redis, _config: Config) {
     for(let type in speedrun_db.locs) {
 
-        if(type == 'game_rank' || type == 'game_abbrs')
+        if(type == 'game_rank' || type == 'genre_rank' || type == 'game_abbrs')
             continue;
 
         let cursor = 0;
