@@ -34,6 +34,7 @@ export default async function(db: ioredis.Redis, _config: Config) {
             type == 'game_abbrs' ||
             type == 'player_abbrs' ||
             type == 'latest_run_verify_date' ||
+            type == 'latest_run' ||
             type == 'verified_runs')
             continue;
 
