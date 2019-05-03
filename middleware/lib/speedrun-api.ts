@@ -123,22 +123,24 @@ export interface BulkCategory {
     name: string
     type: string
 
-    variables: UpstreamData<Variable>|Variable[]
+    variables?: UpstreamData<Variable>|Variable[]
 }
 
 export interface Category extends BulkCategory, BaseMiddleware {
     weblink: string
-    rules: string
+    rules?: string
     miscellaneous: boolean
 }
 
 export function category_to_bulk(category: Category): BulkCategory {
     let ret = _.pick(category, 'id', 'name', 'type', 'variables');
 
-    for(let var of <Variable[]>categry.variables) {
-        // remove any rules embedded in the values which can be annoyingly large
-        for(let val in var.values) {
-            delete var.values[val].rules;
+    if(category.variables) {
+        for(let v of <Variable[]>category.variables) {
+            // remove any rules embedded in the values which can be annoyingly large
+            for(let val in v.values.values) {
+                delete (<any>v.values.values)[val].rules;
+            }
         }
     }
 
