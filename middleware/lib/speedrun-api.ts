@@ -133,7 +133,16 @@ export interface Category extends BulkCategory, BaseMiddleware {
 }
 
 export function category_to_bulk(category: Category): BulkCategory {
-    return _.pick(category, 'id', 'name', 'type', 'variables');
+    let ret = _.pick(category, 'id', 'name', 'type', 'variables');
+
+    for(let var of <Variable[]>categry.variables) {
+        // remove any rules embedded in the values which can be annoyingly large
+        for(let val in var.values) {
+            delete var.values[val].rules;
+        }
+    }
+
+    return ret;
 }
 
 export function normalize_category(d: Category) {
