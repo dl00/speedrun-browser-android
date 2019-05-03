@@ -184,7 +184,7 @@ export interface Leaderboard extends BaseMiddleware {
     weblink: string
     game: Game|string
     category: Category|string
-    level: string
+    level?: string
     platform: string
     region: string
     emulators: string
@@ -231,6 +231,10 @@ export function normalize_leaderboard(d: Leaderboard) {
     }
 
     delete d.players;
+
+    // make sure we are not harboring an empty object in level, that will break the app
+    if(!_.isString(d.level))
+        delete d.level;
 }
 
 export interface RunTimes {
@@ -258,7 +262,7 @@ export interface BulkRun {
 export interface Run extends BulkRun, BaseMiddleware {
     weblink: string
     game: BulkGame|string
-    level: BulkLevel|string
+    level?: BulkLevel|string
     category: BulkCategory|string
     submitted: string
     videos: {
