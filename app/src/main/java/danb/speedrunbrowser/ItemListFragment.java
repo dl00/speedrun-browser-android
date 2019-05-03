@@ -139,7 +139,10 @@ public class ItemListFragment extends Fragment {
 
     public void setItemsSource(ItemSource source) {
         mItemSource = source;
+        reload();
+    }
 
+    public void reload() {
         if(mAdapter != null)
             mAdapter.loadListTop();
     }

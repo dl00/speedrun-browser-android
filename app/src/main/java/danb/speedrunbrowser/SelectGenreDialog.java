@@ -7,6 +7,8 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -25,6 +27,7 @@ import com.google.android.material.chip.ChipGroup;
 
 import java.lang.reflect.Array;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI;
@@ -44,6 +47,10 @@ public class SelectGenreDialog extends AlertDialog implements View.OnClickListen
     private CompositeDisposable mDisposables;
 
     private GenreArrayAdapter mGenreAdapter;
+
+    private ScrollView mGenreListScroller;
+
+    private Genre mSelectedGenre;
 
     public SelectGenreDialog(Context ctx, CompositeDisposable disposables) {
         super(ctx, AlertDialog.THEME_DEVICE_DEFAULT_DARK);
@@ -71,7 +78,10 @@ public class SelectGenreDialog extends AlertDialog implements View.OnClickListen
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                triggerSearchGenres(s.toString());
+                if(s.length() >= SpeedrunMiddlewareAPI.MIN_AUTOCOMPLETE_LENGTH)
+                    triggerSearchGenres(s.toString());
+                else
+                    triggerSearchGenres("");
             }
 
             @Override
@@ -79,17 +89,25 @@ public class SelectGenreDialog extends AlertDialog implements View.OnClickListen
         });
         layout.addView(searchView);
 
-        ScrollView scrollView = new ScrollView(getContext());
+        mGenreListScroller = new ScrollView(getContext());
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, getContext().getResources().getDimensionPixelSize(R.dimen.dialog_list_min_height));
+        params.weight = 1;
+        mGenreListScroller.setLayoutParams(params);
+        mGenreListScroller.setFillViewport(true);
 
         ListView lv = new ListView(getContext());
+        params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0);
+        params.weight = 1;
+        lv.setLayoutParams(params);
         mGenreAdapter = new GenreArrayAdapter(getContext());
         lv.setAdapter(mGenreAdapter);
 
         lv.setOnItemClickListener(this);
 
-        scrollView.addView(lv);
+        //mGenreListScroller.addView(lv);
 
-        layout.addView(scrollView);
+        //layout.addView(mGenreListScroller);
+        layout.addView(lv);
 
         Button cancelButton = new Button(getContext());
         cancelButton.setText(android.R.string.cancel);
@@ -105,6 +123,14 @@ public class SelectGenreDialog extends AlertDialog implements View.OnClickListen
 
         triggerSearchGenres("");
 
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+        getWindow().setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+
+        InputMethodManager inputMananger = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        inputMananger.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+
         setContentView(layout);
     }
 
@@ -118,6 +144,7 @@ public class SelectGenreDialog extends AlertDialog implements View.OnClickListen
                         mGenreAdapter.clear();
                         mGenreAdapter.addAll(genreAPIResponse.data);
                         mGenreAdapter.notifyDataSetChanged();
+                        //((ListView)mGenreListScroller.getChildAt(0)).scrollTo(0, 0);
                     }
                 }, new ConnectionErrorConsumer(getContext())));
     }
@@ -129,16 +156,29 @@ public class SelectGenreDialog extends AlertDialog implements View.OnClickListen
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Genre genre = mGenreAdapter.getItem(position);
+        mSelectedGenre = mGenreAdapter.getItem(position);
 
         // TODO: Save this genre somewhere so that the result can be picked up by the listener
 
         dismiss();
     }
 
+    public Genre getSelectedGenre() {
+        return mSelectedGenre;
+    }
+
     private class GenreArrayAdapter extends ArrayAdapter<Genre> {
         public GenreArrayAdapter(@NonNull Context context) {
             super(context, R.layout.content_named_autocomplete_item);
+        }
+
+        @Nullable
+        @Override
+        public Genre getItem(int position) {
+            if(position == 0)
+                return null;
+
+            return super.getItem(position - 1);
         }
 
         @NonNull
@@ -148,13 +188,28 @@ public class SelectGenreDialog extends AlertDialog implements View.OnClickListen
                 convertView = getLayoutInflater().inflate(R.layout.content_named_autocomplete_item, parent, false);
             }
 
-            TextView titleTv = convertView.findViewById(R.id.txtItemName);
+            View unusedImage = convertView.findViewById(R.id.imgItemIcon);
+            unusedImage.setVisibility(View.GONE);
+
+            LinearLayout titleLayout = convertView.findViewById(R.id.txtItemName);
+            TextView titleTv = new TextView(getContext());
             TextView countTv = convertView.findViewById(R.id.txtItemType);
 
-            Genre data = Objects.requireNonNull(getItem(position));
+            Genre data = getItem(position);
 
-            titleTv.setText(data.name);
-            countTv.setText(data.count);
+            if(data != null) {
+                titleTv.setText(data.name);
+                countTv.setText(String.format(Locale.US, "%d", data.count));
+            }
+            else {
+                titleTv.setText(R.string.label_all_genres);
+                countTv.setText("");
+            }
+
+            titleLayout.removeAllViews();
+            titleLayout.addView(titleTv);
+
+            convertView.setMinimumHeight(getContext().getResources().getDimensionPixelSize(R.dimen.genre_list_item_height));
 
             return convertView;
         }

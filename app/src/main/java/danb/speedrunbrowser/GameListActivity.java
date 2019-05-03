@@ -25,6 +25,7 @@ import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -71,6 +72,8 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
 
     private EditText mGameFilter;
     private ListView mAutoCompleteResults;
+
+    private Genre mSelectedGenre;
 
     private SimpleTabStrip mTabs;
     private ViewPager mViewPager;
@@ -261,6 +264,15 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
     private void showGenreFilterDialog() {
         SelectGenreDialog dialog = new SelectGenreDialog(this, mDisposables);
 
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                mSelectedGenre = ((SelectGenreDialog)dialog).getSelectedGenre();
+
+                ((PagerAdapter) Objects.requireNonNull(mViewPager.getAdapter())).reloadSearchResults();
+            }
+        });
+
         dialog.show();
     }
 
@@ -429,7 +441,10 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
                     fragments[0].setItemsSource(new ItemListFragment.ItemSource() {
                         @Override
                         public Observable<SpeedrunMiddlewareAPI.APIResponse<Object>> list(int offset) {
-                            return SpeedrunMiddlewareAPI.make().listGames(offset).map(new ItemListFragment.GenericMapper<Game>());
+                            if(mSelectedGenre != null)
+                                return SpeedrunMiddlewareAPI.make().listGamesByGenre(mSelectedGenre.id, offset).map(new ItemListFragment.GenericMapper<Game>());
+                            else
+                                return SpeedrunMiddlewareAPI.make().listGames(offset).map(new ItemListFragment.GenericMapper<Game>());
                         }
                     });
                     break;
@@ -437,7 +452,10 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
                     fragments[1].setItemsSource(new ItemListFragment.ItemSource() {
                         @Override
                         public Observable<SpeedrunMiddlewareAPI.APIResponse<Object>> list(int offset) {
-                            return SpeedrunMiddlewareAPI.make().listLatestRuns(offset).map(new ItemListFragment.GenericMapper<LeaderboardRunEntry>());
+                            if(mSelectedGenre != null)
+                                return SpeedrunMiddlewareAPI.make().listLatestRunsByGenre(mSelectedGenre.id, offset).map(new ItemListFragment.GenericMapper<LeaderboardRunEntry>());
+                            else
+                                return SpeedrunMiddlewareAPI.make().listLatestRuns(offset).map(new ItemListFragment.GenericMapper<LeaderboardRunEntry>());
                         }
                     });
                     break;
@@ -540,6 +558,12 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
                         }
                     });
                     break;
+            }
+        }
+
+        public void reloadSearchResults() {
+            for(ItemListFragment f : fragments) {
+                f.reload();
             }
         }
     }

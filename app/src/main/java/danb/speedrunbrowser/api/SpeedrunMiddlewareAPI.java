@@ -118,6 +118,9 @@ public class SpeedrunMiddlewareAPI {
         @GET("games")
         Observable<APIResponse<Game>> listGames(@Query("start") int offset);
 
+        @GET("games/genre/{id}")
+        Observable<APIResponse<Game>> listGamesByGenre(@Path("id") String genreId, @Query("start") int offset);
+
         @GET("games/{ids}")
         Observable<APIResponse<Game>> listGames(@Path("ids") String ids);
 
@@ -132,6 +135,9 @@ public class SpeedrunMiddlewareAPI {
         // Runs
         @GET("runs/latest")
         Observable<APIResponse<LeaderboardRunEntry>> listLatestRuns(@Query("start") int offset);
+
+        @GET("runs/latest/genre/{id}")
+        Observable<APIResponse<LeaderboardRunEntry>> listLatestRunsByGenre(@Path("id") String genreId, @Query("start") int offset);
 
         @GET("runs/{ids}")
         Observable<APIResponse<LeaderboardRunEntry>> listRuns(@Path("ids") String runIds);

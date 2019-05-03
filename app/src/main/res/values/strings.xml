@@ -94,4 +94,5 @@
     <string name="label_filter_platform">Platform</string>
     <string name="label_filter_region">Region</string>
     <string name="menu_genres">Genres</string>
+    <string name="label_all_genres">All Genres</string>
 </resources>
