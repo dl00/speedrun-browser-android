@@ -50,9 +50,12 @@ public class ItemDetailActivity extends AppCompatActivity implements Consumer<Sp
         if (savedInstanceState == null) {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
-            Bundle args = getIntent().getExtras();
-
             Intent intent = getIntent();
+            Bundle args = intent.getExtras();
+
+            if(args == null) {
+                finish(); // nothing/no way to view...
+            }
 
             ItemListFragment.ItemType type = (ItemListFragment.ItemType)args.getSerializable(EXTRA_ITEM_TYPE);
 
