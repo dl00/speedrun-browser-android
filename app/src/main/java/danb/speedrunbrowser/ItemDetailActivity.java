@@ -84,7 +84,7 @@ public class ItemDetailActivity extends AppCompatActivity implements Consumer<Sp
                 Log.d(TAG, "Decoded game or player ID: " + id + ", from URL: " + intent.getData());
 
                 // use the whatis api to resolve the type of object
-                whatIsQuery = SpeedrunMiddlewareAPI.make().whatAreThese(id)
+                whatIsQuery = SpeedrunMiddlewareAPI.INSTANCE.make().whatAreThese(id)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(this, new ConnectionErrorConsumer(this));
@@ -133,20 +133,20 @@ public class ItemDetailActivity extends AppCompatActivity implements Consumer<Sp
         Bundle args = new Bundle();
         Fragment frag = null;
 
-        WhatIsEntry entry = whatIsEntryAPIResponse.data.get(0);
+        WhatIsEntry entry = whatIsEntryAPIResponse.getData().get(0);
 
         if(entry != null) {
-            if(entry.type.equals("game")) {
-                args.putString(GameDetailFragment.ARG_GAME_ID, entry.id);
+            if(entry.getType().equals("game")) {
+                args.putString(GameDetailFragment.ARG_GAME_ID, entry.getId());
                 frag = new GameDetailFragment();
             }
-            else if(entry.type.equals("player")) {
-                args.putString(PlayerDetailFragment.ARG_PLAYER_ID, entry.id);
+            else if(entry.getType().equals("player")) {
+                args.putString(PlayerDetailFragment.ARG_PLAYER_ID, entry.getId());
                 frag = new PlayerDetailFragment();
             }
-            else if(entry.type.equals("run")) {
+            else if(entry.getType().equals("run")) {
                 // wrong activity
-                showRun(entry.id);
+                showRun(entry.getId());
             }
         }
         else {

@@ -55,19 +55,19 @@
     <string name="button_got_it">Got it!</string>
 
     <!-- release notes: edit for each release for now -->
-    <string name="dialog_title_release_notes">New Features in 1.6!</string>
+    <string name="dialog_title_release_notes">Production Release!</string>
     <string name="dialog_msg_release_notes">
-        Hi, and thanks for being one of the first people to use this app! Latest changes:\n
-        * Subcategories and everything about them should work now.\n
-        * Missing rules on certain games should appear now (thanks cpc2 on reddit).\n
-        * New filters available for Platform, Region, when relevant.\n
-        * Front page is now filterable by genres.\n
-        * Many other misc enhancements.\n
-        * Fixed ongoing bugs.\n
+        Hi, and thanks for being one of the first people to use this app!\n
         \n
-        As always, feel free to submit feedback through the Play Store
-        or through the thread on the Speedrun.com forum. It\'s really appreciated!
+        This is mostly a bugfix release. If you are having trouble with the app, please do not
+        hesitate to contact in many places.\n
+        \n
+        Now that the app has reached production, if you would like to publicly rate, you can do so!\n
+        \n
+        Either way, it has been great to have so much support over the last few months.
     </string>
+
+    <string name="dialog_button_rate_now">Rate now!</string>
 
     <string name="label_about_privacy_policy">Privacy Policy</string>
     <string name="label_about_terms_and_conditions"><![CDATA[Terms & Conditions]]></string>

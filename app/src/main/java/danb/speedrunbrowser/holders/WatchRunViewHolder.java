@@ -36,20 +36,20 @@ public class WatchRunViewHolder extends RecyclerView.ViewHolder {
 
         mLeaderboardHolder.apply(context, disposables, game, entry);
 
-        if(entry.run.game.names != null) {
-            String gameAndCategoryText = entry.run.game.names.get("international");
+        if(entry.getRun().getGame().getNames() != null) {
+            String gameAndCategoryText = entry.getRun().getGame().getNames().get("international");
 
-            gameAndCategoryText += " \u2022 " + entry.run.category.name;
+            gameAndCategoryText += " \u2022 " + entry.getRun().getCategory().getName();
 
-            if(entry.run.level != null)
-                gameAndCategoryText += " \u2022 " + entry.run.level.name;
+            if(entry.getRun().getLevel() != null)
+                gameAndCategoryText += " \u2022 " + entry.getRun().getLevel().getName();
 
             mGameName.setText(gameAndCategoryText);
         }
 
-        if(entry.run.game != null && entry.run.game.assets != null && entry.run.game.assets.coverLarge != null) {
+        if(entry.getRun().getGame() != null && entry.getRun().getGame().getAssets() != null && entry.getRun().getGame().getAssets().getCoverLarge() != null) {
             mGameImage.setVisibility(View.VISIBLE);
-            disposables.add(new ImageLoader(context).loadImage(entry.run.game.assets.coverLarge.uri)
+            disposables.add(new ImageLoader(context).loadImage(entry.getRun().getGame().getAssets().getCoverLarge().getUri())
                     .subscribe(new ImageViewPlacerConsumer(mGameImage)));
         }
         else

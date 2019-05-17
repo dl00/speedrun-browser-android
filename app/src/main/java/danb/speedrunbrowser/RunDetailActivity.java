@@ -191,22 +191,22 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
 
     private void loadRun(final String runId) {
         Log.d(TAG, "Download runId: " + runId);
-        mDisposables.add(SpeedrunMiddlewareAPI.make().listRuns(runId)
+        mDisposables.add(SpeedrunMiddlewareAPI.INSTANCE.make().listRuns(runId)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(new Consumer<SpeedrunMiddlewareAPI.APIResponse<LeaderboardRunEntry>>() {
                 @Override
                 public void accept(SpeedrunMiddlewareAPI.APIResponse<LeaderboardRunEntry> gameAPIResponse) throws Exception {
 
-                    if (gameAPIResponse.data == null) {
+                    if (gameAPIResponse.getData() == null) {
                         // game was not able to be found for some reason?
                         Util.showErrorToast(RunDetailActivity.this, getString(R.string.error_missing_game, runId));
                         return;
                     }
 
-                    mRun = gameAPIResponse.data.get(0).run;
-                    mGame = mRun.game;
-                    mCategory = mRun.category;
-                    mLevel = mRun.level;
+                    mRun = gameAPIResponse.getData().get(0).getRun();
+                    mGame = mRun.getGame();
+                    mCategory = mRun.getCategory();
+                    mLevel = mRun.getLevel();
 
                     onDataReady();
                 }
@@ -253,25 +253,25 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
         setViewData();
         mSpinner.setVisibility(View.GONE);
 
-        Analytics.logItemView(this, "run", mRun.id);
+        Analytics.logItemView(this, "run", mRun.getId());
 
         onConfigurationChanged(getResources().getConfiguration());
 
         // check watch history to set video start time
-        mDisposables.add(mDB.watchHistoryDao().get(mRun.id)
+        mDisposables.add(mDB.watchHistoryDao().get(mRun.getId())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<AppDatabase.WatchHistoryEntry>() {
                     @Override
                     public void accept(AppDatabase.WatchHistoryEntry historyEntry) throws Exception {
-                        Log.d(TAG, "Got seek record for run: " + mRun.id);
+                        Log.d(TAG, "Got seek record for run: " + mRun.getId());
                         mVideoFrame.setSeekTime((int)historyEntry.seekPos);
                         onVideoReady();
                     }
                 }, new NoopConsumer<Throwable>(), new Action() {
                     @Override
                     public void run() throws Exception {
-                        System.out.println("No seek record for run: " + mRun.id);
+                        System.out.println("No seek record for run: " + mRun.getId());
                         onVideoReady();
                     }
                 }));
@@ -281,14 +281,14 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
 
         mVideoFrame.setListener(this);
 
-        if (mRun.videos == null || mRun.videos.links == null || mRun.videos.links.isEmpty()) {
+        if (mRun.getVideos() == null || mRun.getVideos().getLinks() == null || mRun.getVideos().getLinks().isEmpty()) {
             mVideoFrame.setVideoNotAvailable();
 
             return;
         }
 
         // find the first available video recognized
-        for(MediaLink ml : mRun.videos.links) {
+        for(MediaLink ml : mRun.getVideos().getLinks()) {
             if(mVideoFrame.loadVideo(ml))
                 break;
         }
@@ -296,7 +296,7 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
         if(!mVideoFrame.hasLoadedVideo()) {
             Log.w(TAG, "Could not play a video for this run");
             // just record the fact that the video page was accessed
-            mVideoFrame.setVideoFrameOther(mRun.videos.links.get(0));
+            mVideoFrame.setVideoFrameOther(mRun.getVideos().getLinks().get(0));
             writeWatchToDb(0);
         }
     }
@@ -347,21 +347,21 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
 
         Log.d(TAG, "Record seek time: " + seekTime);
 
-        mDisposables.add(mDB.watchHistoryDao().record(new AppDatabase.WatchHistoryEntry(mRun.id, seekTime))
+        mDisposables.add(mDB.watchHistoryDao().record(new AppDatabase.WatchHistoryEntry(mRun.getId(), seekTime))
                 .subscribeOn(Schedulers.io())
                 .subscribe());
     }
 
     private void setViewData() {
-        mGameName.setText(mGame.getName());
-        mReleaseDate.setText(mGame.releaseDate);
+        mGameName.setText(mGame.getResolvedName());
+        mReleaseDate.setText(mGame.getReleaseDate());
 
         // we have to join the string manually because it is java 7
-        if(mGame.platforms != null) {
+        if(mGame.getPlatforms() != null) {
             StringBuilder sb = new StringBuilder();
-            for (int i = 0;i < mGame.platforms.size();i++) {
-                sb.append(mGame.platforms.get(i).getName());
-                if(i < mGame.platforms.size() - 1)
+            for (int i = 0; i < mGame.getPlatforms().size(); i++) {
+                sb.append(mGame.getPlatforms().get(i).getName());
+                if(i < mGame.getPlatforms().size() - 1)
                     sb.append(", ");
             }
 
@@ -373,54 +373,54 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
 
         mVariableChips.removeAllViews();
 
-        StringBuilder fullCategoryName = new StringBuilder(mCategory.name);
+        StringBuilder fullCategoryName = new StringBuilder(mCategory.getName());
         if(mLevel != null)
-            fullCategoryName.append(" \u2022 ").append(mLevel.name);
+            fullCategoryName.append(" \u2022 ").append(mLevel.getName());
 
-        if(mGame.shouldShowPlatformFilter() && mRun.system != null) {
+        if(mGame.shouldShowPlatformFilter() && mRun.getSystem() != null) {
             Chip chip = new Chip(this);
 
-            for(Platform p : mGame.platforms) {
-                if(p.id.equals(mRun.system.platform)) {
-                    chip.setText(p.name);
+            for(Platform p : mGame.getPlatforms()) {
+                if(p.getId().equals(mRun.getSystem().getPlatform())) {
+                    chip.setText(p.getName());
                     mVariableChips.addView(chip);
                     break;
                 }
             }
         }
 
-        if(mGame.shouldShowRegionFilter() && mRun.system != null) {
+        if(mGame.shouldShowRegionFilter() && mRun.getSystem() != null) {
             Chip chip = new Chip(this);
 
-            for(Region r : mGame.regions) {
-                if(r.id.equals(mRun.system.region)) {
-                    chip.setText(r.name);
+            for(Region r : mGame.getRegions()) {
+                if(r.getId().equals(mRun.getSystem().getRegion())) {
+                    chip.setText(r.getName());
                     mVariableChips.addView(chip);
                     break;
                 }
             }
         }
 
-        if(mCategory.variables != null) {
-            for(Variable var : mCategory.variables) {
-                if(mRun.values.containsKey(var.id) && !var.isSubcategory && var.values.containsKey(mRun.values.get(var.id))) {
+        if(mCategory.getVariables() != null) {
+            for(Variable var : mCategory.getVariables()) {
+                if(mRun.getValues().containsKey(var.getId()) && !var.isSubcategory() && var.getValues().containsKey(mRun.getValues().get(var.getId()))) {
                     Chip chip = new Chip(this);
-                    chip.setText(new StringBuilder(var.name).append(": ").append(Objects.requireNonNull(var.values.get(mRun.values.get(var.id))).label));
+                    chip.setText(new StringBuilder(var.getName()).append(": ").append(Objects.requireNonNull(var.getValues().get(mRun.getValues().get(var.getId()))).getLabel()));
                     mVariableChips.addView(chip);
                 }
-                else if(var.isSubcategory && var.values.containsKey(mRun.values.get(var.id))) {
-                    fullCategoryName.append(" \u2022 ").append(Objects.requireNonNull(var.values.get(mRun.values.get(var.id))).label);
+                else if(var.isSubcategory() && var.getValues().containsKey(mRun.getValues().get(var.getId()))) {
+                    fullCategoryName.append(" \u2022 ").append(Objects.requireNonNull(var.getValues().get(mRun.getValues().get(var.getId()))).getLabel());
                 }
             }
         }
 
-        if(mGame.assets != null && mGame.assets.coverLarge != null)
+        if(mGame.getAssets() != null && mGame.getAssets().getCoverLarge() != null)
             mDisposables.add(
-                    new ImageLoader(this).loadImage(mGame.assets.coverLarge.uri)
+                    new ImageLoader(this).loadImage(mGame.getAssets().getCoverLarge().getUri())
                             .subscribe(new ImageViewPlacerConsumer(mCover)));
 
         mPlayerNames.removeAllViews();
-        for(final User player : mRun.players) {
+        for(final User player : mRun.getPlayers()) {
             TextView tv = new TextView(this);
             tv.setTextSize(16);
             player.applyTextView(tv);
@@ -440,9 +440,9 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
         }
 
         mCategoryName.setText(fullCategoryName);
-        mRunTime.setText(mRun.times.formatTime());
+        mRunTime.setText(mRun.getTimes().getTime());
 
-        mRunComment.setText(mRun.comment);
+        mRunComment.setText(mRun.getComment());
 
         TextView emptyTv = new TextView(this);
 
@@ -452,7 +452,7 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
     private void viewPlayer(User player) {
         Intent intent = new Intent(this, ItemDetailActivity.class);
         intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.PLAYERS);
-        intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, player.id);
+        intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, player.getId());
         intent.setFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
 
         startActivity(intent);
@@ -461,7 +461,7 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
     private void viewGame() {
         Intent intent = new Intent(this, ItemDetailActivity.class);
         intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.GAMES);
-        intent.putExtra(GameDetailFragment.ARG_GAME_ID, mGame.id);
+        intent.putExtra(GameDetailFragment.ARG_GAME_ID, mGame.getId());
         intent.setFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
 
         startActivity(intent);

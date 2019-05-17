@@ -28,6 +28,9 @@ import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -92,13 +95,13 @@ public class ItemListFragment extends Fragment {
                     String id = "";
                     switch(mItemType) {
                         case GAMES:
-                            id = ((Game)v.getTag()).id;
+                            id = ((Game) v.getTag()).getId();
                             break;
                         case PLAYERS:
-                            id = ((User)v.getTag()).id;
+                            id = ((User) v.getTag()).getId();
                             break;
                         case RUNS:
-                            id = ((LeaderboardRunEntry)v.getTag()).run.id;
+                            id = ((LeaderboardRunEntry) v.getTag()).getRun().getId();
                             break;
                     }
 
@@ -179,8 +182,15 @@ public class ItemListFragment extends Fragment {
                     if(lm instanceof LinearLayoutManager)
                         visibleItemPosition = ((LinearLayoutManager)lm).findLastVisibleItemPosition();
 
-                    if(visibleItemPosition == items.size() - 1)
-                        loadListMore();
+                    if(visibleItemPosition == items.size() - 1) {
+                        Handler handler = new Handler(Looper.getMainLooper());
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                loadListMore();
+                            }
+                        });
+                    }
                 }
             });
         }
@@ -233,8 +243,8 @@ public class ItemListFragment extends Fragment {
                         @Override
                         public void accept(SpeedrunMiddlewareAPI.APIResponse<Object> objectAPIResponse) throws Exception {
                             currentLoading = null;
-                            items = objectAPIResponse.data;
-                            isAtEndOfList = items.isEmpty();
+                            items = objectAPIResponse.getData();
+                            isAtEndOfList = objectAPIResponse.getMore() != null ? !objectAPIResponse.getMore().hasMore() : items.isEmpty();
 
                             if(isAtEndOfList)
                                 mEmptyView.setVisibility(View.VISIBLE);
@@ -243,7 +253,19 @@ public class ItemListFragment extends Fragment {
 
                             notifyDataSetChanged();
                         }
-                    }, new ConnectionErrorConsumer(getContext()));
+                    }, new Consumer<Throwable>() {
+                        @Override
+                        public void accept(Throwable throwable) throws Exception {
+                            // probably went past the end of the list if we got to this point.
+                            // TODO: handle the error more
+
+                            items = new ArrayList<>(0);
+
+                            currentLoading = null;
+                            isAtEndOfList = true;
+                            notifyDataSetChanged();
+                        }
+                    });
             notifyDataSetChanged();
         }
 
@@ -259,18 +281,30 @@ public class ItemListFragment extends Fragment {
                         @Override
                         public void accept(SpeedrunMiddlewareAPI.APIResponse<Object> objectAPIResponse) throws Exception {
                             currentLoading = null;
-                            if(objectAPIResponse.data.isEmpty()) {
+                            if (objectAPIResponse.getData().isEmpty()) {
                                 isAtEndOfList = true;
                                 notifyItemRemoved(items.size());
-                            }
-                            else {
+                            } else {
                                 int prevSize = items.size();
-                                items.addAll(objectAPIResponse.data);
+                                items.addAll(objectAPIResponse.getData());
                                 notifyItemChanged(prevSize);
-                                notifyItemRangeInserted(prevSize + 1, objectAPIResponse.data.size() - 1);
+                                notifyItemRangeInserted(prevSize + 1, objectAPIResponse.getData().size() - 1);
+
+                                if(objectAPIResponse.getMore() != null)
+                                    isAtEndOfList = !objectAPIResponse.getMore().hasMore();
                             }
                         }
-                    }, new ConnectionErrorConsumer(getContext()));
+                    }, new Consumer<Throwable>() {
+                        @Override
+                        public void accept(Throwable throwable) throws Exception {
+                            // probably went past the end of the list if we got to this point.
+                            // TODO: handle the error more properly
+
+                            currentLoading = null;
+                            isAtEndOfList = true;
+                            notifyItemRemoved(items.size());
+                        }
+                    });
 
             notifyItemChanged(items.size());
         }
@@ -321,29 +355,12 @@ public class ItemListFragment extends Fragment {
                     ((PlayerViewHolder)holder).apply(ctx, disposables, (User)toApply, false);
                     break;
                 case RUNS:
-                    ((WatchRunViewHolder)holder).apply(ctx, disposables, ((LeaderboardRunEntry)toApply).run.game, (LeaderboardRunEntry)toApply);
+                    ((WatchRunViewHolder)holder).apply(ctx, disposables, ((LeaderboardRunEntry) toApply).getRun().getGame(), (LeaderboardRunEntry)toApply);
                     break;
             }
         }
 
         public ActivityOptions makeSceneTransition(Activity activity, View v) {
-
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                View transitionView;
-                switch (this) {
-                    case GAMES:
-                        transitionView = v.findViewById(R.id.imgGameCover);
-                        transitionView.setTransitionName(activity.getString(R.string.transition_feature_img));
-                        return ActivityOptions.makeSceneTransitionAnimation(activity, transitionView, activity.getString(R.string.transition_feature_img));
-                    case PLAYERS:
-                        transitionView = v.findViewById(R.id.imgPlayerIcon);
-                        transitionView.setTransitionName(activity.getString(R.string.transition_feature_img));
-                        return ActivityOptions.makeSceneTransitionAnimation(activity, transitionView, activity.getString(R.string.transition_feature_img));
-                    case RUNS:
-                        return ActivityOptions.makeSceneTransitionAnimation(activity, v, activity.getString(R.string.transition_feature_img));
-                }
-            }
-
             return null;
         }
 
@@ -358,8 +375,8 @@ public class ItemListFragment extends Fragment {
         @Override
         public SpeedrunMiddlewareAPI.APIResponse<Object> apply(SpeedrunMiddlewareAPI.APIResponse<T> res) throws Exception {
             SpeedrunMiddlewareAPI.APIResponse<Object> obj = new SpeedrunMiddlewareAPI.APIResponse<>();
-            obj.data.addAll(res.data);
-            obj.error = res.error;
+            obj.getData().addAll(res.getData());
+            obj.setError(res.getError());
             return obj;
         }
     }

@@ -45,11 +45,11 @@ public class LeaderboardPagerAdapter extends FragmentPagerAdapter implements Vie
         perGameCategories = new ArrayList<>();
         perLevelCategories = new ArrayList<>();
 
-        if(game.categories != null) {
-            for(Category c : game.categories) {
-                if(c.type.equals("per-game"))
+        if(game.getCategories() != null) {
+            for(Category c : game.getCategories()) {
+                if(c.getType().equals("per-game"))
                     perGameCategories.add(c);
-                else if(c.type.equals("per-level"))
+                else if(c.getType().equals("per-level"))
                     perLevelCategories.add(c);
 
                 // TODO: Log or something if per-game or per-level are not the str
@@ -57,7 +57,7 @@ public class LeaderboardPagerAdapter extends FragmentPagerAdapter implements Vie
         }
 
         if(!perLevelCategories.isEmpty()) {
-            this.levels = game.levels;
+            this.levels = game.getLevels();
         }
         else {
             this.levels = new ArrayList<>(0);
@@ -137,11 +137,11 @@ public class LeaderboardPagerAdapter extends FragmentPagerAdapter implements Vie
     @Override
     public CharSequence getPageTitle(int position) {
         if(position < perGameCategories.size())
-            return perGameCategories.get(position).name;
+            return perGameCategories.get(position).getName();
         else {
             int mPos = position - perGameCategories.size();
 
-            return perLevelCategories.get(mPos / levels.size()).name + '(' + levels.get(mPos % levels.size()).name + ')';
+            return perLevelCategories.get(mPos / levels.size()).getName() + '(' + levels.get(mPos % levels.size()).getName() + ')';
         }
     }
 

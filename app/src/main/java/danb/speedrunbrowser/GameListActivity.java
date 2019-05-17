@@ -296,10 +296,10 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
         Object item = parent.getAdapter().getItem(position);
         System.out.println(item);
         if(item instanceof User) {
-            showPlayer(((User)item).id, null, null);
+            showPlayer(((User) item).getId(), null, null);
         }
         else if(item instanceof Game) {
-            showGame(((Game)item).id, null, null);
+            showGame(((Game) item).getId(), null, null);
         }
     }
 
@@ -442,9 +442,9 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
                         @Override
                         public Observable<SpeedrunMiddlewareAPI.APIResponse<Object>> list(int offset) {
                             if(mSelectedGenre != null)
-                                return SpeedrunMiddlewareAPI.make().listGamesByGenre(mSelectedGenre.id, offset).map(new ItemListFragment.GenericMapper<Game>());
+                                return SpeedrunMiddlewareAPI.INSTANCE.make().listGamesByGenre(mSelectedGenre.getId(), offset).map(new ItemListFragment.GenericMapper<Game>());
                             else
-                                return SpeedrunMiddlewareAPI.make().listGames(offset).map(new ItemListFragment.GenericMapper<Game>());
+                                return SpeedrunMiddlewareAPI.INSTANCE.make().listGames(offset).map(new ItemListFragment.GenericMapper<Game>());
                         }
                     });
                     break;
@@ -453,9 +453,9 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
                         @Override
                         public Observable<SpeedrunMiddlewareAPI.APIResponse<Object>> list(int offset) {
                             if(mSelectedGenre != null)
-                                return SpeedrunMiddlewareAPI.make().listLatestRunsByGenre(mSelectedGenre.id, offset).map(new ItemListFragment.GenericMapper<LeaderboardRunEntry>());
+                                return SpeedrunMiddlewareAPI.INSTANCE.make().listLatestRunsByGenre(mSelectedGenre.getId(), offset).map(new ItemListFragment.GenericMapper<LeaderboardRunEntry>());
                             else
-                                return SpeedrunMiddlewareAPI.make().listLatestRuns(offset).map(new ItemListFragment.GenericMapper<LeaderboardRunEntry>());
+                                return SpeedrunMiddlewareAPI.INSTANCE.make().listLatestRuns(offset).map(new ItemListFragment.GenericMapper<LeaderboardRunEntry>());
                         }
                     });
                     break;
@@ -481,7 +481,7 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
                                         builder.append(whe.runId);
                                     }
 
-                                    return SpeedrunMiddlewareAPI.make().listRuns(builder.toString()).map(new ItemListFragment.GenericMapper<LeaderboardRunEntry>());
+                                    return SpeedrunMiddlewareAPI.INSTANCE.make().listRuns(builder.toString()).map(new ItemListFragment.GenericMapper<LeaderboardRunEntry>());
                                 }
                             });
                         }
@@ -525,7 +525,7 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
                                         builder.append(id);
                                     }
 
-                                    return SpeedrunMiddlewareAPI.make().listGames(builder.toString()).map(new ItemListFragment.GenericMapper<Game>());
+                                    return SpeedrunMiddlewareAPI.INSTANCE.make().listGames(builder.toString()).map(new ItemListFragment.GenericMapper<Game>());
                                 }
                             });
                         }
@@ -552,7 +552,7 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
                                         builder.append(sub.resourceId);
                                     }
 
-                                    return SpeedrunMiddlewareAPI.make().listPlayers(builder.toString()).map(new ItemListFragment.GenericMapper<User>());
+                                    return SpeedrunMiddlewareAPI.INSTANCE.make().listPlayers(builder.toString()).map(new ItemListFragment.GenericMapper<User>());
                                 }
                             });
                         }

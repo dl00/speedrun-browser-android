@@ -103,7 +103,7 @@ public class CategoryTabStrip extends LinearLayout implements ViewPager.OnPageCh
         for(final Category category : mPagerAdapter.getSortedCategories()) {
             TextView tv = new TextView(getContext());
 
-            tv.setText(category.name);
+            tv.setText(category.getName());
             styleTab(tv);
 
             tv.setOnClickListener(new View.OnClickListener() {
@@ -111,18 +111,18 @@ public class CategoryTabStrip extends LinearLayout implements ViewPager.OnPageCh
                 public void onClick(View view) {
                     Level l = mPagerAdapter.getLevelOfIndex(mPager.getCurrentItem());
 
-                    selectLeaderboard(category, l == null && mGame.levels != null && !mGame.levels.isEmpty() ? mGame.levels.get(0) : l);
+                    selectLeaderboard(category, l == null && mGame.getLevels() != null && !mGame.getLevels().isEmpty() ? mGame.getLevels().get(0) : l);
                 }
             });
 
             mLayoutCategory.addView(tv);
         }
 
-        if(mGame.levels != null) {
-            for(final Level level : mGame.levels) {
+        if(mGame.getLevels() != null) {
+            for(final Level level : mGame.getLevels()) {
                 TextView tv = new TextView(getContext());
 
-                tv.setText(level.name);
+                tv.setText(level.getName());
                 styleTab(tv);
 
                 tv.setOnClickListener(new View.OnClickListener() {
@@ -187,8 +187,8 @@ public class CategoryTabStrip extends LinearLayout implements ViewPager.OnPageCh
             setScroll(position, -1, positionOffset);
         }
         else {
-            setScroll(mPagerAdapter.getPerGameCategorySize() + (position - mPagerAdapter.getPerGameCategorySize()) / mGame.levels.size(),
-                    (position - mPagerAdapter.getPerGameCategorySize()) % mGame.levels.size(), positionOffset);
+            setScroll(mPagerAdapter.getPerGameCategorySize() + (position - mPagerAdapter.getPerGameCategorySize()) / mGame.getLevels().size(),
+                    (position - mPagerAdapter.getPerGameCategorySize()) % mGame.getLevels().size(), positionOffset);
         }
     }
 
@@ -203,8 +203,8 @@ public class CategoryTabStrip extends LinearLayout implements ViewPager.OnPageCh
         else {
             mLayoutCategory.getChildAt(mHighlightCategory).setBackground(new ColorDrawable(getResources().getColor(android.R.color.transparent)));
             mLayoutLevel.getChildAt(mHighlightLevel).setBackground(new ColorDrawable(getResources().getColor(android.R.color.transparent)));
-            mHighlightCategory = mPagerAdapter.getPerGameCategorySize() + (position - mPagerAdapter.getPerGameCategorySize()) / mGame.levels.size();
-            mHighlightLevel = (position - mPagerAdapter.getPerGameCategorySize()) % mGame.levels.size();
+            mHighlightCategory = mPagerAdapter.getPerGameCategorySize() + (position - mPagerAdapter.getPerGameCategorySize()) / mGame.getLevels().size();
+            mHighlightLevel = (position - mPagerAdapter.getPerGameCategorySize()) % mGame.getLevels().size();
             mLayoutCategory.getChildAt(mHighlightCategory).setBackground(new ColorDrawable(getResources().getColor(R.color.colorAccent)));
             mLayoutLevel.getChildAt(mHighlightLevel).setBackground(new ColorDrawable(getResources().getColor(R.color.colorAccent)));
             showLevelsStrip();

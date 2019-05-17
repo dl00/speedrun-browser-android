@@ -73,12 +73,12 @@ public class GameSubscribeDialog extends AlertDialog implements CompoundButton.O
     private void setViewData() {
         mCategoryCheckboxDisplay.removeAllViews();
 
-        for(Category category : mGame.categories) {
-            if(category.type.equals("per-level")) {
-                for(Level level : mGame.levels) {
-                    String id = category.id + "_" + level.id;
+        for(Category category : mGame.getCategories()) {
+            if(category.getType().equals("per-level")) {
+                for(Level level : mGame.getLevels()) {
+                    String id = category.getId() + "_" + level.getId();
                     CheckBox cb = makeStyledCheckbox();
-                    cb.setText(getContext().getResources().getString(R.string.render_level_category, category.name, level.name));
+                    cb.setText(getContext().getResources().getString(R.string.render_level_category, category.getName(), level.getName()));
                     cb.setChecked(mSubscribed.contains(id));
                     cb.setTag(id);
 
@@ -87,9 +87,9 @@ public class GameSubscribeDialog extends AlertDialog implements CompoundButton.O
             }
             else {
                 CheckBox cb = makeStyledCheckbox();
-                cb.setText(category.name);
-                cb.setChecked(mSubscribed.contains(category.id));
-                cb.setTag(category.id);
+                cb.setText(category.getName());
+                cb.setChecked(mSubscribed.contains(category.getId()));
+                cb.setTag(category.getId());
 
                 mCategoryCheckboxDisplay.addView(cb);
             }
@@ -122,14 +122,14 @@ public class GameSubscribeDialog extends AlertDialog implements CompoundButton.O
     public void onClick(View v) {
 
         if(v == mSelectAllButton) {
-            for(Category category : mGame.categories) {
-                if(category.type.equals("per-level")) {
-                    for(Level level : mGame.levels) {
-                        mSubscribed.add(category.id + "_" + level.id);
+            for(Category category : mGame.getCategories()) {
+                if(category.getType().equals("per-level")) {
+                    for(Level level : mGame.getLevels()) {
+                        mSubscribed.add(category.getId() + "_" + level.getId());
                     }
                 }
                 else {
-                    mSubscribed.add(category.id);
+                    mSubscribed.add(category.getId());
                 }
             }
 

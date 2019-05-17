@@ -35,7 +35,7 @@ public class PlayerViewHolder extends RecyclerView.ViewHolder {
 
         mSubscribedIndicator.setVisibility(subscribed ? View.VISIBLE : View.INVISIBLE);
 
-        if(user.names != null && user.names.get("international") != null) {
+        if(user.getNames() != null && user.getNames().get("international") != null) {
             mPlayerImage.setVisibility(View.VISIBLE);
             try {
                 disposables.add(new ImageLoader(context).loadImage(user.getIconUrl())

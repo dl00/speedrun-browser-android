@@ -66,11 +66,11 @@ public class MultiVideoView extends FrameLayout {
             throw new UnsupportedOperationException("multi video view cannot load more than one video");
         }
 
-        Log.d(TAG, "Trying to find YT/Twitch video: " + ml.uri);
+        Log.d(TAG, "Trying to find YT/Twitch video: " + ml.getUri());
 
-        if (ml.isYoutube()) {
+        if (ml.getYoutubeVideoID() != null) {
             setVideoFrameYT(ml);
-        } else if (ml.isTwitch()) {
+        } else if (ml.getTwitchVideoID() != null) {
             setVideoFrameTwitch(ml);
         } else {
             return false;
@@ -225,7 +225,7 @@ public class MultiVideoView extends FrameLayout {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(m.uri.toString()));
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(m.getUri().toString()));
                 getContext().startActivity(intent);
             }
         });

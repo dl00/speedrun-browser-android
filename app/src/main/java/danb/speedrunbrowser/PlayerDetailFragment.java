@@ -95,7 +95,7 @@ public class PlayerDetailFragment extends Fragment implements View.OnClickListen
         Bundle args = getArguments();
 
         if(args != null && (mPlayer = (User)args.getSerializable(ARG_PLAYER)) != null) {
-            loadSubscription(mPlayer.id);
+            loadSubscription(mPlayer.getId());
             setViewData();
         }
         else if(args != null && args.getString(ARG_PLAYER_ID) != null) {
@@ -176,19 +176,19 @@ public class PlayerDetailFragment extends Fragment implements View.OnClickListen
         Log.d(TAG, "Download playerId: " + playerId);
 
         /// TODO: ideally this would be zipped/run in parallel
-        mDisposables.add(SpeedrunMiddlewareAPI.make().listPlayers(playerId)
+        mDisposables.add(SpeedrunMiddlewareAPI.INSTANCE.make().listPlayers(playerId)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(new Consumer<SpeedrunMiddlewareAPI.APIResponse<User>>() {
                 @Override
                 public void accept(SpeedrunMiddlewareAPI.APIResponse<User> gameAPIResponse) throws Exception {
 
-                    if (gameAPIResponse.data == null || gameAPIResponse.data.isEmpty()) {
+                    if (gameAPIResponse.getData() == null || gameAPIResponse.getData().isEmpty()) {
                         // game was not able to be found for some reason?
                         Util.showErrorToast(getContext(), getString(R.string.error_missing_game, playerId));
                         return;
                     }
 
-                    mPlayer = gameAPIResponse.data.get(0);
+                    mPlayer = gameAPIResponse.getData().get(0);
 
                     setViewData();
 
@@ -231,7 +231,7 @@ public class PlayerDetailFragment extends Fragment implements View.OnClickListen
             return true;
         }
         else if(mPlayer != null) {
-            mSubscription = new AppDatabase.Subscription("player", mPlayer.id, mPlayer.getName().toLowerCase());
+            mSubscription = new AppDatabase.Subscription("player", mPlayer.getId(), mPlayer.getName().toLowerCase());
 
             mDisposables.add(sc.subscribeTo(mSubscription)
                     .subscribe(new Action() {
@@ -275,16 +275,16 @@ public class PlayerDetailFragment extends Fragment implements View.OnClickListen
 
             mPlayer.applyTextView(mPlayerName);
 
-            mIconTwitch.setVisibility(mPlayer.twitch != null ? View.VISIBLE : View.GONE);
-            mIconTwitter.setVisibility(mPlayer.twitter != null ? View.VISIBLE : View.GONE);
-            mIconYoutube.setVisibility(mPlayer.youtube != null ? View.VISIBLE : View.GONE);
-            mIconZSR.setVisibility(mPlayer.speedrunslive != null ? View.VISIBLE : View.GONE);
+            mIconTwitch.setVisibility(mPlayer.getTwitch() != null ? View.VISIBLE : View.GONE);
+            mIconTwitter.setVisibility(mPlayer.getTwitter() != null ? View.VISIBLE : View.GONE);
+            mIconYoutube.setVisibility(mPlayer.getYoutube() != null ? View.VISIBLE : View.GONE);
+            mIconZSR.setVisibility(mPlayer.getSpeedrunslive() != null ? View.VISIBLE : View.GONE);
 
 
             if(!mPlayer.isGuest()) {
                 try {
                     mBestsFrame.setVisibility(View.VISIBLE);
-                    mDisposables.add(il.loadImage(new URL(String.format(Constants.AVATAR_IMG_LOCATION, mPlayer.names.get("international"))))
+                    mDisposables.add(il.loadImage(new URL(String.format(Constants.AVATAR_IMG_LOCATION, mPlayer.getNames().get("international"))))
                             .subscribe(new ImageViewPlacerConsumer(mPlayerIcon)));
                 } catch (MalformedURLException e) {
                     Log.w(TAG, "Chould not show player logo:", e);
@@ -308,10 +308,10 @@ public class PlayerDetailFragment extends Fragment implements View.OnClickListen
 
     @SuppressLint("SetTextI18n")
     private void populateBestsFrame(ImageLoader il) {
-        if(mPlayer.bests == null)
+        if(mPlayer.getBests() == null)
             return;
 
-        List<User.UserGameBests> playerGameBests = new ArrayList<>(mPlayer.bests.values());
+        List<User.UserGameBests> playerGameBests = new ArrayList<>(mPlayer.getBests().values());
 
         Collections.sort(playerGameBests, new Comparator<User.UserGameBests>() {
             @Override
@@ -320,8 +320,8 @@ public class PlayerDetailFragment extends Fragment implements View.OnClickListen
                 LeaderboardRunEntry r1 = o1.getNewestRun();
                 LeaderboardRunEntry r2 = o2.getNewestRun();
 
-                if(r1 != null && r1.run.date != null && r2 != null && r2.run.date != null)
-                    return -r1.run.date.compareTo(r2.run.date);
+                if(r1 != null && r1.getRun().getDate() != null && r2 != null && r2.getRun().getDate() != null)
+                    return -r1.getRun().getDate().compareTo(r2.getRun().getDate());
                 else
                     return 0;
             }
@@ -330,26 +330,26 @@ public class PlayerDetailFragment extends Fragment implements View.OnClickListen
         for(User.UserGameBests gameBests : playerGameBests) {
             View gameLayout = getLayoutInflater().inflate(R.layout.content_game_personal_bests, null);
 
-            ((TextView)gameLayout.findViewById(R.id.txtGameName)).setText(gameBests.names.get("international"));
+            ((TextView)gameLayout.findViewById(R.id.txtGameName)).setText(gameBests.getNames().get("international"));
 
-            if(gameBests.assets.coverLarge != null) {
+            if(gameBests.getAssets().getCoverLarge() != null) {
                 ImageView imgView = gameLayout.findViewById(R.id.imgGameCover);
-                mDisposables.add(il.loadImage(gameBests.assets.coverLarge.uri)
+                mDisposables.add(il.loadImage(gameBests.getAssets().getCoverLarge().getUri())
                     .subscribe(new ImageViewPlacerConsumer(imgView)));
             }
 
             List<PersonalBestRunRow> runsToAdd = new ArrayList<>();
 
-            for(User.UserCategoryBest categoryBest : gameBests.categories.values()) {
+            for(User.UserCategoryBest categoryBest : gameBests.getCategories().values()) {
 
-                if(categoryBest.levels != null && !categoryBest.levels.isEmpty()) {
-                    for(User.UserLevelBest levelBest : categoryBest.levels.values()) {
-                        PersonalBestRunRow rr = new PersonalBestRunRow(categoryBest.name, levelBest.name, levelBest.run);
+                if(categoryBest.getLevels() != null && !categoryBest.getLevels().isEmpty()) {
+                    for(User.UserLevelBest levelBest : categoryBest.getLevels().values()) {
+                        PersonalBestRunRow rr = new PersonalBestRunRow(categoryBest.getName(), levelBest.getName(), levelBest.getRun());
                         runsToAdd.add(rr);
                     }
                 }
                 else {
-                    PersonalBestRunRow rr = new PersonalBestRunRow(categoryBest.name, null, categoryBest.run);
+                    PersonalBestRunRow rr = new PersonalBestRunRow(categoryBest.getName(), null, categoryBest.getRun());
                     runsToAdd.add(rr);
                 }
             }
@@ -358,9 +358,9 @@ public class PlayerDetailFragment extends Fragment implements View.OnClickListen
             Collections.sort(runsToAdd, new Comparator<PersonalBestRunRow>() {
                 @Override
                 public int compare(PersonalBestRunRow o1, PersonalBestRunRow o2) {
-                    if(o1.re.run.date == null || o2.re.run.date == null)
+                    if(o1.re.getRun().getDate() == null || o2.re.getRun().getDate() == null)
                         return 0;
-                    return -o1.re.run.date.compareTo(o2.re.run.date);
+                    return -o1.re.getRun().getDate().compareTo(o2.re.getRun().getDate());
                 }
             });
 
@@ -372,20 +372,20 @@ public class PlayerDetailFragment extends Fragment implements View.OnClickListen
 
                 ImageView placeImg = rowPersonalBest.findViewById(R.id.imgPlace);
 
-                if(row.re.place == 1 && gameBests.assets.trophy1st != null) {
-                    mDisposables.add(il.loadImage(gameBests.assets.trophy1st.uri)
+                if(row.re.getPlace() == 1 && gameBests.getAssets().getTrophy1st() != null) {
+                    mDisposables.add(il.loadImage(gameBests.getAssets().getTrophy1st().getUri())
                             .subscribe(new ImageViewPlacerConsumer(placeImg)));
                 }
-                if(row.re.place == 2 && gameBests.assets.trophy2nd != null) {
-                    mDisposables.add(il.loadImage(gameBests.assets.trophy2nd.uri)
+                if(row.re.getPlace() == 2 && gameBests.getAssets().getTrophy2nd() != null) {
+                    mDisposables.add(il.loadImage(gameBests.getAssets().getTrophy2nd().getUri())
                             .subscribe(new ImageViewPlacerConsumer(placeImg)));
                 }
-                if(row.re.place == 3 && gameBests.assets.trophy3rd != null) {
-                    mDisposables.add(il.loadImage(gameBests.assets.trophy3rd.uri)
+                if(row.re.getPlace() == 3 && gameBests.getAssets().getTrophy3rd() != null) {
+                    mDisposables.add(il.loadImage(gameBests.getAssets().getTrophy3rd().getUri())
                             .subscribe(new ImageViewPlacerConsumer(placeImg)));
                 }
-                if(row.re.place == 4 && gameBests.assets.trophy4th != null) {
-                    mDisposables.add(il.loadImage(gameBests.assets.trophy4th.uri)
+                if(row.re.getPlace() == 4 && gameBests.getAssets().getTrophy4th() != null) {
+                    mDisposables.add(il.loadImage(gameBests.getAssets().getTrophy4th().getUri())
                             .subscribe(new ImageViewPlacerConsumer(placeImg)));
                 }
                 else
@@ -393,13 +393,13 @@ public class PlayerDetailFragment extends Fragment implements View.OnClickListen
 
                 ((TextView)rowPersonalBest.findViewById(R.id.txtPlace)).setText(row.re.getPlaceName());
 
-                ((TextView)rowPersonalBest.findViewById(R.id.txtRunTime)).setText(row.re.run.times.formatTime());
-                ((TextView)rowPersonalBest.findViewById(R.id.txtRunDate)).setText(row.re.run.date);
+                ((TextView)rowPersonalBest.findViewById(R.id.txtRunTime)).setText(row.re.getRun().getTimes().getTime());
+                ((TextView)rowPersonalBest.findViewById(R.id.txtRunDate)).setText(row.re.getRun().getDate());
 
                 rowPersonalBest.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        viewRun(row.re.run.id);
+                        viewRun(row.re.getRun().getId());
                     }
                 });
 
@@ -416,13 +416,13 @@ public class PlayerDetailFragment extends Fragment implements View.OnClickListen
         URL selectedLink = null;
 
         if(v == mIconTwitch)
-            selectedLink = mPlayer.twitch.uri;
+            selectedLink = mPlayer.getTwitch().getUri();
         if(v == mIconTwitter)
-            selectedLink = mPlayer.twitter.uri;
+            selectedLink = mPlayer.getTwitter().getUri();
         if(v == mIconYoutube)
-            selectedLink = mPlayer.youtube.uri;
+            selectedLink = mPlayer.getYoutube().getUri();
         if(v == mIconZSR)
-            selectedLink = mPlayer.speedrunslive.uri;
+            selectedLink = mPlayer.getSpeedrunslive().getUri();
 
         if(selectedLink != null) {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(selectedLink.toString()));

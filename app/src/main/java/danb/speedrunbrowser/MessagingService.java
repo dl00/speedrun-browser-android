@@ -52,7 +52,7 @@ public class MessagingService extends FirebaseMessagingService {
 
     private void makePlayerNotification(PushNotificationData data) {
 
-        List<User> players = data.new_run.run.players;
+        List<User> players = data.getNew_run().getRun().getPlayers();
 
         if(players.isEmpty()) {
             Log.w(TAG, "Received notification of run with no players! Cancelling notification.");
@@ -64,7 +64,7 @@ public class MessagingService extends FirebaseMessagingService {
         Bitmap featureImg = null;
         try {
 
-            URL playerImgUrl = new URL(String.format(Constants.AVATAR_IMG_LOCATION, players.get(0).names.get("international")));
+            URL playerImgUrl = new URL(String.format(Constants.AVATAR_IMG_LOCATION, players.get(0).getNames().get("international")));
 
             Log.d(TAG, "Download player img from:" + playerImgUrl);
 
@@ -83,25 +83,25 @@ public class MessagingService extends FirebaseMessagingService {
             Log.e(TAG, "Could not download player feature img:", e);
         }
 
-        String title = getString(R.string.notify_title_player_record, User.printPlayerNames(players), data.game.getName());
+        String title = getString(R.string.notify_title_player_record, User.Companion.printPlayerNames(players), data.getGame().getResolvedName());
 
-        String categoryAndLevelName = data.category.name;
-        if(data.level != null)
-            categoryAndLevelName += " - " + data.level.name;
+        String categoryAndLevelName = data.getCategory().getName();
+        if(data.getLevel() != null)
+            categoryAndLevelName += " - " + data.getLevel().getName();
 
-        String msg = getString(R.string.notify_msg_player_record, data.new_run.getPlaceName() + " place",
-                data.game.getName(), categoryAndLevelName,
-                data.old_run != null ? data.old_run.run.times.formatTime() : "", data.new_run.run.times.formatTime());
+        String msg = getString(R.string.notify_msg_player_record, data.getNew_run().getPlaceName() + " place",
+                data.getGame().getResolvedName(), categoryAndLevelName,
+                data.getOld_run() != null ? data.getOld_run().getRun().getTimes().getTime() : "", data.getNew_run().getRun().getTimes().getTime());
 
         Intent intent = new Intent(this, ItemDetailActivity.class);
         intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.PLAYERS);
-        intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, players.get(0).id);
+        intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, players.get(0).getId());
 
-        Util.postNotification(this, intent, players.get(0).id, title, msg, featureImg);
+        Util.postNotification(this, intent, players.get(0).getId(), title, msg, featureImg);
     }
 
     private void makeGameNotification(PushNotificationData data) {
-        List<User> players = data.new_run.run.players;
+        List<User> players = data.getNew_run().getRun().getPlayers();
 
         if(players.isEmpty()) {
             Log.w(TAG, "Received notification of run with no players! Cancelling notification.");
@@ -113,7 +113,7 @@ public class MessagingService extends FirebaseMessagingService {
         Bitmap featureImg = null;
         try {
 
-            URL gameCoverUrl = data.game.assets.coverLarge.uri;
+            URL gameCoverUrl = data.getGame().getAssets().getCoverLarge().getUri();
 
             Log.d(TAG, "Download player img from:" + gameCoverUrl);
 
@@ -132,22 +132,22 @@ public class MessagingService extends FirebaseMessagingService {
             Log.e(TAG, "Could not download player feature img:", e);
         }
 
-        String title = getString(R.string.notify_title_game_record, data.game.getName(), User.printPlayerNames(players));
+        String title = getString(R.string.notify_title_game_record, data.getGame().getResolvedName(), User.Companion.printPlayerNames(players));
 
-        String categoryAndLevelName = data.category.name;
+        String categoryAndLevelName = data.getCategory().getName();
 
-        if(data.level != null)
-            categoryAndLevelName += " - " + data.level.name;
+        if(data.getLevel() != null)
+            categoryAndLevelName += " - " + data.getLevel().getName();
 
-        String msg = getString(R.string.notify_msg_game_record, data.new_run.getPlaceName() + " place",
-                data.game.getName(), categoryAndLevelName,
-                data.old_run != null ? data.old_run.run.times.formatTime() : "", data.new_run.run.times.formatTime());
+        String msg = getString(R.string.notify_msg_game_record, data.getNew_run().getPlaceName() + " place",
+                data.getGame().getResolvedName(), categoryAndLevelName,
+                data.getOld_run() != null ? data.getOld_run().getRun().getTimes().getTime() : "", data.getNew_run().getRun().getTimes().getTime());
 
         Intent intent = new Intent(this, ItemDetailActivity.class);
         intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.GAMES);
-        intent.putExtra(GameDetailFragment.ARG_GAME_ID, data.game.id);
+        intent.putExtra(GameDetailFragment.ARG_GAME_ID, data.getGame().getId());
 
-        Util.postNotification(this, intent, data.game.id, title, msg, featureImg);
+        Util.postNotification(this, intent, data.getGame().getId(), title, msg, featureImg);
     }
 
     private String getBuildVariant() {

@@ -12,6 +12,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
 import android.view.Menu;
@@ -137,10 +138,10 @@ public class Util {
         Analytics.logDeliverNotification(c, subjectId);
     }
 
-    public static void showNewFeaturesDialog(Context ctx) {
+    public static void showNewFeaturesDialog(final Context ctx) {
         SharedPreferences prefs = ctx.getSharedPreferences(Constants.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
 
-        String lastVersion = prefs.getString(Constants.PREF_LAST_APP_VERSION, "1.3");
+        String lastVersion = prefs.getString(Constants.PREF_LAST_APP_VERSION, "1.7");
 
         if(lastVersion.equals(BuildConfig.VERSION_NAME)) {
             return;
@@ -149,7 +150,14 @@ public class Util {
         AlertDialog dialog = new AlertDialog.Builder(ctx, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
                 .setTitle(R.string.dialog_title_release_notes)
                 .setMessage(R.string.dialog_msg_release_notes)
-                .setPositiveButton(R.string.button_got_it, null)
+                .setNeutralButton(R.string.button_got_it, null)
+                .setPositiveButton(R.string.dialog_button_rate_now, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + BuildConfig.APPLICATION_ID));
+                        ctx.startActivity(intent);
+                    }
+                })
                 .create();
 
         dialog.show();

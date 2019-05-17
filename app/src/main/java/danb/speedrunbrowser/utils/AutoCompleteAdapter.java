@@ -60,19 +60,19 @@ public class AutoCompleteAdapter extends BaseAdapter implements Consumer<Speedru
     public void recalculateSearchResults() {
         searchResults = new LinkedList<>();
 
-        searchResults.addAll(rawSearchData.games);
+        searchResults.addAll(rawSearchData.getGames());
 
         if(!searchResults.isEmpty()) {
             ListIterator<SearchResultItem> sr = searchResults.listIterator();
             SearchResultItem cur = sr.next();
-            for(User player : rawSearchData.players) {
+            for(User player : rawSearchData.getPlayers()) {
                 // select the longest matching substring
-                LCSMatcher lcsp = new LCSMatcher(query, player.getName().toLowerCase(), 3);
+                LCSMatcher lcsp = new LCSMatcher(query, player.getResolvedName().toLowerCase(), 3);
 
                 LCSMatcher lcsg;
                 do {
-                    lcsg = new LCSMatcher(query, cur.getName().toLowerCase(), 3);
-                    System.out.println("LCSG (" + cur.getName() + ", " + player.getName() + "): " + lcsg.getMaxMatchLength() + ", " + lcsp.getMaxMatchLength());
+                    lcsg = new LCSMatcher(query, cur.getResolvedName().toLowerCase(), 3);
+                    System.out.println("LCSG (" + cur.getResolvedName() + ", " + player.getResolvedName() + "): " + lcsg.getMaxMatchLength() + ", " + lcsp.getMaxMatchLength());
                 } while(lcsg.getMaxMatchLength() >= lcsp.getMaxMatchLength() && sr.hasNext() && (cur = sr.next()) != null);
 
                 sr.previous();
@@ -81,7 +81,7 @@ public class AutoCompleteAdapter extends BaseAdapter implements Consumer<Speedru
             }
         }
 
-        searchResults.addAll(rawSearchData.players);
+        searchResults.addAll(rawSearchData.getPlayers());
 
         searchResults = new ArrayList<>(searchResults);
 
@@ -114,15 +114,10 @@ public class AutoCompleteAdapter extends BaseAdapter implements Consumer<Speedru
         LinearLayout viewName = convertView.findViewById(R.id.txtItemName);
         TextView viewType = convertView.findViewById(R.id.txtItemType);
 
-        try {
-            URL iconUrl;
-            if((iconUrl = item.getIconUrl()) != null) {
-                disposables.add(new ImageLoader(ctx).loadImage(iconUrl)
-                        .subscribe(new ImageViewPlacerConsumer(viewIcon)));
-            }
-        }
-        catch(MalformedURLException e) {
-            Log.w(TAG, "Malformed icon for search icon: ", e);
+        URL iconUrl;
+        if((iconUrl = item.getIconUrl()) != null) {
+            disposables.add(new ImageLoader(ctx).loadImage(iconUrl)
+                    .subscribe(new ImageViewPlacerConsumer(viewIcon)));
         }
 
         viewName.removeAllViews();
@@ -131,7 +126,7 @@ public class AutoCompleteAdapter extends BaseAdapter implements Consumer<Speedru
         item.applyTextView(tv);
         viewName.addView(tv);
 
-        viewType.setText(item.getTypeName());
+        viewType.setText(item.getType());
 
         return convertView;
     }
@@ -143,7 +138,7 @@ public class AutoCompleteAdapter extends BaseAdapter implements Consumer<Speedru
                 .filter(new Predicate<String>() {
                     @Override
                     public boolean test(String s) throws Exception {
-                        return s != null && (s.isEmpty() || s.length() >= SpeedrunMiddlewareAPI.MIN_AUTOCOMPLETE_LENGTH);
+                        return s != null && (s.isEmpty() || s.length() >= SpeedrunMiddlewareAPI.INSTANCE.getMIN_AUTOCOMPLETE_LENGTH());
                     }
                 });
 
@@ -159,10 +154,10 @@ public class AutoCompleteAdapter extends BaseAdapter implements Consumer<Speedru
             .switchMap(new Function<String, ObservableSource<SpeedrunMiddlewareAPI.APISearchResponse>>() {
                 @Override
                 public ObservableSource<SpeedrunMiddlewareAPI.APISearchResponse> apply(String s) throws Exception {
-                    if(s.length() < SpeedrunMiddlewareAPI.MIN_AUTOCOMPLETE_LENGTH)
+                    if(s.length() < SpeedrunMiddlewareAPI.INSTANCE.getMIN_AUTOCOMPLETE_LENGTH())
                         return Observable.just(new SpeedrunMiddlewareAPI.APISearchResponse());
                     else
-                        return SpeedrunMiddlewareAPI.make().autocomplete(s);
+                        return SpeedrunMiddlewareAPI.INSTANCE.make().autocomplete(s);
                 }
             })
             .observeOn(AndroidSchedulers.mainThread())
@@ -173,7 +168,7 @@ public class AutoCompleteAdapter extends BaseAdapter implements Consumer<Speedru
     public void accept(SpeedrunMiddlewareAPI.APISearchResponse apiSearchResponse) {
         // TODO: Handle error
 
-        rawSearchData = apiSearchResponse.search;
+        rawSearchData = apiSearchResponse.getSearch();
         recalculateSearchResults();
     }
 }

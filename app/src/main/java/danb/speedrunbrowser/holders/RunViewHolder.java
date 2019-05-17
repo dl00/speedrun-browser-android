@@ -42,7 +42,7 @@ public class RunViewHolder extends RecyclerView.ViewHolder {
 
         mPlayerNames.removeAllViews();
         boolean first = true;
-        for(User player : entry.run.players) {
+        for(User player : entry.getRun().getPlayers()) {
 
             TextView tv = new TextView(context);
             tv.setTextSize(16);
@@ -59,27 +59,27 @@ public class RunViewHolder extends RecyclerView.ViewHolder {
             mPlayerNames.addView(tv);
         }
 
-        mRunTime.setText(entry.run.times.formatTime());
-        mRunDate.setText(entry.run.date);
+        mRunTime.setText(entry.getRun().getTimes().getTime());
+        mRunDate.setText(entry.getRun().getDate());
         mRank.setText(entry.getPlaceName());
 
         ImageLoader il = new ImageLoader(context);
 
-        if(game.assets != null) {
-            if(entry.place == 1 && game.assets.trophy1st != null) {
-                disposables.add(il.loadImage(game.assets.trophy1st.uri)
+        if(game.getAssets() != null) {
+            if(entry.getPlace() == 1 && game.getAssets().getTrophy1st() != null) {
+                disposables.add(il.loadImage(game.getAssets().getTrophy1st().getUri())
                     .subscribe(new ImageViewPlacerConsumer(mRankImg)));
             }
-            if(entry.place == 2 && game.assets.trophy2nd != null) {
-                disposables.add(il.loadImage(game.assets.trophy2nd.uri)
+            if(entry.getPlace() == 2 && game.getAssets().getTrophy2nd() != null) {
+                disposables.add(il.loadImage(game.getAssets().getTrophy2nd().getUri())
                         .subscribe(new ImageViewPlacerConsumer(mRankImg)));
             }
-            if(entry.place == 3 && game.assets.trophy3rd != null) {
-                disposables.add(il.loadImage(game.assets.trophy3rd.uri)
+            if(entry.getPlace() == 3 && game.getAssets().getTrophy3rd() != null) {
+                disposables.add(il.loadImage(game.getAssets().getTrophy3rd().getUri())
                         .subscribe(new ImageViewPlacerConsumer(mRankImg)));
             }
-            if(entry.place == 4 && game.assets.trophy4th != null) {
-                disposables.add(il.loadImage(game.assets.trophy4th.uri)
+            if(entry.getPlace() == 4 && game.getAssets().getTrophy4th() != null) {
+                disposables.add(il.loadImage(game.getAssets().getTrophy4th().getUri())
                         .subscribe(new ImageViewPlacerConsumer(mRankImg)));
             }
             else

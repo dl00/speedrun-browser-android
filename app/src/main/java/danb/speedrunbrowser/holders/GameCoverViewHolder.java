@@ -29,12 +29,12 @@ public class GameCoverViewHolder extends RecyclerView.ViewHolder {
     }
 
     public void apply(Context ctx, CompositeDisposable disposables, Game game) {
-        mName.setText(game.names.get("international"));
-        mDate.setText(game.releaseDate);
+        mName.setText(game.getNames().get("international"));
+        mDate.setText(game.getReleaseDate());
         mRunnersCount.setText("");
 
-        if(game.assets.coverLarge != null)
-            disposables.add(new ImageLoader(ctx).loadImage(game.assets.coverLarge.uri)
+        if(game.getAssets().getCoverLarge() != null)
+            disposables.add(new ImageLoader(ctx).loadImage(game.getAssets().getCoverLarge().getUri())
                 .subscribe(new ImageViewPlacerConsumer(mCover)));
         else {}
         // TODO: In the extremely unlikely case there is no cover, might have to replace with dummy image

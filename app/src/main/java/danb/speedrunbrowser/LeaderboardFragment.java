@@ -85,7 +85,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
      * fragment (e.g. upon screen orientation changes).
      */
     public LeaderboardFragment() {
-        mGame = new Game();
+        mGame = null;
     }
 
     @Override
@@ -101,7 +101,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         mLevel = (Level)args.getSerializable(ARG_LEVEL);
 
         if(mVariableSelections != null)
-            mVariableSelections.setDefaults(mCategory.variables);
+            mVariableSelections.setDefaults(mCategory.getVariables());
 
         assert mGame != null;
         assert mCategory != null;
@@ -120,10 +120,10 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
 
     private String calculateLeaderboardId() {
         // the leaderboard id is a mishmash of category and level concatenated, if available/appropriate
-        String leaderboardId = mCategory.id;
+        String leaderboardId = mCategory.getId();
 
         if (mLevel != null) {
-            leaderboardId += "_" + mLevel.id;
+            leaderboardId += "_" + mLevel.getId();
         }
 
         return leaderboardId;
@@ -133,7 +133,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
 
         Log.d(TAG, "Loading leaderboard: " + leaderboardId);
 
-        return SpeedrunMiddlewareAPI.make().listLeaderboards(leaderboardId)
+        return SpeedrunMiddlewareAPI.INSTANCE.make().listLeaderboards(leaderboardId)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this, new ConnectionErrorConsumer(getContext()));
     }
@@ -181,13 +181,13 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         layout.setOrientation(LinearLayout.HORIZONTAL);
         layout.setGravity(Gravity.CENTER_VERTICAL);
 
-        for(final Variable var : mCategory.variables) {
-            if(!var.isSubcategory ||
-                    (var.scope.type.equals("single-level") && (mLevel == null || !var.scope.level.equals(mLevel.id))))
+        for(final Variable var : mCategory.getVariables()) {
+            if(!var.isSubcategory() ||
+                    (var.getScope().getType().equals("single-level") && (mLevel == null || !var.getScope().getLevel().equals(mLevel.getId()))))
                 continue;
 
             ChipGroup cg = new ChipGroup(Objects.requireNonNull(getContext()));
-            cg.setTag(var.id);
+            cg.setTag(var.getId());
 
             cg.setSingleSelection(true);
 
@@ -196,9 +196,9 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
             lp.rightMargin = getResources().getDimensionPixelSize(R.dimen.half_fab_margin);
             cg.setLayoutParams(lp);
 
-            for(final String vv : var.values.keySet()) {
+            for(final String vv : var.getValues().keySet()) {
                 Chip cv = new Chip(getContext(), null, R.style.Widget_MaterialComponents_Chip_Choice);
-                cv.setText(Objects.requireNonNull(var.values.get(vv)).label);
+                cv.setText(Objects.requireNonNull(var.getValues().get(vv)).getLabel());
                 cv.setChipBackgroundColor(getContext().getResources().getColorStateList(R.color.filter));
                 cv.setCheckedIconVisible(false);
                 cv.setTag(vv);
@@ -209,7 +209,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
                 cv.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        mVariableSelections.selectOnly(var.id, vv);
+                        mVariableSelections.selectOnly(var.getId(), vv);
                         notifyFilterChanged();
                     }
                 });
@@ -278,20 +278,20 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
 
         StringBuilder rulesText = new StringBuilder();
 
-        if(mCategory.rules != null)
-            rulesText.append(mCategory.rules.trim());
+        if(mCategory.getRules() != null)
+            rulesText.append(mCategory.getRules().trim());
 
         // add variable rules as necessary
-        for(Variable var : mCategory.variables) {
-            if(!var.isSubcategory)
+        for(Variable var : mCategory.getVariables()) {
+            if(!var.isSubcategory())
                 break;
 
-            Set<String> selections = mVariableSelections.getSelections(var.id);
+            Set<String> selections = mVariableSelections.getSelections(var.getId());
 
             if(selections.isEmpty())
                 continue;
 
-            String moreRules = Objects.requireNonNull(var.values.get(selections.iterator().next())).rules;
+            String moreRules = Objects.requireNonNull(var.getValues().get(selections.iterator().next())).getRules();
 
             if(moreRules != null)
                 rulesText.append("\n\n").append(moreRules);
@@ -312,7 +312,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
 
     @Override
     public void accept(SpeedrunMiddlewareAPI.APIResponse<Leaderboard> leaderboardAPIResponse) throws Exception {
-        List<Leaderboard> leaderboards = leaderboardAPIResponse.data;
+        List<Leaderboard> leaderboards = leaderboardAPIResponse.getData();
 
         if(leaderboards.isEmpty()) {
             // not found
@@ -323,7 +323,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         mLeaderboard = leaderboards.get(0);
         notifyFilterChanged();
 
-        Log.d(TAG, "Downloaded " + mLeaderboard.runs.size() + " runs!");
+        Log.d(TAG, "Downloaded " + mLeaderboard.getRuns().size() + " runs!");
         if(mRunsListAdapter != null) {
             Log.d(TAG, "Runs list adapter not created/available");
             mRunsListAdapter.notifyDataSetChanged();
@@ -375,8 +375,8 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         // find the matching player
         User player = null;
 
-        if(pid.id != null) {
-            player = lb.players.get(pid.id);
+        if(pid.getId() != null) {
+            player = lb.getPlayers().get(pid.getId());
 
             if(player == null) {
                 player = pid;
@@ -393,7 +393,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
         mVariableSelections = selections;
 
         if(mCategory != null && mVariableSelections != null)
-            mVariableSelections.setDefaults(mCategory.variables);
+            mVariableSelections.setDefaults(mCategory.getVariables());
 
         notifyFilterChanged();
     }
@@ -413,10 +413,10 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
                 // set the subcategory indicators
                 //mContentLayout.findViewWithTag(mVariableSelections.getSelection())
 
-                mFilteredLeaderboardRuns = mVariableSelections.filterLeaderboardRuns(mLeaderboard, mCategory.variables);
+                mFilteredLeaderboardRuns = mVariableSelections.filterLeaderboardRuns(mLeaderboard, mCategory.getVariables());
             }
             else
-                mFilteredLeaderboardRuns = mLeaderboard.runs;
+                mFilteredLeaderboardRuns = mLeaderboard.getRuns();
 
             if(mRunsListAdapter != null) {
                 mRunsListAdapter.notifyDataSetChanged();
@@ -441,7 +441,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
                 LeaderboardRunEntry re = (LeaderboardRunEntry) view.getTag();
 
                 Intent intent = new Intent(getContext(), RunDetailActivity.class);
-                intent.putExtra(RunDetailActivity.EXTRA_RUN_ID, re.run.id);
+                intent.putExtra(RunDetailActivity.EXTRA_RUN_ID, re.getRun().getId());
                 startActivity(intent);
             }
         };

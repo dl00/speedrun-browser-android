@@ -191,19 +191,19 @@ public class GameDetailFragment extends Fragment {
 
     public Disposable loadGame(final String gameId) {
         Log.d(TAG, "Downloading game data: " + gameId);
-        return SpeedrunMiddlewareAPI.make().listGames(gameId)
+        return SpeedrunMiddlewareAPI.INSTANCE.make().listGames(gameId)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<SpeedrunMiddlewareAPI.APIResponse<Game>>() {
                     @Override
                     public void accept(SpeedrunMiddlewareAPI.APIResponse<Game> gameAPIResponse) throws Exception {
 
-                        if (gameAPIResponse.data.isEmpty()) {
+                        if (gameAPIResponse.getData().isEmpty()) {
                             // game was not able to be found for some reason?
                             Util.showErrorToast(getContext(), getString(R.string.error_missing_game, gameId));
                             return;
                         }
 
-                        mGame = gameAPIResponse.data.get(0);
+                        mGame = gameAPIResponse.getData().get(0);
                         loadSubscription();
                         setViewData();
 
@@ -214,8 +214,8 @@ public class GameDetailFragment extends Fragment {
     }
 
     private void loadSubscription() {
-        System.out.println("Load subscription " + mGame.id);
-        mDisposables.add(mDB.subscriptionDao().listOfTypeWithIDPrefix("game", mGame.id)
+        System.out.println("Load subscription " + mGame.getId());
+        mDisposables.add(mDB.subscriptionDao().listOfTypeWithIDPrefix("game", mGame.getId())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<List<AppDatabase.Subscription>>() {
@@ -286,7 +286,7 @@ public class GameDetailFragment extends Fragment {
     }
 
     private void setupTabStrip() {
-        if(mGame.categories.get(0).variables.isEmpty())
+        if(mGame.getCategories().get(0).getVariables().isEmpty())
             mFiltersButton.setVisibility(View.GONE);
         else if(mVariableSelections == null)
             mVariableSelections = new Variable.VariableSelections();
@@ -300,15 +300,15 @@ public class GameDetailFragment extends Fragment {
     private void setViewData() {
         if(mGame != null) {
 
-            Objects.requireNonNull(getActivity()).setTitle(mGame.getName());
+            Objects.requireNonNull(getActivity()).setTitle(mGame.getResolvedName());
 
-            mReleaseDate.setText(mGame.releaseDate);
+            mReleaseDate.setText(mGame.getReleaseDate());
 
             // we have to join the string manually because it is java 7
             StringBuilder sb = new StringBuilder();
-            for (int i = 0;i < mGame.platforms.size();i++) {
-                sb.append(mGame.platforms.get(i).getName());
-                if(i < mGame.platforms.size() - 1)
+            for (int i = 0; i < mGame.getPlatforms().size(); i++) {
+                sb.append(mGame.getPlatforms().get(i).getName());
+                if(i < mGame.getPlatforms().size() - 1)
                     sb.append(", ");
             }
 
@@ -324,11 +324,11 @@ public class GameDetailFragment extends Fragment {
 
                 ImageLoader il = new ImageLoader(ctx);
 
-                if(mGame.assets.coverLarge != null)
-                    mDisposables.add(il.loadImage(mGame.assets.coverLarge.uri)
+                if(mGame.getAssets().getCoverLarge() != null)
+                    mDisposables.add(il.loadImage(mGame.getAssets().getCoverLarge().getUri())
                         .subscribe(new ImageViewPlacerConsumer(mCover)));
-                if(mGame.assets.background != null && mBackground != null)
-                    mDisposables.add(il.loadImage(mGame.assets.background.uri)
+                if(mGame.getAssets().getBackground() != null && mBackground != null)
+                    mDisposables.add(il.loadImage(mGame.getAssets().getBackground().getUri())
                             .subscribe(new ImageViewPlacerConsumer(mBackground)));
             }
 
@@ -340,7 +340,7 @@ public class GameDetailFragment extends Fragment {
 
     private void openFiltersDialog() {
         FiltersDialog dialog = new FiltersDialog(getContext(), mGame,
-                mCategoryTabStrip.getPagerAdapter().getCategoryOfIndex(mLeaderboardPager.getCurrentItem()).variables, mVariableSelections);
+                mCategoryTabStrip.getPagerAdapter().getCategoryOfIndex(mLeaderboardPager.getCurrentItem()).getVariables(), mVariableSelections);
 
         dialog.show();
 
@@ -434,7 +434,7 @@ public class GameDetailFragment extends Fragment {
             Set<AppDatabase.Subscription> subs = new HashSet<>(size());
 
             for(String sub : this) {
-                subs.add(new AppDatabase.Subscription("game", game.id + "_" + sub, game.getName().toLowerCase()));
+                subs.add(new AppDatabase.Subscription("game", game.getId() + "_" + sub, game.getResolvedName().toLowerCase()));
             }
 
             return subs;

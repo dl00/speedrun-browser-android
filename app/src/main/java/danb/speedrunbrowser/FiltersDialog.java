@@ -63,9 +63,9 @@ public class FiltersDialog extends AlertDialog implements CompoundButton.OnCheck
             filterLayout.addView(filterTv);
 
             ChipGroup cgv = new ChipGroup(getContext());
-            for(Platform p : mGame.platforms) {
-                Chip cv = makeChip(Variable.VariableSelections.FILTER_KEY_PLATFORM, p.id);
-                cv.setText(p.name);
+            for(Platform p : mGame.getPlatforms()) {
+                Chip cv = makeChip(Variable.VariableSelections.Companion.getFILTER_KEY_REGION(), p.getId());
+                cv.setText(p.getName());
                 cgv.addView(cv);
             }
 
@@ -77,9 +77,9 @@ public class FiltersDialog extends AlertDialog implements CompoundButton.OnCheck
             filterLayout.addView(filterTv);
 
             ChipGroup cgv = new ChipGroup(getContext());
-            for(Region r : mGame.regions) {
-                Chip cv = makeChip(Variable.VariableSelections.FILTER_KEY_REGION, r.id);
-                cv.setText(r.name);
+            for(Region r : mGame.getRegions()) {
+                Chip cv = makeChip(Variable.VariableSelections.Companion.getFILTER_KEY_REGION(), r.getId());
+                cv.setText(r.getName());
                 cgv.addView(cv);
             }
 
@@ -88,17 +88,17 @@ public class FiltersDialog extends AlertDialog implements CompoundButton.OnCheck
 
         for(Variable v : mVariables) {
 
-            if(v.isSubcategory)
+            if(v.isSubcategory())
                 continue; // handled elsewhere
 
             TextView filterTv = makeFilterLabel();
-            filterTv.setText(v.name);
+            filterTv.setText(v.getName());
             filterLayout.addView(filterTv);
 
             ChipGroup cgv = new ChipGroup(getContext());
-            for(String vv : v.values.keySet()) {
-                Chip cv = makeChip(v.id, vv);
-                cv.setText(Objects.requireNonNull(v.values.get(vv)).label);
+            for(String vv : v.getValues().keySet()) {
+                Chip cv = makeChip(v.getId(), vv);
+                cv.setText(Objects.requireNonNull(v.getValues().get(vv)).getLabel());
                 cgv.addView(cv);
             }
 

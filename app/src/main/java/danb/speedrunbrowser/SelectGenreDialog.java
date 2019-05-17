@@ -78,7 +78,7 @@ public class SelectGenreDialog extends AlertDialog implements View.OnClickListen
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if(s.length() >= SpeedrunMiddlewareAPI.MIN_AUTOCOMPLETE_LENGTH)
+                if(s.length() >= SpeedrunMiddlewareAPI.INSTANCE.getMIN_AUTOCOMPLETE_LENGTH())
                     triggerSearchGenres(s.toString());
                 else
                     triggerSearchGenres("");
@@ -135,14 +135,14 @@ public class SelectGenreDialog extends AlertDialog implements View.OnClickListen
     }
 
     private void triggerSearchGenres(String query) {
-        mDisposables.add(SpeedrunMiddlewareAPI.make().listGenres(query)
+        mDisposables.add(SpeedrunMiddlewareAPI.INSTANCE.make().listGenres(query)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<SpeedrunMiddlewareAPI.APIResponse<Genre>>() {
                     @Override
                     public void accept(SpeedrunMiddlewareAPI.APIResponse<Genre> genreAPIResponse) throws Exception {
                         mGenreAdapter.clear();
-                        mGenreAdapter.addAll(genreAPIResponse.data);
+                        mGenreAdapter.addAll(genreAPIResponse.getData());
                         mGenreAdapter.notifyDataSetChanged();
                         //((ListView)mGenreListScroller.getChildAt(0)).scrollTo(0, 0);
                     }
@@ -198,8 +198,8 @@ public class SelectGenreDialog extends AlertDialog implements View.OnClickListen
             Genre data = getItem(position);
 
             if(data != null) {
-                titleTv.setText(data.name);
-                countTv.setText(String.format(Locale.US, "%d", data.count));
+                titleTv.setText(data.getName());
+                countTv.setText(String.format(Locale.US, "%d", data.getCount()));
             }
             else {
                 titleTv.setText(R.string.label_all_genres);
