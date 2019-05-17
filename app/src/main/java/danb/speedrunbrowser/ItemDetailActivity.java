@@ -92,7 +92,7 @@ public class ItemDetailActivity extends AppCompatActivity implements Consumer<Sp
             else {
                 Log.w(TAG, "Could not find game ID argument");
 
-                Util.showErrorToast(this, getString(R.string.error_could_not_find, "No data provided"));
+                Util.INSTANCE.showErrorToast(this, getString(R.string.error_could_not_find, "No data provided"));
 
                 finish();
             }
@@ -150,7 +150,7 @@ public class ItemDetailActivity extends AppCompatActivity implements Consumer<Sp
             }
         }
         else {
-            Util.showErrorToast(this, getString(R.string.error_could_not_find, getIntent().getDataString()));
+            Util.INSTANCE.showErrorToast(this, getString(R.string.error_could_not_find, getIntent().getDataString()));
             finish();
         }
 

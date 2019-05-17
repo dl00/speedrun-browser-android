@@ -98,7 +98,7 @@ public class MultiVideoView extends FrameLayout {
         float scaleFactor = 1.0f;
         String pageContent;
         try {
-            pageContent = String.format(Locale.US, Util.readToString(getClass().getResourceAsStream(Constants.YOUTUBE_EMBED_SNIPPET_FILE)), scaleFactor, videoId, mSeekTime);
+            pageContent = String.format(Locale.US, Util.INSTANCE.readToString(getClass().getResourceAsStream(Constants.YOUTUBE_EMBED_SNIPPET_FILE)), scaleFactor, videoId, mSeekTime);
         } catch (IOException e) {
             setVideoFrameError();
             return;
@@ -150,7 +150,7 @@ public class MultiVideoView extends FrameLayout {
         float scaleFactor = 1.0f;
         String pageContent;
         try {
-            pageContent = String.format(Locale.US, Util.readToString(getClass().getResourceAsStream(Constants.TWITCH_EMBED_SNIPPET_FILE)), scaleFactor, videoId, mSeekTime);
+            pageContent = String.format(Locale.US, Util.INSTANCE.readToString(getClass().getResourceAsStream(Constants.TWITCH_EMBED_SNIPPET_FILE)), scaleFactor, videoId, mSeekTime);
         } catch (IOException e) {
             setVideoFrameError();
             return;

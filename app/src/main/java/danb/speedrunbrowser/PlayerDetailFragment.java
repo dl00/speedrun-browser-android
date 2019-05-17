@@ -88,7 +88,7 @@ public class PlayerDetailFragment extends Fragment implements View.OnClickListen
 
         setHasOptionsMenu(true);
 
-        mDB = AppDatabase.make(getContext());
+        mDB = AppDatabase.Companion.make(getContext());
 
         Objects.requireNonNull(getActivity()).setTitle(R.string.title_loading);
 
@@ -184,7 +184,7 @@ public class PlayerDetailFragment extends Fragment implements View.OnClickListen
 
                     if (gameAPIResponse.getData() == null || gameAPIResponse.getData().isEmpty()) {
                         // game was not able to be found for some reason?
-                        Util.showErrorToast(getContext(), getString(R.string.error_missing_game, playerId));
+                        Util.INSTANCE.showErrorToast(getContext(), getString(R.string.error_missing_game, playerId));
                         return;
                     }
 
@@ -193,7 +193,7 @@ public class PlayerDetailFragment extends Fragment implements View.OnClickListen
                     setViewData();
 
 
-                    Analytics.logItemView(getContext(), "player", playerId);
+                    Analytics.INSTANCE.logItemView(getContext(), "player", playerId);
 
                 }
             }, new ConnectionErrorConsumer(getContext())));
@@ -224,7 +224,7 @@ public class PlayerDetailFragment extends Fragment implements View.OnClickListen
                         public void run() throws Exception {
                             mSubscription = null;
                             setMenu();
-                            Util.showMsgToast(getContext(), getString(R.string.success_subscription));
+                            Util.INSTANCE.showMsgToast(getContext(), getString(R.string.success_subscription));
                         }
                     }));
 
@@ -238,7 +238,7 @@ public class PlayerDetailFragment extends Fragment implements View.OnClickListen
                         @Override
                         public void run() throws Exception {
                             setMenu();
-                            Util.showMsgToast(getContext(), getString(R.string.success_subscription));
+                            Util.INSTANCE.showMsgToast(getContext(), getString(R.string.success_subscription));
                         }
                     }));
 

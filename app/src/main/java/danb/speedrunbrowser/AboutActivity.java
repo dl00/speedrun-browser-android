@@ -60,7 +60,7 @@ public class AboutActivity extends AppCompatActivity implements View.OnClickList
     private void viewOpenSourceLicenses() {
         String licenseText;
         try {
-            licenseText = Util.readToString(getClass().getResourceAsStream(OPENSOURCE_LICENSES_FILE));
+            licenseText = Util.INSTANCE.readToString(getClass().getResourceAsStream(OPENSOURCE_LICENSES_FILE));
         }
         catch(Exception e) {
             // this basically should not happen

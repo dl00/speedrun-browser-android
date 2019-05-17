@@ -120,7 +120,7 @@ public class GameDetailFragment extends Fragment {
 
         setHasOptionsMenu(true);
 
-        mDB = AppDatabase.make(getContext());
+        mDB = AppDatabase.Companion.make(getContext());
 
         mDisposables = new CompositeDisposable();
 
@@ -199,7 +199,7 @@ public class GameDetailFragment extends Fragment {
 
                         if (gameAPIResponse.getData().isEmpty()) {
                             // game was not able to be found for some reason?
-                            Util.showErrorToast(getContext(), getString(R.string.error_missing_game, gameId));
+                            Util.INSTANCE.showErrorToast(getContext(), getString(R.string.error_missing_game, gameId));
                             return;
                         }
 
@@ -207,7 +207,7 @@ public class GameDetailFragment extends Fragment {
                         loadSubscription();
                         setViewData();
 
-                        Analytics.logItemView(getContext(), "game", gameId);
+                        Analytics.INSTANCE.logItemView(getContext(), "game", gameId);
 
                     }
                 }, new ConnectionErrorConsumer(getContext()));
@@ -405,7 +405,7 @@ public class GameDetailFragment extends Fragment {
                             @Override
                             public void run() throws Exception {
                                 mMenu.findItem(R.id.menu_subscribe).setActionView(null);
-                                Util.showMsgToast(getContext(), getString(R.string.success_subscription));
+                                Util.INSTANCE.showMsgToast(getContext(), getString(R.string.success_subscription));
                                 mSubscription = dialog.getSubscriptions();
                                 setMenu();
                             }
@@ -425,7 +425,7 @@ public class GameDetailFragment extends Fragment {
             this.game = game;
 
             for(AppDatabase.Subscription sub : subs) {
-                add(sub.resourceId.substring(sub.resourceId.indexOf('_') + 1));
+                add(sub.getResourceId().substring(sub.getResourceId().indexOf('_') + 1));
             }
         }
 

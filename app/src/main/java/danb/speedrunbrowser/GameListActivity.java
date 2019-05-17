@@ -87,11 +87,11 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
 
         mDisposables = new CompositeDisposable();
 
-        mDB = AppDatabase.make(this);
+        mDB = AppDatabase.Companion.make(this);
 
         FirebaseCrash.setCrashCollectionEnabled(!BuildConfig.DEBUG);
 
-        Util.showNewFeaturesDialog(this);
+        Util.INSTANCE.showNewFeaturesDialog(this);
 
         // might need to update certificates/connection modes on older android versions
         // TODO: this is the synchronous call, may block user interation when installing provider. Consider using async
@@ -368,7 +368,7 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
                             break;
                     }
 
-                    Analytics.logItemView(GameListActivity.this, type, listName);
+                    Analytics.INSTANCE.logItemView(GameListActivity.this, type, listName);
                 }
 
                 @Override
@@ -478,7 +478,7 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
                                     for(AppDatabase.WatchHistoryEntry whe : entries) {
                                         if(builder.length() != 0)
                                             builder.append(",");
-                                        builder.append(whe.runId);
+                                        builder.append(whe.getRunId());
                                     }
 
                                     return SpeedrunMiddlewareAPI.INSTANCE.make().listRuns(builder.toString()).map(new ItemListFragment.GenericMapper<LeaderboardRunEntry>());
@@ -509,8 +509,8 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
                                     List<String> ids = new ArrayList<>();
 
                                     for(AppDatabase.Subscription sub : subscriptions) {
-                                        System.out.println(sub.getFCMTopic());
-                                        String id = sub.resourceId.substring(0, sub.resourceId.indexOf('_'));
+                                        System.out.println(sub.getFcmTopic());
+                                        String id = sub.getResourceId().substring(0, sub.getResourceId().indexOf('_'));
 
                                         if(!ids.isEmpty() && id.equals(ids.get(ids.size() - 1)))
                                             continue;
@@ -549,7 +549,7 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
                                     for(AppDatabase.Subscription sub : subscriptions) {
                                         if(builder.length() != 0)
                                             builder.append(",");
-                                        builder.append(sub.resourceId);
+                                        builder.append(sub.getResourceId());
                                     }
 
                                     return SpeedrunMiddlewareAPI.INSTANCE.make().listPlayers(builder.toString()).map(new ItemListFragment.GenericMapper<User>());

@@ -72,7 +72,7 @@ public class MessagingService extends FirebaseMessagingService {
                     .url(playerImgUrl)
                     .build();
 
-            Response res = Objects.requireNonNull(Util.getHTTPClient()).newCall(req).execute();
+            Response res = Objects.requireNonNull(Util.INSTANCE.getHTTPClient()).newCall(req).execute();
 
             if(!res.isSuccessful())
                 throw new IOException();
@@ -97,7 +97,7 @@ public class MessagingService extends FirebaseMessagingService {
         intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.PLAYERS);
         intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, players.get(0).getId());
 
-        Util.postNotification(this, intent, players.get(0).getId(), title, msg, featureImg);
+        Util.INSTANCE.postNotification(this, intent, players.get(0).getId(), title, msg, featureImg);
     }
 
     private void makeGameNotification(PushNotificationData data) {
@@ -121,7 +121,7 @@ public class MessagingService extends FirebaseMessagingService {
                     .url(gameCoverUrl)
                     .build();
 
-            Response res = Objects.requireNonNull(Util.getHTTPClient()).newCall(req).execute();
+            Response res = Objects.requireNonNull(Util.INSTANCE.getHTTPClient()).newCall(req).execute();
 
             if(!res.isSuccessful())
                 throw new IOException();
@@ -147,7 +147,7 @@ public class MessagingService extends FirebaseMessagingService {
         intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.GAMES);
         intent.putExtra(GameDetailFragment.ARG_GAME_ID, data.getGame().getId());
 
-        Util.postNotification(this, intent, data.getGame().getId(), title, msg, featureImg);
+        Util.INSTANCE.postNotification(this, intent, data.getGame().getId(), title, msg, featureImg);
     }
 
     private String getBuildVariant() {

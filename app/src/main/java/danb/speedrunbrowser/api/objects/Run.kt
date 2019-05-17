@@ -70,12 +70,12 @@ data class Run(
                     else -> null
                 },
                 category = when {
-                    obj["category"]?.isJsonPrimitive == true -> Category(obj["category"].asString)
+                    obj["category"]?.isJsonPrimitive == true -> Category(obj["category"].asString, "")
                     obj["category"] != null -> context.deserialize(obj["category"], Category::class.java)
                     else -> null
                 },
                 level = when {
-                    obj["level"]?.isJsonPrimitive == true -> Level(obj["level"].asString)
+                    obj["level"]?.isJsonPrimitive == true -> Level(obj["level"].asString, "")
                     obj["level"] != null -> context.deserialize(obj["level"], Level::class.java)
                     else -> null
                 }

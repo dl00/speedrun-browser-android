@@ -7,6 +7,7 @@ import android.content.res.Configuration;
 import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
@@ -119,7 +120,7 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_run_detail);
 
-        mDB = AppDatabase.make(this);
+        mDB = AppDatabase.Companion.make(this);
 
         mRootView = findViewById(R.id.contentLayout);
         mSpinner = findViewById(R.id.spinner);
@@ -168,7 +169,7 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
                 loadRun(runId);
             }
             else {
-                Util.showErrorToast(this, getString(R.string.error_invalod_url, appLinkData));
+                Util.INSTANCE.showErrorToast(this, getString(R.string.error_invalod_url, appLinkData));
             }
         }
         else {
@@ -199,7 +200,7 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
 
                     if (gameAPIResponse.getData() == null) {
                         // game was not able to be found for some reason?
-                        Util.showErrorToast(RunDetailActivity.this, getString(R.string.error_missing_game, runId));
+                        Util.INSTANCE.showErrorToast(RunDetailActivity.this, getString(R.string.error_missing_game, runId));
                         return;
                     }
 
@@ -253,7 +254,7 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
         setViewData();
         mSpinner.setVisibility(View.GONE);
 
-        Analytics.logItemView(this, "run", mRun.getId());
+        Analytics.INSTANCE.logItemView(this, "run", mRun.getId());
 
         onConfigurationChanged(getResources().getConfiguration());
 
@@ -265,7 +266,7 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
                     @Override
                     public void accept(AppDatabase.WatchHistoryEntry historyEntry) throws Exception {
                         Log.d(TAG, "Got seek record for run: " + mRun.getId());
-                        mVideoFrame.setSeekTime((int)historyEntry.seekPos);
+                        mVideoFrame.setSeekTime((int) historyEntry.getSeekPos());
                         onVideoReady();
                     }
                 }, new NoopConsumer<Throwable>(), new Action() {
@@ -347,7 +348,7 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
 
         Log.d(TAG, "Record seek time: " + seekTime);
 
-        mDisposables.add(mDB.watchHistoryDao().record(new AppDatabase.WatchHistoryEntry(mRun.getId(), seekTime))
+        mDisposables.add(mDB.watchHistoryDao().record(new AppDatabase.WatchHistoryEntry(mRun.getId(), seekTime, 0))
                 .subscribeOn(Schedulers.io())
                 .subscribe());
     }
@@ -414,7 +415,7 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
             }
         }
 
-        if(mGame.getAssets() != null && mGame.getAssets().getCoverLarge() != null)
+        if(mGame.getAssets().getCoverLarge() != null)
             mDisposables.add(
                     new ImageLoader(this).loadImage(mGame.getAssets().getCoverLarge().getUri())
                             .subscribe(new ImageViewPlacerConsumer(mCover)));
@@ -453,7 +454,9 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
         Intent intent = new Intent(this, ItemDetailActivity.class);
         intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.PLAYERS);
         intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, player.getId());
-        intent.setFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            intent.setFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
+        }
 
         startActivity(intent);
     }
@@ -462,7 +465,9 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
         Intent intent = new Intent(this, ItemDetailActivity.class);
         intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.GAMES);
         intent.putExtra(GameDetailFragment.ARG_GAME_ID, mGame.getId());
-        intent.setFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            intent.setFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
+        }
 
         startActivity(intent);
     }

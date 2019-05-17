@@ -316,7 +316,7 @@ public class LeaderboardFragment extends Fragment implements Consumer<SpeedrunMi
 
         if(leaderboards.isEmpty()) {
             // not found
-            Util.showErrorToast(getContext(), getString(R.string.error_missing_leaderboard, calculateLeaderboardId()));
+            Util.INSTANCE.showErrorToast(getContext(), getString(R.string.error_missing_leaderboard, calculateLeaderboardId()));
             return;
         }
 

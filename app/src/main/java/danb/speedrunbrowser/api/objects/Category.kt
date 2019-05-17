@@ -3,8 +3,8 @@ package danb.speedrunbrowser.api.objects
 import java.io.Serializable
 
 data class Category(
-    val id: String? = null,
-    val name: String? = null,
+    val id: String,
+    val name: String,
     val weblink: String? = null,
     val type: String? = null,
     val rules: String? = null,
