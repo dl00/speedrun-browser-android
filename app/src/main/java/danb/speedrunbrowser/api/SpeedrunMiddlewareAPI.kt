@@ -74,24 +74,20 @@ object SpeedrunMiddlewareAPI {
         var msg: String? = null
     }
 
-    class APIResponse<T> {
-        var data: List<T>
-        var error: Error? = null
+    data class APIResponse<T>(
+        val data: List<T>? = listOf(),
+        val error: Error? = null,
 
-        var more: MoreInfo? = null
+        val more: MoreInfo? = null
+    )
 
-        init {
-            data = ArrayList()
-        }
-    }
+    data class MoreInfo(
+        val code: String? = null,
+        val count: Int = 0
+    ) {
 
-    class MoreInfo {
-        var code: String? = null
-        var count: Int = 0
-
-        fun hasMore(): Boolean {
-            return code == "0"
-        }
+        val hasMore
+        get() = code == "0"
     }
 
     class APISearchData {
@@ -104,14 +100,10 @@ object SpeedrunMiddlewareAPI {
         }
     }
 
-    class APISearchResponse {
-        var search: APISearchData
+    data class APISearchResponse(
+        var search: APISearchData? = APISearchData(),
         var error: Error? = null
-
-        init {
-            search = APISearchData()
-        }
-    }
+    )
 
     interface Endpoints {
 

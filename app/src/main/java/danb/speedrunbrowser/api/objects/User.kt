@@ -76,8 +76,8 @@ data class User(
     }
 
     data class UserCategoryBest(
-        val id: String? = null,
-        val name: String? = null,
+        val id: String,
+        val name: String,
         val type: String? = null,
 
         val levels: HashMap<String, UserLevelBest>? = null,
@@ -90,7 +90,7 @@ data class User(
 
     data class UserLevelBest(
             val id: String,
-            val name: String? = null,
+            val name: String,
 
             val run: LeaderboardRunEntry
     ) : Serializable

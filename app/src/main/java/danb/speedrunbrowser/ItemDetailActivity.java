@@ -137,11 +137,11 @@ public class ItemDetailActivity extends AppCompatActivity implements Consumer<Sp
 
         if(entry != null) {
             if(entry.getType().equals("game")) {
-                args.putString(GameDetailFragment.ARG_GAME_ID, entry.getId());
+                args.putString(GameDetailFragment.Companion.getARG_GAME_ID(), entry.getId());
                 frag = new GameDetailFragment();
             }
             else if(entry.getType().equals("player")) {
-                args.putString(PlayerDetailFragment.ARG_PLAYER_ID, entry.getId());
+                args.putString(PlayerDetailFragment.Companion.getARG_PLAYER_ID(), entry.getId());
                 frag = new PlayerDetailFragment();
             }
             else if(entry.getType().equals("run")) {
