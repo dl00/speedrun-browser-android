@@ -4,10 +4,11 @@ import java.io.Serializable
 import java.util.HashMap
 
 data class Leaderboard(
-        val weblink: String? = null,
-        val game: String? = null,
-        val category: String? = null,
+        val game: String,
+        val category: String,
         val level: String? = null,
+
+        val weblink: String? = null,
 
         val platform: String? = null,
         val region: String? = null,
@@ -16,5 +17,5 @@ data class Leaderboard(
         val timing: String? = null,
 
         val runs: List<LeaderboardRunEntry>? = null,
-        val players: HashMap<String, User>? = null
+        val players: Map<String, User>? = null
 ) : Serializable

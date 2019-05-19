@@ -13,8 +13,8 @@ import java.util.HashMap
 import danb.speedrunbrowser.utils.Constants
 
 data class UserLocation(
-    val code: String? = null,
-    val names: HashMap<String, String>? = null
+    val code: String,
+    val names: Map<String, String>? = null
 ) : Serializable
 
 data class User(
@@ -65,7 +65,7 @@ data class User(
 
     data class UserGameBests(
         val id: String? = null,
-        val names: HashMap<String, String>? = null,
+        val names: Map<String, String>? = null,
         val assets: GameAssets? = null,
 
         val categories: Map<String, UserCategoryBest>? = null

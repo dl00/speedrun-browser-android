@@ -1,7 +1,5 @@
 package danb.speedrunbrowser
 
-import android.content.Context
-
 import android.content.DialogInterface
 import android.os.Bundle
 import android.os.Parcelable
@@ -17,9 +15,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.fragment.app.FragmentActivity
 import java.util.HashSet
-import java.util.Objects
 
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.Category
@@ -31,21 +27,16 @@ import danb.speedrunbrowser.utils.AppDatabase
 import danb.speedrunbrowser.utils.ConnectionErrorConsumer
 import danb.speedrunbrowser.utils.ImageLoader
 import danb.speedrunbrowser.utils.ImageViewPlacerConsumer
-import danb.speedrunbrowser.utils.LeaderboardPagerAdapter
 import danb.speedrunbrowser.utils.SubscriptionChanger
 import danb.speedrunbrowser.utils.Util
 import danb.speedrunbrowser.views.CategoryTabStrip
 import danb.speedrunbrowser.views.ProgressSpinnerView
-import io.reactivex.CompletableSource
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
-import io.reactivex.functions.Action
 import io.reactivex.functions.Consumer
-import io.reactivex.functions.Function
 import io.reactivex.schedulers.Schedulers
-import org.reactivestreams.Subscription
 
 /**
  * A fragment representing a single Game detail screen.
@@ -86,7 +77,7 @@ class GameDetailFragment : Fragment() {
     private lateinit var mCover: ImageView
     private var mBackground: ImageView? = null
 
-    private lateinit var mCategoryTabStrip: CategoryTabStrip
+    private var mCategoryTabStrip: CategoryTabStrip? = null
     private lateinit var mLeaderboardPager: ViewPager
 
     private val mStartPositionCategory: Category? = null
@@ -165,7 +156,12 @@ class GameDetailFragment : Fragment() {
         return SpeedrunMiddlewareAPI.make().listGames(gameId)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(Consumer { gameAPIResponse ->
-                    if (gameAPIResponse.data.isEmpty()) {
+
+                    if (gameAPIResponse.error != null) {
+                        Util.showErrorToast(context!!, getString(R.string.error_could_not_connect))
+                    }
+
+                    if (gameAPIResponse.data!!.isEmpty()) {
                         // game was not able to be found for some reason?
                         Util.showErrorToast(context!!, getString(R.string.error_missing_game, gameId))
                         return@Consumer
@@ -195,7 +191,7 @@ class GameDetailFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
 
         if (savedInstanceState != null) {
-            mLeaderboardPager!!.onRestoreInstanceState(savedInstanceState.getParcelable<Parcelable>(SAVED_PAGER))
+            mLeaderboardPager.onRestoreInstanceState(savedInstanceState.getParcelable<Parcelable>(SAVED_PAGER))
             Log.d(TAG, "Loaded from saved instance state")
         }
     }
@@ -223,7 +219,7 @@ class GameDetailFragment : Fragment() {
             setupTabStrip()
         }
 
-        mFiltersButton!!.setOnClickListener { openFiltersDialog() }
+        mFiltersButton.setOnClickListener { openFiltersDialog() }
 
         setViewData()
 
@@ -235,18 +231,18 @@ class GameDetailFragment : Fragment() {
 
         val pa = mCategoryTabStrip!!.pagerAdapter
 
-        outState.putParcelable(SAVED_PAGER, mLeaderboardPager!!.onSaveInstanceState())
+        outState.putParcelable(SAVED_PAGER, mLeaderboardPager.onSaveInstanceState())
         outState.putSerializable(SAVED_GAME, mGame)
         outState.putSerializable(SAVED_FILTERS, mVariableSelections)
     }
 
     private fun setupTabStrip() {
         if (mGame!!.categories!![0].variables!!.isEmpty())
-            mFiltersButton!!.visibility = View.GONE
+            mFiltersButton.visibility = View.GONE
         else if (mVariableSelections == null)
             mVariableSelections = Variable.VariableSelections()
 
-        mCategoryTabStrip!!.setup(mGame!!, mVariableSelections!!, mLeaderboardPager!!, childFragmentManager)
+        mCategoryTabStrip!!.setup(mGame!!, mVariableSelections!!, mLeaderboardPager, childFragmentManager)
 
         if (mStartPositionCategory != null)
             mCategoryTabStrip!!.selectLeaderboard(mStartPositionCategory, mStartPositionLevel)
@@ -257,7 +253,7 @@ class GameDetailFragment : Fragment() {
 
             activity?.title = mGame?.resolvedName
 
-            mReleaseDate!!.text = mGame!!.releaseDate
+            mReleaseDate.text = mGame!!.releaseDate
 
             // we have to join the string manually because it is java 7
             val sb = StringBuilder()
@@ -267,7 +263,7 @@ class GameDetailFragment : Fragment() {
                     sb.append(", ")
             }
 
-            mPlatformList!!.text = sb.toString()
+            mPlatformList.text = sb.toString()
 
             // leaderboards
             if (mCategoryTabStrip != null) {
@@ -295,11 +291,11 @@ class GameDetailFragment : Fragment() {
 
     private fun openFiltersDialog() {
         val dialog = FiltersDialog(context!!, mGame!!,
-                mCategoryTabStrip.pagerAdapter!!.getCategoryOfIndex(mLeaderboardPager.currentItem).variables!!, mVariableSelections!!)
+                mCategoryTabStrip!!.pagerAdapter!!.getCategoryOfIndex(mLeaderboardPager.currentItem).variables!!, mVariableSelections!!)
 
         dialog.show()
 
-        dialog.setOnDismissListener { mCategoryTabStrip.pagerAdapter!!.notifyFilterChanged() }
+        dialog.setOnDismissListener { mCategoryTabStrip!!.pagerAdapter!!.notifyFilterChanged() }
     }
 
     private fun openSubscriptionDialog() {
@@ -311,7 +307,7 @@ class GameDetailFragment : Fragment() {
         dialog.setOnDismissListener(DialogInterface.OnDismissListener {
             val newSubs = dialog.subscriptions.baseSubscriptions
             val oldSubs = mSubscription!!.baseSubscriptions
-            val delSubs = HashSet<Subscription>(oldSubs)
+            val delSubs: MutableSet<AppDatabase.Subscription> = HashSet(oldSubs)
 
             delSubs.removeAll(newSubs)
             newSubs.removeAll(oldSubs)
@@ -332,11 +328,11 @@ class GameDetailFragment : Fragment() {
             val sc = SubscriptionChanger(context!!, mDB)
 
             // change all the subscriptions async in one go
-            mDisposables.add(Observable.fromIterable<Subscription>(delSubs)
+            mDisposables.add(Observable.fromIterable<AppDatabase.Subscription>(delSubs)
                     .flatMapCompletable {
                         subscription -> sc.unsubscribeFrom(subscription)
                     }
-                    .mergeWith(Observable.fromIterable<Subscription>(newSubs)
+                    .mergeWith(Observable.fromIterable<AppDatabase.Subscription>(newSubs)
                             .flatMapCompletable {
                                 subscription -> sc.subscribeTo(subscription)
                             }
@@ -390,13 +386,13 @@ class GameDetailFragment : Fragment() {
          * The fragment argument representing the item ID that this fragment
          * represents.
          */
-        val ARG_GAME_ID = "game_id"
+        const val ARG_GAME_ID = "game_id"
 
         /**
          * Saved state options
          */
-        private val SAVED_GAME = "game"
-        private val SAVED_PAGER = "pager"
-        private val SAVED_FILTERS = "variable_selections"
+        private const val SAVED_GAME = "game"
+        private const val SAVED_PAGER = "pager"
+        private const val SAVED_FILTERS = "variable_selections"
     }
 }

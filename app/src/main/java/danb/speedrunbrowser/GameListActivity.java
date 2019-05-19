@@ -205,7 +205,7 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
     private void showGame(String id, Fragment fragment, ActivityOptions transitionOptions) {
         if(isTwoPane()) {
             Bundle arguments = new Bundle();
-            arguments.putString(GameDetailFragment.Companion.getARG_GAME_ID(), id);
+            arguments.putString(GameDetailFragment.ARG_GAME_ID, id);
 
             GameDetailFragment newFrag = new GameDetailFragment();
             newFrag.setArguments(arguments);
@@ -217,7 +217,7 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
         else {
             Intent intent = new Intent(this, ItemDetailActivity.class);
             intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.GAMES);
-            intent.putExtra(GameDetailFragment.Companion.getARG_GAME_ID(), id);
+            intent.putExtra(GameDetailFragment.ARG_GAME_ID, id);
 
             if(fragment != null && transitionOptions != null)
                 startActivityFromFragment(fragment, intent, 0, transitionOptions.toBundle());
@@ -314,27 +314,27 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
 
             fragments[0] = new ItemListFragment();
             Bundle args = new Bundle();
-            args.putSerializable(ItemListFragment.Companion.getARG_ITEM_TYPE(), ItemListFragment.ItemType.GAMES);
+            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemListFragment.ItemType.GAMES);
             fragments[0].setArguments(args);
 
             fragments[1] = new ItemListFragment();
             args = new Bundle();
-            args.putSerializable(ItemListFragment.Companion.getARG_ITEM_TYPE(), ItemListFragment.ItemType.RUNS);
+            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemListFragment.ItemType.RUNS);
             fragments[1].setArguments(args);
 
             fragments[2] = new ItemListFragment();
             args = new Bundle();
-            args.putSerializable(ItemListFragment.Companion.getARG_ITEM_TYPE(), ItemListFragment.ItemType.RUNS);
+            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemListFragment.ItemType.RUNS);
             fragments[2].setArguments(args);
 
             fragments[3] = new ItemListFragment();
             args = new Bundle();
-            args.putSerializable(ItemListFragment.Companion.getARG_ITEM_TYPE(), ItemListFragment.ItemType.GAMES);
+            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemListFragment.ItemType.GAMES);
             fragments[3].setArguments(args);
 
             fragments[4] = new ItemListFragment();
             args = new Bundle();
-            args.putSerializable(ItemListFragment.Companion.getARG_ITEM_TYPE(), ItemListFragment.ItemType.PLAYERS);
+            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemListFragment.ItemType.PLAYERS);
             fragments[4].setArguments(args);
 
             for(int i = 0;i < getCount();i++)
@@ -350,7 +350,7 @@ public class GameListActivity extends AppCompatActivity implements TextWatcher, 
                     if(fragments[position].getItemType() == null)
                         return;
 
-                    String type = fragments[position].getItemType().getName();
+                    String type = fragments[position].getItemType().name();
 
                     String listName = "";
                     switch(position) {

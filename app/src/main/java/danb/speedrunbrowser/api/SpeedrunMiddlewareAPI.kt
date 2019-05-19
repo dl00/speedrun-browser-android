@@ -90,15 +90,10 @@ object SpeedrunMiddlewareAPI {
         get() = code == "0"
     }
 
-    class APISearchData {
-        var games: List<Game>
-        var players: List<User>
-
-        init {
-            games = ArrayList(0)
-            players = ArrayList(0)
-        }
-    }
+    data class APISearchData(
+        val games: List<Game> = listOf(),
+        val players: List<User> = listOf()
+    )
 
     data class APISearchResponse(
         var search: APISearchData? = APISearchData(),

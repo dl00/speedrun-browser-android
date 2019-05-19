@@ -23,25 +23,25 @@ data class RunSystem(
 
 data class Run(
     val id: String,
-    val weblink: String?,
-    val game: Game?,
-    val level: Level?,
-    val category: Category?,
-    val videos: RunVideos?,
-    val comment: String?,
+    val weblink: String? = null,
+    val game: Game? = null,
+    val level: Level? = null,
+    val category: Category? = null,
+    val videos: RunVideos? = null,
+    val comment: String? = null,
 
-    val status: RunStatus?,
-    val players: List<User>?,
+    val status: RunStatus? = null,
+    val players: List<User>? = null,
 
-    val date: String?,
-    val submitted: String?,
+    val date: String? = null,
+    val submitted: String? = null,
 
-    val values: Map<String, String>?,
+    val values: Map<String, String>? = null,
 
-    val times: RunTimes?,
-    val splits: MediaLink?,
+    val times: RunTimes? = null,
+    val splits: MediaLink? = null,
 
-    val system: RunSystem?
+    val system: RunSystem? = null
 ) : Serializable {
 
     class JsonConverter : JsonDeserializer<Run> {

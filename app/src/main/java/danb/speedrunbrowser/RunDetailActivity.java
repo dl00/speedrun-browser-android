@@ -464,7 +464,7 @@ public class RunDetailActivity extends AppCompatActivity implements MultiVideoVi
     private void viewGame() {
         Intent intent = new Intent(this, ItemDetailActivity.class);
         intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.GAMES);
-        intent.putExtra(GameDetailFragment.Companion.getARG_GAME_ID(), mGame.getId());
+        intent.putExtra(GameDetailFragment.ARG_GAME_ID, mGame.getId());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             intent.setFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT);
         }

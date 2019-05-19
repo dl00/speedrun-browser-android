@@ -280,9 +280,15 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
 
     @Throws(Exception::class)
     override fun accept(leaderboardAPIResponse: SpeedrunMiddlewareAPI.APIResponse<Leaderboard>) {
+
+        if(leaderboardAPIResponse.error != null) {
+            Util.showErrorToast(context!!, getString(R.string.error_could_not_connect))
+            return
+        }
+
         val leaderboards = leaderboardAPIResponse.data
 
-        if (leaderboards.isEmpty()) {
+        if (leaderboards!!.isEmpty()) {
             // not found
             Util.showErrorToast(context!!, getString(R.string.error_missing_leaderboard, leaderboardId))
             return
