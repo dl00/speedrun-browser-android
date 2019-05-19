@@ -27,7 +27,7 @@ class FiltersDialog(
         private val mVariableSelections: Variable.VariableSelections
 ) : AlertDialog(ctx, THEME_DEVICE_DEFAULT_DARK), CompoundButton.OnCheckedChangeListener, View.OnClickListener {
 
-    override fun onCreate(savedInstanceState: Bundle) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val layout = LinearLayout(context)

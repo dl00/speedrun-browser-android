@@ -96,7 +96,7 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
 
         game = args.getSerializable(ARG_GAME) as Game
         mCategory = args.getSerializable(ARG_CATEGORY) as Category
-        mLevel = args.getSerializable(ARG_LEVEL) as Level
+        mLevel = args.getSerializable(ARG_LEVEL) as Level?
 
         if (filter != null)
             filter!!.setDefaults(mCategory!!.variables!!)

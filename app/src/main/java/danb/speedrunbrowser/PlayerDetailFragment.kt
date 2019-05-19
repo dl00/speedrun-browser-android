@@ -62,8 +62,8 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
 
     private lateinit var mSpinner: ProgressSpinnerView
     private lateinit var mPlayerHead: View
-    private lateinit var mScrollBests: View
-    private lateinit var mFrameBests: View
+    private var mScrollBests: View? = null
+    private var mFrameBests: View? = null
 
     private lateinit var mPlayerIcon: ImageView
     private lateinit var mPlayerName: TextView
@@ -87,7 +87,7 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
         val args = arguments
 
         if(args != null) {
-            mPlayer = args.getSerializable(ARG_PLAYER) as User
+            mPlayer = args.getSerializable(ARG_PLAYER) as User?
             if (mPlayer != null) {
                 loadSubscription(mPlayer!!.id)
                 setViewData()
@@ -266,8 +266,8 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
             mSpinner.visibility = View.GONE
             mPlayerHead.visibility = View.VISIBLE
 
-            mScrollBests.visibility = View.VISIBLE
-            mFrameBests.visibility = View.VISIBLE
+            mScrollBests?.visibility = View.VISIBLE
+            mFrameBests?.visibility = View.VISIBLE
         }
     }
 

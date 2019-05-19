@@ -143,6 +143,6 @@ class SimpleTabStrip(context: Context, attrs: AttributeSet) : FrameLayout(contex
     override fun onPageScrollStateChanged(state: Int) {}
 
     interface IconPagerAdapter {
-        fun getPageIcon(position: Int): Drawable
+        fun getPageIcon(position: Int): Drawable?
     }
 }
