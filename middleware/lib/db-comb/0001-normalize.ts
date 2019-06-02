@@ -6,16 +6,20 @@ import * as speedrun_api from '../speedrun-api';
 import * as speedrun_db from '../speedrun-db';
 import { Config } from '../config';
 
+import { normalize_game } from '../dao/games';
+import { normalize_leaderboard } from '../dao/leaderboards';
+import { normalize_run } from '../dao/runs';
+
 function do_normalize(type: string, d: any) {
     switch(type) {
     case 'games':
-        speedrun_api.normalize_game(d);
+        normalize_game(d);
     case 'categories':
         speedrun_api.normalize_category(d);
     case 'leaderboards':
-        speedrun_api.normalize_leaderboard(d);
+        normalize_leaderboard(d);
     case 'runs':
-        speedrun_api.normalize_run(d);
+        normalize_run(d);
     default:
         speedrun_api.normalize(d);
     }

@@ -3,20 +3,19 @@ import * as _ from 'lodash';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import * as ioredis from 'ioredis';
-
 import { load_config } from './config';
+import { load_db } from './db';
 
 export async function run_single(name: string) {
     let config = load_config();
 
-    let rdb = new ioredis(config.redis);
+    let db = load_db(config);
 
     let mod = require(path.join(__dirname, 'db-comb', name));
 
     console.log('Run: ', name);
     try {
-        await mod.default(rdb, config);
+        await mod.default(db, config);
     }
     catch(err) {
         console.error('Failure in module: ', name);

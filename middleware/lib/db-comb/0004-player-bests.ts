@@ -2,7 +2,7 @@ import * as ioredis from 'ioredis';
 
 //import * as speedrun_api from '../speedrun-api';
 import * as speedrun_db from '../speedrun-db';
-import { Leaderboard } from '../speedrun-api';
+import { Leaderboard } from '../dao/leaderboards';
 import { Config } from '../config';
 
 // Operations:

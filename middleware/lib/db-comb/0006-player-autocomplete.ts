@@ -37,10 +37,10 @@ export default async function(db: ioredis.Redis, config: Config) {
 
                 if(name != 'international')
                     idx.namespace = name;
-                
+
                 indexes.push(idx);
             }
-            
+
             await indexer.add(player.id, indexes);
         }
 

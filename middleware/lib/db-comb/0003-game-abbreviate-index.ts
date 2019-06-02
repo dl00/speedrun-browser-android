@@ -1,7 +1,7 @@
 import * as ioredis from 'ioredis';
 
 import * as speedrun_db from '../speedrun-db';
-import { Game } from '../speedrun-api';
+import { Game } from '../dao/games';
 import { Config } from '../config';
 
 // Operations:
