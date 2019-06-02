@@ -4,8 +4,7 @@ import * as _ from 'lodash';
 
 import { Router } from 'express';
 
-import * as speedrun_api from '../../lib/speedrun-api'
-import * as speedrun_db from '../../lib/speedrun-db';
+import { LeaderboardDao } from '../../lib/dao/leaderboards';
 
 import * as api from '../';
 import * as api_response from '../response';
@@ -20,14 +19,17 @@ router.get('/:ids', async (req, res) => {
         return api_response.error(res, api_response.err.TOO_MANY_ITEMS());
     }
 
-    let leaderboards_raw = await api.storedb!.hmget(speedrun_db.locs.leaderboards, ...ids);
+    try {
+        let leaderboards = await new LeaderboardDao(api.storedb!).load(ids);
 
-    let leaderboards: speedrun_api.Leaderboard[] = <any[]>_.chain(leaderboards_raw)
-        .reject(_.isNil)
-        .map(JSON.parse)
-        .value();
-    
-    for(let leaderboard of leaderboards) {
+        return api_response.complete(res, leaderboards);
+    }
+    catch(err) {
+        console.error('api/leaderboards: could not send runs from list:', err);
+        return api_response.error(res, api_response.err.INTERNAL_ERROR());
+    }
+
+    /*for(let leaderboard of leaderboards) {
         if(!leaderboard.players) {
 
             let player_ids = _.chain(leaderboard.runs)
@@ -36,7 +38,7 @@ router.get('/:ids', async (req, res) => {
                 .reject(_.isNil)
                 .uniq()
                 .value();
-            
+
             if(!player_ids.length) {
                 leaderboard.players = {};
                 continue;
@@ -51,9 +53,7 @@ router.get('/:ids', async (req, res) => {
                 .keyBy('id')
                 .value();
         }
-    }
-
-    return api_response.complete(res, leaderboards);
+    }*/
 });
 
 module.exports = router;

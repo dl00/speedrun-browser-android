@@ -41,10 +41,10 @@ router.get('/', async (req, res) => {
 
             if(ids.length) {
                 // resolve all the results
-                let raw = await api.storedb!.hmget(
+                let raw = await api.storedb!.redis.hmget(
                     speedrun_db.locs[SCAN_INDEXES[si].loc],
                     ...ids);
-                
+
                 results[si] = _.chain(raw)
                     .reject(_.isNil)
                     .map(JSON.parse)

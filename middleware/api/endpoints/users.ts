@@ -4,8 +4,9 @@ import * as _ from 'lodash';
 
 import { Router } from 'express';
 
-import * as speedrun_api from '../../lib/speedrun-api'
 import * as speedrun_db from '../../lib/speedrun-db';
+
+import { Leaderboard } from '../../lib/dao/leaderboards';
 
 import * as api from '../';
 import * as api_response from '../response';
@@ -20,9 +21,9 @@ router.get('/:ids', async (req, res) => {
         return api_response.error(res, api_response.err.TOO_MANY_ITEMS());
     }
 
-    let players_raw = await api.storedb!.hmget(speedrun_db.locs.players, ...ids);
+    let players_raw = await api.storedb!.redis.hmget(speedrun_db.locs.players, ...ids);
 
-    let players: speedrun_api.Leaderboard[] = <any[]>_.chain(players_raw)
+    let players: Leaderboard[] = <any[]>_.chain(players_raw)
         .reject(_.isNil)
         .map(JSON.parse)
         .value();

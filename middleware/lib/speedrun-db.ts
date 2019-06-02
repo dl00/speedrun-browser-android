@@ -1,13 +1,16 @@
 import * as _ from 'lodash';
-import * as moment from 'moment';
 import * as ioredis from 'ioredis';
+
+import { Game, game_assets_to_bulk } from './dao/games';
+import { Leaderboard } from './dao/leaderboards';
+import { LeaderboardRunEntry, BulkRun } from './dao/runs';
 
 import * as speedrun_api from './speedrun-api';
 
 /// information about a new PB from a player
 export interface NewRecord {
-    old_run: speedrun_api.LeaderboardRunEntry,
-    new_run: speedrun_api.LeaderboardRunEntry
+    old_run: LeaderboardRunEntry,
+    new_run: LeaderboardRunEntry
 }
 
 /// key values/prefixes for which datasets can be found
@@ -60,78 +63,6 @@ export async function list_leaderboards(db: ioredis.Redis, game_id: string) {
     return leaderboard_ids;
 }
 
-export function generate_leaderboard_score(leaderboard: speedrun_api.Leaderboard) {
-    let timenow = leaderboard.updated ? moment(leaderboard.updated) : moment();
-
-    let updated_cutoff = timenow.subtract(1, 'year');
-    let edge_cutoff = timenow.subtract(3, 'months');
-
-    let score = 0;
-
-    for(let run of leaderboard.runs) {
-        let d = moment(run.run.date);
-
-        if(d.isAfter(edge_cutoff))
-            score += 4;
-        else if(d.isAfter(updated_cutoff))
-            score++;
-    }
-
-    return score;
-}
-
-export async function rescore_game(db: ioredis.Redis, indexer: any, game: speedrun_api.Game) {
-
-    let game_score = 0;
-
-    // look at the game's leaderboards, for categories not levels. Find the number of records
-    let categories_raw = await db.hget(locs.categories, game.id);
-
-    if(categories_raw) {
-        let categories = JSON.parse(categories_raw);
-
-        categories = _.filter(categories, c => c.type == 'per-game');
-
-        let div = 1 + Math.log(Math.max(1, categories.length));
-
-        if(categories.length) {
-            let leaderboards_raw = await db.hmget(locs.leaderboards, ..._.map(categories, 'id'));
-            if(leaderboards_raw)
-                game_score = Math.ceil(_.chain(leaderboards_raw)
-                    .reject(_.isNil)
-                    .map(JSON.parse)
-                    .map(generate_leaderboard_score)
-                    .sum().value() / div);
-        }
-    }
-
-    let indexes: { text: string, score: number, namespace?: string }[] = [];
-    indexes.push({ text: game.abbreviation.toLowerCase(), score: game_score });
-
-    for(let name in game.names) {
-        if(!game.names[name])
-            continue;
-
-        let idx: any = { text: game.names[name].toLowerCase(), score: game_score };
-        if(name != 'international')
-            idx.namespace = name;
-
-        indexes.push(idx);
-    }
-
-    // install autocomplete entry
-    await indexer.add(game.id, indexes);
-
-    // install master rank list
-    await db.zadd(locs.game_rank, game_score.toString(), game.id);
-
-    // install on category lists
-    // TODO: switch to `speedrun_api.Genre[] instead of any[]`
-    for(let genre of <any[]>game.genres) {
-        await db.zadd(locs.game_rank + ':' + (genre.id || genre), game_score.toString(), game.id);
-    }
-}
-
 export async function rescore_genre(db: ioredis.Redis, indexer: any, genre: speedrun_api.Genre) {
     let score = await db.zcard(locs.game_rank + ':' + genre.id);
 
@@ -147,9 +78,9 @@ export async function rescore_genre(db: ioredis.Redis, indexer: any, genre: spee
 
 // add/update the given personal best entry for the given user
 export function apply_personal_best(player: speedrun_api.User,
-            game: speedrun_api.Game, category: speedrun_api.Category,
+            game: Game, category: speedrun_api.Category,
             level: speedrun_api.Level|null,
-            lb: speedrun_api.Leaderboard,
+            lb: Leaderboard,
             index: number): NewRecord|null {
 
     let category_run: speedrun_api.CategoryPersonalBests = {
@@ -161,11 +92,11 @@ export function apply_personal_best(player: speedrun_api.User,
     let game_run: speedrun_api.GamePersonalBests = {
         id: game.id,
         names: game.names,
-        assets: speedrun_api.game_assets_to_bulk(game.assets),
+        assets: game_assets_to_bulk(game.assets),
         categories: {}
     };
 
-    let best_run: { place: number, run: speedrun_api.BulkRun } = {
+    let best_run: { place: number, run: BulkRun } = {
         place: lb.runs[index].place,
         run: lb.runs[index].run
     };
@@ -210,7 +141,7 @@ export function apply_personal_best(player: speedrun_api.User,
     };
 }
 
-export async function apply_leaderboard_bests(db: ioredis.Redis, lb: speedrun_api.Leaderboard, updated_players: {[id: string]: speedrun_api.User}): Promise<NewRecord[]> {
+export async function apply_leaderboard_bests(db: ioredis.Redis, lb: Leaderboard, updated_players: {[id: string]: speedrun_api.User}): Promise<NewRecord[]> {
 
     let player_ids = _.chain(lb.runs)
         .map(v => _.map(v.run.players, 'id'))
@@ -233,7 +164,7 @@ export async function apply_leaderboard_bests(db: ioredis.Redis, lb: speedrun_ap
         .hmget(locs.players, ...player_ids)
         .exec();
 
-    let game: speedrun_api.Game = JSON.parse(res[0][1]);
+    let game: Game = JSON.parse(res[0][1]);
     let category: speedrun_api.Category = _.find(JSON.parse(res[1][1]), v => v.id == category_id);
     let level: speedrun_api.Level = _.find(JSON.parse(res[2][1]), v => v.id == level_id);
 

@@ -17,7 +17,7 @@ router.get('/:ids', async (req, res) => {
         return api_response.error(res, api_response.err.TOO_MANY_ITEMS());
     }
 
-    let multi = api.storedb!.multi();
+    let multi = api.storedb!.redis.multi();
 
     for(let id of ids) {
         multi
@@ -46,7 +46,7 @@ router.get('/:ids', async (req, res) => {
             });
         }
         else if(d[i * 5 + 2][1]) {
-            
+
             types.push({
                 type: 'player',
                 id: d[i * 5 + 2][1]

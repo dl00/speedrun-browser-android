@@ -4,6 +4,7 @@ import * as path from 'path';
 import * as _ from 'lodash';
 
 import * as ioredis from 'ioredis';
+import { MongoClientOptions } from 'mongodb';
 
 let Indexer: any = require('@13013/indexer');
 
@@ -28,7 +29,22 @@ export interface Config {
     }
 
     /// Configure the DB connection
-    redis: ioredis.RedisOptions
+    db: {
+        /// MongoDB database connection options
+        mongo: {
+            /// MongoDB connection string, see https://docs.mongodb.com/manual/reference/connection-string/
+            uri: string,
+
+            /// The database to use on the server
+            dbName: string,
+
+            /// Extra options for mongodb
+            options?: MongoClientOptions
+        }
+
+        /// Redis database connection options
+        redis: ioredis.RedisOptions
+    }
 
     scraper: {
         /// How fast should the API scan for changes?
@@ -91,7 +107,13 @@ export const DEFAULT_CONFIG: Config = {
         maxSearchLength: 50
     },
 
-    redis: {},
+    db: {
+        redis: {},
+        mongo: {
+            uri: 'mongodb://localhost:27017',
+            dbName: 'srbrowser'
+        }
+    },
 
     scraper: {
         // number of calls / second
@@ -162,13 +184,13 @@ export var load_config = _.memoize(() => {
 });
 
 export function load_store_redis(config: Config) {
-    return new ioredis(config.redis);
+    return new ioredis(config.db.redis);
 }
 
 export function load_scraper_redis(config: Config) {
-    return new ioredis(_.defaults(config.scraper.redis, config.redis));
+    return new ioredis(_.defaults(config.scraper.redis, config.db.redis));
 }
 
 export function load_indexer(config: Config, name: string) {
-    return new Indexer(name, config.indexer.config, _.defaults(config.indexer.redis, config.redis));
+    return new Indexer(name, config.indexer.config, _.defaults(config.indexer.redis, config.db.redis));
 }

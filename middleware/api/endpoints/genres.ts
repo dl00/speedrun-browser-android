@@ -18,12 +18,12 @@ router.get('/', async function(req, res) {
 
     if(!query) {
         try {
-            let top_genres = await api.storedb!.zrevrange(
+            let top_genres = await api.storedb!.redis.zrevrange(
                 speedrun_db.locs.genre_rank,
                 0, 19
             );
 
-            let raw = await api.storedb!.hmget(
+            let raw = await api.storedb!.redis.hmget(
                 speedrun_db.locs.genres,
                 ...top_genres);
 
@@ -51,7 +51,7 @@ router.get('/', async function(req, res) {
 
         if(ids.length) {
             // resolve all the results
-            let raw = await api.storedb!.hmget(
+            let raw = await api.storedb!.redis.hmget(
                 speedrun_db.locs.genres,
                 ...ids);
 

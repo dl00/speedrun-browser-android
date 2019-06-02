@@ -3,11 +3,10 @@ import * as path from 'path';
 
 import * as express from 'express';
 
-import * as ioredis from 'ioredis';
-
+import { DB, load_db } from '../lib/db';
 import { Config } from '../lib/config';
 
-export var storedb: ioredis.Redis|null = null;
+export var storedb: DB|null = null;
 export var config: Config|null = null;
 
 export function create_express_server() {
@@ -18,14 +17,14 @@ export function create_express_server() {
     return app;
 }
 
-export function run(conf: Config) {
+export async function run(conf: Config) {
 
     console.log('Start API');
 
     config = conf;
 
     // load storedb
-    storedb = new ioredis(config!.redis);
+    storedb = await load_db(config);
 
     // create an express server
     const app = create_express_server();
@@ -42,7 +41,7 @@ export function run(conf: Config) {
         loaded[name] = require(path.join(__dirname, 'endpoints', name));
         app.use('/api/v1/' + name, loaded[name]);
     }
-    
+
     app.listen(config!.listen, () => {
         console.log('API Ready', config!.listen);
     });
