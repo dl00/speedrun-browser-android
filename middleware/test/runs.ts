@@ -71,7 +71,7 @@ describe('RunDao', () => {
                     times: { primary: '100' },
                     system: {},
                     values: {},
-                    game: 'a_game_with_genre'
+                    game: {id: 'a_game_with_genre'}
                 }
             },
             {
@@ -84,7 +84,7 @@ describe('RunDao', () => {
                     times: { primary: '135' },
                     system: {},
                     values: {},
-                    game: 'a_game'
+                    game: {id: 'a_game'}
                 }
             }
         ]);
@@ -111,7 +111,7 @@ describe('RunDao', () => {
                 times: { primary: '135' },
                 system: {},
                 values: {},
-                game: 'a_game_with_genre'
+                game: {id: 'a_game_with_genre'}
             }
         });
 
