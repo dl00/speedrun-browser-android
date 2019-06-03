@@ -133,6 +133,9 @@ class PopularGamesIndex implements IndexDriver<Game> {
         let popular_game_ids: string[] = await conf.db.redis.zrevrange(POPULAR_GAMES_KEY + (genre ? ':' + genre : ''),
             offset, offset + this.max_return - 1);
 
+        if(!popular_game_ids.length)
+            return [];
+
         return await conf.load(popular_game_ids);
     }
 
@@ -145,14 +148,16 @@ class PopularGamesIndex implements IndexDriver<Game> {
             let game_score = game.score || 0;
 
             // install master rank list
-            await m.zadd(POPULAR_GAMES_KEY, game_score.toString(), game.id);
+            m.zadd(POPULAR_GAMES_KEY, game_score.toString(), game.id);
 
             // install on category lists
             // TODO: switch to `speedrun_api.Genre[] instead of any[]`
             for(let genre of <any[]>game.genres) {
-                await m.zadd(POPULAR_GAMES_KEY + ':' + (genre.id || genre), game_score.toString(), game.id);
+                m.zadd(POPULAR_GAMES_KEY + ':' + (genre.id || genre), game_score.toString(), game.id);
             }
         }
+
+        await m.exec();
     }
 
     async clear(conf: DaoConfig<Game>, objs: Game[]) {
@@ -169,9 +174,18 @@ class PopularGamesIndex implements IndexDriver<Game> {
 
 export interface GameDaoOptions {
     max_items?: number;
+
+    game_score_time_now?: moment.Moment;
+    game_score_leaderboard_updated_cutoff?: moment.Moment;
+    game_score_leaderboard_edge_cutoff?: moment.Moment;
 }
 
 export class GameDao extends Dao<Game> {
+
+    private game_score_time_now: moment.Moment;
+    private game_score_leaderboard_updated_cutoff: moment.Moment;
+    private game_score_leaderboard_edge_cutoff: moment.Moment;
+
     constructor(db: DB, options?: GameDaoOptions) {
         super(db, 'games', 'redis');
 
@@ -181,6 +195,25 @@ export class GameDao extends Dao<Game> {
             new RedisMapIndex('abbr', 'abbreviation'),
             new PopularGamesIndex('popular_games', (options && options.max_items) ? options.max_items : 100)
         ];
+
+        this.game_score_time_now = options && options.game_score_time_now ? options.game_score_time_now : moment();
+        this.game_score_leaderboard_updated_cutoff = this.game_score_time_now.subtract(1, 'year');
+        this.game_score_leaderboard_edge_cutoff = this.game_score_time_now.subtract(3, 'months');
+
+        _.assign(this, _.pick(options, 'game_score_leaderboard_edge_cutoff', 'game_score_leaderboard_updated_cutoff'));
+    }
+
+    async save(games: Game|Game[]): Promise<void> {
+        if(!_.isArray(games))
+            games = [games];
+
+        for(let game of games) {
+            // make sure every game comes in with a score, otherwise its confusing
+            if(_.isNil(game.score))
+                await this.calculate_score(game);
+        }
+
+        await super.save(games);
     }
 
     // refreshes the score for a game by reading its leaderboards.
@@ -216,7 +249,7 @@ export class GameDao extends Dao<Game> {
 
                 game_score = Math.ceil(_.chain(leaderboards)
                     .reject(_.isNil)
-                    .map(GameDao.generate_leaderboard_score)
+                    .map(_.bind(this.generate_leaderboard_score, this))
                     .sum().value() / div);
             }
         }
@@ -224,27 +257,22 @@ export class GameDao extends Dao<Game> {
         return game_score;
     }
 
-    private static generate_leaderboard_score(leaderboard: Leaderboard) {
-        let timenow = leaderboard.updated ? moment(leaderboard.updated) : moment();
-
-        let updated_cutoff = timenow.subtract(1, 'year');
-        let edge_cutoff = timenow.subtract(3, 'months');
-
+    private generate_leaderboard_score(leaderboard: Leaderboard) {
         let score = 0;
 
         for(let run of leaderboard.runs) {
             let d = moment(run.run.date);
 
-            if(d.isAfter(edge_cutoff))
+            if(d.isAfter(this.game_score_leaderboard_edge_cutoff))
                 score += 4;
-            else if(d.isAfter(updated_cutoff))
+            else if(d.isAfter(this.game_score_leaderboard_updated_cutoff))
                 score++;
         }
 
         return score;
     }
 
-    async load_popular(offset: number, genreId: string) {
+    async load_popular(offset?: number, genreId?: string) {
         let key = `${genreId || ''}:${offset || 0}`;
         return await this.load_by_index('popular_games', key);
     }

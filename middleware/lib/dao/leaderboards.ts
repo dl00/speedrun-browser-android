@@ -14,10 +14,10 @@ export interface Leaderboard extends BaseMiddleware {
     game: Game|string
     category: Category|string
     level?: string
-    platform: string
-    region: string
-    emulators: string
-    'video-only': boolean
+    platform?: string
+    region?: string
+    emulators?: string
+    'video-only'?: boolean
     runs: LeaderboardRunEntry[]
 
     players: {[id: string]: User}|{data: User[]}
