@@ -58,6 +58,8 @@ export function normalize_leaderboard(d: Leaderboard) {
             return v;
         });
     }
+    else
+        d.runs = [];
 
     delete d.players;
 
