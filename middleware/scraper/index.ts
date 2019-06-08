@@ -3,17 +3,16 @@ import * as moment from 'moment';
 
 import * as ioredis from 'ioredis';
 
-import { Config, load_store_redis, load_scraper_redis, load_indexer } from '../lib/config';
+import { Config, load_scraper_redis } from '../lib/config';
 import { generate_unique_id } from '../lib/util';
 import * as redis from '../lib/redis';
 
-import * as DB from './db';
+import * as ScraperDB from './db';
+
+import * as StoreDB from '../lib/db';
 
 export let rdb: ioredis.Redis|null = null;
-export let storedb: ioredis.Redis|null = null;
-export let indexer_games: any|null = null;
-export let indexer_players: any|null = null;
-export let indexer_genres: any|null = null;
+export let storedb: StoreDB.DB|null = null;
 export let config: any = null;
 
 interface Task {
@@ -78,7 +77,7 @@ export async function push_call(call: Call, priority: number) {
     console.log('[PUSHC]', call.module, call.exec, call.runid);
 
     await rdb!.multi()
-        .rpush(`${DB.locs.callqueue}:${priority}`, DB.join([
+        .rpush(`${ScraperDB.locs.callqueue}:${priority}`, ScraperDB.join([
             call.runid,
             call.module,
             call.exec,
@@ -117,7 +116,7 @@ async function do_call(call: Call, priority: number) {
 // arguments for later passing to the iblpushrpop command
 const LISTEN_CMD: string[] = [];
 for(let i = 0;i < 20;i++) {
-    LISTEN_CMD.push(DB.join([DB.locs.callqueue, i.toString()]))
+    LISTEN_CMD.push(ScraperDB.join([ScraperDB.locs.callqueue, i.toString()]))
 }
 
 // timeout: do not block for more than a second!
@@ -137,7 +136,7 @@ async function pop_call() {
         return null;
 
     let priority = rawc[0].split(':')[1];
-    let raw_running_task = DB.join([Date.now(), rawc[1]]);
+    let raw_running_task = ScraperDB.join([Date.now(), rawc[1]]);
 
     let d = rawc[1].split(':');
 
@@ -150,7 +149,7 @@ async function pop_call() {
     };
 
     await rdb!.multi()
-        .rpush(DB.locs.running_tasks, raw_running_task)
+        .rpush(ScraperDB.locs.running_tasks, raw_running_task)
         .exec();
 
     console.log('[POP C]', call.module, call.exec, call.runid);
@@ -158,7 +157,7 @@ async function pop_call() {
     let ret = await do_call(call, priority);
 
     // when the call returns we can safely remove from running tasks
-    rdb!.lrem(DB.locs.running_tasks, 1, raw_running_task);
+    rdb!.lrem(ScraperDB.locs.running_tasks, 1, raw_running_task);
 
     if(call.skip_wait)
         setTimeout(pop_call, 1);
@@ -168,7 +167,7 @@ async function pop_call() {
 
 export function spawn_task(task: Task) {
     // scan currently enqueued tasks to ensure previous runid still does not exist
-    let runid = generate_unique_id(DB.ID_LENGTH);
+    let runid = generate_unique_id(ScraperDB.ID_LENGTH);
 
     let loader = require(`./loaders/${task.module}`);
 
@@ -179,7 +178,7 @@ export function spawn_task(task: Task) {
 }
 
 async function init_task(task: Task) {
-    let runid = task.name + '/' + generate_unique_id(DB.ID_LENGTH)
+    let runid = task.name + '/' + generate_unique_id(ScraperDB.ID_LENGTH)
 
     await push_call({
         runid: runid,
@@ -188,7 +187,7 @@ async function init_task(task: Task) {
         options: task.options
     }, 0);
 
-    await rdb!.hset(DB.locs.pending_tasks, task.name, DB.join([
+    await rdb!.hset(ScraperDB.locs.pending_tasks, task.name, ScraperDB.join([
         runid,
         moment().add(task.repeat).toISOString()
     ]));
@@ -204,7 +203,7 @@ async function init_task(task: Task) {
 async function wipe_running_tasks() {
 
     try {
-        let running_tasks = await rdb!.lrange(DB.locs.running_tasks, 0, -1);
+        let running_tasks = await rdb!.lrange(ScraperDB.locs.running_tasks, 0, -1);
 
         console.log('[WIPET]', running_tasks.length, 'running tasks found');
 
@@ -215,8 +214,8 @@ async function wipe_running_tasks() {
             if(time < Date.now() - config.scraper.runningTaskTimeout * 1000) {
                 console.log('[WIPET]', t);
                 await rdb!.multi()
-                        .lrem(DB.locs.running_tasks, 1, t)
-                        .lpush(DB.join([DB.locs.callqueue, '1']), spl.join(':'))
+                        .lrem(ScraperDB.locs.running_tasks, 1, t)
+                        .lpush(ScraperDB.join([ScraperDB.locs.callqueue, '1']), spl.join(':'))
                         .exec();
             }
         }
@@ -228,11 +227,7 @@ async function wipe_running_tasks() {
 export async function connect(conf: Config) {
     config = conf;
     rdb = load_scraper_redis(config);
-    storedb = load_store_redis(config);
-
-    indexer_games = load_indexer(config, 'games');
-    indexer_players = load_indexer(config, 'players');
-    indexer_genres = load_indexer(config, 'genres');
+    storedb = await StoreDB.load_db(config);
 
     redis.defineCommands(rdb);
 }
@@ -245,7 +240,7 @@ export async function run(config: Config) {
 
     // spawn the base tasks
     for(let task of BASE_TASKS) {
-        let ptask = <string>(await rdb!.hget(DB.locs.pending_tasks, task.name));
+        let ptask = <string>(await rdb!.hget(ScraperDB.locs.pending_tasks, task.name));
 
         if(ptask) {
             let ptaskParts = ptask.split(':');

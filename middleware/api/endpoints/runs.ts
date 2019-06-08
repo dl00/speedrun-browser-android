@@ -2,8 +2,7 @@ import * as _ from 'lodash';
 
 import { Router, Request, Response } from 'express';
 
-import * as speedrun_api from '../../lib/speedrun-api'
-import * as speedrun_db from '../../lib/speedrun-db';
+import { RunDao } from '../../lib/dao/runs';
 
 import * as api from '../';
 import * as api_response from '../response';
@@ -27,35 +26,15 @@ async function get_latest_runs(req: Request, res: Response) {
     if(isNaN(end) || end < start || end - start + 1 > api.config!.api.maxItems)
         return api_response.error(res, api_response.err.INVALID_PARAMS(['count']));
 
-    let db_key = speedrun_db.locs.verified_runs;
-
-    if(req.params.id) {
-        // filter by genre
-        db_key += ':' + req.params.id;
-    }
-
-    let total = await api.storedb!.zcard(db_key);
-
-    if(start > total - 1)
-        return api_response.error(res, api_response.err.INVALID_PARAMS(['start'], 'past the end of list'));
-
-    end = Math.min(end, total - 1);
-
     try {
-        let ids = await api.storedb!.zrevrange(db_key, start, end);
-        let runs_raw = await api.storedb!.hmget(speedrun_db.locs.runs, ...ids);
-
-        let runs = _.chain(runs_raw)
-            .reject(_.isNil)
-            .map(JSON.parse)
-            .value();
+        let runs = await new RunDao(api.storedb!, { max_items: api.config!.api.maxItems }).load_latest_runs(start, req.params.id);
 
         return api_response.complete(res, runs, {
-            code: ((end + 1) % total).toString(),
-            total: total
+            code: (end + 1).toString(),
+            total: 100000
         });
     } catch(err) {
-        console.error('api/games: could not send latest runs:', err);
+        console.error('api/runs: could not send latest runs:', err);
         return api_response.error(res, api_response.err.INTERNAL_ERROR());
     }
 }
@@ -71,14 +50,14 @@ router.get('/:ids', async (req, res) => {
         return api_response.error(res, api_response.err.TOO_MANY_ITEMS());
     }
 
-    let lre_raw = await api.storedb!.hmget(speedrun_db.locs.runs, ...ids);
-
-    let lres: speedrun_api.LeaderboardRunEntry[] = <any[]>_.chain(lre_raw)
-        .reject(_.isNil)
-        .map(JSON.parse)
-        .value();
-
-    return api_response.complete(res, lres);
+    try {
+        let runs = await new RunDao(api.storedb!).load(ids);
+        return api_response.complete(res, runs);
+    }
+    catch(err) {
+        console.error('api/runs: could not send runs from list:', err);
+        return api_response.error(res, api_response.err.INTERNAL_ERROR());
+    }
 });
 
 module.exports = router;

@@ -3,8 +3,12 @@ import * as _ from 'lodash';
 import * as fb_admin from 'firebase-admin';
 
 import { load_config } from '../lib/config';
-import * as speedrun_api from '../lib/speedrun-api';
-import { NewRecord } from '../lib/speedrun-db';
+
+import { Game, game_to_bulk } from '../lib/dao/games';
+import { Category, category_to_bulk } from '../lib/dao/categories';
+import { Level, level_to_bulk } from '../lib/dao/levels';
+import { User } from '../lib/dao/users';
+import { Run, NewRecord, run_to_bulk } from '../lib/dao/runs';
 
 const config = load_config();
 
@@ -23,28 +27,28 @@ interface RecordNotificationData {
     [key: string]: string|undefined
 }
 
-function build_record_notification_data(record: NewRecord, game: speedrun_api.Game, category: speedrun_api.Category, level?: speedrun_api.Level): RecordNotificationData {
+function build_record_notification_data(record: NewRecord, game: Game, category: Category, level?: Level|null): RecordNotificationData {
 
-    record.new_run.run = speedrun_api.run_to_bulk(<speedrun_api.Run>record.new_run.run);
+    record.new_run.run = run_to_bulk(<Run>record.new_run.run);
 
     let ret: RecordNotificationData = {
         new_run: JSON.stringify(record.new_run),
-        game: JSON.stringify(speedrun_api.game_to_bulk(game)),
-        category: JSON.stringify(speedrun_api.category_to_bulk(category))
+        game: JSON.stringify(game_to_bulk(game)),
+        category: JSON.stringify(category_to_bulk(category))
     };
 
     if(record.old_run) {
-        record.old_run.run = speedrun_api.run_to_bulk(<speedrun_api.Run>record.old_run.run);
+        record.old_run.run = run_to_bulk(<Run>record.old_run.run);
         ret.old_run = JSON.stringify(record.old_run);
     }
 
     if(level)
-        ret.level = JSON.stringify(speedrun_api.level_to_bulk(level));
+        ret.level = JSON.stringify(level_to_bulk(level));
 
     return ret;
 }
 
-export async function notify_game_record(record: NewRecord, game: speedrun_api.Game, category: speedrun_api.Category, level?: speedrun_api.Level) {
+export async function notify_game_record(record: NewRecord, game: Game, category: Category, level?: Level|null) {
     if(!config.scraper.pushNotify.enabled)
         return false;
 
@@ -64,10 +68,10 @@ export async function notify_game_record(record: NewRecord, game: speedrun_api.G
     return true;
 }
 
-export async function notify_player_record(record: NewRecord, player: speedrun_api.User, game: speedrun_api.Game, category: speedrun_api.Category, level?: speedrun_api.Level) {
+export async function notify_player_record(record: NewRecord, player: User, game: Game, category: Category, level?: Level|null) {
     if(!config.scraper.pushNotify.enabled)
         return false;
-    
+
     const PLAYER_RECORD_TOPIC = `${config.stackName}_player_${player.id}`;
 
     let run_notification_data: RecordNotificationData = build_record_notification_data(record, game, category, level);

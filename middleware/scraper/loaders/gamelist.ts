@@ -4,24 +4,22 @@
 
 import * as _ from 'lodash';
 
-import * as speedrun_api from '../../lib/speedrun-api';
-import * as speedrun_db from '../../lib/speedrun-db';
-import request from '../../lib/request';
+import * as puller from '../puller';
+
+import { Game, GameDao, normalize_game } from '../../lib/dao/games';
+import { Genre, GenreDao } from '../../lib/dao/genres';
+import { Category, CategoryDao } from '../../lib/dao/categories';
+import { Level, LevelDao } from '../../lib/dao/levels';
 
 import * as scraper from '../index';
 
 export async function list_all_games(runid: string, options: any) {
 
     try {
-        let res = await request(speedrun_api.API_PREFIX + '/games', {
-            qs: {
-                _bulk: 'yes',
-                max: 1000,
-                offset: options ? options.offset : 0
-            }
-        });
+        let res = await puller.do_pull(scraper.storedb!,
+            '/games?_bulk=yes&max=1000&offset=' + (options ? options.offset : 0));
 
-        for(let game of <speedrun_api.Game[]>res.data) {
+        for(let game of <Game[]>res.data.data) {
             await scraper.push_call({
                 runid: scraper.join_runid([runid, game.id]),
                 module: 'gamelist',
@@ -32,14 +30,14 @@ export async function list_all_games(runid: string, options: any) {
             }, 10);
         }
 
-        if(res.pagination.max == res.pagination.size) {
+        if(res.data.pagination.max == res.data.pagination.size) {
             // schedule another load
             await scraper.push_call({
                 runid: runid,
                 module: 'gamelist',
                 exec: 'list_all_games',
                 options: {
-                    offset: (options ? options.offset : 0) + res.pagination.size
+                    offset: (options ? options.offset : 0) + res.data.pagination.size
                 }
             }, 0);
         }
@@ -52,24 +50,23 @@ export async function list_all_games(runid: string, options: any) {
 
 export async function pull_game(runid: string, options: any) {
     try {
-        let res = await request(speedrun_api.API_PREFIX + '/games/' + options.id + '?embed=platforms,regions,genres');
+        let res = await puller.do_pull(scraper.storedb!, '/games/' + options.id + '?embed=platforms,regions,genres');
 
-        let game: speedrun_api.Game = res.data;
+        let game: Game = res.data.data;
+
+        normalize_game(game);
 
         // write the game to db
-        speedrun_api.normalize_game(game);
-
-        let m = scraper.storedb!.multi();
-
-        m.hset(speedrun_db.locs.games, options.id, JSON.stringify(game));
-        m.hset(speedrun_db.locs.game_abbrs, game.abbreviation, game.id);
+        await new GameDao(scraper.storedb!, scraper.config).save(game);
 
         // write any genres to the db
-        for(let genre of <speedrun_api.Genre[]>game.genres) {
-            await speedrun_db.rescore_genre(scraper.storedb!, scraper.indexer_genres, genre);
+        if(game.genres && (<Genre[]>game.genres).length) {
+            let genre_dao = await new GenreDao(scraper.storedb!);
+            await genre_dao.save(<Genre[]>game.genres);
+            for(let genre of <Genre[]>game.genres) {
+                await genre_dao.rescore_genre(genre.id);
+            }
         }
-
-        await m.exec();
 
         // unfortunately we have to load the categories for a game in a separate request...
         await scraper.push_call({
@@ -82,22 +79,22 @@ export async function pull_game(runid: string, options: any) {
         }, 9);
     }
     catch(err) {
-        console.error('loader/gamelist: could not retrieve single game entry:', options, err.statusCode, err);
+        console.error('loader/gamelist: could not retrieve single game entry:', options, err.statusCode, err, _.get(err, 'previousErrors[0]'));
         throw 'reschedule';
     }
 }
 
 export async function pull_game_categories(runid: string, options: any) {
     try {
-        let res = await request(speedrun_api.API_PREFIX + '/games/' + options.id + '/categories?embed=variables');
+        let res = await puller.do_pull(scraper.storedb!, '/games/' + options.id + '/categories?embed=variables');
 
-        let categories: speedrun_api.Category[] = res.data;
+        let categories: Category[] = res.data.data;
 
         // write the categories to db
-        for(let category of categories) {
-            speedrun_api.normalize_category(category);
-        }
-        await scraper.storedb!.hset(speedrun_db.locs.categories, options.id, JSON.stringify(categories));
+        await new CategoryDao(scraper.storedb!).save(categories.map(v => {
+            v.game = options.id;
+            return v;
+        }));
 
         let grouped_categories = _.groupBy(categories, 'type');
 
@@ -145,29 +142,27 @@ export async function pull_game_categories(runid: string, options: any) {
 
 export async function pull_game_levels(runid: string, options: any) {
     try {
-        let res = await request(speedrun_api.API_PREFIX + '/games/' + options.id + '/levels');
+        let res = await puller.do_pull(scraper.storedb!, '/games/' + options.id + '/levels');
 
-        let levels: speedrun_api.Level[] = res.data;
+        let levels: Level[] = res.data.data;
 
+        await new LevelDao(scraper.storedb!).save(levels.map(v => {
+            v.game = options.id;
+            return v;
+        }));
 
-        if(levels.length) {
-            for(let level of levels) {
-                speedrun_api.normalize(level);
-            }
-            await scraper.storedb!.hset(speedrun_db.locs.levels, options.id, JSON.stringify(levels));
-            for(let level of levels) {
-                for(let category_id of options.categories) {
-                    await scraper.push_call({
-                        runid: scraper.join_runid([runid, options.id, level.id + '_' + category_id, 'leaderboard']),
-                        module: 'leaderboard',
-                        exec: 'pull_leaderboard',
-                        options: {
-                            game_id: options.id,
-                            category_id: category_id,
-                            level_id: level.id
-                        }
-                    }, 8);
-                }
+        for(let level of levels) {
+            for(let category_id of options.categories) {
+                await scraper.push_call({
+                    runid: scraper.join_runid([runid, options.id, level.id + '_' + category_id, 'leaderboard']),
+                    module: 'leaderboard',
+                    exec: 'pull_leaderboard',
+                    options: {
+                        game_id: options.id,
+                        category_id: category_id,
+                        level_id: level.id
+                    }
+                }, 8);
             }
         }
     }
@@ -179,11 +174,7 @@ export async function pull_game_levels(runid: string, options: any) {
 
 export async function postprocess_game(_runid: string, options: any) {
     try {
-        let raw_game = await scraper.storedb!.hget(speedrun_db.locs.games, options.id);
-        if(!raw_game)
-            throw 'game does not exist in db!';
-
-        await speedrun_db.rescore_game(scraper.storedb!, scraper.indexer_games, JSON.parse(raw_game));
+        await new GameDao(scraper.storedb!, scraper.config).rescore_games(options.id);
     } catch(err) {
         // this should not happen unless there is some internal problem with the previous steps
         console.error('loader/gamelist: could not postprocess game:', options, err);

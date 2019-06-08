@@ -4,23 +4,24 @@
 
 import * as _ from 'lodash';
 
-import * as speedrun_api from '../../lib/speedrun-api';
-import * as speedrun_db from '../../lib/speedrun-db';
-import request from '../../lib/request';
+import * as puller from '../puller';
 
 import * as scraper from '../index';
 
+import { Run } from '../../lib/dao/runs';
+
 export async function pull_latest_runs(runid: string, options: any) {
     try {
-        let res = await request(speedrun_api.API_PREFIX + `/runs?status=verified&orderby=verify-date&direction=desc&offset=${options.offset || 0}&max=200`);
+        let res = await puller.do_pull(scraper.storedb!,
+            `/runs?status=verified&orderby=verify-date&direction=desc&offset=${options.offset || 0}&max=200`);
 
-        let runs: speedrun_api.Run[] = res.data;
+        let runs: Run[] = res.data.data;
 
         if(!runs.length)
             return;
 
         let latest_run_verify_date: string|null = options.latest_run_verify_date ||
-            await scraper.storedb!.getset(speedrun_db.locs.latest_run_verify_date,
+            await scraper.storedb!.redis.getset('latest_run_verify_date',
                 runs[0].status['verify-date']);
 
         if(!latest_run_verify_date) {
@@ -65,7 +66,7 @@ export async function pull_latest_runs(runid: string, options: any) {
             module: 'latest-runs',
             exec: 'pull_latest_runs',
             options: {
-                offset: res.pagination.offset + res.pagination.size,
+                offset: res.data.pagination.offset + res.data.pagination.size,
                 latest_run_verify_date: latest_run_verify_date
             }
         }, 1);

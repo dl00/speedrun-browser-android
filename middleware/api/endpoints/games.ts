@@ -2,10 +2,12 @@ import * as _ from 'lodash';
 
 import { Router, Request, Response } from 'express';
 
-import * as speedrun_db from '../../lib/speedrun-db';
-
 import * as api from '../';
 import * as api_response from '../response';
+
+import { Game, GameDao } from '../../lib/dao/games';
+import { Category, CategoryDao } from '../../lib/dao/categories';
+import { Level, LevelDao } from '../../lib/dao/levels';
 
 const router = Router();
 
@@ -26,33 +28,13 @@ async function get_popular_games(req: Request, res: Response) {
     if(isNaN(end) || end < start || end - start + 1 > api.config!.api.maxItems)
         return api_response.error(res, api_response.err.INVALID_PARAMS(['count']));
 
-    let db_key = speedrun_db.locs.game_rank
-
-    if(req.params.id) {
-        db_key += ':' + req.params.id;
-    }
-
-    console.log(db_key);
-
-    let total = await api.storedb!.zcard(db_key);
-
-    if(start > total - 1)
-        return api_response.error(res, api_response.err.INVALID_PARAMS(['start'], 'past the end of list'));
-
-    end = Math.min(end, total - 1);
-
     try {
-        let ids = await api.storedb!.zrevrange(db_key, start, end);
-        let games_raw = await api.storedb!.hmget(speedrun_db.locs.games, ...ids);
-
-        let games = _.chain(games_raw)
-            .reject(_.isNil)
-            .map(JSON.parse)
-            .value();
+        let games = await new GameDao(api.storedb!,
+            {max_items: api.config!.api.maxItems}).load_popular(start, req.params.id);
 
         return api_response.complete(res, games, {
-            code: ((end + 1) % total).toString(),
-            total: total
+            code: (end + 1).toString(),
+            total: 100000
         });
     } catch(err) {
         console.error('api/games/genre: could not send genred games:', err);
@@ -74,27 +56,32 @@ router.get('/:ids', async (req, res) => {
     }
 
     // remap abbrevations as necessary
-    let abbr_remapped = await api.storedb!.hmget(speedrun_db.locs.game_abbrs, ...ids);
-    ids = _.zipWith(abbr_remapped, ids, (abbr, id) => abbr || id);
-    let games_raw = await api.storedb!.hmget(speedrun_db.locs.games, ...ids);
+    let game_dao = new GameDao(api.storedb!);
 
-    let games = <any[]>_.chain(games_raw)
-        .reject(_.isNil)
-        .map(JSON.parse)
-        .value();
+    try {
 
+        let games: (Game|null)[];
+        let games_no_abbr = await game_dao.load(ids);
+        if(games_no_abbr.indexOf(null) == -1)
+            games = games_no_abbr;
+        else {
+            let games_abbr = await game_dao.load_by_index('abbr', ids);
+            games = _.zipWith(games_no_abbr, games_abbr, (a: any, b: any) => a || b);
 
-    if(games.length === 1) {
-        let category_raw = await api.storedb!.hget(speedrun_db.locs.categories, games[0].id);
-        let level_raw = await api.storedb!.hget(speedrun_db.locs.levels, games[0].id);
+            return api_response.complete(res, games);
+        }
 
-        if(category_raw)
-            games[0].categories = JSON.parse(category_raw);
-        if(level_raw)
-            games[0].levels = JSON.parse(level_raw);
+        if(games.length === 1 && !_.isNil(games[0])) {
+            games[0]!.categories = <Category[]>await new CategoryDao(api.storedb!).load_by_index('game', games[0]!.id);
+            games[0]!.levels = <Level[]>await new LevelDao(api.storedb!).load_by_index('game', games[0]!.id);
+        }
+
+        return api_response.complete(res, games);
     }
-
-    return api_response.complete(res, games);
+    catch(err) {
+        console.error('api/games/genre: could not send genred games:', err);
+        return api_response.error(res, api_response.err.INTERNAL_ERROR());
+    }
 });
 
 module.exports = router;

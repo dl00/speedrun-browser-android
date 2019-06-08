@@ -11,6 +11,8 @@ variables:
 
 services:
   - dcr.buyme360.com/devops/docker:dind
+  - mongo:4.0.9-xenial
+  - redis:5.0-alpine
 
 before_script:
   - apt-get --quiet update --yes
@@ -37,10 +39,11 @@ middlewareDocker:
   image: dcr.buyme360.com/devops/docker:latest
   before_script:
     - cd middleware
+  script:
     - npm i -g typescript
     - npm i
+    - npm test
     - tsc
-  script:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
     - docker build -t $IMAGE_TAG .
     - docker push $IMAGE_TAG
