@@ -2,12 +2,12 @@ import * as _ from 'lodash';
 
 import { Router, Request, Response } from 'express';
 
-import * as speedrun_db from '../../lib/speedrun-db';
-
 import * as api from '../';
 import * as api_response from '../response';
 
-import { GameDao, Game } from '../../lib/dao/games';
+import { Game, GameDao } from '../../lib/dao/games';
+import { Category, CategoryDao } from '../../lib/dao/categories';
+import { Level, LevelDao } from '../../lib/dao/levels';
 
 const router = Router();
 
@@ -72,13 +72,8 @@ router.get('/:ids', async (req, res) => {
         }
 
         if(games.length === 1 && !_.isNil(games[0])) {
-            let category_raw = await api.storedb!.redis.hget(speedrun_db.locs.categories, games[0]!.id);
-            let level_raw = await api.storedb!.redis.hget(speedrun_db.locs.levels, games[0]!.id);
-
-            if(category_raw)
-                games[0]!.categories = JSON.parse(category_raw);
-            if(level_raw)
-                games[0]!.levels = JSON.parse(level_raw);
+            games[0]!.categories = <Category[]>await new CategoryDao(api.storedb!).load_by_index('game', games[0]!.id);
+            games[0]!.levels = <Level[]>await new LevelDao(api.storedb!).load_by_index('game', games[0]!.id);
         }
 
         return api_response.complete(res, games);

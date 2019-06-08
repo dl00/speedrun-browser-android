@@ -30,6 +30,44 @@ export interface IndexDriver<T> {
     has_changed(old_obj: T, new_obj: T): boolean;
 }
 
+export class IndexerIndex<T> implements IndexDriver<T> {
+    name: string;
+    private indexer_name: string;
+    index_by: (obj: T) => {text: string, score: number, namespace?: string}[];
+
+    constructor(indexer_name: string, index_by: (obj: T) => {text: string, score: number, namespace?: string}[]) {
+        this.name = 'autocomplete';
+        this.indexer_name = indexer_name;
+        this.index_by = index_by;
+    }
+
+    async load(conf: DaoConfig<T>, keys: string[]): Promise<(T|null)[]> {
+        if(keys.length !== 1)
+            throw new Error('IndexerIndex expects only a single text search to load');
+
+        let ids = await conf.db.indexers[this.indexer_name].search_raw(keys[0], {maxResults: 20});
+
+        return await conf.load(ids);
+    }
+
+    async apply(conf: DaoConfig<T>, objs: T[]) {
+        // install autocomplete entry
+        await Promise.all(objs.map(async (obj: T) => {
+            await conf.db.indexers[this.indexer_name].add(conf.id_key(obj), this.index_by(obj));
+        }));
+    }
+
+    async clear(conf: DaoConfig<T>, objs: T[]) {
+        await Promise.all(objs.map(async (obj: T) => {
+            await conf.db.indexers[this.indexer_name].remove(conf.id_key(obj));
+        }));
+    }
+
+    has_changed(old_obj: T, new_obj: T): boolean {
+        return _.isEqual(this.index_by(old_obj), this.index_by(new_obj));
+    }
+}
+
 export class Dao<T> implements DaoConfig<T> {
     db: DB;
     collection: string;
@@ -46,6 +84,9 @@ export class Dao<T> implements DaoConfig<T> {
     async save(objs: T|T[]) {
         if(!_.isArray(objs))
             objs = [objs];
+
+        // run the transform for each obj
+        Promise.all(objs.map(v => _.bind(this.pre_store_transform, this, v)));
 
         // keep a copy of the previous values for index processing
         let prev_objs = await require(`./backing/${this.backing}`).save(this, objs);
@@ -110,5 +151,9 @@ export class Dao<T> implements DaoConfig<T> {
             throw `Undefined Index: ${index}`;
 
         return await idx.load(this, vals);
+    }
+
+    protected async pre_store_transform(obj: T): Promise<T> {
+        return obj;
     }
 }

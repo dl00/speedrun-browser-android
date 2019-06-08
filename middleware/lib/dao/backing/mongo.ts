@@ -90,3 +90,39 @@ export class MongoMapIndex<T> implements IndexDriver<T> {
         return _.get(old_obj, this.key_by) != _.get(new_obj, this.key_by);
     }
 }
+
+export class MongoMultiIndex<T> implements IndexDriver<T> {
+    name: string;
+    key_by: string;
+
+    private created: boolean = false;
+
+    constructor(name: string, key_by: string) {
+        this.name = name;
+        this.key_by = key_by;
+    }
+
+    async load(conf: DaoConfig<T>, keys: string[]): Promise<(T|null)[]> {
+        let data = await conf.db.mongo.collection(conf.collection)
+            .find(_.set({}, this.key_by, { $in: keys}))
+            .toArray();
+
+        if(!data.length)
+            return data;
+
+        return _.map(data, v => _.omit(v, '_id'));
+    }
+
+    async apply(conf: DaoConfig<T>, _objs: T[]) {
+        if(!this.created) {
+            await conf.db.mongo.collection(conf.collection).createIndex(this.key_by);
+            this.created = true;
+        }
+    }
+
+    async clear(_conf: DaoConfig<T>, _objs: T[]) {}
+
+    has_changed(old_obj: T, new_obj: T): boolean {
+        return _.get(old_obj, this.key_by) != _.get(new_obj, this.key_by);
+    }
+}

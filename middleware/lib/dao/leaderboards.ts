@@ -2,12 +2,16 @@ import * as _ from 'lodash';
 
 import { Dao } from './';
 
+import { MongoMultiIndex } from './backing/mongo';
+
 import { DB } from '../db';
 
-import { BaseMiddleware, Category, User, Variable, normalize } from '../speedrun-api';
+import { BaseMiddleware, Variable, normalize } from '../speedrun-api';
 
 import { LeaderboardRunEntry, Run, run_to_bulk } from './runs';
 import { Game } from './games';
+import { Category } from './categories';
+import { User } from './users';
 
 export interface Leaderboard extends BaseMiddleware {
     weblink: string
@@ -73,5 +77,14 @@ export class LeaderboardDao extends Dao<Leaderboard> {
         super(db, 'leaderboards', 'mongo');
 
         this.id_key = (lb: Leaderboard) => lb.category + (lb.level ? '_' + lb.level : '');
+
+        this.indexes = [
+            new MongoMultiIndex('game', 'game')
+        ];
+    }
+
+    protected async pre_store_transform(leaderboard: Leaderboard): Promise<Leaderboard> {
+        normalize_leaderboard(leaderboard);
+        return leaderboard;
     }
 }

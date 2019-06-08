@@ -4,8 +4,6 @@
 
 import * as _ from 'lodash';
 
-import * as speedrun_db from '../../lib/speedrun-db';
-
 import * as puller from '../puller';
 
 import * as scraper from '../index';
@@ -23,7 +21,7 @@ export async function pull_latest_runs(runid: string, options: any) {
             return;
 
         let latest_run_verify_date: string|null = options.latest_run_verify_date ||
-            await scraper.storedb!.redis.getset(speedrun_db.locs.latest_run_verify_date,
+            await scraper.storedb!.redis.getset('latest_run_verify_date',
                 runs[0].status['verify-date']);
 
         if(!latest_run_verify_date) {

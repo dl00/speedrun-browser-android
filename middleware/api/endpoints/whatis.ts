@@ -2,10 +2,12 @@ import * as _ from 'lodash';
 
 import { Router } from 'express';
 
-import * as speedrun_db from '../../lib/speedrun-db';
-
 import * as api from '../';
 import * as api_response from '../response';
+
+import { GameDao } from '../../lib/dao/games';
+import { UserDao } from '../../lib/dao/users';
+import { RunDao } from '../../lib/dao/runs';
 
 const router = Router();
 
@@ -17,48 +19,32 @@ router.get('/:ids', async (req, res) => {
         return api_response.error(res, api_response.err.TOO_MANY_ITEMS());
     }
 
-    let multi = api.storedb!.redis.multi();
+    let game_dao = new GameDao(api.storedb!);
+    let games = await game_dao.load(ids);
+    let games_by_abbr = await game_dao.load_by_index('abbr', ids);
 
-    for(let id of ids) {
-        multi
-            .hget(speedrun_db.locs.game_abbrs, id)
-            .hexists(speedrun_db.locs.games, id)
-            .hget(speedrun_db.locs.player_abbrs, id)
-            .hexists(speedrun_db.locs.players, id)
-            .hexists(speedrun_db.locs.runs, id)
-    }
+    let user_dao = new UserDao(api.storedb!);
+    let players = await new UserDao(api.storedb!).load(ids);
+    let players_by_abbr = await user_dao.load_by_index('abbr', ids);
 
-    let d = await multi.exec();
+    let runs = await new RunDao(api.storedb!).load(ids);
 
     let types: ({type: string, id: string}|null)[] = [];
 
     for(let i = 0;i < ids.length;i++) {
-        if(d[i * 5][1]) {
+        if(games[i] || games_by_abbr[i]) {
             types.push({
                 type: 'game',
-                id: d[i * 5][1]
+                id: games_by_abbr[i] ? games_by_abbr[i]!.id : ids[i]
             });
         }
-        else if(d[i * 5 + 1][1]) {
-            types.push({
-                type: 'game',
-                id: ids[i]
-            });
-        }
-        else if(d[i * 5 + 2][1]) {
-
+        else if(players[i] || players_by_abbr[i]) {
             types.push({
                 type: 'player',
-                id: d[i * 5 + 2][1]
+                id: players_by_abbr[i] ? players_by_abbr[i]!.id : ids[i]
             });
         }
-        else if(d[i * 5 + 3][1]) {
-            types.push({
-                type: 'player',
-                id: ids[i]
-            });
-        }
-        else if(d[i * 5 + 4][1]) {
+        else if(runs[i]) {
             types.push({
                 type: 'run',
                 id: ids[i]

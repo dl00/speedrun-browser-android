@@ -2,37 +2,23 @@ import * as _ from 'lodash';
 
 import { Router } from 'express';
 
-import * as speedrun_db from '../../lib/speedrun-db';
-import { load_indexer, load_config } from '../../lib/config';
+import { GenreDao } from '../../lib/dao/genres';
 
 import * as api from '../';
 import * as api_response from '../response';
 
 const router = Router();
 
-let indexer = load_indexer(load_config(), 'genres');
-
 // retrieves a list of games from most popular to least popular
 router.get('/', async function(req, res) {
     let query = <string>req.query.q;
 
+    let genre_dao = new GenreDao(api.storedb!);
+
     if(!query) {
         try {
-            let top_genres = await api.storedb!.redis.zrevrange(
-                speedrun_db.locs.genre_rank,
-                0, 19
-            );
-
-            let raw = await api.storedb!.redis.hmget(
-                speedrun_db.locs.genres,
-                ...top_genres);
-
-            let results = _.chain(raw)
-                .reject(_.isNil)
-                .map(JSON.parse)
-                .value();
-
-            return api_response.complete(res, results);
+            let genres = await genre_dao.load_popular();
+            return api_response.complete(res, genres);
         }
         catch(err) {
             console.log('api/genres: could not get top list:', err);
@@ -47,23 +33,8 @@ router.get('/', async function(req, res) {
 
     // search all the indexer indexes
     try {
-        let ids = await indexer.search_raw(query, {maxResults: 20});
-
-        if(ids.length) {
-            // resolve all the results
-            let raw = await api.storedb!.redis.hmget(
-                speedrun_db.locs.genres,
-                ...ids);
-
-            let results = _.chain(raw)
-                .reject(_.isNil)
-                .map(JSON.parse)
-                .value();
-
-            return api_response.complete(res, results);
-        }
-        else
-            api_response.complete(res, []);
+        let genres = await genre_dao.load_by_index('autocomplete', query);
+        api_response.complete(res, genres);
     }
     catch(err) {
         console.log('api/genres: could not autocompleted:', err);

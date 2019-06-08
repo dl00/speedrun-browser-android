@@ -1,28 +1,26 @@
 import * as _ from 'lodash';
 import * as moment from 'moment';
 
-import { Dao, DaoConfig, IndexDriver } from './';
+import { Dao, DaoConfig, IndexDriver, IndexerIndex } from './';
 
 import { DB } from '../db';
 
 import { RedisMapIndex } from './backing/redis';
 
 import { Leaderboard, LeaderboardDao } from './leaderboards';
+import { Category } from './categories';
+import { Level } from './levels';
+import { Genre } from './genres';
 
 import { Names,
     UpstreamData,
     Platform,
     Region,
     Publisher,
-    Genre,
-    Category,
-    Level,
     Asset,
     BaseMiddleware,
     normalize
 } from '../speedrun-api';
-
-import * as speedrun_db from '../speedrun-db';
 
 import assert = require('assert');
 
@@ -170,6 +168,36 @@ class PopularGamesIndex implements IndexDriver<Game> {
     has_changed(old_obj: Game, new_obj: Game): boolean {
         return old_obj.score != new_obj.score;
     }
+
+    async get_genre_count(conf: DaoConfig<Game>, genre_ids: string[]): Promise<number[]> {
+
+        let m = conf.db.redis.multi()
+
+        for(let id of genre_ids)
+            m.zcard(POPULAR_GAMES_KEY + ':' + id);
+
+        let res: [any, number][] = await m.exec();
+
+        return res.map(v => v[1]);
+    }
+}
+
+function get_game_search_indexes(game: Game) {
+    let indexes: { text: string, score: number, namespace?: string }[] = [];
+    indexes.push({ text: game.abbreviation.toLowerCase(), score: game.score || 1 });
+
+    for(let name in game.names) {
+        if(!game.names[name])
+            continue;
+
+        let idx: any = { text: game.names[name].toLowerCase(), score: game.score || 1 };
+        if(name != 'international')
+            idx.namespace = name;
+
+        indexes.push(idx);
+    }
+
+    return indexes;
 }
 
 export interface GameDaoOptions {
@@ -193,6 +221,7 @@ export class GameDao extends Dao<Game> {
 
         this.indexes = [
             new RedisMapIndex('abbr', 'abbreviation'),
+            new IndexerIndex('games', get_game_search_indexes),
             new PopularGamesIndex('popular_games', (options && options.max_items) ? options.max_items : 100)
         ];
 
@@ -232,27 +261,17 @@ export class GameDao extends Dao<Game> {
 
     // calculates the score for a single game by reading activity on its leaderboards
     private async calculate_score(game: Game): Promise<number> {
-        let game_score = 0;
-
         // look at the game's leaderboards, for categories not levels. Find the number of records
-        let categories_raw = await this.db.redis.hget(speedrun_db.locs.categories, game.id);
+        let leaderboards = <Leaderboard[]>await new LeaderboardDao(this.db).load_by_index('game', game.id);
 
-        if(categories_raw) {
-            let categories = JSON.parse(categories_raw);
+        leaderboards = leaderboards.filter(v => _.isNil(v.level));
 
-            categories = _.filter(categories, c => c.type == 'per-game');
+        let div = 1 + Math.log(Math.max(1, leaderboards.length));
 
-            let div = 1 + Math.log(Math.max(1, categories.length));
-
-            if(categories.length) {
-                let leaderboards = await new LeaderboardDao(this.db).load(_.map(categories, 'id'));
-
-                game_score = Math.ceil(_.chain(leaderboards)
-                    .reject(_.isNil)
-                    .map(_.bind(this.generate_leaderboard_score, this))
-                    .sum().value() / div);
-            }
-        }
+        let game_score = Math.ceil(_.chain(leaderboards)
+            .reject(_.isNil)
+            .map(_.bind(this.generate_leaderboard_score, this))
+            .sum().value() / div);
 
         return game_score;
     }
@@ -272,8 +291,17 @@ export class GameDao extends Dao<Game> {
         return score;
     }
 
-    async load_popular(offset?: number, genreId?: string) {
-        let key = `${genreId || ''}:${offset || 0}`;
+    async load_popular(offset?: number, genre_id?: string) {
+        let key = `${genre_id || ''}:${offset || 0}`;
         return await this.load_by_index('popular_games', key);
+    }
+
+    async get_genre_count(genre_id: string[]): Promise<number[]> {
+        return await (<PopularGamesIndex>this.indexes[1]).get_genre_count(this, genre_id);
+    }
+
+    protected async pre_store_transform(game: Game): Promise<Game> {
+        normalize_game(game);
+        return game;
     }
 }

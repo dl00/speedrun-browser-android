@@ -4,12 +4,12 @@
 
 import * as _ from 'lodash';
 
-import * as speedrun_api from '../../lib/speedrun-api';
-import * as speedrun_db from '../../lib/speedrun-db';
-
 import * as puller from '../puller';
 
-import { Game, GameDao, normalize_game } from '../../lib/dao/games';
+import { Game, GameDao } from '../../lib/dao/games';
+import { Genre, GenreDao } from '../../lib/dao/genres';
+import { Category, CategoryDao } from '../../lib/dao/categories';
+import { Level, LevelDao } from '../../lib/dao/levels';
 
 import * as scraper from '../index';
 
@@ -55,13 +55,13 @@ export async function pull_game(runid: string, options: any) {
         let game: Game = res.data.data;
 
         // write the game to db
-        normalize_game(game);
-
         await new GameDao(scraper.storedb!, scraper.config).save(game);
 
         // write any genres to the db
-        for(let genre of <speedrun_api.Genre[]>game.genres) {
-            await speedrun_db.rescore_genre(scraper.storedb!.redis, scraper.indexer_genres, genre);
+        let genre_dao = await new GenreDao(scraper.storedb!);
+        await genre_dao.save(<Genre[]>game.genres);
+        for(let genre of <Genre[]>game.genres) {
+            await genre_dao.rescore_genre(genre.id);
         }
 
         // unfortunately we have to load the categories for a game in a separate request...
@@ -84,13 +84,10 @@ export async function pull_game_categories(runid: string, options: any) {
     try {
         let res = await puller.do_pull(scraper.storedb!, '/games/' + options.id + '/categories?embed=variables');
 
-        let categories: speedrun_api.Category[] = res.data.data;
+        let categories: Category[] = res.data.data;
 
         // write the categories to db
-        for(let category of categories) {
-            speedrun_api.normalize_category(category);
-        }
-        await scraper.storedb!.redis.hset(speedrun_db.locs.categories, options.id, JSON.stringify(categories));
+        await new CategoryDao(scraper.storedb!).save(categories);
 
         let grouped_categories = _.groupBy(categories, 'type');
 
@@ -140,27 +137,22 @@ export async function pull_game_levels(runid: string, options: any) {
     try {
         let res = await puller.do_pull(scraper.storedb!, '/games/' + options.id + '/levels');
 
-        let levels: speedrun_api.Level[] = res.data.data;
+        let levels: Level[] = res.data.data;
 
+        await new LevelDao(scraper.storedb!).save(levels);
 
-        if(levels.length) {
-            for(let level of levels) {
-                speedrun_api.normalize(level);
-            }
-            await scraper.storedb!.redis.hset(speedrun_db.locs.levels, options.id, JSON.stringify(levels));
-            for(let level of levels) {
-                for(let category_id of options.categories) {
-                    await scraper.push_call({
-                        runid: scraper.join_runid([runid, options.id, level.id + '_' + category_id, 'leaderboard']),
-                        module: 'leaderboard',
-                        exec: 'pull_leaderboard',
-                        options: {
-                            game_id: options.id,
-                            category_id: category_id,
-                            level_id: level.id
-                        }
-                    }, 8);
-                }
+        for(let level of levels) {
+            for(let category_id of options.categories) {
+                await scraper.push_call({
+                    runid: scraper.join_runid([runid, options.id, level.id + '_' + category_id, 'leaderboard']),
+                    module: 'leaderboard',
+                    exec: 'pull_leaderboard',
+                    options: {
+                        game_id: options.id,
+                        category_id: category_id,
+                        level_id: level.id
+                    }
+                }, 8);
             }
         }
     }
@@ -172,35 +164,7 @@ export async function pull_game_levels(runid: string, options: any) {
 
 export async function postprocess_game(_runid: string, options: any) {
     try {
-        let game_dao = new GameDao(scraper.storedb!, scraper.config);
-
-        let games = await game_dao.load(options.id);
-        if(!games[0])
-            throw 'game does not exist in db!';
-
-        let game = <Game>games[0];
-
-        // TODO: GameDao should take fully fledged games. this is a bit ineffecient
-        let scored_games = await new GameDao(scraper.storedb!, scraper.config).rescore_games(options.id);
-
-        let game_score = scored_games[0].score!;
-
-        let indexes: { text: string, score: number, namespace?: string }[] = [];
-        indexes.push({ text: game.abbreviation.toLowerCase(), score: game_score });
-
-        for(let name in game.names) {
-            if(!game.names[name])
-                continue;
-
-            let idx: any = { text: game.names[name].toLowerCase(), score: game_score };
-            if(name != 'international')
-                idx.namespace = name;
-
-            indexes.push(idx);
-        }
-
-        // install autocomplete entry
-        await scraper.indexer_games.add(game.id, indexes);
+        await new GameDao(scraper.storedb!, scraper.config).rescore_games(options.id);
     } catch(err) {
         // this should not happen unless there is some internal problem with the previous steps
         console.error('loader/gamelist: could not postprocess game:', options, err);

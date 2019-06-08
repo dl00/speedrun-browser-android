@@ -9,19 +9,21 @@ import { GameDao, Game, BulkGame, game_to_bulk } from './games';
 import { DB } from '../db';
 
 import {
-    BulkUser,
     BaseMiddleware,
-    BulkLevel,
-    BulkCategory,
-    Genre,
-    Category,
-    Level,
-    User,
     normalize,
-    user_to_bulk,
-    category_to_bulk,
-    level_to_bulk
 } from '../speedrun-api';
+
+import { BulkRun } from './runs';
+import { BulkUser, User, user_to_bulk } from './users';
+import { Category, BulkCategory, category_to_bulk } from './categories';
+import { BulkLevel, Level, level_to_bulk } from './levels';
+import { Genre } from './genres';
+
+/// information about a new PB from a player
+export interface NewRecord {
+    old_run: LeaderboardRunEntry,
+    new_run: LeaderboardRunEntry
+}
 
 export interface RunTimes {
     primary: string
@@ -50,7 +52,7 @@ export interface BulkRun {
 export interface Run extends BulkRun, BaseMiddleware {
     weblink: string
     game: BulkGame|string
-    level?: BulkLevel|string
+    level?: BulkLevel|string|null
     category: BulkCategory|string
     submitted: string
     videos: {
@@ -191,5 +193,10 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
     async load_latest_runs(offset?: number, genreId?: string) {
         let key = `${genreId || ''}:${offset || 0}`;
         return await this.load_by_index('latest_runs', key);
+    }
+
+    protected async pre_store_transform(run: LeaderboardRunEntry): Promise<LeaderboardRunEntry> {
+        normalize_run(<Run>run.run);
+        return run;
     }
 }

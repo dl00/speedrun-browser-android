@@ -3,7 +3,7 @@ import * as moment from 'moment';
 
 import * as ioredis from 'ioredis';
 
-import { Config, load_scraper_redis, load_indexer } from '../lib/config';
+import { Config, load_scraper_redis } from '../lib/config';
 import { generate_unique_id } from '../lib/util';
 import * as redis from '../lib/redis';
 
@@ -13,9 +13,6 @@ import * as StoreDB from '../lib/db';
 
 export let rdb: ioredis.Redis|null = null;
 export let storedb: StoreDB.DB|null = null;
-export let indexer_games: any|null = null;
-export let indexer_players: any|null = null;
-export let indexer_genres: any|null = null;
 export let config: any = null;
 
 interface Task {
@@ -231,10 +228,6 @@ export async function connect(conf: Config) {
     config = conf;
     rdb = load_scraper_redis(config);
     storedb = await StoreDB.load_db(config);
-
-    indexer_games = load_indexer(config, 'games');
-    indexer_players = load_indexer(config, 'players');
-    indexer_genres = load_indexer(config, 'genres');
 
     redis.defineCommands(rdb);
 }
