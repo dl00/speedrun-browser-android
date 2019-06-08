@@ -1,6 +1,8 @@
 import * as _ from 'lodash';
 import * as assert from 'assert';
 
+import * as util from 'util';
+
 import { DB } from '../db';
 
 export interface DaoConfig<T> {
@@ -85,8 +87,14 @@ export class Dao<T> implements DaoConfig<T> {
         if(!_.isArray(objs))
             objs = [objs];
 
+        if(!objs.length)
+            throw new Error(`Dao ${this.collection} save() called with no objects to save`);
+
+        if(_.findIndex(objs, _.isNil) !== -1)
+            throw new Error(`Dao ${this.collection} trying to save a null object: ${util.inspect(objs)}`);
+
         // run the transform for each obj
-        Promise.all(objs.map(v => _.bind(this.pre_store_transform, this, v)));
+        Promise.all(objs.map(v => this.pre_store_transform(v)));
 
         // keep a copy of the previous values for index processing
         let prev_objs = await require(`./backing/${this.backing}`).save(this, objs);
@@ -120,6 +128,9 @@ export class Dao<T> implements DaoConfig<T> {
     async load(ids: string|string[]): Promise<(T|null)[]> {
         if(!_.isArray(ids))
             ids = [ids];
+
+        if(!ids.length)
+            throw new Error('Dao load() called with no IDs to load');
 
         return await require(`./backing/${this.backing}`).load(this, ids);
     }

@@ -6,7 +6,7 @@ import * as _ from 'lodash';
 
 import * as puller from '../puller';
 
-import { Game, GameDao } from '../../lib/dao/games';
+import { Game, GameDao, normalize_game } from '../../lib/dao/games';
 import { Genre, GenreDao } from '../../lib/dao/genres';
 import { Category, CategoryDao } from '../../lib/dao/categories';
 import { Level, LevelDao } from '../../lib/dao/levels';
@@ -54,14 +54,18 @@ export async function pull_game(runid: string, options: any) {
 
         let game: Game = res.data.data;
 
+        normalize_game(game);
+
         // write the game to db
         await new GameDao(scraper.storedb!, scraper.config).save(game);
 
         // write any genres to the db
-        let genre_dao = await new GenreDao(scraper.storedb!);
-        await genre_dao.save(<Genre[]>game.genres);
-        for(let genre of <Genre[]>game.genres) {
-            await genre_dao.rescore_genre(genre.id);
+        if(game.genres && (<Genre[]>game.genres).length) {
+            let genre_dao = await new GenreDao(scraper.storedb!);
+            await genre_dao.save(<Genre[]>game.genres);
+            for(let genre of <Genre[]>game.genres) {
+                await genre_dao.rescore_genre(genre.id);
+            }
         }
 
         // unfortunately we have to load the categories for a game in a separate request...
@@ -75,7 +79,7 @@ export async function pull_game(runid: string, options: any) {
         }, 9);
     }
     catch(err) {
-        console.error('loader/gamelist: could not retrieve single game entry:', options, err.statusCode, err);
+        console.error('loader/gamelist: could not retrieve single game entry:', options, err.statusCode, err, _.get(err, 'previousErrors[0]'));
         throw 'reschedule';
     }
 }
@@ -87,7 +91,10 @@ export async function pull_game_categories(runid: string, options: any) {
         let categories: Category[] = res.data.data;
 
         // write the categories to db
-        await new CategoryDao(scraper.storedb!).save(categories);
+        await new CategoryDao(scraper.storedb!).save(categories.map(v => {
+            v.game = options.id;
+            return v;
+        }));
 
         let grouped_categories = _.groupBy(categories, 'type');
 
@@ -139,7 +146,10 @@ export async function pull_game_levels(runid: string, options: any) {
 
         let levels: Level[] = res.data.data;
 
-        await new LevelDao(scraper.storedb!).save(levels);
+        await new LevelDao(scraper.storedb!).save(levels.map(v => {
+            v.game = options.id;
+            return v;
+        }));
 
         for(let level of levels) {
             for(let category_id of options.categories) {

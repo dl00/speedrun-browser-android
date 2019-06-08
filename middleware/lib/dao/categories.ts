@@ -2,6 +2,8 @@ import * as _ from 'lodash';
 
 import { DB } from '../db';
 
+import { RedisMultiIndex } from './backing/redis';
+
 import {
     UpstreamData,
     BaseMiddleware,
@@ -23,6 +25,7 @@ export interface Category extends BulkCategory, BaseMiddleware {
     weblink: string
     rules?: string
     miscellaneous: boolean
+    game?: string;
 }
 
 export function category_to_bulk(category: Category): BulkCategory {
@@ -59,7 +62,7 @@ export class CategoryDao extends Dao<Category> {
         this.id_key = _.property('id');
 
         this.indexes = [
-
+            new RedisMultiIndex('game', 'game')
         ];
     }
 

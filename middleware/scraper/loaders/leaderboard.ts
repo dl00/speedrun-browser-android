@@ -54,37 +54,41 @@ export async function pull_leaderboard(runid: string, options: any) {
         correct_leaderboard_run_places(lb, <Variable[]>category.variables);
 
         // record runs
-        for(let run of lb.runs) {
-            run.run.players = run.run.players.map(v => v.id && updated_players[v.id] ? updated_players[v.id] : v);
-            (<Run>run.run).game = game;
-            (<Run>run.run).category = category;
-            if(level)
-                (<Run>run.run).level = level;
+        if(lb.runs && lb.runs.length) {
+            for(let run of lb.runs) {
+                run.run.players = run.run.players.map(v => v.id && updated_players[v.id] ? updated_players[v.id] : v);
+                (<Run>run.run).game = game;
+                (<Run>run.run).category = category;
+                if(level && level.id)
+                    (<Run>run.run).level = level;
+                else
+                    (<Run>run.run).level = null;
+            }
+
+            // save the runs
+            await new RunDao(scraper.storedb!, scraper.config).save(lb.runs);
+
+            // record players
+            // this applies players as well as set their personal best
+            let new_records = await new UserDao(scraper.storedb!).apply_leaderboard_bests(lb, updated_players);
+
+            // send push notifications as needed. All notifications are triggered by a player record change
+            for(let nr of new_records) {
+                if(nr.new_run.place == 1) {
+                    // new record on this category/level, send notification
+                    push_notify.notify_game_record(nr, game, category, level);
+                }
+
+                // this should be a personal best. send notification to all attached players who are regular users
+                for(let pid of nr.new_run.run.players) {
+                    if(updated_players[pid.id])
+                        push_notify.notify_player_record(nr, updated_players[pid.id], game, category, level);
+                }
+            }
         }
-
-        // save the runs
-        await new RunDao(scraper.storedb!, scraper.config).save(lb.runs);
-
-        // record players
-        // this applies players as well as set their personal best
-        let new_records = await new UserDao(scraper.storedb!).apply_leaderboard_bests(lb, updated_players);
 
         // write the leaderboard to db (excluding the players)
         await new LeaderboardDao(scraper.storedb!).save(<Leaderboard>_.omit(lb, 'players'));
-
-        // send push notifications as needed. All notifications are triggered by a player record change
-        for(let nr of new_records) {
-            if(nr.new_run.place == 1) {
-                // new record on this category/level, send notification
-                push_notify.notify_game_record(nr, game, category, level);
-            }
-
-            // this should be a personal best. send notification to all attached players who are regular users
-            for(let pid of nr.new_run.run.players) {
-                if(updated_players[pid.id])
-                    push_notify.notify_player_record(nr, updated_players[pid.id], game, category, level);
-            }
-        }
     }
     catch(err) {
         console.error('loader/leaderboard: could not retrieve and process leaderboard/players:', options, err.statusCode || err);

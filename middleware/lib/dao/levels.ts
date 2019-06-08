@@ -2,6 +2,8 @@ import * as _ from 'lodash';
 
 import { DB } from '../db';
 
+import { RedisMultiIndex } from './backing/redis';
+
 import {
     BaseMiddleware, normalize,
 } from '../speedrun-api';
@@ -11,6 +13,7 @@ import { Dao } from './';
 export interface BulkLevel {
     id: string
     name: string
+    game?: string
 }
 
 export interface Level extends BulkLevel, BaseMiddleware {}
@@ -26,7 +29,7 @@ export class LevelDao extends Dao<Level> {
         this.id_key = _.property('id');
 
         this.indexes = [
-
+            new RedisMultiIndex('game', 'game')
         ];
     }
 

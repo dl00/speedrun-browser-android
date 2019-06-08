@@ -17,7 +17,7 @@ import { Leaderboard } from './leaderboards';
 import { NewRecord } from './runs';
 
 import { BulkGameAssets } from './games';
-import { LeaderboardRunEntry } from './runs';
+import { LeaderboardRunEntry, Run, run_to_bulk } from './runs';
 
 import { Dao, IndexerIndex } from './';
 
@@ -93,7 +93,7 @@ export function apply_personal_best(player: User,
 
     let best_run: LeaderboardRunEntry = {
         place: lb.runs[index].place,
-        run: lb.runs[index].run
+        run: run_to_bulk(<Run>lb.runs[index].run)
     };
 
     if(!best_run.place)
@@ -160,6 +160,10 @@ function get_user_search_indexes(user: User) {
     return indexes;
 }
 
+export function normalize_user(d: User) {
+    normalize(d);
+}
+
 export class UserDao extends Dao<User> {
     constructor(db: DB) {
         super(db, 'users', 'redis');
@@ -167,7 +171,7 @@ export class UserDao extends Dao<User> {
         this.id_key = _.property('id');
 
         this.indexes = [
-            new RedisMapIndex('player_abbrs', (v: User) => {
+            new RedisMapIndex('abbr', (v: User) => {
                 if(v.names && v.names['international'])
                     return v.names['international'];
 
@@ -179,7 +183,7 @@ export class UserDao extends Dao<User> {
     }
 
     protected async pre_store_transform(user: User): Promise<User> {
-        normalize(user);
+        normalize_user(user);
         return user;
     }
 
@@ -218,7 +222,9 @@ export class UserDao extends Dao<User> {
 
         // store/update player information
         // TODO: not sure why, but typescript errors with wrong value here?
-        let players = <{[id: string]: User}>_.keyBy(await this.load(player_ids), 'id');
+        let players = <{[id: string]: User}>_.keyBy(
+            _.filter(await this.load(player_ids), 'id'),
+            'id');
 
         // set known leaderboard information to player
         _.merge(players, updated_players);
