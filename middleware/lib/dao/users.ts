@@ -14,7 +14,7 @@ import { Game, GameDao, game_assets_to_bulk } from './games';
 import { Category, CategoryDao } from './categories';
 import { Level, LevelDao } from './levels';
 import { Leaderboard } from './leaderboards';
-import { NewRecord, BulkRun } from './runs';
+import { NewRecord } from './runs';
 
 import { BulkGameAssets } from './games';
 import { LeaderboardRunEntry } from './runs';
@@ -91,10 +91,13 @@ export function apply_personal_best(player: User,
         categories: {}
     };
 
-    let best_run: { place: number, run: BulkRun } = {
+    let best_run: LeaderboardRunEntry = {
         place: lb.runs[index].place,
         run: lb.runs[index].run
     };
+
+    if(!best_run.place)
+        return null;
 
     let old_run = null;
 

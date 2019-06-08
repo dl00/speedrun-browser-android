@@ -297,7 +297,8 @@ export class GameDao extends Dao<Game> {
     }
 
     async get_genre_count(genre_id: string[]): Promise<number[]> {
-        return await (<PopularGamesIndex>this.indexes[1]).get_genre_count(this, genre_id);
+        // TODO: this is kind of loose
+        return await (<PopularGamesIndex>this.indexes[2]).get_genre_count(this, genre_id);
     }
 
     protected async pre_store_transform(game: Game): Promise<Game> {

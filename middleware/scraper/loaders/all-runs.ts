@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 
 import { Run, RunDao, LeaderboardRunEntry } from '../../lib/dao/runs';
-import { LeaderboardDao } from '../../lib/dao/leaderboards';
+import { Leaderboard, LeaderboardDao } from '../../lib/dao/leaderboards';
 import { GameDao, BulkGame } from '../../lib/dao/games';
 import { CategoryDao, Category } from '../../lib/dao/categories';
 import { LevelDao, Level } from '../../lib/dao/levels';
@@ -33,10 +33,16 @@ export async function list_all_runs(runid: string, options: any) {
             run.level = <Level|null>levels[<string>run.level];
         }
 
-        let leaderboards = await new LeaderboardDao(scraper.storedb!).load(leaderboard_ids);
+        let leaderboards = <{[id: string]: Leaderboard}>_.zipObject(leaderboard_ids, await new LeaderboardDao(scraper.storedb!).load(leaderboard_ids));
 
-        let lbrs: LeaderboardRunEntry[] = runs.map((run) => {
+        let lbrs: LeaderboardRunEntry[] = runs.map((run, i) => {
 
+            let entry = _.find(leaderboards[leaderboard_ids[i]].runs, r => r.run.id === run.id);
+
+            return {
+                place: entry ? entry.place : null,
+                run: run
+            }
         });
 
         await new RunDao(scraper.storedb!).save(lbrs);

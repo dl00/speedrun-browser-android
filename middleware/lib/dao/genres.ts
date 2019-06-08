@@ -40,7 +40,11 @@ class PopularGenresIndex implements IndexDriver<Genre> {
         assert.equal(keys.length, 1, 'PopularGenresIndex only supports reading from a single key at a time');
 
         // we only read the first
-        let offset = parseInt(keys[0][1]);
+        let offset;
+        if(keys[0])
+            offset = parseInt(keys[0]);
+        else
+            offset = 0;
 
         let popular_game_ids: string[] = await conf.db.redis.zrevrange(POPULAR_GENRES_KEY,
             offset, offset + this.max_return - 1);

@@ -53,7 +53,8 @@ export async function load_db(conf: Config): Promise<DB> {
     let db: any = {
         redis: new ioredis(_.merge(conf.db.redis, { lazyConnect: true })),
         mongo: null,
-        mongo_client: (await mongodb.connect(conf.db.mongo.uri, _.merge(conf.db.mongo.options, {useNewUrlParser: true })))
+        mongo_client: (await mongodb.connect(conf.db.mongo.uri, _.merge(conf.db.mongo.options, {useNewUrlParser: true }))),
+        indexers: {}
     };
 
     db.mongo = db.mongo_client.db(conf.db.mongo.dbName);
@@ -70,4 +71,8 @@ export async function load_db(conf: Config): Promise<DB> {
 export async function close_db(db: DB) {
     db.mongo_client.close();
     db.redis.disconnect();
+
+    for(let ind in db.indexers)
+        // TODO: fix indexer so we don't have to call the private "rdb" directly
+        db.indexers[ind].rdb.disconnect();
 }

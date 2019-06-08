@@ -127,3 +127,68 @@ describe('Dao', () => {
         expect(res[0]).to.not.exist;
     });
 });
+
+describe('IndexerIndex', () => {
+    var db: DB;
+
+    let ao: dao.Dao<{id: string, test: string}>;
+
+    before(async () => {
+        db = await load_db(load_config());
+        await db.mongo.dropDatabase();
+        await db.mongo.setProfilingLevel('all');
+        await db.redis.flushall();
+
+        ao = new dao.Dao<{id: string, test: string}>(db, 'indexerIndexTests');
+        ao.backing = 'mongo';
+        ao.indexes = [
+            new dao.IndexerIndex('games', (v) => {
+                return [{
+                    score: 1,
+                    text: v.test
+                }];
+            })
+        ];
+    });
+
+    after(async () => {
+        close_db(db);
+    });
+
+    it('should create indexes on an indexer database', async () => {
+
+        await ao.save([
+            {
+                id: 'wohoo',
+                test: 'super mario maker',
+            },
+            {
+                id: 'wawe',
+                test: 'super mario galaxy'
+            },
+            {
+                id: 'weeboo',
+                test: 'the legend of zelda wind waker galaxy'
+            }
+        ]);
+
+        let items = await ao.load_by_index('autocomplete', 'super');
+
+        expect(items).to.have.length(2);
+        expect(items.map(_.property('id')).sort()).to.eql(['wawe', 'wohoo']);
+
+        items = await ao.load_by_index('autocomplete', 'galaxy super');
+
+        expect(items).to.have.length(3);
+        expect(items[0]).to.eql({id: 'wawe', test: 'super mario galaxy'});
+    });
+
+    it('should delete indexes on indexer databases', async() => {
+        await ao.remove('wawe');
+
+        let items = await ao.load_by_index('autocomplete', 'galaxy super');
+
+        expect(items).to.have.length(2);
+        expect(items[0]).to.have.property('id', 'weeboo');
+    })
+});

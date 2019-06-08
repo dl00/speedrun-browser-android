@@ -73,7 +73,7 @@ export interface Run extends BulkRun, BaseMiddleware {
 }
 
 export interface LeaderboardRunEntry {
-    place: number
+    place?: number|null
     run: BulkRun
 }
 
