@@ -91,15 +91,11 @@ describe('GenreDao', () => {
             }
         ]);
 
-        console.log('before the first');
-
         // make sure these two runs come back, and they are in the correct order
         let genres = await genre_dao.load_popular();
 
         expect(genres[0]).to.have.property('id', 'a_genre');
         expect(genres[1]).to.have.property('id', 'a_genre_2');
-
-        console.log('Past the first');
 
         genres = await genre_dao.load_popular(1);
 
