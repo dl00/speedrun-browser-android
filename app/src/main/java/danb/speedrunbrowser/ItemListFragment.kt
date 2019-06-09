@@ -166,6 +166,8 @@ class ItemListFragment : Fragment() {
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
 
+            println("My position is" + items)
+
             if (getItemViewType(position) == 0) {
                 itemType!!.applyToViewHolder(context, mDisposables, holder, items!![position])
                 holder.itemView.setOnClickListener(onClickListener)
@@ -192,7 +194,7 @@ class ItemListFragment : Fragment() {
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe({ (data, _, more) ->
                         currentLoading = null
-                        items = data!!.toMutableList()
+                        items = data!!.filterNotNull().toMutableList()
                         isAtEndOfList = if (more != null) !more.hasMore else items!!.isEmpty()
 
                         if (isAtEndOfList)
@@ -229,7 +231,7 @@ class ItemListFragment : Fragment() {
                             notifyItemRemoved(items!!.size)
                         } else {
                             val prevSize = items!!.size
-                            items!!.addAll(data)
+                            items!!.addAll(data.filterNotNull())
                             notifyItemChanged(prevSize)
                             notifyItemRangeInserted(prevSize + 1, data.size - 1)
 
@@ -250,7 +252,7 @@ class ItemListFragment : Fragment() {
     }
 
     interface ItemSource {
-        fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any>>
+        fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>>
     }
 
     interface OnFragmentInteractionListener {

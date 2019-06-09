@@ -67,7 +67,7 @@ export class CategoryDao extends Dao<Category> {
     }
 
     protected async pre_store_transform(obj: Category): Promise<Category> {
-        normalize(obj);
+        normalize_category(obj);
         return obj;
     }
 }
