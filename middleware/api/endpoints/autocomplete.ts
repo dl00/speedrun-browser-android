@@ -24,8 +24,8 @@ router.get('/', async (req, res) => {
     // search all the indexer indexes
     try {
         let results: IndexerResponse = {
-            games: await new GameDao(api.storedb!).load_by_index('autocomplete', query),
-            players: await new UserDao(api.storedb!).load_by_index('autocomplete', query)
+            games: _.reject(await new GameDao(api.storedb!).load_by_index('autocomplete', query), _.isNil),
+            players: _.reject(await new UserDao(api.storedb!).load_by_index('autocomplete', query), _.isNil)
         };
 
         return api_response.custom(res, {

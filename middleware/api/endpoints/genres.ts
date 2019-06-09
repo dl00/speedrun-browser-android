@@ -17,7 +17,7 @@ router.get('/', async function(req, res) {
 
     if(!query) {
         try {
-            let genres = await genre_dao.load_popular();
+            let genres = _.reject(await genre_dao.load_popular(), _.isNil);
             return api_response.complete(res, genres);
         }
         catch(err) {
@@ -33,7 +33,7 @@ router.get('/', async function(req, res) {
 
     // search all the indexer indexes
     try {
-        let genres = await genre_dao.load_by_index('autocomplete', query);
+        let genres = _.reject(await genre_dao.load_by_index('autocomplete', query), _.isNil);
         api_response.complete(res, genres);
     }
     catch(err) {
