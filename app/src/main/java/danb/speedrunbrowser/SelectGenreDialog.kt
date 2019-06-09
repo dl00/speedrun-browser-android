@@ -37,7 +37,7 @@ class SelectGenreDialog(ctx: Context, private val mDisposables: CompositeDisposa
     var selectedGenre: Genre? = null
         private set
 
-    override fun onCreate(savedInstanceState: Bundle) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val layout = LinearLayout(context)

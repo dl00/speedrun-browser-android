@@ -88,8 +88,12 @@ export function normalize_run(d: Run) {
         d.game = game_to_bulk(<Game>d.game);
     if(typeof d.category === 'object')
         d.category = category_to_bulk(<Category>d.category);
-    if(typeof d.level === 'object')
-        d.level = level_to_bulk(<Level>d.level);
+    if(typeof d.level === 'object') {
+        if(!_.keys(d.level).length)
+            delete d.level;
+        else
+            d.level = level_to_bulk(<Level>d.level);
+    }
 }
 
 /// TODO: Use decorators

@@ -194,6 +194,7 @@ class ItemListFragment : Fragment() {
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe({ (data, _, more) ->
                         currentLoading = null
+
                         items = data!!.filterNotNull().toMutableList()
                         isAtEndOfList = if (more != null) !more.hasMore else items!!.isEmpty()
 
@@ -290,12 +291,12 @@ class ItemListFragment : Fragment() {
         }
     }
 
-    class GenericMapper<T> : Function<SpeedrunMiddlewareAPI.APIResponse<T>, SpeedrunMiddlewareAPI.APIResponse<Any>> {
+    class GenericMapper<T> : Function<SpeedrunMiddlewareAPI.APIResponse<T>, SpeedrunMiddlewareAPI.APIResponse<Any?>> {
 
         @Throws(Exception::class)
-        override fun apply(res: SpeedrunMiddlewareAPI.APIResponse<T>): SpeedrunMiddlewareAPI.APIResponse<Any> {
+        override fun apply(res: SpeedrunMiddlewareAPI.APIResponse<T>): SpeedrunMiddlewareAPI.APIResponse<Any?> {
             return SpeedrunMiddlewareAPI.APIResponse(
-                    ArrayList<Any>(res.data!!),
+                    ArrayList(res.data),
                     res.error
             )
         }

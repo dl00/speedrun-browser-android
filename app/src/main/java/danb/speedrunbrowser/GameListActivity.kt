@@ -357,28 +357,28 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
 
             when (position) {
                 0 -> fragments[0].setItemsSource(object : ItemListFragment.ItemSource {
-                    override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any>> {
+                    override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
                         return if (mSelectedGenre != null)
-                            SpeedrunMiddlewareAPI.make().listGamesByGenre(mSelectedGenre!!.id, offset).map<SpeedrunMiddlewareAPI.APIResponse<Any>>(ItemListFragment.GenericMapper())
+                            SpeedrunMiddlewareAPI.make().listGamesByGenre(mSelectedGenre!!.id, offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                         else
-                            SpeedrunMiddlewareAPI.make().listGames(offset).map<SpeedrunMiddlewareAPI.APIResponse<Any>>(ItemListFragment.GenericMapper())
+                            SpeedrunMiddlewareAPI.make().listGames(offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                     }
                 })
                 1 -> fragments[1].setItemsSource(object : ItemListFragment.ItemSource {
-                    override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any>> {
+                    override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
                         return if (mSelectedGenre != null)
-                            SpeedrunMiddlewareAPI.make().listLatestRunsByGenre(mSelectedGenre!!.id, offset).map<SpeedrunMiddlewareAPI.APIResponse<Any>>(ItemListFragment.GenericMapper())
+                            SpeedrunMiddlewareAPI.make().listLatestRunsByGenre(mSelectedGenre!!.id, offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                         else
-                            SpeedrunMiddlewareAPI.make().listLatestRuns(offset).map<SpeedrunMiddlewareAPI.APIResponse<Any>>(ItemListFragment.GenericMapper())
+                            SpeedrunMiddlewareAPI.make().listLatestRuns(offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                     }
                 })
                 2 -> fragments[2].setItemsSource(object : ItemListFragment.ItemSource {
-                    override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any>> {
+                    override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
                         val entries = mDB!!.watchHistoryDao()
                                 .getMany(offset)
                                 .subscribeOn(Schedulers.io())
 
-                        return entries.flatMapObservable<SpeedrunMiddlewareAPI.APIResponse<Any>>(Function<List<AppDatabase.WatchHistoryEntry>, ObservableSource<SpeedrunMiddlewareAPI.APIResponse<Any>>> { entries ->
+                        return entries.flatMapObservable<SpeedrunMiddlewareAPI.APIResponse<Any?>>(Function<List<AppDatabase.WatchHistoryEntry>, ObservableSource<SpeedrunMiddlewareAPI.APIResponse<Any?>>> { entries ->
                             if (entries.isEmpty())
                                 return@Function Observable.just(SpeedrunMiddlewareAPI.APIResponse())
 
@@ -389,12 +389,12 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
                                 builder.append(runId)
                             }
 
-                            SpeedrunMiddlewareAPI.make().listRuns(builder.toString()).map<SpeedrunMiddlewareAPI.APIResponse<Any>>(ItemListFragment.GenericMapper())
+                            SpeedrunMiddlewareAPI.make().listRuns(builder.toString()).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                         })
                     }
                 })
                 3 -> fragments[3].setItemsSource(object : ItemListFragment.ItemSource {
-                    override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any>> {
+                    override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
 
                         // TODO: hack for now
                         if (offset != 0)
@@ -403,7 +403,7 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
                         val subs = mDB!!.subscriptionDao()
                                 .listOfType("game", offset)
 
-                        return subs.flatMapObservable<SpeedrunMiddlewareAPI.APIResponse<Any>>(Function<List<AppDatabase.Subscription>, ObservableSource<SpeedrunMiddlewareAPI.APIResponse<Any>>> { subscriptions ->
+                        return subs.flatMapObservable<SpeedrunMiddlewareAPI.APIResponse<Any?>>(Function<List<AppDatabase.Subscription>, ObservableSource<SpeedrunMiddlewareAPI.APIResponse<Any?>>> { subscriptions ->
                             if (subscriptions.isEmpty())
                                 return@Function Observable.just(SpeedrunMiddlewareAPI.APIResponse())
 
@@ -426,16 +426,16 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
                                 builder.append(id)
                             }
 
-                            SpeedrunMiddlewareAPI.make().listGames(builder.toString()).map<SpeedrunMiddlewareAPI.APIResponse<Any>>(ItemListFragment.GenericMapper())
+                            SpeedrunMiddlewareAPI.make().listGames(builder.toString()).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                         })
                     }
                 })
                 4 -> fragments[4].setItemsSource(object : ItemListFragment.ItemSource {
-                    override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any>> {
+                    override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
                         val subs = mDB!!.subscriptionDao()
                                 .listOfType("player", offset)
 
-                        return subs.flatMapObservable<SpeedrunMiddlewareAPI.APIResponse<Any>>(Function<List<AppDatabase.Subscription>, ObservableSource<SpeedrunMiddlewareAPI.APIResponse<Any>>> { subscriptions ->
+                        return subs.flatMapObservable<SpeedrunMiddlewareAPI.APIResponse<Any?>>(Function<List<AppDatabase.Subscription>, ObservableSource<SpeedrunMiddlewareAPI.APIResponse<Any?>>> { subscriptions ->
                             if (subscriptions.isEmpty())
                                 return@Function Observable.just(SpeedrunMiddlewareAPI.APIResponse())
 
@@ -446,7 +446,7 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
                                 builder.append(resourceId)
                             }
 
-                            SpeedrunMiddlewareAPI.make().listPlayers(builder.toString()).map<SpeedrunMiddlewareAPI.APIResponse<Any>>(ItemListFragment.GenericMapper())
+                            SpeedrunMiddlewareAPI.make().listPlayers(builder.toString()).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                         })
                     }
                 })
