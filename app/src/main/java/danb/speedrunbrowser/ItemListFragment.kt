@@ -29,6 +29,7 @@ import io.reactivex.schedulers.Schedulers
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -165,9 +166,6 @@ class ItemListFragment : Fragment() {
         }
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-
-            println("My position is" + items)
-
             if (getItemViewType(position) == 0) {
                 itemType!!.applyToViewHolder(context, mDisposables, holder, items!![position])
                 holder.itemView.setOnClickListener(onClickListener)
@@ -207,6 +205,8 @@ class ItemListFragment : Fragment() {
                     }, {
                         // probably went past the end of the list if we got to this point.
                         // TODO: handle the error more
+
+                        Log.e(TAG, "Cannot load list: ", it)
 
                         items = ArrayList(0)
 
@@ -306,5 +306,7 @@ class ItemListFragment : Fragment() {
         // TODO: Rename parameter arguments, choose names that match
         // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
         const val ARG_ITEM_TYPE = "item_type"
+
+        val TAG = ItemListFragment::javaClass.name
     }
 }// Required empty public constructor
