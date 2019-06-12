@@ -50,9 +50,9 @@ class AutoCompleteAdapter(private val ctx: Context, private val disposables: Com
                 var lcsg: LCSMatcher
                 do {
                     lcsg = LCSMatcher(query, cur.resolvedName.toLowerCase(), 3)
-                    println("LCSG (" + cur.resolvedName + ", " + player.resolvedName + "): " + lcsg.maxMatchLength + ", " + lcsp.maxMatchLength)
 
-                    cur = sr.next()
+                    if(sr.hasNext())
+                        cur = sr.next()
                 } while (lcsg.maxMatchLength >= lcsp.maxMatchLength && sr.hasNext())
 
                 sr.previous()

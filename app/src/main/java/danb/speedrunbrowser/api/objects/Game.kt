@@ -3,6 +3,7 @@ package danb.speedrunbrowser.api.objects
 import android.widget.TextView
 
 import java.io.Serializable
+import java.net.URL
 import java.util.Date
 
 data class Game(
@@ -36,7 +37,8 @@ data class Game(
 
     override val type = "game"
 
-    override val iconUrl = assets.coverLarge?.uri
+    override val iconUrl: URL?
+        get() = assets.coverLarge?.uri ?: assets.icon!!.uri
 
     override fun applyTextView(tv: TextView) {
         tv.text = resolvedName
