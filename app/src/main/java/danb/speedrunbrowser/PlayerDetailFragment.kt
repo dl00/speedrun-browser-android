@@ -202,7 +202,7 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
 
             return true
         } else if (mPlayer != null) {
-            mSubscription = AppDatabase.Subscription("player", mPlayer!!.id, mPlayer!!.name!!.toLowerCase())
+            mSubscription = AppDatabase.Subscription("player", mPlayer!!.id, mPlayer!!.resolvedName.toLowerCase())
 
             mDisposables.add(sc.subscribeTo(mSubscription!!)
                     .subscribe {

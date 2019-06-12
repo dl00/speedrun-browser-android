@@ -49,7 +49,7 @@ class ItemDetailActivity : AppCompatActivity(), Consumer<SpeedrunMiddlewareAPI.A
                 finish() // nothing/no way to view...
             }
 
-            val type = args!!.getSerializable(EXTRA_ITEM_TYPE) as ItemListFragment.ItemType
+            val type = args!!.getSerializable(EXTRA_ITEM_TYPE) as ItemListFragment.ItemType?
 
             var frag: Fragment? = null
 

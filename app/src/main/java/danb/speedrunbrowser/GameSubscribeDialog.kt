@@ -28,7 +28,7 @@ class GameSubscribeDialog(ctx: Context, val subscriptions: GameDetailFragment.Ga
         mGame = subscriptions.game
     }
 
-    override fun onCreate(savedInstanceState: Bundle) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val rootView = (context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater).inflate(R.layout.dialog_subscribe_game, null)
