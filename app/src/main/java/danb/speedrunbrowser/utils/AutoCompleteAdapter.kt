@@ -14,7 +14,9 @@ import java.util.LinkedList
 import java.util.concurrent.TimeUnit
 import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
+import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.api.objects.SearchResultItem
+import danb.speedrunbrowser.api.objects.User
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -38,7 +40,7 @@ class AutoCompleteAdapter(private val ctx: Context, private val disposables: Com
 
         searchResults!!.addAll(rawSearchData!!.games)
 
-        if (!searchResults!!.isEmpty()) {
+        if (searchResults!!.isNotEmpty()) {
             val sr = searchResults!!.listIterator()
             var cur = sr.next()
             for (player in rawSearchData!!.players) {
@@ -51,7 +53,7 @@ class AutoCompleteAdapter(private val ctx: Context, private val disposables: Com
                     println("LCSG (" + cur.resolvedName + ", " + player.resolvedName + "): " + lcsg.maxMatchLength + ", " + lcsp.maxMatchLength)
 
                     cur = sr.next()
-                } while (lcsg.maxMatchLength >= lcsp.maxMatchLength && sr.hasNext() && cur != null)
+                } while (lcsg.maxMatchLength >= lcsp.maxMatchLength && sr.hasNext())
 
                 sr.previous()
                 sr.add(player)
@@ -63,7 +65,7 @@ class AutoCompleteAdapter(private val ctx: Context, private val disposables: Com
 
         searchResults = ArrayList(searchResults!!)
 
-        notifyDataSetInvalidated()
+        notifyDataSetChanged()
     }
 
     override fun getCount(): Int {

@@ -48,6 +48,8 @@ export class IndexerIndex<T> implements IndexDriver<T> {
             throw new Error('IndexerIndex expects only a single text search to load');
 
         let ids = await conf.db.indexers[this.indexer_name].search_raw(keys[0], {maxResults: 20});
+        if(!ids.length)
+            return [];
 
         return await conf.load(ids);
     }

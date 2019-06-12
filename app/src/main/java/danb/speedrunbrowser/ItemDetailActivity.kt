@@ -129,6 +129,11 @@ class ItemDetailActivity : AppCompatActivity(), Consumer<SpeedrunMiddlewareAPI.A
 
         val entry = whatIsEntryAPIResponse.data[0]
 
+        if(entry == null) {
+            Util.showErrorToast(this, getString(R.string.error_could_not_find))
+            showMainPage()
+        }
+
         when (entry.type) {
             "game" -> {
                 args.putString(GameDetailFragment.ARG_GAME_ID, entry.id)
