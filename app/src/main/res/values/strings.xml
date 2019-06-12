@@ -55,16 +55,17 @@
     <string name="button_got_it">Got it!</string>
 
     <!-- release notes: edit for each release for now -->
-    <string name="dialog_title_release_notes">Production Release!</string>
+    <string name="dialog_title_release_notes">1.8!</string>
     <string name="dialog_msg_release_notes">
         Hi, and thanks for being one of the first people to use this app!\n
         \n
-        This is mostly a bugfix release. If you are having trouble with the app, please do not
-        hesitate to contact in many places.\n
+        While no new user features were introduced, nearly every line of code has changed with this release.
+        New features you can expect within the coming weeks:\n
+        * Speedrun statistics and graphs like those shown on speedrun.com\n
+        * Splits information for runs, when available\n
+        * More subscription options\n
         \n
-        Now that the app has reached production, if you would like to publicly rate, you can do so!\n
-        \n
-        Either way, it has been great to have so much support over the last few months.
+        Enjoy and feel free to leave your thoughts the Play Store!
     </string>
 
     <string name="dialog_button_rate_now">Rate now!</string>
@@ -95,4 +96,5 @@
     <string name="label_filter_region">Region</string>
     <string name="menu_genres">Genres</string>
     <string name="label_all_genres">All Genres</string>
+    <string name="button_view_on_official">View on Official Player</string>
 </resources>

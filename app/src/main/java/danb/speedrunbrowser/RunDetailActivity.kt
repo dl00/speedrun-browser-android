@@ -12,10 +12,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Display
 import android.view.View
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.ListView
-import android.widget.TextView
+import android.widget.*
 
 import com.google.android.flexbox.FlexboxLayout
 import com.google.android.material.chip.Chip
@@ -84,6 +81,8 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
     private lateinit var mRunSplits: ListView
     private lateinit var mRunEmptySplits: TextView
 
+    private lateinit var mViewOnOfficial: Button
+
     /**
      * Video views
      */
@@ -116,6 +115,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
         mPlayerNames = findViewById(R.id.txtPlayerNames)
         mRunTime = findViewById(R.id.txtRunTime)
         mVideoFrame = findViewById(R.id.videoFrame)
+        mViewOnOfficial = findViewById(R.id.buttonViewOnOfficial)
 
         mRunComment = findViewById(R.id.txtRunComment)
 
@@ -158,6 +158,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
         }
 
         mGameInfoPane.setOnClickListener { viewGame() }
+        mViewOnOfficial.setOnClickListener { viewOnOfficial() }
     }
 
     private fun loadRun(runId: String?) {
@@ -231,6 +232,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
 
         if (mRun!!.videos == null || mRun!!.videos!!.links == null || mRun!!.videos!!.links!!.isEmpty()) {
             mVideoFrame.setVideoNotAvailable()
+            mViewOnOfficial.visibility = View.GONE
 
             return
         }
@@ -245,6 +247,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
             Log.w(TAG, "Could not play a video for this run")
             // just record the fact that the video page was accessed
             mVideoFrame.setVideoFrameOther(mRun!!.videos!!.links!![0])
+            mViewOnOfficial.visibility = View.GONE
             writeWatchToDb(0)
         }
     }
@@ -406,6 +409,12 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             intent.flags = Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT
         }
+
+        startActivity(intent)
+    }
+
+    private fun viewOnOfficial() {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(mRun!!.videos!!.links!![0].uri.toString()))
 
         startActivity(intent)
     }

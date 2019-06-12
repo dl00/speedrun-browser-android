@@ -199,6 +199,12 @@
         android:layout_marginTop="@dimen/fab_margin"
         android:orientation="vertical">
 
+        <Button
+            android:id="@+id/buttonViewOnOfficial"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/button_view_on_official" />
+
         <TextView
             android:id="@+id/txtRunComment"
             android:layout_marginBottom="@dimen/half_fab_margin"

@@ -3,7 +3,6 @@ package danb.speedrunbrowser.api.objects
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
-import com.google.gson.JsonObject
 import com.google.gson.JsonParseException
 
 import java.io.Serializable
@@ -13,7 +12,7 @@ data class Genre(
     val id: String,
     val name: String = "",
 
-    val count: Int = 0
+    val game_count: Int = 0
 ) : Serializable {
 
     class JsonConverter : JsonDeserializer<Genre> {
@@ -30,8 +29,8 @@ data class Genre(
                     id = obj.get("id").asString,
                     name = obj.get("name").asString,
 
-                    count = if(obj.has("count"))
-                        obj.get("count").asNumber.toInt()
+                    game_count = if(obj.has("game_count"))
+                        obj.get("game_count").asNumber.toInt()
                     else
                         0
                 )

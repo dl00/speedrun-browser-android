@@ -153,7 +153,7 @@ class SelectGenreDialog(ctx: Context, private val mDisposables: CompositeDisposa
 
             if (data != null) {
                 titleTv.text = data.name
-                countTv.text = String.format(Locale.US, "%d", data.count)
+                countTv.text = String.format(Locale.US, "%d", data.game_count)
             } else {
                 titleTv.setText(R.string.label_all_genres)
                 countTv.text = ""

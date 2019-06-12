@@ -132,7 +132,7 @@ object Util {
     fun showNewFeaturesDialog(ctx: Context) {
         val prefs = ctx.getSharedPreferences(Constants.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
 
-        val lastVersion = prefs.getString(Constants.PREF_LAST_APP_VERSION, "1.7")
+        val lastVersion = prefs.getString(Constants.PREF_LAST_APP_VERSION, "unset")
 
         if (lastVersion == BuildConfig.VERSION_NAME) {
             return
