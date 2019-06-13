@@ -35,7 +35,8 @@ data class Game(
     override val resolvedName: String
     get() = names["international"] ?: "? Unknown Name ?"
 
-    override val type = "game"
+    override val type: String
+            get() = "game"
 
     override val iconUrl: URL?
         get() = assets.coverLarge?.uri ?: assets.icon!!.uri

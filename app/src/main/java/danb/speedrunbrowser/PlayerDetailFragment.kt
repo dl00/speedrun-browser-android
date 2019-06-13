@@ -291,7 +291,7 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
                         .subscribe(ImageViewPlacerConsumer(imgView)))
             }
 
-            var runsToAdd = ArrayList<PersonalBestRunRow>()
+            var runsToAdd: MutableList<PersonalBestRunRow> = mutableListOf()
 
             for (categoryBest in gameBests.categories!!.values) {
 
@@ -307,11 +307,11 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
             }
 
             // sort these runs by date, descending
-            runsToAdd.sortedBy { it.re.run.date ?: "00000000000" }
+            val runsAdded = runsToAdd.sortedByDescending { it.re.run.date ?: "00000000000" }
 
             val bestTable = gameLayout.findViewById<TableLayout>(R.id.tablePersonalBests)
 
-            for (row in runsToAdd) {
+            for (row in runsAdded) {
                 val rowPersonalBest = layoutInflater.inflate(R.layout.content_row_personal_best, null) as TableRow
                 (rowPersonalBest.findViewById<View>(R.id.txtRunCategory) as TextView).text = row.label
 

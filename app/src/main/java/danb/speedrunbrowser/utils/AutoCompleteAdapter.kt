@@ -35,7 +35,7 @@ class AutoCompleteAdapter(private val ctx: Context, private val disposables: Com
         searchResults = ArrayList()
     }
 
-    fun recalculateSearchResults() {
+    private fun recalculateSearchResults() {
         searchResults = LinkedList()
 
         searchResults!!.addAll(rawSearchData!!.games)
@@ -55,6 +55,7 @@ class AutoCompleteAdapter(private val ctx: Context, private val disposables: Com
                         cur = sr.next()
                 } while (lcsg.maxMatchLength >= lcsp.maxMatchLength && sr.hasNext())
 
+                sr.previous()
                 sr.previous()
                 sr.add(player)
                 sr.next()

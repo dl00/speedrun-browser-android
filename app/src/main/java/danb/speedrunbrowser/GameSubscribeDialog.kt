@@ -58,8 +58,8 @@ class GameSubscribeDialog(ctx: Context, val subscriptions: GameDetailFragment.Ga
                     val id = id1 + "_" + id2
                     val cb = makeStyledCheckbox()
                     cb.text = context.resources.getString(R.string.render_level_category, name, name1)
-                    cb.isChecked = subscriptions.contains(id)
                     cb.tag = id
+                    cb.isChecked = subscriptions.contains(id)
 
                     mCategoryCheckboxDisplay!!.addView(cb)
                 }
@@ -87,7 +87,7 @@ class GameSubscribeDialog(ctx: Context, val subscriptions: GameDetailFragment.Ga
     }
 
     override fun onCheckedChanged(buttonView: CompoundButton, isChecked: Boolean) {
-        val id = buttonView.tag as String
+        val id = buttonView.tag as String? ?: return
 
         if (isChecked)
             subscriptions.add(id)

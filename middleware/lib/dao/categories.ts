@@ -48,6 +48,39 @@ export function normalize_category(d: Category) {
     }
 }
 
+export function standard_sort_categories(categories: Category[]) {
+    // first, sort by some predefined names that should always be in the front
+    return _.sortBy(categories, (c) => {
+        let name = c.name.toLowerCase();
+
+        let score = 0;
+
+        if(name === 'any%')
+            score = 0;
+        else if(name.match(/^all.*/))
+            score = 1;
+        else if(name === 'low%')
+            score = 2;
+        else if(name === '100%')
+            score = 3;
+        else if(name.match(/^any%/))
+            score = 4;
+        else if(name.match(/^100%/))
+            score = 5;
+        else if(name.match(/%$/))
+            score = 6;
+        else
+            score = 7;
+
+        if(c.type !== 'per-game')
+            score += 100;
+        if(c.miscellaneous)
+            score += 500;
+
+        return _.padStart(score.toString(), 4, '0') + name;
+    });
+}
+
 export class CategoryDao extends Dao<Category> {
     constructor(db: DB) {
         super(db, 'categories', 'redis');

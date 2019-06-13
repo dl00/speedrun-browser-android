@@ -6,7 +6,7 @@ import * as api from '../';
 import * as api_response from '../response';
 
 import { Game, GameDao } from '../../lib/dao/games';
-import { Category, CategoryDao } from '../../lib/dao/categories';
+import { Category, CategoryDao, standard_sort_categories } from '../../lib/dao/categories';
 import { Level, LevelDao } from '../../lib/dao/levels';
 
 const router = Router();
@@ -73,7 +73,14 @@ router.get('/:ids', async (req, res) => {
 
         if(games.length === 1 && !_.isNil(games[0])) {
             games[0]!.categories = <Category[]>await new CategoryDao(api.storedb!).load_by_index('game', games[0]!.id);
+
+            // since we don't preserve the order from speedrun.com of categories, we have to sort them on our own
+
+
             games[0]!.levels = <Level[]>await new LevelDao(api.storedb!).load_by_index('game', games[0]!.id);
+
+            // since we don't preserve the order from speedrun.com, we have to sort them on our own
+            games[0]!.levels = _.sortBy(games[0]!.levels, l => l.name.toLowerCase())
         }
 
         return api_response.complete(res, games);
