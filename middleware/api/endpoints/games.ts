@@ -75,7 +75,7 @@ router.get('/:ids', async (req, res) => {
             games[0]!.categories = <Category[]>await new CategoryDao(api.storedb!).load_by_index('game', games[0]!.id);
 
             // since we don't preserve the order from speedrun.com of categories, we have to sort them on our own
-
+            games[0]!.categories = standard_sort_categories(games[0]!.categories);
 
             games[0]!.levels = <Level[]>await new LevelDao(api.storedb!).load_by_index('game', games[0]!.id);
 
