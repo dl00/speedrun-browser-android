@@ -131,7 +131,7 @@ describe('Dao', () => {
 describe('IndexerIndex', () => {
     var db: DB;
 
-    let ao: dao.Dao<{id: string, test: string}>;
+    let ao: dao.Dao<{id: string, test: string, score: number}>;
 
     before(async () => {
         db = await load_db(load_config());
@@ -139,12 +139,12 @@ describe('IndexerIndex', () => {
         await db.mongo.setProfilingLevel('all');
         await db.redis.flushall();
 
-        ao = new dao.Dao<{id: string, test: string}>(db, 'indexerIndexTests');
+        ao = new dao.Dao<{id: string, test: string, score: number}>(db, 'indexerIndexTests');
         ao.backing = 'mongo';
         ao.indexes = [
             new dao.IndexerIndex('games', (v) => {
                 return [{
-                    score: 1,
+                    score: v.score,
                     text: v.test
                 }];
             })
@@ -161,14 +161,17 @@ describe('IndexerIndex', () => {
             {
                 id: 'wohoo',
                 test: 'super mario maker',
+                score: 1
             },
             {
                 id: 'wawe',
-                test: 'super mario galaxy'
+                test: 'super mario galaxy',
+                score: 2
             },
             {
                 id: 'weeboo',
-                test: 'the legend of zelda wind waker galaxy'
+                test: 'the legend of zelda wind waker galaxy',
+                score: 1
             }
         ]);
 
@@ -180,7 +183,20 @@ describe('IndexerIndex', () => {
         items = await ao.load_by_index('autocomplete', 'galaxy super');
 
         expect(items).to.have.length(3);
-        expect(items[0]).to.eql({id: 'wawe', test: 'super mario galaxy'});
+        expect(items[0]).to.eql({id: 'wawe', score: 2, test: 'super mario galaxy'});
+    });
+
+    it('should recognize changes to any index field', async () => {
+        await ao.save({
+                id: 'weeboo',
+                test: 'the legend of zelda wind waker galaxy',
+                score: 10000
+        });
+
+        let items = await ao.load_by_index('autocomplete', 'galaxy');
+
+        expect(items[0]).to.have.property('id', 'weeboo');
+        expect(items[0]).to.have.property('score', 10000);
     });
 
     it('should delete indexes on indexer databases', async() => {
@@ -190,5 +206,5 @@ describe('IndexerIndex', () => {
 
         expect(items).to.have.length(2);
         expect(items[0]).to.have.property('id', 'weeboo');
-    })
+    });
 });
