@@ -216,8 +216,8 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
         mDisposables.add(mDB.watchHistoryDao()[mRun!!.id]
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(Consumer { (_, _, seekPos) ->
-                    Log.d(TAG, "Got seek record for run: " + mRun!!.id)
+                .subscribe(Consumer { (_, seekPos) ->
+                    Log.d(TAG, "Got seek record for run: " + mRun!!.id + ", " + seekPos)
                     mVideoFrame.seekTime = seekPos.toInt()
                     onVideoReady()
                 }, NoopConsumer(), Action {
@@ -296,7 +296,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
 
         Log.d(TAG, "Record seek time: $seekTime")
 
-        mDisposables.add(mDB.watchHistoryDao().record(AppDatabase.WatchHistoryEntry(mRun!!.id, seekTime, 0))
+        mDisposables.add(mDB.watchHistoryDao().record(AppDatabase.WatchHistoryEntry(mRun!!.id, seekTime))
                 .subscribeOn(Schedulers.io())
                 .subscribe())
     }
@@ -322,7 +322,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
         mVariableChips.removeAllViews()
 
         val fullCategoryName = StringBuilder(mCategory!!.name)
-        if (mLevel != null)
+        if (mLevel != null && mLevel!!.name != null)
             fullCategoryName.append(" \u2022 ").append(mLevel!!.name)
 
         if (mGame!!.shouldShowPlatformFilter() && mRun!!.system != null) {

@@ -51,10 +51,10 @@ abstract class AppDatabase : RoomDatabase() {
     data class WatchHistoryEntry(
         @PrimaryKey
         var runId: String,
-
-        var watchDate: Long = 0,
         var seekPos: Long = 0
-    )
+    ) {
+        var watchDate: Long = System.currentTimeMillis()
+    }
 
     @Dao
     interface SubscriptionDao {

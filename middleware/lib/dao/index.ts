@@ -68,7 +68,7 @@ export class IndexerIndex<T> implements IndexDriver<T> {
     }
 
     has_changed(old_obj: T, new_obj: T): boolean {
-        return _.isEqual(this.index_by(old_obj), this.index_by(new_obj));
+        return !_.isEqual(this.index_by(old_obj), this.index_by(new_obj));
     }
 }
 

@@ -278,7 +278,11 @@ class ItemListFragment : Fragment() {
             when (this) {
                 GAMES -> (holder as GameCoverViewHolder).apply(ctx!!, disposables!!, toApply as Game)
                 PLAYERS -> (holder as PlayerViewHolder).apply(ctx!!, disposables!!, toApply as User, false)
-                RUNS -> (holder as WatchRunViewHolder).apply(ctx!!, disposables!!, (toApply as LeaderboardRunEntry).run.game!!, toApply)
+                RUNS -> {
+                    if((toApply as LeaderboardRunEntry).run == null)
+                        return
+                    (holder as WatchRunViewHolder).apply(ctx!!, disposables!!, (toApply as LeaderboardRunEntry).run.game!!, toApply)
+                }
             }
         }
 

@@ -30,7 +30,7 @@ class WatchRunViewHolder(v: View) : RecyclerView.ViewHolder(v) {
         if(entry.run.category != null)
             gameAndCategoryText += " \u2022 " + entry.run.category.name
 
-        if (entry.run.level != null)
+        if (entry.run.level?.name != null)
             gameAndCategoryText += " \u2022 " + entry.run.level.name
 
         mGameName.text = gameAndCategoryText
