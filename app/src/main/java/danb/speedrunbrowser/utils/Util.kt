@@ -26,6 +26,7 @@ import java.util.Random
 import java.util.concurrent.TimeUnit
 
 import androidx.core.app.NotificationCompat
+import androidx.core.app.TaskStackBuilder
 import danb.speedrunbrowser.BuildConfig
 import danb.speedrunbrowser.R
 import io.reactivex.Single
@@ -101,8 +102,13 @@ object Util {
         val requestId = System.currentTimeMillis().toInt()
 
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        val pendingIntent = PendingIntent.getActivity(c, requestId, intent,
-                PendingIntent.FLAG_ONE_SHOT)
+
+        val pi = TaskStackBuilder.create(c).run {
+            addNextIntentWithParentStack(intent)
+
+            // Get the PendingIntent containing the entire back stack
+            getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
+        }
 
         val channelId = c.getString(R.string.default_notification_channel_id)
         val notificationBuilder = NotificationCompat.Builder(c, channelId)
@@ -111,8 +117,8 @@ object Util {
                 .setContentTitle(title)
                 .setContentText(message)
                 .setAutoCancel(true)
-                .setGroup(Util.NOTIFICATION_GROUP)
-                .setContentIntent(pendingIntent)
+                .setGroup(NOTIFICATION_GROUP)
+                .setContentIntent(pi)
 
         val notificationManager = c.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -142,7 +148,7 @@ object Util {
                 .setTitle(R.string.dialog_title_release_notes)
                 .setMessage(R.string.dialog_msg_release_notes)
                 .setNeutralButton(R.string.button_got_it, null)
-                .setPositiveButton(R.string.dialog_button_rate_now) { dialog, which ->
+                .setPositiveButton(R.string.dialog_button_rate_now) { _, _ ->
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + BuildConfig.APPLICATION_ID))
                     ctx.startActivity(intent)
                 }
