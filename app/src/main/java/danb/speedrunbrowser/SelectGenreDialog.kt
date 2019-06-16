@@ -8,6 +8,7 @@ import android.text.TextWatcher
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.view.inputmethod.InputMethod
 import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -121,11 +122,21 @@ class SelectGenreDialog(ctx: Context, private val mDisposables: CompositeDisposa
     }
 
     override fun onClick(v: View) {
+        // try! to hide the soft keyboard
+        val inputMananger = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        if(inputMananger.isActive)
+            inputMananger.toggleSoftInput(0, 0)
+
         dismiss()
     }
 
     override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
         selectedGenre = mGenreAdapter.getItem(position)
+
+        // try! to hide the soft keyboard
+        val inputMananger = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        if(inputMananger.isActive)
+            inputMananger.toggleSoftInput(0, 0)
 
         // TODO: Save this genre somewhere so that the result can be picked up by the listener
 
@@ -135,7 +146,7 @@ class SelectGenreDialog(ctx: Context, private val mDisposables: CompositeDisposa
     private inner class GenreArrayAdapter(context: Context) : ArrayAdapter<Genre>(context, R.layout.content_named_autocomplete_item) {
 
         override fun getItem(position: Int): Genre? {
-            return if (position == 0) null else super.getItem(position - 1)
+            return if (position == 0) Genre.ALL_GENRES_GENRE else super.getItem(position - 1)
 
         }
 

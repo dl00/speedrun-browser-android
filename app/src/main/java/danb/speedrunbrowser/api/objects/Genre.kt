@@ -37,4 +37,8 @@ data class Genre(
             }
         }
     }
+
+    companion object {
+        val ALL_GENRES_GENRE = Genre(id = "ALL_GENRES", name = "All Genres")
+    }
 }

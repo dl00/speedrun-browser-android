@@ -120,14 +120,29 @@
 
         </LinearLayout>
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/fab_margin"
-            android:layout_marginBottom="@dimen/fab_margin"
-            android:textStyle="bold"
-            android:textAlignment="center"
-            android:id="@+id/txtCategoryName" />
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginTop="@dimen/fab_margin"
+                android:layout_marginBottom="@dimen/fab_margin"
+                android:textStyle="bold"
+                android:textAlignment="center"
+                android:id="@+id/txtCategoryName" />
+
+            <Button
+                android:id="@+id/buttonViewRules"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/button_view_rules" />
+
+        </LinearLayout>
 
         <HorizontalScrollView
             android:layout_width="match_parent"

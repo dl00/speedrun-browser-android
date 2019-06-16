@@ -1,6 +1,7 @@
 package danb.speedrunbrowser
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
@@ -157,7 +158,9 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
             onDataReady()
         }
 
-        mGameInfoPane.setOnClickListener { viewGame() }
+        findViewById<Button>(R.id.buttonViewRules).setOnClickListener { viewRules() }
+
+        mGameInfoPane.getChildAt(0).setOnClickListener { viewGame() }
         mViewOnOfficial.setOnClickListener { viewOnOfficial() }
     }
 
@@ -411,6 +414,25 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
         }
 
         startActivity(intent)
+    }
+
+    // show game rules as a Alert Dialog
+    private fun viewRules() {
+        //var rulesText = if(filter != null)
+        //    mCategory!!.getRulesText(filter!!)
+        //else
+            var rulesText = mCategory!!.getRulesText(Variable.VariableSelections())
+
+
+        if (rulesText.isEmpty())
+            rulesText = getString(R.string.msg_no_rules_content)
+
+        val dialog = AlertDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+                .setMessage(rulesText)
+                .setNeutralButton(android.R.string.ok, null)
+                .create()
+
+        dialog.show()
     }
 
     private fun viewOnOfficial() {

@@ -3,6 +3,8 @@ import * as _ from 'lodash';
 import { Router, Request, Response } from 'express';
 
 import { RunDao } from '../../lib/dao/runs';
+import { CategoryDao } from '../../lib/dao/categories';
+import { LevelDao } from '../../lib/dao/levels';
 
 import * as api from '../';
 import * as api_response from '../response';
@@ -52,6 +54,13 @@ router.get('/:ids', async (req, res) => {
 
     try {
         let runs = await new RunDao(api.storedb!).load(ids);
+
+        // load full category/level data if this run is the only one
+        if(ids.length === 1 && runs.length === 1) {
+            runs[0]!.run.category = (await new CategoryDao(api.storedb!).load(runs[0]!.run.category.id))[0];
+            runs[0]!.run.level = (await new LevelDao(api.storedb!).load(runs[0]!.run.level.id))[0];
+        }
+
         return api_response.complete(res, runs);
     }
     catch(err) {

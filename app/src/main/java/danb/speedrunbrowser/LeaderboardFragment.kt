@@ -243,35 +243,17 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
 
     // show game rules as a Alert Dialog
     private fun viewRules() {
+        var rulesText = if(filter != null)
+            mCategory!!.getRulesText(filter!!)
+        else
+            mCategory!!.getRulesText(Variable.VariableSelections())
 
-        val rulesText = StringBuilder()
 
-        if (mCategory!!.rules != null)
-            rulesText.append(mCategory!!.rules!!.trim { it <= ' ' })
-
-        // add variable rules as necessary
-        for ((id, _, _, _, _, _, isSubcategory, values) in mCategory!!.variables!!) {
-            if (!isSubcategory)
-                break
-
-            val selections = filter!!.getSelections(id)
-
-            if (selections!!.isEmpty())
-                continue
-
-            val moreRules = values.getValue(selections.iterator().next()).rules
-
-            if (moreRules != null)
-                rulesText.append("\n\n").append(moreRules)
-        }
-
-        var finishedRulesText = rulesText.toString().trim { it <= ' ' }
-
-        if (finishedRulesText.isEmpty())
-            finishedRulesText = getString(R.string.msg_no_rules_content)
+        if (rulesText.isEmpty())
+            rulesText = getString(R.string.msg_no_rules_content)
 
         val dialog = AlertDialog.Builder(context, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
-                .setMessage(finishedRulesText)
+                .setMessage(rulesText)
                 .setNeutralButton(android.R.string.ok, null)
                 .create()
 
