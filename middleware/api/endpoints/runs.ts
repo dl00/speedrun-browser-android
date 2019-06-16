@@ -58,6 +58,7 @@ router.get('/:ids', async (req, res) => {
         // load full category/level data if this run is the only one
         if(ids.length === 1 && runs.length === 1) {
             runs[0]!.run.category = (await new CategoryDao(api.storedb!).load(runs[0]!.run.category.id))[0];
+            if(runs[0]!.run.level)
             runs[0]!.run.level = (await new LevelDao(api.storedb!).load(runs[0]!.run.level.id))[0];
         }
 
