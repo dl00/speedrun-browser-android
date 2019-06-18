@@ -69,6 +69,8 @@ export function standard_sort_categories(categories: Category[]) {
             score = 5;
         else if(name.match(/%$/))
             score = 6;
+        else if(name.match(/^\d+.*/))
+            score = 1 + parseInt(name.match(/^(\d+).*/)![1]) / 1000000;
         else
             score = 7;
 
@@ -76,8 +78,8 @@ export function standard_sort_categories(categories: Category[]) {
             score += 100;
         if(c.miscellaneous)
             score += 500;
-
-        return _.padStart(score.toString(), 4, '0') + name;
+            
+        return _.padStart(score.toFixed(6), 10, '0') + name;
     });
 }
 

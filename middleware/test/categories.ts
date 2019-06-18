@@ -8,13 +8,13 @@ describe('standard_sort_categories', () => {
     it('should give precedence to standard categories over all else', () => {
         let sorted = standard_sort_categories([
             { id: 'arst', name: 'Any%', type: 'per-game', weblink: '', miscellaneous: false },
-            { id: 'arst3', name: '1357 Some other category', type: 'per-game', weblink: '', miscellaneous: false },
+            { id: 'arst3', name: 'Some other category', type: 'per-game', weblink: '', miscellaneous: false },
             { id: 'arst2', name: '100%', type: 'per-game', weblink: '', miscellaneous: false }
         ]);
 
         expect(sorted[0].name).to.eql('Any%');
         expect(sorted[1].name).to.eql('100%');
-        expect(sorted[2].name).to.eql('1357 Some other category');
+        expect(sorted[2].name).to.eql('Some other category');
     });
 
     it('should sort alphabetically almost', () => {
@@ -37,10 +37,24 @@ describe('standard_sort_categories', () => {
             { id: 'arst4', name: 'Any% Wohoo', type: 'per-level', weblink: '', miscellaneous: false }
         ]);
 
-        expect(sorted[0].name).to.eql('Low%');
-        expect(sorted[1].name).to.eql('1357 Some other category');
+        expect(sorted[0].name).to.eql('1357 Some other category');
+        expect(sorted[1].name).to.eql('Low%');
         expect(sorted[2].name).to.eql('Any% Wohoo');
         expect(sorted[3].name).to.eql('Any%');
 
     });
+
+    it('should sort numerical categories', () => {
+        let sorted = standard_sort_categories([
+            { id: 'arst1', name: '16', type: 'per-game', weblink: '', miscellaneous: false },
+            { id: 'arst2', name: '2048', type: 'per-game', weblink: '', miscellaneous: false },
+            { id: 'arst3', name: '32', type: 'per-game', weblink: '', miscellaneous: false },
+            { id: 'arst4', name: '2', type: 'per-game', weblink: '', miscellaneous: false }
+        ]);
+
+        expect(sorted[0].name).to.eql('2');
+        expect(sorted[1].name).to.eql('16');
+        expect(sorted[2].name).to.eql('32');
+        expect(sorted[3].name).to.eql('2048');
+    })
 });

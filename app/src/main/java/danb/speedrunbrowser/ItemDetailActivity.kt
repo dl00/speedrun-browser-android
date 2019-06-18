@@ -53,34 +53,40 @@ class ItemDetailActivity : AppCompatActivity(), Consumer<SpeedrunMiddlewareAPI.A
 
             var frag: Fragment? = null
 
-            if (type != null) {
-                when (type) {
-                    ItemListFragment.ItemType.GAMES -> frag = GameDetailFragment()
-                    ItemListFragment.ItemType.PLAYERS -> frag = PlayerDetailFragment()
+            when {
+                type != null -> frag = when (type) {
+                    ItemListFragment.ItemType.GAMES -> GameDetailFragment()
+                    ItemListFragment.ItemType.PLAYERS -> PlayerDetailFragment()
+                    else -> {
+                        showMainPage()
+                        return
+                    }
                 }
-            } else if (intent.data != null) {
-                val segs = intent.data!!.pathSegments
+                intent.data != null -> {
+                    val segs = intent.data!!.pathSegments
 
-                if (segs.isEmpty()) {
-                    showMainPage()
-                    return
+                    if (segs.isEmpty()) {
+                        showMainPage()
+                        return
+                    }
+
+                    val id = segs[segs.size - 1]
+
+                    Log.d(TAG, "Decoded game or player ID: " + id + ", from URL: " + intent.data)
+
+                    // use the whatis api to resolve the type of object
+                    whatIsQuery = SpeedrunMiddlewareAPI.make().whatAreThese(id)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(this, ConnectionErrorConsumer(this))
                 }
+                else -> {
+                    Log.w(TAG, "Could not find game ID argument")
 
-                val id = segs[segs.size - 1]
+                    Util.showErrorToast(this, getString(R.string.error_could_not_find, "No data provided"))
 
-                Log.d(TAG, "Decoded game or player ID: " + id + ", from URL: " + intent.data)
-
-                // use the whatis api to resolve the type of object
-                whatIsQuery = SpeedrunMiddlewareAPI.make().whatAreThese(id)
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(this, ConnectionErrorConsumer(this))
-            } else {
-                Log.w(TAG, "Could not find game ID argument")
-
-                Util.showErrorToast(this, getString(R.string.error_could_not_find, "No data provided"))
-
-                finish()
+                    finish()
+                }
             }
 
             if (frag != null) {
@@ -132,6 +138,7 @@ class ItemDetailActivity : AppCompatActivity(), Consumer<SpeedrunMiddlewareAPI.A
         if(entry == null) {
             Util.showErrorToast(this, getString(R.string.error_could_not_find))
             showMainPage()
+            return
         }
 
         when (entry.type) {

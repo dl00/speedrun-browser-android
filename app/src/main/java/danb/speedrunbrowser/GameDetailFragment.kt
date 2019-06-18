@@ -22,13 +22,7 @@ import danb.speedrunbrowser.api.objects.Category
 import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.api.objects.Level
 import danb.speedrunbrowser.api.objects.Variable
-import danb.speedrunbrowser.utils.Analytics
-import danb.speedrunbrowser.utils.AppDatabase
-import danb.speedrunbrowser.utils.ConnectionErrorConsumer
-import danb.speedrunbrowser.utils.ImageLoader
-import danb.speedrunbrowser.utils.ImageViewPlacerConsumer
-import danb.speedrunbrowser.utils.SubscriptionChanger
-import danb.speedrunbrowser.utils.Util
+import danb.speedrunbrowser.utils.*
 import danb.speedrunbrowser.views.CategoryTabStrip
 import danb.speedrunbrowser.views.ProgressSpinnerView
 import io.reactivex.Observable
@@ -90,28 +84,28 @@ class GameDetailFragment : Fragment() {
 
         mDB = AppDatabase.make(context!!)
 
-        if (savedInstanceState != null) {
-            mVariableSelections = savedInstanceState.getSerializable(SAVED_FILTERS) as Variable.VariableSelections
-        } else {
-            mVariableSelections = Variable.VariableSelections()
-        }
-
         val args = arguments
 
-        if (args == null) {
-            Log.e(TAG, "No arguments provided")
-            return
+        mVariableSelections = when {
+            savedInstanceState != null -> savedInstanceState.getSerializable(SAVED_FILTERS) as Variable.VariableSelections
+            args?.get(ARG_VARIABLE_SELECTIONS) != null -> args.getSerializable(ARG_VARIABLE_SELECTIONS) as Variable.VariableSelections
+            else -> Variable.VariableSelections()
         }
-        else if(savedInstanceState != null) {
-            mGame = savedInstanceState.getSerializable(SAVED_GAME) as Game
-        }
-        else if (args.containsKey(ARG_GAME_ID)) {
-            // Load the dummy content specified by the fragment
-            // arguments. In a real-world scenario, use a Loader
-            // to load content from a content provider.
 
-            val gameId = args.getString(ARG_GAME_ID)
-            loadGame(gameId)
+        when {
+            args == null -> {
+                Log.e(TAG, "No arguments provided")
+                return
+            }
+            savedInstanceState != null -> mGame = savedInstanceState.getSerializable(SAVED_GAME) as Game
+            args.containsKey(ARG_GAME_ID) -> {
+                // Load the dummy content specified by the fragment
+                // arguments. In a real-world scenario, use a Loader
+                // to load content from a content provider.
+
+                val gameId = args.getString(ARG_GAME_ID)
+                loadGame(gameId, args.getString(ARG_LEADERBOARD_ID))
+            }
         }
     }
 
@@ -151,7 +145,7 @@ class GameDetailFragment : Fragment() {
         }
     }
 
-    fun loadGame(gameId: String?): Disposable {
+    private fun loadGame(gameId: String?, leaderboardId: String?): Disposable {
         Log.d(TAG, "Downloading game data: " + gameId!!)
         return SpeedrunMiddlewareAPI.make().listGames(gameId)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -171,8 +165,22 @@ class GameDetailFragment : Fragment() {
                     loadSubscription()
                     setViewData()
 
+                    if(leaderboardId != null) {
+                        switchToLeaderboard(leaderboardId)
+                    }
+
                     Analytics.logItemView(context!!, "game", gameId)
                 }, ConnectionErrorConsumer(context!!))
+    }
+
+    private fun switchToLeaderboard(leaderboardId: String) {
+        val spl = leaderboardId.split('_')
+
+        val category = mGame!!.categories!!.find { it.id == spl[0] }
+        if(category != null) {
+            mLeaderboardPager.currentItem = (mLeaderboardPager.adapter as LeaderboardPagerAdapter)
+                    .indexOf(category, mGame!!.levels?.find { it.id == spl[1] })
+        }
     }
 
     private fun loadSubscription() {
@@ -349,8 +357,8 @@ class GameDetailFragment : Fragment() {
         })
     }
 
-    class GameSubscription : HashSet<String> {
-        var game: Game? = null
+    class GameSubscription(game: Game, subs: Collection<AppDatabase.Subscription>) : HashSet<String>() {
+        var game: Game? = game
             private set
 
         val baseSubscriptions: MutableSet<AppDatabase.Subscription>
@@ -365,13 +373,7 @@ class GameDetailFragment : Fragment() {
                 return subs
             }
 
-        constructor(game: Game) {
-            this.game = game
-        }
-
-        constructor(game: Game, subs: Collection<AppDatabase.Subscription>) {
-            this.game = game
-
+        init {
             for ((_, resourceId) in subs) {
                 add(resourceId.substring(resourceId.indexOf('_') + 1))
             }
@@ -387,6 +389,8 @@ class GameDetailFragment : Fragment() {
          * represents.
          */
         const val ARG_GAME_ID = "game_id"
+        const val ARG_LEADERBOARD_ID = "leaderboard_id"
+        const val ARG_VARIABLE_SELECTIONS = "variable_selections"
 
         /**
          * Saved state options

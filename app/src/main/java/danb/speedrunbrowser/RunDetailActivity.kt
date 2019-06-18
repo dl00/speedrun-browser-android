@@ -11,25 +11,19 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.Display
 import android.view.View
 import android.widget.*
 
 import com.google.android.flexbox.FlexboxLayout
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
-import java.util.Objects
 import java.util.concurrent.TimeUnit
 
 import androidx.appcompat.app.AppCompatActivity
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.Category
 import danb.speedrunbrowser.api.objects.Game
-import danb.speedrunbrowser.api.objects.LeaderboardRunEntry
 import danb.speedrunbrowser.api.objects.Level
-import danb.speedrunbrowser.api.objects.MediaLink
-import danb.speedrunbrowser.api.objects.Platform
-import danb.speedrunbrowser.api.objects.Region
 import danb.speedrunbrowser.api.objects.Run
 import danb.speedrunbrowser.api.objects.User
 import danb.speedrunbrowser.api.objects.Variable
@@ -175,7 +169,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
                         return@Consumer
                     }
 
-                    mRun = data[0].run
+                    mRun = data[0]!!.run
                     mGame = mRun!!.game
                     mCategory = mRun!!.category
                     mLevel = mRun!!.level
@@ -409,6 +403,8 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
         val intent = Intent(this, ItemDetailActivity::class.java)
         intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.GAMES)
         intent.putExtra(GameDetailFragment.ARG_GAME_ID, mGame!!.id)
+        intent.putExtra(GameDetailFragment.ARG_LEADERBOARD_ID, mCategory!!.id + (if(mLevel != null) "_" + mLevel!!.id else ""))
+        intent.putExtra(GameDetailFragment.ARG_VARIABLE_SELECTIONS, Variable.VariableSelections(mRun))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             intent.flags = Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT
         }
@@ -418,11 +414,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
 
     // show game rules as a Alert Dialog
     private fun viewRules() {
-        //var rulesText = if(filter != null)
-        //    mCategory!!.getRulesText(filter!!)
-        //else
-            var rulesText = mCategory!!.getRulesText(Variable.VariableSelections())
-
+        var rulesText = mCategory!!.getRulesText(Variable.VariableSelections(mRun))
 
         if (rulesText.isEmpty())
             rulesText = getString(R.string.msg_no_rules_content)

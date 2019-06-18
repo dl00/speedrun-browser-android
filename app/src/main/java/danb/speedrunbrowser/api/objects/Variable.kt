@@ -42,9 +42,16 @@ data class Variable(
         val level: String? = null
     ) : Serializable
 
-    class VariableSelections : Serializable {
+    class VariableSelections(run: Run? = null) : Serializable {
 
         private val selections: MutableMap<String, MutableSet<String>> = mutableMapOf()
+
+        init {
+            if(run?.values != null) {
+                for((key, value) in run.values)
+                    selections[key] = mutableSetOf(value)
+            }
+        }
 
         fun setDefaults(vars: List<Variable>) {
             for (`var` in vars) {

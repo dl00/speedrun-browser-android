@@ -75,7 +75,7 @@ object SpeedrunMiddlewareAPI {
     }
 
     data class APIResponse<T>(
-        val data: List<T>? = listOf(),
+        val data: List<T?>? = listOf(),
         val error: Error? = null,
 
         val more: MoreInfo? = null
