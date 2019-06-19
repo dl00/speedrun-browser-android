@@ -32,9 +32,9 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 object SpeedrunMiddlewareAPI {
-    val MIN_AUTOCOMPLETE_LENGTH = 3
+    const val MIN_AUTOCOMPLETE_LENGTH = 3
 
-    val baseUrl: String
+    private val baseUrl: String
         get() = if (BuildConfig.DEBUG) {
             "https://sr-browser-develop.dbeal.dev/api/v1/"
         } else {

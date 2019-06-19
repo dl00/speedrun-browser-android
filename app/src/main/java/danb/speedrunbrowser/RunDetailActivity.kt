@@ -59,6 +59,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
 
     private lateinit var mSpinner: ProgressSpinnerView
     private lateinit var mGameInfoPane: LinearLayout
+    private lateinit var mInfoHeader: LinearLayout
     private lateinit var mRunFooterPane: LinearLayout
     private lateinit var mGameName: TextView
     private lateinit var mReleaseDate: TextView
@@ -100,6 +101,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
         mRootView = findViewById(R.id.contentLayout)
         mSpinner = findViewById(R.id.spinner)
         mGameInfoPane = findViewById(R.id.gameInfoHead)
+        mInfoHeader = findViewById(R.id.headerLayout)
         mRunFooterPane = findViewById(R.id.runFooter)
         mGameName = findViewById(R.id.txtGameName)
         mReleaseDate = findViewById(R.id.txtReleaseDate)
@@ -270,6 +272,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
 
             // hide things
             mGameInfoPane.visibility = View.GONE
+            mInfoHeader.visibility = View.GONE
             mRunFooterPane.visibility = View.GONE
 
         } else {
