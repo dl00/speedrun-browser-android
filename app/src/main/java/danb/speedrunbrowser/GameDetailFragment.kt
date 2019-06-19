@@ -178,8 +178,11 @@ class GameDetailFragment : Fragment() {
 
         val category = mGame!!.categories!!.find { it.id == spl[0] }
         if(category != null) {
+
+            val level = if(spl.size > 1) mGame!!.levels?.find { it.id == spl[1] } else null
+
             mLeaderboardPager.currentItem = (mLeaderboardPager.adapter as LeaderboardPagerAdapter)
-                    .indexOf(category, mGame!!.levels?.find { it.id == spl[1] })
+                    .indexOf(category, level)
         }
     }
 

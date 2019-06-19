@@ -162,7 +162,7 @@ class SelectGenreDialog(ctx: Context, private val mDisposables: CompositeDisposa
 
             val data = getItem(position)
 
-            if (data != null) {
+            if (data != null && data != Genre.ALL_GENRES_GENRE) {
                 titleTv.text = data.name
                 countTv.text = String.format(Locale.US, "%d", data.game_count)
             } else {

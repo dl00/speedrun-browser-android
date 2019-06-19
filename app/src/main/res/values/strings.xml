@@ -59,13 +59,13 @@
     <string name="dialog_msg_release_notes">
         Hi, and thanks for being one of the first people to use this app!\n
         \n
-        While no new user features were introduced, nearly every line of code has changed with this release.
+        There were a variety of simple and small issues fixed, but under the hood nearly every line of code has changed (both client and server) with this release.
         New features you can expect within the coming weeks:\n
         * Speedrun statistics and graphs like those shown on speedrun.com\n
         * Splits information for runs, when available\n
         * More subscription options\n
         \n
-        Enjoy and feel free to leave your thoughts the Play Store!
+        Enjoy and please use the complain button in the About page if you run into any issues!
     </string>
 
     <string name="dialog_button_rate_now">Rate now!</string>
@@ -97,4 +97,27 @@
     <string name="menu_genres">Genres</string>
     <string name="label_all_genres">All Genres</string>
     <string name="button_view_on_official">View on Official Player</string>
+    <string name="msg_share_run">Speedrun by %s in %s, %s %s</string>
+    <string name="msg_share_run_explain">Share Run</string>
+    <string name="label_about_rate_this">Rate this app!</string>
+    <string name="label_about_complain">Complain/Report a Problem</string>
+    <string name="dialog_title_send_email">Report a Problem</string>
+    <string name="dialog_msg_send_email">
+        I do my best to track, monitor, and resolve crashes and other app misbehavior as are observable via
+        analytics. However, I have had a lot of difficulty resolving some issues reported on the Play Store
+        because I have not been able to open a line of communication or receive more specific details of the
+        issue.\n
+        \n
+        In order to try and remedy this, I recommend sending an email with an attached screenshot and details
+        about your session so I can debug with greatest efficiency.\n
+        \n
+        You are of course welcome to post a poor review on the play store. I read feedback from there as well!
+        I just will have a harder time resolving such issues.\n
+        \n
+        If you do choose to send an email, the process would be made most easy if you did the following:\n
+        \n
+        * Submit Screenshots of issues and pages around the issue, when applicable\n
+        * Provide a detailed overview of your session, including which games, players, and runs you may have viewed
+    </string>
+    <string name="dialog_button_send_email">Send Email</string>
 </resources>

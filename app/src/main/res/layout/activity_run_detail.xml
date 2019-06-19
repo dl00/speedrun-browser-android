@@ -118,6 +118,19 @@
 
             </LinearLayout>
 
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/imgShare"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/half_fab_margin"
+                    android:src="@drawable/baseline_share_24" />
+
+            </LinearLayout>
+
         </LinearLayout>
 
         <LinearLayout

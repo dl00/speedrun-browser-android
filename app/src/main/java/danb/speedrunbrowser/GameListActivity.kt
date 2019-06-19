@@ -234,10 +234,16 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
     private fun showGenreFilterDialog() {
         val dialog = SelectGenreDialog(this, mDisposables!!)
 
-        dialog.setOnDismissListener { d ->
-            mSelectedGenre = (d as SelectGenreDialog).selectedGenre
+        dialog.setOnDismissListener {
 
-            (mViewPager!!.adapter as PagerAdapter).reloadSearchResults()
+            if(dialog.selectedGenre != null && mSelectedGenre != dialog.selectedGenre) {
+                mSelectedGenre = if(dialog.selectedGenre == Genre.ALL_GENRES_GENRE)
+                    null
+                else
+                    dialog.selectedGenre
+
+                (mViewPager!!.adapter as PagerAdapter).reloadSearchResults()
+            }
         }
 
         dialog.show()

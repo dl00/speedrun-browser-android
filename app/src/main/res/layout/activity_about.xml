@@ -37,7 +37,7 @@
                 android:id="@+id/txtAppTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="-20dp"
+                android:layout_marginTop="50dp"
                 android:text="@string/label_about_subtitle"
                 android:textAlignment="center"
                 android:typeface="monospace"
@@ -60,6 +60,34 @@
                 android:text="@string/label_about_author2"
                 android:textAlignment="center"
                 android:typeface="monospace"
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/linkRateThis"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="50dp"
+                android:paddingTop="@dimen/half_fab_margin"
+                android:paddingBottom="@dimen/half_fab_margin"
+                android:text="@string/label_about_rate_this"
+                android:textAlignment="center"
+                android:typeface="monospace"
+                android:textStyle="bold"
+                android:textColor="@color/colorLinkText"
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/linkComplain"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="50dp"
+                android:paddingTop="@dimen/half_fab_margin"
+                android:paddingBottom="@dimen/half_fab_margin"
+                android:text="@string/label_about_complain"
+                android:textAlignment="center"
+                android:typeface="monospace"
+                android:textStyle="bold"
+                android:textColor="@color/colorLinkText"
                 android:textSize="20sp" />
 
             <TextView

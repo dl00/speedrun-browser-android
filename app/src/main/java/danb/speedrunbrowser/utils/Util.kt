@@ -99,8 +99,6 @@ object Util {
     }
 
     fun postNotification(c: Context, intent: Intent, subjectId: String, title: String, message: String, largeIcon: Bitmap) {
-        val requestId = System.currentTimeMillis().toInt()
-
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TASK
 
         val pi = TaskStackBuilder.create(c).run {

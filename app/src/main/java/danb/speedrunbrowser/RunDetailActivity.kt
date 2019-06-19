@@ -153,6 +153,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
         }
 
         findViewById<Button>(R.id.buttonViewRules).setOnClickListener { viewRules() }
+        findViewById<ImageView>(R.id.imgShare).setOnClickListener { doShare() }
 
         mGameInfoPane.getChildAt(0).setOnClickListener { viewGame() }
         mViewOnOfficial.setOnClickListener { viewOnOfficial() }
@@ -429,8 +430,15 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
 
     private fun viewOnOfficial() {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(mRun!!.videos!!.links!![0].uri.toString()))
-
         startActivity(intent)
+    }
+
+    private fun doShare() {
+        val intent = Intent(Intent.ACTION_SEND)
+                .setType("text/plain")
+                .putExtra(Intent.EXTRA_TEXT, getString(R.string.msg_share_run, mRun!!.players!![0].names!!["international"], mRun!!.game!!.names["international"], mRun!!.times!!.time, mRun!!.weblink))
+
+        startActivity(Intent.createChooser(intent, getString(R.string.msg_share_run_explain)))
     }
 
     override fun onFullscreenToggleListener() {
