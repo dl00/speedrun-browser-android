@@ -146,10 +146,10 @@ object Util {
                 .setTitle(R.string.dialog_title_release_notes)
                 .setMessage(R.string.dialog_msg_release_notes)
                 .setNeutralButton(R.string.button_got_it, null)
-                .setPositiveButton(R.string.dialog_button_rate_now) { _, _ ->
+                /*.setPositiveButton(R.string.dialog_button_rate_now) { _, _ ->
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + BuildConfig.APPLICATION_ID))
                     ctx.startActivity(intent)
-                }
+                }*/
                 .create()
 
         dialog.show()
