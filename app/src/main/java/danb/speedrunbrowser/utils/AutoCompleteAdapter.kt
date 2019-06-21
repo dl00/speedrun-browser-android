@@ -118,7 +118,7 @@ class AutoCompleteAdapter(private val ctx: Context, private val disposables: Com
         disposables.add(obs.subscribe { s -> query = s })
 
         disposables.add(obs
-                .throttleLatest(DEBOUNCE_SEARCH_DELAY.toLong(), TimeUnit.MILLISECONDS)
+                .throttleFirst(DEBOUNCE_SEARCH_DELAY.toLong(), TimeUnit.MILLISECONDS)
                 .switchMap<SpeedrunMiddlewareAPI.APISearchResponse> { s ->
                     if (s.length < SpeedrunMiddlewareAPI.MIN_AUTOCOMPLETE_LENGTH)
                         Observable.just(SpeedrunMiddlewareAPI.APISearchResponse())
@@ -139,6 +139,6 @@ class AutoCompleteAdapter(private val ctx: Context, private val disposables: Com
     companion object {
         private val TAG = AutoCompleteAdapter::class.java.simpleName
 
-        private val DEBOUNCE_SEARCH_DELAY = 500
+        private val DEBOUNCE_SEARCH_DELAY = 200
     }
 }

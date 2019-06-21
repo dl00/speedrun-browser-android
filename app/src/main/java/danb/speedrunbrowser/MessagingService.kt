@@ -143,7 +143,7 @@ class MessagingService : FirebaseMessagingService() {
         intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.GAMES)
         intent.putExtra(GameDetailFragment.ARG_GAME_ID, data.game.id)
 
-        Util.postNotification(this, intent, data.game.id, title, msg, featureImg!!)
+        Util.postNotification(this, intent, data.game.id, title, msg, featureImg)
     }
 
     companion object {

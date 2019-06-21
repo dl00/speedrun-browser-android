@@ -437,11 +437,16 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
     }
 
     private fun doShare() {
-        val intent = Intent(Intent.ACTION_SEND)
-                .setType("text/plain")
-                .putExtra(Intent.EXTRA_TEXT, getString(R.string.msg_share_run, mRun!!.players!![0].names!!["international"], mRun!!.game!!.names["international"], mRun!!.times!!.time, mRun!!.weblink))
+        if(mRun != null) {
+            val intent = Intent(Intent.ACTION_SEND)
+                    .setType("text/plain")
+                    .putExtra(Intent.EXTRA_TEXT,
+                            getString(R.string.msg_share_run, User.printPlayerNames(mRun!!.players!!),
+                                    mRun!!.game!!.names["international"],
+                                    mRun!!.times?.time ?: "", mRun!!.weblink))
 
-        startActivity(Intent.createChooser(intent, getString(R.string.msg_share_run_explain)))
+            startActivity(Intent.createChooser(intent, getString(R.string.msg_share_run_explain)))
+        }
     }
 
     override fun onFullscreenToggleListener() {

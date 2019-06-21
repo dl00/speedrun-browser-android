@@ -17,6 +17,9 @@ data class Category(
     fun getRulesText(filter: Variable.VariableSelections): String {
         val rulesText = StringBuilder()
 
+        if (rules != null)
+            rulesText.append(rules.trim { it <= ' ' }).append("\n\n")
+
         // add variable rules as necessary
         if (variables != null) {
             for ((id, _, _, _, _, _, isSubcategory, values) in variables) {
@@ -24,8 +27,7 @@ data class Category(
                     break
 
                 val selections = filter.getSelections(id)
-
-                if (selections!!.isEmpty())
+                if (selections?.isEmpty() != false)
                     continue
 
                 val moreRules = values.getValue(selections.iterator().next()).rules
@@ -34,9 +36,6 @@ data class Category(
                     rulesText.append("\n\n").append(moreRules)
             }
         }
-
-        if (rules != null)
-            rulesText.append(rules.trim { it <= ' ' })
 
         return rulesText.toString().trim { it <= ' ' }
     }
