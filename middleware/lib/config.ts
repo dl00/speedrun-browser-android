@@ -66,6 +66,9 @@ export interface Config {
             credentialFile: string
         }
 
+        /// list of database update tasks which should be used by the downloader. empty means run all tasks
+        baseTasks: string[]
+
         /// Settings for storing data in the database
         db: {
             /// The number of runs to keep as marked "latest"
@@ -124,6 +127,8 @@ export const DEFAULT_CONFIG: Config = {
         redis: {
             db: 1
         },
+
+        baseTasks: [],
 
         pushNotify: {
             enabled: false,

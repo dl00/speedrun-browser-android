@@ -84,11 +84,11 @@ export function normalize_run(d: Run) {
         d.players = d.players.map(<any>user_to_bulk);
     }
 
-    if(typeof d.game === 'object')
+    if(_.isObject(d.game))
         d.game = game_to_bulk(<Game>d.game);
-    if(typeof d.category === 'object')
+    if(_.isObject(d.category))
         d.category = category_to_bulk(<Category>d.category);
-    if(typeof d.level === 'object') {
+    if(_.isObject(d.level)) {
         if(!_.keys(d.level).length)
             delete d.level;
         else
@@ -105,15 +105,21 @@ export function run_to_bulk(run: Run): BulkRun {
     return newr;
 }
 
-export const LATEST_RUNS_KEY = 'verified_runs';
+export const LATEST_VERIFIED_RUNS_KEY = 'verified_runs';
+export const LATEST_NEW_RUNS_KEY = 'latest_new_runs'
+
 
 export class RecentRunsIndex implements IndexDriver<LeaderboardRunEntry> {
     name: string;
+    private date_property: string;
+    private redis_key: string;
     private keep_count: number;
     private max_return: number;
 
-    constructor(name: string, keep_count: number, max_return: number) {
+    constructor(name: string, date_property: string, redis_key: string, keep_count: number, max_return: number) {
         this.name = name;
+        this.date_property = date_property;
+        this.redis_key = redis_key;
         this.keep_count = keep_count;
         this.max_return = max_return;
     }
@@ -128,7 +134,7 @@ export class RecentRunsIndex implements IndexDriver<LeaderboardRunEntry> {
         let genre = spl[0];
         let offset = parseInt(spl[1]);
 
-        let latest_run_ids: string[] = await conf.db.redis.zrevrange(LATEST_RUNS_KEY + (genre ? ':' + genre : ''),
+        let latest_run_ids: string[] = await conf.db.redis.zrevrange(this.redis_key + (genre ? ':' + genre : ''),
             offset, offset + this.max_return - 1);
 
         return await conf.load(latest_run_ids);
@@ -142,11 +148,11 @@ export class RecentRunsIndex implements IndexDriver<LeaderboardRunEntry> {
         let m = conf.db.redis.multi();
 
         for(let lbr of objs) {
-            let date_score = moment((<Run>lbr.run).status['verify-date']).unix().toString();
+            let date_score = moment(_.get(<Run>lbr.run, this.date_property)).unix().toString();
 
             m
-                .zadd(LATEST_RUNS_KEY, date_score, lbr.run.id)
-                .zremrangebyrank(LATEST_RUNS_KEY, 0, -this.keep_count - 1)
+                .zadd(this.redis_key, date_score, lbr.run.id)
+                .zremrangebyrank(this.redis_key, 0, -this.keep_count - 1)
 
             let game = <Game>games[<string>(<BulkGame>(<Run>lbr.run).game).id];
 
@@ -154,7 +160,7 @@ export class RecentRunsIndex implements IndexDriver<LeaderboardRunEntry> {
                 throw `Missing game for run: ${lbr.run.id}, game id: ${(<BulkGame>(<Run>lbr.run).game).id}`
 
             for(let genre of <Genre[]>game.genres) {
-                let genre_runs = LATEST_RUNS_KEY + ':' + genre.id;
+                let genre_runs = this.redis_key + ':' + genre.id;
                 m.zadd(genre_runs, date_score, lbr.run.id)
                     .zremrangebyrank(genre_runs, 0, -this.keep_count - 1);
             }
@@ -166,12 +172,12 @@ export class RecentRunsIndex implements IndexDriver<LeaderboardRunEntry> {
     async clear(conf: DaoConfig<LeaderboardRunEntry>, objs: LeaderboardRunEntry[]) {
         let keys = _.map(objs, conf.id_key);
 
-        await conf.db.redis.zrem(LATEST_RUNS_KEY,
+        await conf.db.redis.zrem(this.redis_key,
             ...keys);
     }
 
     has_changed(old_obj: LeaderboardRunEntry, new_obj: LeaderboardRunEntry): boolean {
-        return (<Run>old_obj.run).status['verify-date'] != (<Run>new_obj.run).status['verify-date'];
+        return _.get(<Run>old_obj.run, this.date_property) != _.get(<Run>new_obj.run, this.date_property);
     }
 }
 
@@ -187,16 +193,20 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         this.id_key = _.property('run.id');
 
         this.indexes = [
-            new RecentRunsIndex('latest_runs',
+            new RecentRunsIndex('latest_new_runs', 'submitted', LATEST_NEW_RUNS_KEY,
+                config && config.latest_runs_history_length ? config.latest_runs_history_length : 1000,
+                config && config.max_items ? config.max_items : 100
+            ),
+            new RecentRunsIndex('latest_verified_runs', 'status.verify-date', LATEST_VERIFIED_RUNS_KEY,
                 config && config.latest_runs_history_length ? config.latest_runs_history_length : 1000,
                 config && config.max_items ? config.max_items : 100
             )
         ];
     }
 
-    async load_latest_runs(offset?: number, genreId?: string) {
+    async load_latest_runs(offset?: number, genreId?: string, verified: boolean = true) {
         let key = `${genreId || ''}:${offset || 0}`;
-        return await this.load_by_index('latest_runs', key);
+        return await this.load_by_index(verified ? 'latest_verified_runs' : 'latest_new_runs', key);
     }
 
     protected async pre_store_transform(run: LeaderboardRunEntry): Promise<LeaderboardRunEntry> {

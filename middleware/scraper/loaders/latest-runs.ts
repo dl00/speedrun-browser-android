@@ -12,19 +12,23 @@ import { Run } from '../../lib/dao/runs';
 
 export async function pull_latest_runs(runid: string, options: any) {
     try {
+
+        let run_date_property: 'status.verify-date'|'submitted' = options.verified ? 'status.verify-date' : 'submitted';
+        let latest_run_redis_property: 'latest_run_verify_date'|'latest_run_new_date' = options.verified ? 'latest_run_verify_date' : 'latest_run_new_date';
+
         let res = await puller.do_pull(scraper.storedb!,
-            `/runs?status=verified&orderby=verify-date&direction=desc&offset=${options.offset || 0}&max=200`);
+            `/runs?status=verified&orderby=${options.verified ? 'verify-date' : 'submitted'}&direction=desc&offset=${options.offset || 0}&max=200`);
 
         let runs: Run[] = res.data.data;
 
         if(!runs.length)
             return;
 
-        let latest_run_verify_date: string|null = options.latest_run_verify_date ||
-            await scraper.storedb!.redis.getset('latest_run_verify_date',
-                runs[0].status['verify-date']);
+        let latest_run_date: string|null = options.latest_run_date ||
+            await scraper.storedb!.redis.getset(latest_run_redis_property,
+                _.get(runs[0], run_date_property));
 
-        if(!latest_run_verify_date) {
+        if(!latest_run_date) {
             return;
         }
 
@@ -32,7 +36,7 @@ export async function pull_latest_runs(runid: string, options: any) {
         let lb_pulls: {[key: string]: boolean} = {};
 
         for(let run of runs) {
-            if(run.status['verify-date'] <= latest_run_verify_date) {
+            if(_.get(run, run_date_property) <= latest_run_date) {
                 return;
             }
 
@@ -66,8 +70,9 @@ export async function pull_latest_runs(runid: string, options: any) {
             module: 'latest-runs',
             exec: 'pull_latest_runs',
             options: {
+                verified: options.verified,
                 offset: res.data.pagination.offset + res.data.pagination.size,
-                latest_run_verify_date: latest_run_verify_date
+                latest_run_date: latest_run_date
             }
         }, 1);
     }

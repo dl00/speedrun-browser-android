@@ -40,10 +40,25 @@ const BASE_TASKS: Task[] = [
         repeat: moment.duration(7, 'days')
     },
     {
-        name: 'pull_latest_runs',
+        name: 'pull_latest_new_runs',
         module: 'latest-runs',
         exec: 'pull_latest_runs',
         repeat: moment.duration(1, 'minutes')
+    },
+    {
+        name: 'pull_latest_verified_runs',
+        module: 'latest-runs',
+        exec: 'pull_latest_runs',
+        repeat: moment.duration(1, 'minutes'),
+        options: {
+            verified: true
+        }
+    },
+    {
+        name: 'pull_all_runs',
+        module: 'all-runs',
+        exec: 'list_all_runs',
+        repeat: moment.duration(2, 'weeks')
     }
 ];
 
@@ -239,7 +254,18 @@ export async function run(config: Config) {
     await connect(config);
 
     // spawn the base tasks
-    for(let task of BASE_TASKS) {
+    // config can override which base tasks we use
+
+    let baseTaskNames = config.scraper.baseTasks.length ? config.scraper.baseTasks : _.map(BASE_TASKS, 'name');
+
+    console.log('Loading tasks:', baseTaskNames);
+
+    for(let taskName of baseTaskNames) {
+        let task = _.find(BASE_TASKS, v => v.name === taskName);
+
+        if(!task)
+            continue;
+
         let ptask = <string>(await rdb!.hget(ScraperDB.locs.pending_tasks, task.name));
 
         if(ptask) {
@@ -252,7 +278,7 @@ export async function run(config: Config) {
                 let sched_ms = rtime.diff(moment());
                 console.log('[SCHED]', task.name, sched_ms);
                 setTimeout(() => {
-                    init_task(task);
+                    init_task(<Task>task);
                 }, sched_ms);
                 continue;
             }
