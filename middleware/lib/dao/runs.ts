@@ -148,7 +148,7 @@ export class RecentRunsIndex implements IndexDriver<LeaderboardRunEntry> {
         let m = conf.db.redis.multi();
 
         for(let lbr of objs) {
-            let date_score = moment(_.get(<Run>lbr.run, this.date_property)).unix().toString();
+            let date_score = moment(_.get(<Run>lbr.run, this.date_property) || 0).unix().toString();
 
             m
                 .zadd(this.redis_key, date_score, lbr.run.id)
