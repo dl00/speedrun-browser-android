@@ -8,7 +8,14 @@ import * as puller from '../puller';
 
 import * as scraper from '../index';
 
-import { Run } from '../../lib/dao/runs';
+import { Run, RunDao, LeaderboardRunEntry } from '../../lib/dao/runs';
+import { Leaderboard, LeaderboardDao, add_leaderboard_run } from '../../lib/dao/leaderboards';
+
+import { populate_run_sub_documents } from './all-runs';
+import { BulkGame } from '../../lib/dao/games';
+import { BulkCategory } from '../../lib/dao/categories';
+import { BulkLevel } from '../../lib/dao/levels';
+import { Variable } from '../../lib/speedrun-api';
 
 export async function pull_latest_runs(runid: string, options: any) {
     try {
@@ -32,37 +39,62 @@ export async function pull_latest_runs(runid: string, options: any) {
             return;
         }
 
-        // trigger a leaderboard update for each affected run
-        let lb_pulls: {[key: string]: boolean} = {};
+        let remove_after = _.findIndex(runs, run => _.get(run, run_date_property) <= latest_run_date!);
+        runs.splice(remove_after, 100000000);
 
-        for(let run of runs) {
-            if(_.get(run, run_date_property) <= latest_run_date) {
-                return;
-            }
+        if(!runs.length)
+            return;
 
-            let rid = scraper.join_runid(
-                [runid, <string>run.game, run.category + (run.level ? '_' + run.level : ''),
-                'leaderboard']
-            );
+        // install runs on the database
+        let pr = await populate_run_sub_documents(runs);
+        if(pr.drop_runs.length)
+            runs = _.remove(runs, r => _.findIndex(pr.drop_runs, r) !== -1);
 
-            if(lb_pulls[rid])
-                continue;
-
-            lb_pulls[rid] = true;
-
-            let options = {
-                game_id: run.game,
-                category_id: run.category,
-                level_id: run.level
-            };
-
+        // download missing runs
+        for(let mr of pr.drop_runs) {
             await scraper.push_call({
-                runid: rid,
-                module: 'leaderboard',
-                exec: 'pull_leaderboard',
-                options: options
+                runid: runid + '/' + mr.id,
+                module: 'gamelist',
+                exec: 'pull_game',
+                options: {
+                    id: (<BulkGame>mr.game).id || mr.game
+                }
             }, 5);
         }
+
+        if(!runs.length)
+            return;
+
+        let leaderboard_ids = <string[]>_.map(runs, run =>
+            (<BulkCategory>run.category).id +
+            (run.level ? '_' + (<BulkLevel>run.level).id : ''));
+
+        let leaderboard_ids_deduped = _.uniq(leaderboard_ids);
+        let leaderboards = <{[id: string]: Leaderboard}>_.zipObject(leaderboard_ids_deduped, await new LeaderboardDao(scraper.storedb!).load(leaderboard_ids_deduped));
+
+        let lbres: LeaderboardRunEntry[] = [];
+
+        for(let run of runs) {
+
+            let leaderboard = leaderboards[(<BulkCategory>run.category).id + (run.level ? '_' + (<BulkLevel>run.level).id : '')];
+
+            if(!leaderboard) {
+                continue;
+            }
+
+            lbres.push(add_leaderboard_run(
+                leaderboard,
+                run,
+                <Variable[]>pr.categories[(<BulkCategory>run.category).id]!.variables)
+            );
+        }
+
+        if(lbres.length)
+            await new RunDao(scraper.storedb!).save(lbres);
+
+        let clean_leaderboards = _.reject(_.values(leaderboards), _.isNil);
+        if(clean_leaderboards.length)
+            await new LeaderboardDao(scraper.storedb!).save(_.values(leaderboards));
 
         // reschedule with additional offset to go back sync
         await scraper.push_call({

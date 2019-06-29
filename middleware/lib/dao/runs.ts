@@ -27,9 +27,13 @@ export interface NewRecord {
 
 export interface RunTimes {
     primary: string
+    primary_t: number
     realtime?: string
-    realtimeNoloads?: string
+    realtime_t: number
+    realtime_noloads?: string
+    realtime_noloads_t: number
     ingame?: string
+    ingame_t: number
 }
 
 export interface RunSystem {
@@ -152,7 +156,7 @@ export class RecentRunsIndex implements IndexDriver<LeaderboardRunEntry> {
 
             m
                 .zadd(this.redis_key, date_score, lbr.run.id)
-                .zremrangebyrank(this.redis_key, 0, -this.keep_count - 1)
+                .zremrangebyrank(this.redis_key, 0, -this.keep_count - 1);
 
             let game = <Game>games[<string>(<BulkGame>(<Run>lbr.run).game).id];
 

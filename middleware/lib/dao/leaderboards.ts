@@ -27,6 +27,49 @@ export interface Leaderboard extends BaseMiddleware {
     players: {[id: string]: User}|{data: User[]}
 }
 
+export function add_leaderboard_run(d: Leaderboard, run: Run, vars: Variable[]): LeaderboardRunEntry {
+
+    let lbe: LeaderboardRunEntry = { run: run };
+
+    if(!d.runs)
+        d.runs = [];
+
+    let run_idx = _.sortedIndexBy(d.runs, lbe, v => v.run.times.primary_t)
+
+    let subcategory_var_ids = _.map(_.filter(vars, 'is-subcategory'), 'id');
+
+    // check for existing role with the same player and parameters
+    let existing_idx = _.findIndex(d.runs, v => {
+        return _.isEqual(run.players, v.run.players) &&
+        _.isEqual(
+            _.pick(run.values, subcategory_var_ids),
+            _.pick(v.run.values, subcategory_var_ids)
+        );
+    });
+
+    if(existing_idx != -1 && d.runs[existing_idx].run.times.primary_t < run.times.primary_t)
+        return { run: run }; // has no place on this leaderboard because its obsolete
+
+    // only add verified runs
+    if(lbe.run.status['verify-date']) {
+        if(existing_idx !== -1)
+            d.runs.splice(existing_idx, 1);
+
+        d.runs.splice(run_idx, 0, lbe);
+
+        correct_leaderboard_run_places(d, vars);
+        return d.runs[run_idx];
+    }
+    else {
+        // calculate what place the run *would* be in
+        lbe.place = run_idx > 0 ? d.runs[run_idx - 1].place : 1;
+        if(run_idx > 0 && d.runs[run_idx - 1].run.times.primary_t !== lbe.run.times.primary_t)
+            lbe.place!++;
+
+        return lbe;
+    }
+}
+
 // leaderboards can have subcategories. correct the places returned by the speedrun
 // api to take these subcategories into account
 export function correct_leaderboard_run_places(d: Leaderboard, vars: Variable[]) {
