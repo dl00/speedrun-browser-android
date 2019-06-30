@@ -1,4 +1,4 @@
-import { standard_sort_categories } from '../lib/dao/categories';
+import { standard_sort_categories } from '../../lib/dao/categories';
 
 import { expect } from 'chai';
 

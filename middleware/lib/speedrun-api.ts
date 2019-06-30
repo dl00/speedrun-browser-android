@@ -35,7 +35,8 @@ export interface Asset {
 
 export interface Variable extends BaseMiddleware {
     id: string
-    values: any[]
+    'is-subcategory'?: boolean
+    values: any
 }
 
 export interface Platform {

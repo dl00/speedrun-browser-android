@@ -2,22 +2,23 @@ import * as _ from 'lodash';
 import * as moment from 'moment';
 import * as assert from 'assert';
 
-import { Dao, DaoConfig, IndexDriver } from './';
+import { Dao, DaoConfig, IndexDriver } from '../';
 
-import { GameDao, Game, BulkGame, game_to_bulk } from './games';
+import { GameDao, Game, BulkGame, game_to_bulk } from '../games';
 
-import { DB } from '../db';
+import { RecordChartIndex } from './charts';
+
+import { DB } from '../../db';
 
 import {
     BaseMiddleware,
     normalize,
-} from '../speedrun-api';
+} from '../../speedrun-api';
 
-import { BulkRun } from './runs';
-import { BulkUser, User, user_to_bulk } from './users';
-import { Category, BulkCategory, category_to_bulk } from './categories';
-import { BulkLevel, Level, level_to_bulk } from './levels';
-import { Genre } from './genres';
+import { BulkUser, User, user_to_bulk } from '../users';
+import { Category, BulkCategory, category_to_bulk } from '../categories';
+import { BulkLevel, Level, level_to_bulk } from '../levels';
+import { Genre } from '../genres';
 
 /// information about a new PB from a player
 export interface NewRecord {
@@ -29,11 +30,11 @@ export interface RunTimes {
     primary: string
     primary_t: number
     realtime?: string
-    realtime_t: number
+    realtime_t?: number
     realtime_noloads?: string
-    realtime_noloads_t: number
+    realtime_noloads_t?: number
     ingame?: string
-    ingame_t: number
+    ingame_t?: number
 }
 
 export interface RunSystem {
@@ -161,7 +162,7 @@ export class RecentRunsIndex implements IndexDriver<LeaderboardRunEntry> {
             let game = <Game>games[<string>(<BulkGame>(<Run>lbr.run).game).id];
 
             if(!game)
-                throw `Missing game for run: ${lbr.run.id}, game id: ${(<BulkGame>(<Run>lbr.run).game).id}`
+                throw new Error(`Missing game for run: ${lbr.run.id}, game id: ${(<BulkGame>(<Run>lbr.run).game).id}`);
 
             for(let genre of <Genre[]>game.genres) {
                 let genre_runs = this.redis_key + ':' + genre.id;
@@ -196,6 +197,13 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
 
         this.id_key = _.property('run.id');
 
+        // TODO: these mongodb indexes are just hardcoded in here for now...
+        db.mongo.collection(this.collection).createIndex({
+            'run.category': 1,
+            'run.level': 1,
+            'run.date': 1
+        }).then(_.noop);
+
         this.indexes = [
             new RecentRunsIndex('latest_new_runs', 'submitted', LATEST_NEW_RUNS_KEY,
                 config && config.latest_runs_history_length ? config.latest_runs_history_length : 1000,
@@ -204,7 +212,8 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             new RecentRunsIndex('latest_verified_runs', 'status.verify-date', LATEST_VERIFIED_RUNS_KEY,
                 config && config.latest_runs_history_length ? config.latest_runs_history_length : 1000,
                 config && config.max_items ? config.max_items : 100
-            )
+            ),
+            new RecordChartIndex('chart_wrs')
         ];
     }
 

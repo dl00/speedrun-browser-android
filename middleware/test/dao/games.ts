@@ -1,10 +1,10 @@
 import * as _ from 'lodash';
 import * as moment from 'moment';
 
-import { GameDao } from '../lib/dao/games';
-import { LeaderboardDao, Leaderboard } from '../lib/dao/leaderboards';
-import { load_db, close_db, DB } from '../lib/db';
-import { load_config } from '../lib/config';
+import { GameDao } from '../../lib/dao/games';
+import { LeaderboardDao, Leaderboard } from '../../lib/dao/leaderboards';
+import { load_db, close_db, DB } from '../../lib/db';
+import { load_config } from '../../lib/config';
 
 import { expect } from 'chai';
 
@@ -46,7 +46,7 @@ describe('GameDao', () => {
                         date: '2018-04-30',
                         status: {'verify-date': '2018-04-30'},
                         players: [],
-                        times: { primary: '100' },
+                        times: { primary: '100', primary_t: 100 },
                         system: {},
                         values: {},
                         game: {id: 'a_game_with_genre'}
@@ -59,7 +59,7 @@ describe('GameDao', () => {
                         date: '2018-05-05',
                         status: {'verify-date': '2018-05-05'},
                         players: [],
-                        times: { primary: '135' },
+                        times: { primary: '135', primary_t: 135 },
                         system: {},
                         values: {},
                         game: {id: 'a_game'}
@@ -83,7 +83,7 @@ describe('GameDao', () => {
                             date: '2018-05-03',
                             status: {'verify-date': '2018-05-03'},
                             players: [],
-                            times: { primary: '100' },
+                            times: { primary: '100', primary_t: 100 },
                             system: {},
                             values: {},
                             game: {id: 'a_game_with_genre'}
@@ -96,7 +96,7 @@ describe('GameDao', () => {
                             date: '2018-05-05',
                             status: {'verify-date': '2018-05-05'},
                             players: [],
-                            times: { primary: '135' },
+                            times: { primary: '135', primary_t: 135 },
                             system: {},
                             values: {},
                             game: {id: 'a_game'}
@@ -167,7 +167,7 @@ describe('GameDao', () => {
                     date: '2018-05-02',
                     status: {'verify-date': '2018-05-02'},
                     players: [],
-                    times: { primary: '135' },
+                    times: { primary: '135', primary_t: 135 },
                     system: {},
                     values: {},
                     game: {id: 'a_game'}
@@ -180,7 +180,7 @@ describe('GameDao', () => {
                     date: '2018-05-08',
                     status: {'verify-date': '2018-05-08'},
                     players: [],
-                    times: { primary: '135' },
+                    times: { primary: '135', primary_t: 135 },
                     system: {},
                     values: {},
                     game: {id: 'a_game'}

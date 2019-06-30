@@ -1,9 +1,9 @@
 import * as _ from 'lodash';
 
-import * as dao from '../lib/dao';
-import { RedisMapIndex } from '../lib/dao/backing/redis';
-import { load_db, close_db, DB } from '../lib/db';
-import { load_config } from '../lib/config';
+import * as dao from '../../lib/dao';
+import { RedisMapIndex } from '../../lib/dao/backing/redis';
+import { load_db, close_db, DB } from '../../lib/db';
+import { load_config } from '../../lib/config';
 
 import { expect } from 'chai';
 

@@ -79,7 +79,14 @@ export class MongoMapIndex<T> implements IndexDriver<T> {
 
     async apply(conf: DaoConfig<T>, _objs: T[]) {
         if(!this.created) {
-            await conf.db.mongo.collection(conf.collection).createIndex(this.key_by);
+            let idx: any = {};
+            idx[this.key_by] = 1;
+
+            try {
+                await conf.db.mongo.collection(conf.collection).createIndex(idx, {unique: true});
+            }
+            catch(_) {}
+
             this.created = true;
         }
     }
@@ -115,7 +122,14 @@ export class MongoMultiIndex<T> implements IndexDriver<T> {
 
     async apply(conf: DaoConfig<T>, _objs: T[]) {
         if(!this.created) {
-            await conf.db.mongo.collection(conf.collection).createIndex(this.key_by);
+            let idx: any = {};
+            idx[this.key_by] = 1;
+
+            try {
+                await conf.db.mongo.collection(conf.collection).createIndex(idx);
+            }
+            catch(_) {}
+
             this.created = true;
         }
     }
