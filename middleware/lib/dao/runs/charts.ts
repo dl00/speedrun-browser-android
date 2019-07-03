@@ -97,7 +97,7 @@ export class RecordChartIndex implements IndexDriver<LeaderboardRunEntry> {
                 $or: objs.map((obj) => {
                     return {
                         'run.date': {$lt: obj.run.date},
-                        'run.times.primary_t': obj.run.times.primary_t
+                        'run.times.primary_t': {$lt: obj.run.times.primary_t}
                     }
                 }),
                 'run.status.verify-date': {$exists: true}
