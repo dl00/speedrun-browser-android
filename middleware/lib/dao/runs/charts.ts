@@ -93,15 +93,18 @@ export class RecordChartIndex implements IndexDriver<LeaderboardRunEntry> {
 
             let leaderboard_id = lbr.run.category.id + (lbr.run.level ? '_' + lbr.run.level.id : '');
 
-            let count = await conf.db.mongo.collection(conf.collection).countDocuments({
-                $or: objs.map((obj) => {
-                    return {
-                        'run.date': {$lt: obj.run.date},
-                        'run.times.primary_t': {$lt: obj.run.times.primary_t}
-                    }
-                }),
+            let filter: {[key: string]: any} = {
+                'run.category.id': lbr.run.category.id,
+                'run.date': {$lt: lbr.run.date},
+                'run.times.primary_t': {$lt: lbr.run.times.primary_t},
                 'run.status.verify-date': {$exists: true}
-            });
+            };
+
+            if(lbr.run.level && lbr.run.level.id)
+                filter['run.level.id'] = lbr.run.level.id;
+
+            let count: number = await conf.db.mongo.collection(conf.collection)
+                .countDocuments(filter);
 
             if(!count && !chart_ids_genned.has(leaderboard_id)) {
                 chart_gens.push(this.make_chart(conf, lbr.run.category.id, lbr.run.level ? lbr.run.level.id : null));
