@@ -12,7 +12,7 @@ import { RedisMapIndex } from './backing/redis';
 
 import { Game, GameDao, game_assets_to_bulk } from './games';
 import { Category, CategoryDao } from './categories';
-import { Level, LevelDao } from './levels';
+import { LevelDao } from './levels';
 import { Leaderboard } from './leaderboards';
 import { NewRecord } from './runs';
 
@@ -72,28 +72,24 @@ export function user_to_bulk(user: User) {
 }
 
 // add/update the given personal best entry for the given user
-export function apply_personal_best(player: User,
-            game: Game, category: Category,
-            level: Level|null,
-            lb: Leaderboard,
-            index: number): NewRecord|null {
+export function apply_personal_best(player: User, run: LeaderboardRunEntry): NewRecord|null {
 
     let category_run: CategoryPersonalBests = {
-        id: category.id,
-        name: category.name,
-        type: category.type
+        id: run.run.category.id,
+        name: run.run.category.name,
+        type: run.run.category.type
     };
 
     let game_run: GamePersonalBests = {
-        id: game.id,
-        names: game.names,
-        assets: game_assets_to_bulk(game.assets),
+        id: run.run.game.id,
+        names: run.run.game.names,
+        assets: game_assets_to_bulk(run.run.game.assets),
         categories: {}
     };
 
     let best_run: LeaderboardRunEntry = {
-        place: lb.runs[index].place,
-        run: run_to_bulk(<Run>lb.runs[index].run)
+        place: run.place,
+        run: run_to_bulk(<Run>run.run)
     };
 
     if(!best_run.place)
@@ -101,35 +97,35 @@ export function apply_personal_best(player: User,
 
     let old_run = null;
 
-    if(level) {
+    if(run.run.level && run.run.level.id) {
 
-        old_run = _.get(player, `bests["${game.id}"].categories["${category.id}"].levels["${level.id}"].run`);
+        old_run = _.get(player, `bests["${run.run.game.id}"].categories["${run.run.category.id}"].levels["${run.run.level.id}"].run`);
         if(old_run && (old_run.run.id == best_run.run.id || old_run.place > best_run.place))
             return null;
 
         let level_run: LevelPersonalBests = {
-            id: level.id,
-            name: level.name,
+            id: run.run.level.id,
+            name: run.run.level.name,
 
             run: best_run
         };
 
         category_run.levels = {};
-        category_run.levels[level.id] = level_run;
+        category_run.levels[run.run.level.id] = level_run;
     }
     else {
-        old_run = _.get(player, `bests["${game.id}"].categories["${category.id}"].run`);
+        old_run = _.get(player, `bests["${run.run.game.id}"].categories["${run.run.category.id}"].run`);
         if(old_run && (old_run.run.id == best_run.run.id || old_run.place > best_run.place))
             return null;
 
         category_run.run = best_run;
     }
 
-    game_run.categories[category.id] = category_run;
+    game_run.categories[run.run.category.id] = category_run;
 
     let new_bests: {[id: string]: GamePersonalBests} = {};
 
-    new_bests[game.id] = game_run;
+    new_bests[run.run.game.id] = game_run;
 
     _.merge(player, {bests: new_bests});
 
@@ -187,6 +183,40 @@ export class UserDao extends Dao<User> {
         return user;
     }
 
+    async apply_runs(runs: LeaderboardRunEntry[]): Promise<NewRecord[]> {
+        let player_ids = _.chain(runs)
+            .map(v => _.map(v.run.players, 'id'))
+            .flatten()
+            .reject(_.isNil)
+            .uniq()
+            .value();
+
+        if(!player_ids.length)
+            return []; // nothing to do
+
+        let players = <{[id: string]: User}>_.keyBy(
+            _.filter(await this.load(player_ids), 'id'),
+            'id');
+
+        if(!_.keys(players).length) {
+            return []; // still nothing
+        }
+
+        let new_records: (NewRecord|null)[] = [];
+
+        for(let run of runs) {
+            for(let player of run.run.players) {
+                new_records.push(
+                    apply_personal_best(players[player.id], run));
+            }
+        }
+
+        this.save(_.values(players));
+
+        return <NewRecord[]>_.reject(new_records, _.isNil);
+    }
+
+    // TODO: deprecate this...
     async apply_leaderboard_bests(lb: Leaderboard, updated_players: {[id: string]: User}): Promise<NewRecord[]> {
 
         let player_ids = _.chain(lb.runs)
@@ -235,9 +265,14 @@ export class UserDao extends Dao<User> {
 
         let new_records: (NewRecord|null)[] = [];
 
-        for(let i = 0;i < lb.runs.length;i++) {
-            for(let player of lb.runs[i].run.players) {
-                new_records.push(apply_personal_best(players[player.id], game, category, level, lb, i));
+        for(let run of lb.runs) {
+            let lbr = _.cloneDeep(run);
+            lbr.run.game = game;
+            lbr.run.category = category;
+            lbr.run.level = level;
+
+            for(let player of run.run.players) {
+                new_records.push(apply_personal_best(players[player.id], lbr));
             }
         }
 

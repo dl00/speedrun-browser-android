@@ -110,9 +110,21 @@ export function run_to_bulk(run: Run): BulkRun {
     return newr;
 }
 
+function generate_month_boundaries(start: number, end: number) {
+    // todo: pre-allocate array?
+    let boundaries = [];
+
+    for(let i = start;i < end;i++) {
+        for(let j = 1;j <= 12;j++) {
+            boundaries.push(start + _.padStart(j.toString(), 2, '0'));
+        }
+    }
+
+    return boundaries;
+}
+
 export const LATEST_VERIFIED_RUNS_KEY = 'verified_runs';
 export const LATEST_NEW_RUNS_KEY = 'latest_new_runs'
-
 
 export class RecentRunsIndex implements IndexDriver<LeaderboardRunEntry> {
     name: string;
@@ -225,5 +237,30 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
     protected async pre_store_transform(run: LeaderboardRunEntry): Promise<LeaderboardRunEntry> {
         normalize_run(<Run>run.run);
         return run;
+    }
+
+    async get_submission_distribution(category_id: string, level_id: string|null) {
+
+        let filter: any = {
+            'run.category.id': category_id,
+            'run.status.status': 'verified'
+        };
+
+        if(level_id)
+            filter['run.level.id'] = level_id;
+
+        let month_bounaries: string[] = generate_month_boundaries(2010, new Date().getUTCFullYear());
+
+        return await this.db.mongo.collection(this.collection).aggregate([
+            {
+                $match: filter
+            },
+            {
+                $bucket: {
+                    groupBy: '$run.date',
+                    boundaries: month_bounaries
+                }
+            }
+        ]).toArray();
     }
 }

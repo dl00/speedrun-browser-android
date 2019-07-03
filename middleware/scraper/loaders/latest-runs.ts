@@ -9,6 +9,7 @@ import * as puller from '../puller';
 import * as scraper from '../index';
 
 import { Run, RunDao, LeaderboardRunEntry } from '../../lib/dao/runs';
+import { UserDao } from '../../lib/dao/users';
 import { Leaderboard, LeaderboardDao, add_leaderboard_run } from '../../lib/dao/leaderboards';
 
 import { populate_run_sub_documents } from './all-runs';
@@ -52,14 +53,15 @@ export async function pull_latest_runs(runid: string, options: any) {
 
         // download missing runs
         for(let mr of pr.drop_runs) {
-            await scraper.push_call({
-                runid: runid + '/' + mr.id,
-                module: 'gamelist',
-                exec: 'pull_game',
-                options: {
-                    id: (<BulkGame>mr.game).id || mr.game
-                }
-            }, 5);
+            if(mr.game)
+                await scraper.push_call({
+                    runid: runid + '/' + mr.id,
+                    module: 'gamelist',
+                    exec: 'pull_game',
+                    options: {
+                        id: (<BulkGame>mr.game).id || mr.game
+                    }
+                }, 5);
         }
 
         if(!runs.length)
@@ -95,6 +97,8 @@ export async function pull_latest_runs(runid: string, options: any) {
         let clean_leaderboards = _.reject(_.values(leaderboards), _.isNil);
         if(clean_leaderboards.length)
             await new LeaderboardDao(scraper.storedb!).save(_.values(leaderboards));
+
+        await new UserDao(scraper.storedb!).apply_runs(lbres);
 
         // reschedule with additional offset to go back sync
         await scraper.push_call({

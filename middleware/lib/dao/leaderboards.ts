@@ -50,24 +50,18 @@ export function add_leaderboard_run(d: Leaderboard, run: Run, vars: Variable[]):
     if(existing_idx != -1 && d.runs[existing_idx].run.times.primary_t < run.times.primary_t)
         return { run: run }; // has no place on this leaderboard because its obsolete
 
-    // only add verified runs
-    if(lbe.run.status['verify-date']) {
-        if(existing_idx !== -1)
-            d.runs.splice(existing_idx, 1);
-
-        d.runs.splice(run_idx, 0, lbe);
-
-        correct_leaderboard_run_places(d, vars);
-        return d.runs[run_idx];
+    // simulate leaderboard changes for unverified runs
+    if(lbe.run.status.status !== 'verified') {
+        d = _.cloneDeep(d);
     }
-    else {
-        // calculate what place the run *would* be in
-        lbe.place = run_idx > 0 ? d.runs[run_idx - 1].place : 1;
-        if(run_idx > 0 && d.runs[run_idx - 1].run.times.primary_t !== lbe.run.times.primary_t)
-            lbe.place!++;
 
-        return lbe;
-    }
+    if(existing_idx !== -1)
+        d.runs.splice(existing_idx, 1);
+
+    d.runs.splice(run_idx, 0, lbe);
+
+    correct_leaderboard_run_places(d, vars);
+    return d.runs[run_idx];
 }
 
 // leaderboards can have subcategories. correct the places returned by the speedrun
@@ -77,6 +71,7 @@ export function correct_leaderboard_run_places(d: Leaderboard, vars: Variable[])
     let subcategory_vars = _.filter(vars, 'is-subcategory');
 
     let last_places: {[key: string]: number} = {};
+    let last_runs: {[key: string]: LeaderboardRunEntry} = {};
 
     if(d.runs) {
         for(let run of d.runs) {
@@ -86,10 +81,19 @@ export function correct_leaderboard_run_places(d: Leaderboard, vars: Variable[])
                 subcategory_id += run.run.values[v.id];
             }
 
+
+
             last_places[subcategory_id] = last_places[subcategory_id] ?
                 last_places[subcategory_id] + 1 : 1;
 
-            run.place = last_places[subcategory_id];
+            // handle ties by checking the previous run's time
+            run.place =
+                last_places[subcategory_id] !== 1 &&
+                    last_runs[subcategory_id].run.times.primary_t === run.run.times.primary_t ?
+                last_runs[subcategory_id].place :
+                last_places[subcategory_id];
+
+            last_runs[subcategory_id] = run;
         }
     }
 }
