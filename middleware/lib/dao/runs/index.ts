@@ -210,10 +210,12 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         this.id_key = _.property('run.id');
 
         // TODO: these mongodb indexes are just hardcoded in here for now...
-        (<any>db.mongo.collection(this.collection)).ensureIndex({
+        db.mongo.collection(this.collection).createIndex({
             'run.category': 1,
             'run.level': 1,
             'run.date': 1
+        }, {
+            background: true
         }).then(_.noop);
 
         this.indexes = [
