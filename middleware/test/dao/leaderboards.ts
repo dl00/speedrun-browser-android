@@ -244,8 +244,6 @@ describe('add_leaderboard_run', () => {
             ]
         };
 
-        let orig_lb = _.cloneDeep(lb);
-
         let lre = add_leaderboard_run(lb, <Run><unknown>{
             id: 'one',
             date: '2019-05-05',
