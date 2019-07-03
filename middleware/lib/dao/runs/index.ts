@@ -211,8 +211,8 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
 
         // TODO: these mongodb indexes are just hardcoded in here for now...
         db.mongo.collection(this.collection).createIndex({
-            'run.category': 1,
-            'run.level': 1,
+            'run.category.id': 1,
+            'run.level.id': 1,
             'run.date': 1
         }, {
             background: true
