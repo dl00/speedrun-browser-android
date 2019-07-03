@@ -96,7 +96,7 @@ export async function pull_latest_runs(runid: string, options: any) {
 
         let clean_leaderboards = _.reject(_.values(leaderboards), _.isNil);
         if(clean_leaderboards.length)
-            await new LeaderboardDao(scraper.storedb!).save(_.values(leaderboards));
+            await new LeaderboardDao(scraper.storedb!).save(_.cloneDeep(_.values(leaderboards)));
 
         await new UserDao(scraper.storedb!).apply_runs(lbres);
 
