@@ -8,8 +8,10 @@ import * as puller from '../puller';
 
 import * as scraper from '../index';
 
+import * as push_notify from '../push-notify';
+
 import { Run, RunDao, LeaderboardRunEntry } from '../../lib/dao/runs';
-import { UserDao } from '../../lib/dao/users';
+import { UserDao, User } from '../../lib/dao/users';
 import { Leaderboard, LeaderboardDao, add_leaderboard_run } from '../../lib/dao/leaderboards';
 
 import { populate_run_sub_documents } from './all-runs';
@@ -41,10 +43,11 @@ export async function pull_latest_runs(runid: string, options: any) {
         }
 
         let remove_after = _.findIndex(runs, run => _.get(run, run_date_property) <= latest_run_date!);
-        runs.splice(remove_after, 100000000);
 
-        if(!runs.length)
+        if(remove_after === 0)
             return;
+        else if(remove_after !== -1)
+            runs = runs.slice(0, remove_after);
 
         // install runs on the database
         let pr = await populate_run_sub_documents(runs);
@@ -98,19 +101,34 @@ export async function pull_latest_runs(runid: string, options: any) {
         if(clean_leaderboards.length)
             await new LeaderboardDao(scraper.storedb!).save(_.cloneDeep(_.values(leaderboards)));
 
-        await new UserDao(scraper.storedb!).apply_runs(lbres);
+        let new_records = await new UserDao(scraper.storedb!).apply_runs(lbres);
+
+        // send push notifications as needed. All notifications are triggered by a player record change
+        for(let nr of new_records) {
+            if(nr.new_run.place == 1) {
+                // new record on this category/level, send notification
+                push_notify.notify_game_record(nr, nr.new_run.run.game, nr.new_run.run.category, nr.new_run.run.level);
+            }
+
+            // this should be a personal best. send notification to all attached players who are regular users
+            for(let p of nr.new_run.run.players) {
+                push_notify.notify_player_record(nr, <User>p,
+                    nr.new_run.run.game, nr.new_run.run.category, nr.new_run.run.level);
+            }
+        }
 
         // reschedule with additional offset to go back sync
-        await scraper.push_call({
-            runid: runid,
-            module: 'latest-runs',
-            exec: 'pull_latest_runs',
-            options: {
-                verified: options.verified,
-                offset: res.data.pagination.offset + res.data.pagination.size,
-                latest_run_date: latest_run_date
-            }
-        }, 1);
+        if(remove_after === -1)
+            await scraper.push_call({
+                runid: runid,
+                module: 'latest-runs',
+                exec: 'pull_latest_runs',
+                options: {
+                    verified: options.verified,
+                    offset: res.data.pagination.offset + res.data.pagination.size,
+                    latest_run_date: latest_run_date
+                }
+            }, 1);
     }
     catch(err) {
         console.error('loader/latest-runs: could not retrieve and process pulls for latest runs:', options, err.statusCode || err);
