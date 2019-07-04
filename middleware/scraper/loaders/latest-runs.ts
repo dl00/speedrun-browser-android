@@ -101,7 +101,7 @@ export async function pull_latest_runs(runid: string, options: any) {
         if(clean_leaderboards.length)
             await new LeaderboardDao(scraper.storedb!).save(clean_leaderboards);
 
-        let new_records = await new UserDao(scraper.storedb!).apply_runs(lbres);
+        let new_records = await new UserDao(scraper.storedb!).apply_runs(_.cloneDeep(lbres));
 
         // send push notifications as needed. All notifications are triggered by a player record change
         for(let nr of new_records) {
