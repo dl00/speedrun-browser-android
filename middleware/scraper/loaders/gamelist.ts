@@ -135,7 +135,7 @@ export async function pull_game_categories(runid: string, options: any) {
         }, 9);
     }
     catch(err) {
-        console.error('loader/gamelist: could not retrieve categories for single game:', options, err.statusCode);
+        console.error('loader/gamelist: could not retrieve categories for single game:', options, err.statusCode, err);
         throw 'reschedule';
     }
 }
@@ -167,7 +167,7 @@ export async function pull_game_levels(runid: string, options: any) {
         }
     }
     catch(err) {
-        console.error('loader/gamelist: could not retrieve levels for single game:', options, err.statusCode);
+        console.error('loader/gamelist: could not retrieve levels for single game:', options, err.statusCode, err);
         throw 'reschedule';
     }
 }
