@@ -150,7 +150,7 @@ describe('RecentChartIndex', () => {
         let run_dao = new RunDao(db);
         let chart_dao = new ChartDao(db);
 
-        new GameDao(db).save({
+        await new GameDao(db).save({
             id: 'a_game',
             names: {international: 'A Game'},
             abbreviation: 'agame',
@@ -166,7 +166,7 @@ describe('RecentChartIndex', () => {
             assets: {}
         });
 
-        new CategoryDao(db).save({
+        await new CategoryDao(db).save({
             id: 'mysubcategory',
             name: 'Testing',
             type: 'per-game',

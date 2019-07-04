@@ -43,7 +43,6 @@ export async function populate_run_sub_documents(runs: Run[]): Promise<PopulateR
 
         if(!run.game || !run.category) {
             // must be a brand new game/category
-            if(!run.game)
             drop_runs.push(run);
             continue;
         }

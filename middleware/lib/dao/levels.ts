@@ -33,6 +33,13 @@ export class LevelDao extends Dao<Level> {
         ];
     }
 
+    async apply_for_game(game_id: string, new_levels: Level[]) {
+        let old_levels = await this.load_by_index('game', game_id);
+        await this.remove(_.map(old_levels, 'id'))
+
+        await this.save(new_levels);
+    }
+
     protected async pre_store_transform(level: Level): Promise<Level> {
         normalize(level);
         return level;

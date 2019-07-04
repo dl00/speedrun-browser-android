@@ -78,7 +78,7 @@ export function standard_sort_categories(categories: Category[]) {
             score += 100;
         if(c.miscellaneous)
             score += 500;
-            
+
         return _.padStart(score.toFixed(6), 10, '0') + name;
     });
 }
@@ -92,6 +92,13 @@ export class CategoryDao extends Dao<Category> {
         this.indexes = [
             new RedisMultiIndex('game', 'game')
         ];
+    }
+
+    async apply_for_game(game_id: string, new_categories: Category[]) {
+        let old_categories = await this.load_by_index('game', game_id);
+        await this.remove(_.map(old_categories, 'id'))
+
+        await this.save(new_categories);
     }
 
     protected async pre_store_transform(obj: Category): Promise<Category> {
