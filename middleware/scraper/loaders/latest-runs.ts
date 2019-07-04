@@ -95,11 +95,11 @@ export async function pull_latest_runs(runid: string, options: any) {
         }
 
         if(lbres.length)
-            await new RunDao(scraper.storedb!).save(lbres);
+            await new RunDao(scraper.storedb!).save(_.cloneDeep(lbres));
 
-        let clean_leaderboards = _.reject(_.values(leaderboards), _.isNil);
+        let clean_leaderboards = _.cloneDeep(_.reject(_.values(leaderboards), _.isNil));
         if(clean_leaderboards.length)
-            await new LeaderboardDao(scraper.storedb!).save(_.cloneDeep(_.values(leaderboards)));
+            await new LeaderboardDao(scraper.storedb!).save(clean_leaderboards);
 
         let new_records = await new UserDao(scraper.storedb!).apply_runs(lbres);
 
