@@ -35,7 +35,8 @@ export class LevelDao extends Dao<Level> {
 
     async apply_for_game(game_id: string, new_levels: Level[]) {
         let old_levels = await this.load_by_index('game', game_id);
-        await this.remove(_.map(old_levels, 'id'))
+        if(old_levels.length)
+            await this.remove(_.map(old_levels, 'id'))
 
         await this.save(new_levels);
     }

@@ -96,7 +96,8 @@ export class CategoryDao extends Dao<Category> {
 
     async apply_for_game(game_id: string, new_categories: Category[]) {
         let old_categories = await this.load_by_index('game', game_id);
-        await this.remove(_.map(old_categories, 'id'))
+        if(old_categories.length)
+            await this.remove(_.map(old_categories, 'id'))
 
         await this.save(new_categories);
     }
