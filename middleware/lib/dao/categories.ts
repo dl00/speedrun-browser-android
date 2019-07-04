@@ -31,7 +31,7 @@ export interface Category extends BulkCategory, BaseMiddleware {
 export function category_to_bulk(category: Category): BulkCategory {
     let ret = _.pick(category, 'id', 'name', 'type', 'variables');
 
-    delete category.variables;
+    delete ret.variables;
 
     return ret;
 }
