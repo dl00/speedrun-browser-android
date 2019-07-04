@@ -103,17 +103,21 @@ export async function pull_latest_runs(runid: string, options: any) {
 
         let new_records = await new UserDao(scraper.storedb!).apply_runs(_.cloneDeep(lbres));
 
-        // send push notifications as needed. All notifications are triggered by a player record change
+        let lbres_idx = _.keyBy(lbres, 'run.id');
+
+        // send push notifications
         for(let nr of new_records) {
+            let run = lbres_idx[nr.new_run.run.id].run;
+
             if(nr.new_run.place == 1) {
                 // new record on this category/level, send notification
-                await push_notify.notify_game_record(nr, nr.new_run.run.game, nr.new_run.run.category, nr.new_run.run.level);
+                await push_notify.notify_game_record(nr, run.game, run.category, run.level);
             }
 
             // this should be a personal best. send notification to all attached players who are regular users
-            for(let p of nr.new_run.run.players) {
+            for(let p of run.players) {
                 await push_notify.notify_player_record(nr, <User>p,
-                    nr.new_run.run.game, nr.new_run.run.category, nr.new_run.run.level);
+                    run.game, run.category, run.level);
             }
         }
 

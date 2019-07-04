@@ -47,7 +47,7 @@ export function add_leaderboard_run(d: Leaderboard, run: Run, vars: Variable[]):
         );
     });
 
-    if(existing_idx != -1 && d.runs[existing_idx].run.times.primary_t < run.times.primary_t)
+    if(existing_idx !== -1 && d.runs[existing_idx].run.times.primary_t < run.times.primary_t)
         return { run: run }; // has no place on this leaderboard because its obsolete
 
     // simulate leaderboard changes for unverified runs
