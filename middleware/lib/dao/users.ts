@@ -206,8 +206,10 @@ export class UserDao extends Dao<User> {
 
         for(let run of runs) {
             for(let player of run.run.players) {
-                new_records.push(
-                    apply_personal_best(players[player.id], run));
+                // can only notify for non-guests (with ID)
+                if(player.id)
+                    new_records.push(
+                        apply_personal_best(players[player.id], run));
             }
         }
 
