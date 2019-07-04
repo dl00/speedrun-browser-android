@@ -13,6 +13,8 @@ import { Game } from './games';
 import { Category } from './categories';
 import { User } from './users';
 
+import { Chart } from './charts';
+
 export interface Leaderboard extends BaseMiddleware {
     weblink: string
     game: Game|string
@@ -96,6 +98,44 @@ export function correct_leaderboard_run_places(d: Leaderboard, vars: Variable[])
             last_runs[subcategory_id] = run;
         }
     }
+}
+
+export function make_distribution_chart(lb: Leaderboard, vars: Variable[]): Chart {
+
+    let subcategory_vars = _.filter(vars, 'is-subcategory');
+
+    let chart: Chart = {
+        item_id: `leaderboards_distribution`,
+        item_type: 'leaderboards',
+        chart_type: 'line',
+        data: {},
+        timestamp: new Date()
+    };
+
+    if(lb.runs) {
+        for(let i = 0;i < lb.runs.length;i++) {
+            let run = lb.runs[i];
+
+            let subcategory_id = '';
+
+            for(let v of subcategory_vars) {
+                subcategory_id += run.run.values[v.id];
+            }
+
+            let p = {
+                x: i,
+                y: run.run.times.primary_t,
+                obj: run_to_bulk(<Run>run.run)
+            }
+
+            if(chart.data[subcategory_id])
+                chart.data[subcategory_id].push(p);
+            else
+                chart.data[subcategory_id] = [p];
+        }
+    }
+
+    return chart;
 }
 
 export function normalize_leaderboard(d: Leaderboard) {

@@ -21,7 +21,7 @@ export interface PieChartData {
 }
 
 export interface ListData {
-    label: string
+    obj: string
     score: number
 }
 

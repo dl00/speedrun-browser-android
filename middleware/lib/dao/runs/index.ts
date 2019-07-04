@@ -6,7 +6,7 @@ import { Dao, DaoConfig, IndexDriver } from '../';
 
 import { GameDao, Game, BulkGame, game_to_bulk } from '../games';
 
-import { RecordChartIndex } from './charts';
+import { RecordChartIndex, get_player_pb_chart } from './charts';
 
 import { DB } from '../../db';
 
@@ -116,7 +116,7 @@ function generate_month_boundaries(start: number, end: number) {
 
     for(let i = start;i < end;i++) {
         for(let j = 1;j <= 12;j++) {
-            boundaries.push(start + _.padStart(j.toString(), 2, '0'));
+            boundaries.push(`${i}-${_.padStart(j.toString(), 2, '0')}`);
         }
     }
 
@@ -211,6 +211,23 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
 
         // TODO: these mongodb indexes are just hardcoded in here for now...
         db.mongo.collection(this.collection).createIndex({
+            'run.game.id': 1,
+            'run.date': 1
+        }, {
+            background: true
+        }).then(_.noop);
+
+        db.mongo.collection(this.collection).createIndex({
+            'run.category.id': 1,
+            'run.level.id': 1,
+            'run.date': 1
+        }, {
+            background: true
+        }).then(_.noop);
+
+        db.mongo.collection(this.collection).createIndex({
+            'run.players.id': 1,
+            'run.game.id': 1,
             'run.category.id': 1,
             'run.level.id': 1,
             'run.date': 1
@@ -241,17 +258,8 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         return run;
     }
 
-    async get_submission_distribution(category_id: string, level_id: string|null) {
-
-        let filter: any = {
-            'run.category.id': category_id,
-            'run.status.status': 'verified'
-        };
-
-        if(level_id)
-            filter['run.level.id'] = level_id;
-
-        let month_bounaries: string[] = generate_month_boundaries(2010, new Date().getUTCFullYear());
+    private async get_submission_volume(filter: any) {
+        let month_bounaries: string[] = generate_month_boundaries(2010, new Date().getUTCFullYear() + 1);
 
         return await this.db.mongo.collection(this.collection).aggregate([
             {
@@ -260,9 +268,58 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             {
                 $bucket: {
                     groupBy: '$run.date',
-                    boundaries: month_bounaries
+                    boundaries: month_bounaries,
+                    default: '',
+                    output: {
+                        count: {$sum: 1}
+                    }
                 }
             }
         ]).toArray();
+    }
+
+    async get_leaderboard_submission_volume(category_id: string, level_id: string|null) {
+        let filter: any = {
+            'run.category.id': category_id,
+            'run.status.status': 'verified'
+        };
+
+        if(level_id)
+            filter['run.level.id'] = level_id;
+
+        return await this.get_submission_volume(filter);
+    }
+
+    async get_game_submission_volume(game_id: string) {
+        return await this.get_submission_volume({
+            'run.game.id': game_id,
+            'run.status.status': 'verified'
+        });
+    }
+
+    async get_player_favorite_runs(player_id: string) {
+        return await this.db.mongo.collection(this.collection).aggregate([
+            {
+                $match: {
+                    'run.players.id': player_id
+                }
+            },
+            {
+                $group: {
+                    _id: '$run.game.id',
+                    game: '$run.game',
+                    count: {$sum: 1}
+                }
+            },
+            {
+                $sort: {
+                    count: -1
+                }
+            }
+        ]);
+    }
+
+    async get_player_pb_chart(player_id: string, game_id: string) {
+        return await get_player_pb_chart(this, player_id, game_id);
     }
 }

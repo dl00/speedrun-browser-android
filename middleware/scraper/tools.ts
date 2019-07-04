@@ -10,6 +10,8 @@ import { UserDao, User } from '../lib/dao/users';
 import { RunDao, Run } from '../lib/dao/runs';
 import { GameDao, Game } from '../lib/dao/games';
 
+import { make_all_wr_charts } from '../lib/dao/runs/charts';
+
 scraper.connect(config.load_config());
 
 export async function send_dummy_player_notify(run_id: string) {
@@ -21,4 +23,8 @@ export async function send_dummy_player_notify(run_id: string) {
     let level: Level|null = <Level|null>(<Run>runs[0]!.run).level;
 
     push_notify.notify_player_record({new_run: runs[0]!, old_run: runs[0]!}, player, game, category, <any>level);
+}
+
+export async function generate_all_charts() {
+    await make_all_wr_charts(new RunDao(scraper.storedb!));
 }

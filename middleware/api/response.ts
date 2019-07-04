@@ -29,7 +29,15 @@ export function complete(res: Response, data: any[], more?: MoreSpec) {
         data: data,
         more: more,
         error: null
-    })
+    });
+}
+
+export function complete_single(res: Response, data: any, more?: MoreSpec) {
+    res.json({
+        data: data,
+        more: more,
+        error: null
+    });
 }
 
 export function error(res: Response, info: ErrorInfo) {
@@ -38,7 +46,7 @@ export function error(res: Response, info: ErrorInfo) {
         error: {
             msg: info.msg,
         }
-    })
+    });
 }
 
 export const err = {
@@ -57,7 +65,7 @@ export const err = {
     INVALID_PARAMS: (invalid: string[], hint?: string) => {
         return {
             code: 400,
-            msg: `parameters are not able to be parsed or are generally invalid ${hint ? '(' + hint + ')': ''}: ` + 
+            msg: `parameters are not able to be parsed or are generally invalid ${hint ? '(' + hint + ')': ''}: ` +
                 invalid.join(', ')
         }
     }

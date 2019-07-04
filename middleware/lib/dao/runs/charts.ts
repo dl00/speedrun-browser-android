@@ -21,7 +21,11 @@ export class RecordChartIndex implements IndexDriver<LeaderboardRunEntry> {
 
         let leaderboard_id = category_id + (level_id ? '_' + level_id : '');
 
-        let category = (await new CategoryDao(conf.db).load(category_id))[0]!;
+        let category = (await new CategoryDao(conf.db).load(category_id))[0];
+
+        if(!category) {
+            throw new Error('cannot generate chart: no category found for run!');
+        }
 
         let subcategory_vars = _.map(
             _.filter(<Variable[]>category.variables, 'is-subcategory'),
@@ -37,7 +41,9 @@ export class RecordChartIndex implements IndexDriver<LeaderboardRunEntry> {
         };
 
         let filter: any = {
-            'run.category.id': category_id
+            'run.category.id': category_id,
+            'run.status.verify-date': {$exists: true},
+            'run.status.status': 'verified'
         }
 
         if(level_id)
@@ -97,7 +103,8 @@ export class RecordChartIndex implements IndexDriver<LeaderboardRunEntry> {
                 'run.category.id': lbr.run.category.id,
                 'run.date': {$lt: lbr.run.date},
                 'run.times.primary_t': {$lt: lbr.run.times.primary_t},
-                'run.status.verify-date': {$exists: true}
+                'run.status.verify-date': {$exists: true},
+                'run.status.status': 'verified'
             };
 
             if(lbr.run.level && lbr.run.level.id)
@@ -123,4 +130,74 @@ export class RecordChartIndex implements IndexDriver<LeaderboardRunEntry> {
         return old_obj.run.date !== new_obj.run.date ||
             old_obj.run.times.primary_t !== new_obj.run.times.primary_t;
     }
+}
+
+// debug/helper function
+export async function make_all_wr_charts(conf: DaoConfig<LeaderboardRunEntry>) {
+    let cursor = conf.db.mongo.collection(conf.collection).find({place: 1});
+
+    let rci = new RecordChartIndex('');
+
+    while(await cursor.hasNext()) {
+        let lbr = <LeaderboardRunEntry>await cursor.next();
+
+        console.log('Make chart:', lbr.run.game.names.international, lbr.run.category.id, lbr.run.level ? lbr.run.level.id : null);
+        try {
+            await rci.make_chart(conf, lbr.run.category.id, lbr.run.level ? lbr.run.level.id : null);
+        }
+        catch(err) {
+            // TODO: for right now just print and ignore
+            console.error(err);
+        }
+    }
+}
+
+export async function get_player_pb_chart(conf: DaoConfig<LeaderboardRunEntry>, player_id: string, game_id: string) {
+
+    let chart: Chart = {
+        item_id: `${player_id}_${game_id}`,
+        item_type: 'games',
+        chart_type: 'line',
+        data: {},
+        timestamp: new Date()
+    };
+
+    let filter: any = {
+        'run.players.id': player_id,
+        'run.game.id': game_id
+    };
+
+    let chart_data = await conf.db.mongo.collection(conf.collection)
+        .aggregate([
+            {
+                $match: filter,
+            },
+            {
+                $group: {
+                    _id: {category: '$run.category.id', level: '$run.level.id'},
+                    data: { $push:
+                        {
+                            x: '$run.date',
+                            y: '$run.times.primary_t',
+                            obj: '$$ROOT'
+                        }
+                    }
+                }
+            }
+        ]).toArray();
+
+    chart.data = _.chain(chart_data)
+        .keyBy((v) => v._id.category + (v._id.level ? '_' + v._id.level : ''))
+        .mapValues(v => {
+            return v.data.map((p: LineChartData) => {
+                return {
+                    x: p.x,
+                    y: p.y,
+                    obj: run_to_bulk(p.obj)
+                };
+            });
+        })
+        .value();
+
+    return chart;
 }
