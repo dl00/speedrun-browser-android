@@ -146,7 +146,7 @@ export async function pull_game_levels(runid: string, options: any) {
 
         let levels: Level[] = res.data.data;
 
-        await new LevelDao(scraper.storedb!).save(levels.map(v => {
+        await new LevelDao(scraper.storedb!).apply_for_game(options.id, levels.map(v => {
             v.game = options.id;
             return v;
         }));

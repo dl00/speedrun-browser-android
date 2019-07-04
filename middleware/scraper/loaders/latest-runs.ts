@@ -51,8 +51,14 @@ export async function pull_latest_runs(runid: string, options: any) {
 
         // install runs on the database
         let pr = await populate_run_sub_documents(runs);
+
+        console.log('DROP RUNS LENGTH', pr.drop_runs.length);
+        console.log('RUNS', runs.length);
+
         if(pr.drop_runs.length)
-            runs = _.remove(runs, r => _.findIndex(pr.drop_runs, r) !== -1);
+            runs = _.remove(runs, r => _.find(pr.drop_runs, dr => dr.id === r.id));
+
+        console.log('AFTER RUNS', runs.length);
 
         // download missing runs
         for(let mr of pr.drop_runs) {
