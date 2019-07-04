@@ -37,15 +37,14 @@ export async function populate_run_sub_documents(runs: Run[]): Promise<PopulateR
     let drop_runs: Run[] = [];
 
     for(let run of runs) {
-        run.game = <BulkGame>games[<string>run.game];
-        run.category = <Category>categories[<string>run.category];
-        run.level = <Level|null>levels[<string>run.level];
-
-        if(!run.game || !run.category) {
-            // must be a brand new game/category
+        if(!games[<string>run.game] || !categories[<string>run.category]) {
             drop_runs.push(run);
             continue;
         }
+
+        run.game = <BulkGame>games[<string>run.game];
+        run.category = <Category>categories[<string>run.category];
+        run.level = <Level|null>levels[<string>run.level];
 
         run.players = run.players.map(player => player.id ? <BulkUser>players[player.id] : player);
     }
