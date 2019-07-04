@@ -46,7 +46,19 @@ export async function populate_run_sub_documents(runs: Run[]): Promise<PopulateR
         run.category = <Category>categories[<string>run.category];
         run.level = <Level|null>levels[<string>run.level];
 
-        run.players = run.players.map(player => player.id ? <BulkUser>players[player.id] : player);
+        // handle special cases for users
+        for(let i = 0;i < run.players.length;i++) {
+            if(!run.players[i].id)
+                continue;
+            if(!players[run.players[i].id]) {
+                // new player
+                // currently the best way to solve this is to do a game resync
+                drop_runs.push(run);
+                continue;
+            }
+
+            run.players[i] = <BulkUser>players[run.players[i].id];
+        }
     }
 
     return {
