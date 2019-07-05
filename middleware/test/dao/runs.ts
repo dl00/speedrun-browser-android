@@ -178,9 +178,22 @@ describe('RecentChartIndex', () => {
         let saved_runs = [
             {
                 run: {
+                    id: 'invalid_run',
+                    date: '2018-04-30',
+                    status: {status: 'rejected', 'verify-date': '2018-04-30'},
+                    players: [],
+                    times: { primary: '50', primary_t: 50 },
+                    system: {},
+                    values: {},
+                    game: {id: 'a_game'},
+                    category: {id: 'mysubcategory'}
+                }
+            },
+            {
+                run: {
                     id: 'another_run',
                     date: '2018-04-30',
-                    status: {'verify-date': '2018-04-30'},
+                    status: {status: 'verified', 'verify-date': '2018-04-30'},
                     players: [],
                     times: { primary: '100', primary_t: 100 },
                     system: {},
@@ -193,7 +206,7 @@ describe('RecentChartIndex', () => {
                 run: {
                     id: 'yet_another_run',
                     date: '2018-04-31',
-                    status: {'verify-date': '2018-05-03'},
+                    status: {status: 'verified', 'verify-date': '2018-05-03'},
                     players: [],
                     times: { primary: '110', primary_t: 110 },
                     system: {},
@@ -207,7 +220,7 @@ describe('RecentChartIndex', () => {
                 run: {
                     id: 'one_run',
                     date: '2018-05-05',
-                    status: {'verify-date': '2018-05-05'},
+                    status: {status: 'verified', 'verify-date': '2018-05-05'},
                     players: [],
                     times: { primary: '95', primary_t: 95 },
                     system: {},
@@ -278,7 +291,7 @@ describe('RecentChartIndex', () => {
                 run: {
                     id: 'another_run_2',
                     date: '2018-04-30',
-                    status: {'verify-date': '2018-04-30'},
+                    status: {status: 'verified', 'verify-date': '2018-04-30'},
                     players: [],
                     times: { primary: '100', primary_t: 100 },
                     system: {},
@@ -294,7 +307,7 @@ describe('RecentChartIndex', () => {
                 run: {
                     id: 'yet_another_run_2',
                     date: '2018-04-31',
-                    status: {'verify-date': '2018-05-03'},
+                    status: {status: 'verified', 'verify-date': '2018-05-03'},
                     players: [],
                     times: { primary: '110', primary_t: 110 },
                     system: {},
@@ -311,7 +324,7 @@ describe('RecentChartIndex', () => {
                 run: {
                     id: 'one_run_2',
                     date: '2018-05-05',
-                    status: {'verify-date': '2018-05-05'},
+                    status: {status: 'verified', 'verify-date': '2018-05-05'},
                     players: [],
                     times: { primary: '95', primary_t: 95 },
                     system: {},
