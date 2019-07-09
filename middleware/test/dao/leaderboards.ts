@@ -6,6 +6,7 @@ import { expect } from 'chai';
 
 import 'mocha';
 import { Run } from '../../lib/dao/runs';
+import { Leaderboard } from '../../lib/dao/leaderboards';
 
 describe('correct_leaderboard_run_places', () => {
     it('should have a monotonically increasing list with no ties or subcategories', async () => {
@@ -276,5 +277,45 @@ describe('add_leaderboard_run', () => {
 
         expect(lre.place).to.eql(3);
         expect(lb.runs[2].run.times.primary_t).to.eql(17);
-    })
+    });
+
+    it('should add run to empty leaderboard', async () => {
+        let lbs: Leaderboard[] = [
+            {
+                weblink: '',
+                game: '',
+                category: '',
+                players: {},
+                runs: []
+            },
+            <Leaderboard><unknown>{
+                weblink: '',
+                game: '',
+                category: '',
+                players: {},
+                runs: null
+            }
+        ];
+
+        let run_to_add = <Run><unknown>{
+            id: 'one',
+            date: '2019-05-05',
+            players: [{id: 'dummy'}],
+            status: {status: 'verified', 'verify-date': '2019-05-05'},
+            system: {},
+            values: {},
+            times: {
+                primary: '16T',
+                primary_t: 16
+            }
+        };
+
+        for(let lb of lbs) {
+            let lre = add_leaderboard_run(lb, run_to_add, []);
+
+            expect(lre.place).to.eql(1);
+            expect(lb.runs[0]).to.exist;
+            expect(lb.runs).to.have.length(1);
+        }
+    });
 });
