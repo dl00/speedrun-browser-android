@@ -42,7 +42,7 @@ export function add_leaderboard_run(d: Leaderboard, run: Run, vars: Variable[]):
 
     // check for existing role with the same player and parameters
     let existing_idx = _.findIndex(d.runs, v => {
-        return _.isEqual(run.players, v.run.players) &&
+        return _.isEqual(_.map(run.players, 'id').sort(), _.map(v.run.players, 'id').sort()) &&
         _.isEqual(
             _.pick(run.values, subcategory_var_ids),
             _.pick(v.run.values, subcategory_var_ids)

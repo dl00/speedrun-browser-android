@@ -25,6 +25,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager
+import com.gu.toolargetool.TooLargeTool
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.api.objects.Genre
@@ -75,6 +76,8 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_list)
+
+        TooLargeTool.startLogging(application)
 
         mDisposables = CompositeDisposable()
 
