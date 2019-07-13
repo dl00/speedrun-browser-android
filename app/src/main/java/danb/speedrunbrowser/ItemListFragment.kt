@@ -33,6 +33,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import danb.speedrunbrowser.utils.ItemType
 
 import java.io.Serializable
 import java.util.ArrayList
@@ -261,40 +262,6 @@ class ItemListFragment : Fragment() {
         fun onItemSelected(itemType: ItemType?, itemId: String, fragment: Fragment, options: ActivityOptions?)
     }
 
-    enum class ItemType constructor(val layout: Int) : Serializable {
-        GAMES(R.layout.fragment_game_list),
-        PLAYERS(R.layout.fragment_player_list),
-        RUNS(R.layout.fragment_run_list);
-
-        fun newViewHolder(ctx: Context?, parent: ViewGroup): RecyclerView.ViewHolder {
-            return when (this) {
-                GAMES -> GameCoverViewHolder((ctx!!.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater).inflate(R.layout.content_game_cover, parent, false))
-                PLAYERS -> PlayerViewHolder((ctx!!.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater).inflate(R.layout.content_player_list, parent, false))
-                RUNS -> WatchRunViewHolder((ctx!!.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater).inflate(R.layout.content_watch_list, parent, false))
-            }
-        }
-
-        fun applyToViewHolder(ctx: Context?, disposables: CompositeDisposable?, holder: RecyclerView.ViewHolder, toApply: Any) {
-            when (this) {
-                GAMES -> (holder as GameCoverViewHolder).apply(ctx!!, disposables!!, toApply as Game)
-                PLAYERS -> (holder as PlayerViewHolder).apply(ctx!!, disposables!!, toApply as User, false)
-                RUNS -> {
-                    if((toApply as LeaderboardRunEntry).run == null)
-                        return
-                    (holder as WatchRunViewHolder).apply(ctx!!, disposables!!, (toApply as LeaderboardRunEntry).run.game!!, toApply)
-                }
-            }
-        }
-
-        fun makeSceneTransition(activity: Activity?, v: View): ActivityOptions? {
-            return null
-        }
-
-        override fun toString(): String {
-            return name
-        }
-    }
-
     class GenericMapper<T> : Function<SpeedrunMiddlewareAPI.APIResponse<T>, SpeedrunMiddlewareAPI.APIResponse<Any?>> {
 
         @Throws(Exception::class)
@@ -313,4 +280,4 @@ class ItemListFragment : Fragment() {
 
         val TAG = ItemListFragment::javaClass.name
     }
-}// Required empty public constructor
+}

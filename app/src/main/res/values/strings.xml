@@ -120,4 +120,6 @@
         * Provide a detailed overview of your session, including which games, players, and runs you may have viewed
     </string>
     <string name="dialog_button_send_email">Send Email</string>
+    <string name="chart_title_volume">Submission Volume</string>
+    <string name="chart_desc_volume">Number of runs submitted in a time period</string>
 </resources>

@@ -9,18 +9,7 @@ import java.util.ArrayList
 import java.util.Objects
 
 import danb.speedrunbrowser.BuildConfig
-import danb.speedrunbrowser.api.objects.Game
-import danb.speedrunbrowser.api.objects.GameAssets
-import danb.speedrunbrowser.api.objects.Genre
-import danb.speedrunbrowser.api.objects.Leaderboard
-import danb.speedrunbrowser.api.objects.LeaderboardRunEntry
-import danb.speedrunbrowser.api.objects.MediaLink
-import danb.speedrunbrowser.api.objects.Platform
-import danb.speedrunbrowser.api.objects.Region
-import danb.speedrunbrowser.api.objects.Run
-import danb.speedrunbrowser.api.objects.User
-import danb.speedrunbrowser.api.objects.Variable
-import danb.speedrunbrowser.api.objects.WhatIsEntry
+import danb.speedrunbrowser.api.objects.*
 import danb.speedrunbrowser.utils.Util
 import io.reactivex.Observable
 import okhttp3.OkHttpClient
@@ -100,6 +89,20 @@ object SpeedrunMiddlewareAPI {
         var error: Error? = null
     )
 
+    data class APIChartData(
+        val category: Category?,
+        val level: Level?,
+        val game: Game?,
+        val player: User?,
+        val metrics: Map<String, Double>,
+        val charts: Map<String, Chart>
+    )
+
+    data class APIChartResponse(
+        var data: APIChartData,
+        var error: Error? = null
+    )
+
     interface Endpoints {
 
         // Autocomplete
@@ -141,5 +144,19 @@ object SpeedrunMiddlewareAPI {
         // What is
         @GET("whatis/{ids}")
         fun whatAreThese(@Path("ids") thingIds: String): Observable<APIResponse<WhatIsEntry>>
+
+        // Charts
+        @GET("charts/games/{id}")
+        fun getGameMetrics(@Path("id") gameId: String): Observable<APIChartResponse>
+
+        @GET("charts/leaderboards/{id}")
+        fun getLeaderboardMetrics(@Path("id") gameId: String): Observable<APIChartResponse>
+
+        @GET("charts/users/{id}")
+        fun getUserMetrics(@Path("id") gameId: String): Observable<APIChartResponse>
+
+        @GET("charts/games/:gameId/players/:playerId")
+        fun getUserGameMetrics(@Path("playerId") playerId: String,
+                               @Path("gameId") gameId: String): Observable<APIChartResponse>
     }
 }
