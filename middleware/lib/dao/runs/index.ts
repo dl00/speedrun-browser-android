@@ -165,6 +165,13 @@ export class RecentRunsIndex implements IndexDriver<LeaderboardRunEntry> {
         let m = conf.db.redis.multi();
 
         for(let lbr of objs) {
+
+            if(lbr.run.times.primary_t <= 0.01) {
+                // ensure these "dummy" runs are never added
+                m.zrem(this.redis_key, lbr.run.id);
+                continue;
+            }
+
             let date_score = moment(_.get(<Run>lbr.run, this.date_property) || 0).unix().toString();
 
             m

@@ -127,6 +127,28 @@ describe('RunDao', () => {
         expect(runs[0]).to.have.property('place', 2);
         expect(runs[1]).to.have.property('place', 3);
     });
+
+    it('should not record latest runs to index if they are not real', async () => {
+
+        let run_dao = new RunDao(db);
+
+        await run_dao.save({
+            place: 3,
+            run: {
+                id: 'dummy_run',
+                date: '2018-05-18',
+                status: {'verify-date': '2018-05-20'},
+                players: [],
+                times: { primary: '0', primary_t: 0.001 },
+                system: {},
+                values: {},
+                game: {id: 'a_game_with_genre'}
+            }
+        });
+
+        let runs = await run_dao.load_latest_runs(0);
+        expect(runs[0]!.run.id).to.not.eql('dummy_run');
+    });
 });
 
 
