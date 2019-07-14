@@ -7,6 +7,7 @@ import { Dao, DaoConfig, IndexDriver } from '../';
 import { GameDao, Game, BulkGame, game_to_bulk } from '../games';
 
 import { RecordChartIndex, get_player_pb_chart } from './charts';
+import { Chart } from '../charts'
 
 import { DB } from '../../db';
 
@@ -268,7 +269,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
     private async get_submission_volume(filter: any) {
         let month_bounaries: string[] = generate_month_boundaries(2010, new Date().getUTCFullYear() + 1);
 
-        return await this.db.mongo.collection(this.collection).aggregate([
+        return (await this.db.mongo.collection(this.collection).aggregate([
             {
                 $match: filter
             },
@@ -282,10 +283,15 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
                     }
                 }
             }
-        ]).toArray();
+        ]).toArray()).map(v => {
+            return {
+                x: new Date(v._id).getTime() / 1000,
+                y: v.count
+            }
+        });
     }
 
-    async get_leaderboard_submission_volume(category_id: string, level_id: string|null) {
+    async get_leaderboard_submission_volume(category_id: string, level_id: string|null): Promise<Chart> {
         let filter: any = {
             'run.category.id': category_id,
             'run.status.status': 'verified'
@@ -297,31 +303,31 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         return {
             item_id: category_id + (level_id ? '_' + level_id : ''),
             item_type: 'runs',
-            chart_type: 'bar'
+            chart_type: 'bar',
             data: {
                 'main': await this.get_submission_volume(filter)
             },
-            timestamp: Date
+            timestamp: new Date()
         }
     }
 
-    async get_game_submission_volume(game_id: string): Chart {
+    async get_game_submission_volume(game_id: string): Promise<Chart> {
         return {
             item_id: game_id,
             item_type: 'runs',
-            chart_type: 'bar'
+            chart_type: 'bar',
             data: {
                 'main': await this.get_submission_volume({
                     'run.game.id': game_id,
                     'run.status.status': 'verified'
                 })
             },
-            timestamp: Date
+            timestamp: new Date()
         }
     }
 
-    async get_player_favorite_runs(player_id: string) {
-        return await this.db.mongo.collection(this.collection).aggregate([
+    async get_player_favorite_runs(player_id: string): Promise<Chart> {
+        let chart_data = await this.db.mongo.collection(this.collection).aggregate([
             {
                 $match: {
                     'run.players.id': player_id
@@ -330,7 +336,6 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             {
                 $group: {
                     _id: '$run.game.id',
-                    game: '$run.game',
                     count: {$sum: 1}
                 }
             },
@@ -339,7 +344,24 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
                     count: -1
                 }
             }
-        ]);
+        ]).toArray();
+
+        return {
+            item_id: player_id,
+            item_type: 'games',
+            chart_type: 'pie',
+            data: {
+                'main': _.chain(chart_data)
+                .map(p => {
+                    return {
+                        x: p._id,
+                        y: p.count
+                    }
+                })
+                .value()
+            },
+            timestamp: new Date()
+        }
     }
 
     async get_player_pb_chart(player_id: string, game_id: string) {

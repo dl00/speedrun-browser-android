@@ -5,13 +5,13 @@ import { Dao } from './';
 import { DB } from '../db';
 
 export interface LineChartData {
-    x: number|Date
+    x: number
     y: number
     obj: any
 }
 
 export interface BarChartData {
-    x: string
+    x: number
     y: number
 }
 
