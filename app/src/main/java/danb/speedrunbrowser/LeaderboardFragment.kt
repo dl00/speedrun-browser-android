@@ -11,12 +11,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.CompoundButton
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
 
-import java.util.HashMap
 import java.util.Objects
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
@@ -30,9 +28,9 @@ import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.api.objects.Leaderboard
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry
 import danb.speedrunbrowser.api.objects.Level
-import danb.speedrunbrowser.api.objects.User
 import danb.speedrunbrowser.api.objects.Variable
 import danb.speedrunbrowser.holders.RunViewHolder
+import danb.speedrunbrowser.stats.LeaderboardStatisticsActivity
 import danb.speedrunbrowser.utils.ConnectionErrorConsumer
 import danb.speedrunbrowser.utils.Util
 import danb.speedrunbrowser.views.ProgressSpinnerView
@@ -124,7 +122,7 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        val rootView = inflater.inflate(R.layout.leaderboard_list, container, false)
+        val rootView = inflater.inflate(R.layout.fragment_leaderboard, container, false)
 
         mContentLayout = rootView.findViewById(R.id.contentLayout)
 
@@ -140,9 +138,9 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
         mRunsListAdapter = LeaderboardAdapter()
         leaderboardList.adapter = mRunsListAdapter
 
-        val viewRulesButton = rootView.findViewById<Button>(R.id.viewRulesButton)
+        val viewRulesButton = rootView.findViewById<Button>(R.id.viewLeaderboardInfoButton)
 
-        viewRulesButton.setOnClickListener { viewRules() }
+        viewRulesButton.setOnClickListener { viewInfo() }
 
         notifyFilterChanged()
 
@@ -242,22 +240,10 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
     }
 
     // show game rules as a Alert Dialog
-    private fun viewRules() {
-        var rulesText = if(filter != null)
-            mCategory!!.getRulesText(filter!!)
-        else
-            mCategory!!.getRulesText(Variable.VariableSelections())
-
-
-        if (rulesText.isEmpty())
-            rulesText = getString(R.string.msg_no_rules_content)
-
-        val dialog = AlertDialog.Builder(context, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
-                .setMessage(rulesText)
-                .setNeutralButton(android.R.string.ok, null)
-                .create()
-
-        dialog.show()
+    private fun viewInfo() {
+        val intent = Intent(context!!, LeaderboardStatisticsActivity::class.java)
+        intent.putExtra(LeaderboardStatisticsActivity.EXTRA_LEADERBOARD_ID, leaderboardId)
+        startActivity(intent)
     }
 
     @Throws(Exception::class)

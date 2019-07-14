@@ -44,6 +44,7 @@ object SpeedrunMiddlewareAPI {
             gson.registerTypeAdapter(Genre::class.java, Genre.JsonConverter())
             gson.registerTypeAdapter(Run::class.java, Run.JsonConverter())
             gson.registerTypeAdapter(Variable::class.java, Variable.JsonConverter())
+            gson.registerTypeAdapter(Chart::class.java, Chart.JsonConverter())
 
             return gson.create()
         }

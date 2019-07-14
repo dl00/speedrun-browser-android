@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import { CategoryDao } from '../../lib/dao/categories';
 import { GameDao } from '../../lib/dao/games';
 import { RunDao } from '../../lib/dao/runs';
-import { ChartDao } from '../../lib/dao/charts';
+import { ChartDao, BarChartData } from '../../lib/dao/charts';
 import { load_db, close_db, DB } from '../../lib/db';
 import { load_config } from '../../lib/config';
 
@@ -68,7 +68,7 @@ describe('RunDao', () => {
                 run: {
                     id: 'another_run',
                     date: '2018-04-30',
-                    status: {'verify-date': '2018-04-30'},
+                    status: {status: 'verified', 'verify-date': '2018-04-30'},
                     players: [],
                     times: { primary: '100', primary_t: 100 },
                     system: {},
@@ -81,7 +81,7 @@ describe('RunDao', () => {
                 run: {
                     id: 'one_run',
                     date: '2018-05-05',
-                    status: {'verify-date': '2018-05-05'},
+                    status: {status: 'verified', 'verify-date': '2018-05-05'},
                     players: [],
                     times: { primary: '135', primary_t: 100 },
                     system: {},
@@ -108,7 +108,7 @@ describe('RunDao', () => {
             run: {
                 id: 'yet_another_run',
                 date: '2018-05-01',
-                status: {'verify-date': '2018-05-01'},
+                status: {status: 'verified', 'verify-date': '2018-05-01'},
                 players: [],
                 times: { primary: '135', primary_t: 100 },
                 system: {},
@@ -137,7 +137,7 @@ describe('RunDao', () => {
             run: {
                 id: 'dummy_run',
                 date: '2018-05-18',
-                status: {'verify-date': '2018-05-20'},
+                status: {status: 'verified', 'verify-date': '2018-05-20'},
                 players: [],
                 times: { primary: '0', primary_t: 0.001 },
                 system: {},
@@ -148,6 +148,33 @@ describe('RunDao', () => {
 
         let runs = await run_dao.load_latest_runs(0);
         expect(runs[0]!.run.id).to.not.eql('dummy_run');
+    });
+
+    it('should generate volume submission charts with month gaps filled as necessary', async () => {
+
+        let run_dao = new RunDao(db);
+
+        await run_dao.save({
+            place: 3,
+            run: {
+                id: 'dummy_run2',
+                date: '2018-08-18',
+                status: {status: 'verified', 'verify-date': '2018-08-20'},
+                players: [],
+                times: { primary: '0', primary_t: 0.001 },
+                system: {},
+                values: {},
+                game: {id: 'a_game_with_genre'}
+            }
+        });
+
+        let chart = await run_dao.get_game_submission_volume('a_game_with_genre');
+
+        expect(chart.data.main).to.have.length(5);
+        expect((<BarChartData>chart.data.main[0]).x).to.eql(new Date('2018-04-01').getTime() / 1000);
+        expect((<BarChartData>chart.data.main[0]).y).to.eql(1);
+        expect((<BarChartData>chart.data.main[1]).x).to.eql(new Date('2018-05-01').getTime() / 1000);
+        expect((<BarChartData>chart.data.main[1]).y).to.eql(2);
     });
 });
 

@@ -67,8 +67,13 @@ export class RecordChartIndex implements IndexDriver<LeaderboardRunEntry> {
                     .join('_')
                     .value();
 
+            let t = new Date(lbr.run.date).getTime() / 1000;
+
+            if(isNaN(t) || !t)
+                continue;
+
             let point: LineChartData = {
-                x: new Date(lbr.run.date).getTime(),
+                x: t,
                 y: lbr.run.times.primary_t,
                 obj: run_to_bulk(lbr.run)
             };

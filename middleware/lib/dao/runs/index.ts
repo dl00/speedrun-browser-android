@@ -269,7 +269,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
     private async get_submission_volume(filter: any) {
         let month_bounaries: string[] = generate_month_boundaries(2010, new Date().getUTCFullYear() + 1);
 
-        return (await this.db.mongo.collection(this.collection).aggregate([
+        let d = (await this.db.mongo.collection(this.collection).aggregate([
             {
                 $match: filter
             },
@@ -277,7 +277,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
                 $bucket: {
                     groupBy: '$run.date',
                     boundaries: month_bounaries,
-                    default: '',
+                    default: '1970-01',
                     output: {
                         count: {$sum: 1}
                     }
@@ -289,6 +289,29 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
                 y: v.count
             }
         });
+
+        // remove unknown entries
+        if(d.length && d[0].x === 0)
+            d.splice(0, 1);
+
+        if(!d.length)
+            return d;
+
+        // fill in skipped boundaries
+        let bound_cur = _.findIndex(month_bounaries, v => d[0].x == new Date(v + '-01').getTime() / 1000);
+        for(let i = 1;i < d.length;i++) {
+            let to_add = [];
+            while(d[i].x != new Date(month_bounaries[++bound_cur] + '-01').getTime() / 1000) {
+                to_add.push({ x: new Date(month_bounaries[bound_cur] + '-01').getTime() / 1000, y: 0})
+            }
+
+            if(to_add.length) {
+                d.splice(i, 0, ...to_add)
+                i += to_add.length
+            }
+        }
+
+        return d;
     }
 
     async get_leaderboard_submission_volume(category_id: string, level_id: string|null): Promise<Chart> {

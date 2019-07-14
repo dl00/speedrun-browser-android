@@ -13,6 +13,9 @@ abstract class StatisticsActivity : AppCompatActivity() {
 
     private lateinit var rootFrag: StatisticsFragment
 
+    protected val chartData: SpeedrunMiddlewareAPI.APIChartData?
+    get() = rootFrag.chartData
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -35,7 +38,6 @@ abstract class StatisticsActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
-
         rootFrag.clearCharts()
     }
 

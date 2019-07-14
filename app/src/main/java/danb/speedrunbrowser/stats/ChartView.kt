@@ -1,6 +1,8 @@
 package danb.speedrunbrowser.stats
 
 import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.BaseAdapter
@@ -11,7 +13,10 @@ import androidx.viewpager.widget.ViewPager
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.charts.CombinedChart
 import com.github.mikephil.charting.components.Description
+import com.github.mikephil.charting.components.MarkerView
+import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.*
+import com.github.mikephil.charting.formatter.ValueFormatter
 import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.objects.BarChartData
 import danb.speedrunbrowser.api.objects.Chart
@@ -19,7 +24,7 @@ import danb.speedrunbrowser.api.objects.ChartData
 import danb.speedrunbrowser.api.objects.LineChartData
 import io.reactivex.disposables.CompositeDisposable
 
-fun Chart.generateMpLineSetData(labels: Map<String, String>): LineData {
+fun Chart.generateMpLineSetData(context: Context, labels: (v: String) -> String): LineData {
     val mpdata = LineData()
 
     val datasets = this.data.mapValues {
@@ -30,25 +35,33 @@ fun Chart.generateMpLineSetData(labels: Map<String, String>): LineData {
     }
 
     datasets.forEach {
-        mpdata.addDataSet(LineDataSet(it.value, labels[it.key]))
+        mpdata.addDataSet(LineDataSet(it.value, labels(it.key)))
     }
 
     return mpdata
 }
 
-fun Chart.generateMpBarSetData(labels: Map<String, String>): BarData {
+fun Chart.generateMpBarSetData(context: Context, labels: (v: String) -> String): BarData {
     val mpdata = BarData()
 
     val datasets = this.data.mapValues {
+        var i = 0
         it.value.map { vv ->
             val v = vv as BarChartData
-            BarEntry(v.x, v.y)
+            BarEntry(i++.toFloat(), v.y, v.x)
         }
     }
 
+
     datasets.forEach {
-        mpdata.addDataSet(BarDataSet(it.value, labels[it.key]))
+        val dataSet = BarDataSet(it.value, labels(it.key))
+
+        dataSet.color = context.resources.getColor(R.color.colorSelected)
+
+        mpdata.addDataSet(dataSet)
     }
+
+    mpdata.setDrawValues(false)
 
     return mpdata
 }
@@ -68,14 +81,53 @@ class ChartView(ctx: Context, val options: ChartOptions) : LinearLayout(ctx) {
 
     private fun initializeChart(chartType: String): CombinedChart {
         val chart = CombinedChart(context)
-        chart.setBackgroundColor(resources.getColor(R.color.colorPrimaryDark))
         chart.setDrawGridBackground(chartType == "line")
         chart.setDrawBarShadow(false)
-        chart.isHighlightFullBarEnabled = true
+        //chart.isHighlightFullBarEnabled = true
 
-        // TODO: legend?
+        chart.axisLeft.setDrawAxisLine(false)
+        chart.axisLeft.textColor = Color.WHITE
+        chart.xAxis.textColor = Color.WHITE
+        chart.xAxis.position = XAxis.XAxisPosition.BOTTOM
+        chart.xAxis.setAvoidFirstLastClipping(true)
+        chart.axisRight.textColor = Color.WHITE
+        chart.legend.textColor = Color.WHITE
+        chart.description.isEnabled = false
+        chart.background = ColorDrawable(Color.TRANSPARENT)
 
-        chart.axisLeft.axisMinimum = 0f
+        chart.isScaleXEnabled = false
+        chart.isScaleYEnabled = false
+
+
+
+        if(options.xValueFormat != null) {
+            chart.xAxis.valueFormatter = object : ValueFormatter() {
+                override fun getFormattedValue(value: Float): String {
+                    // bar charts require a hack since they are designed contiguous
+                    return if(chartType == "bar")
+                        options.xValueFormat!!(graph!!.barData.getDataSetByIndex(0)
+                                .getEntryForIndex(value.toInt()).data as Float)
+                    else
+                        options.xValueFormat!!(value)
+                }
+            }
+        }
+
+        if(options.yValueFormat != null) {
+            chart.axisLeft.valueFormatter = object : ValueFormatter() {
+                override fun getFormattedValue(value: Float): String {
+                    return options.yValueFormat!!(value)
+                }
+            }
+        }
+
+        val markerView = XYMarkerView(context, chart.xAxis.valueFormatter)
+        markerView.chartView = chart
+        chart.marker = markerView
+
+        val lp = LayoutParams(LayoutParams.MATCH_PARENT, resources.getDimensionPixelSize(R.dimen.chart_height))
+
+        chart.layoutParams = lp
 
         return chart
     }
@@ -92,17 +144,24 @@ class ChartView(ctx: Context, val options: ChartOptions) : LinearLayout(ctx) {
             when(data.chart_type) {
                 "line", "bar" -> {
                     graph = initializeChart(data.chart_type)
+                    addView(graph)
 
                     val cd = CombinedData()
 
                     if(data.chart_type == "line")
-                        cd.setData(data.generateMpLineSetData(options.setLabels))
+                        cd.setData(data.generateMpLineSetData(context, options.setLabels))
                     if(data.chart_type == "bar")
-                        cd.setData(data.generateMpBarSetData(options.setLabels))
-
-                    println("GRAPH DATA TO BE INVALID" + cd)
+                        cd.setData(data.generateMpBarSetData(context, options.setLabels))
 
                     graph!!.data = cd
+
+                    // hack to prevent bar clipping
+                    if(data.chart_type == "bar") {
+                        graph!!.xAxis.axisMinimum = -0.5f
+                        graph!!.xAxis.axisMaximum = graph!!.barData.xMax + 0.5f
+                        graph!!.xAxis.labelRotationAngle = -45.0f
+                    }
+
                     graph!!.invalidate()
 
                     if(options.chartListViewHolderSource != null) {

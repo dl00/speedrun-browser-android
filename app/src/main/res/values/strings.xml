@@ -124,4 +124,9 @@
     <string name="chart_desc_volume">Number of runs submitted in a time period</string>
     <string name="menu_charts_and_statistics">Charts and Stats</string>
     <string name="title_game_stats">Game Statistics</string>
+    <string name="chart_legend_volume">PBs Submitted</string>
+    <string name="chart_title_wrs">World Record Progression</string>
+    <string name="chart_desc_wrs">Game completion time by world records over time</string>
+    <string name="title_leaderboard_stats">Leaderboard Statistics</string>
+    <string name="button_view_leaderboard_info">View Rules/Stats</string>
 </resources>

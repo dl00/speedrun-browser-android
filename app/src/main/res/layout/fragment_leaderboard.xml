@@ -58,10 +58,10 @@
     </FrameLayout>
 
     <Button
-        android:id="@+id/viewRulesButton"
+        android:id="@+id/viewLeaderboardInfoButton"
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:background="@color/colorAccent"
-        android:text="@string/button_view_rules" />
+        android:text="@string/button_view_leaderboard_info" />
 
 </LinearLayout>

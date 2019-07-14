@@ -1,5 +1,7 @@
 package danb.speedrunbrowser.stats
 
+import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
+import danb.speedrunbrowser.api.objects.Chart
 import danb.speedrunbrowser.utils.ItemType
 import danb.speedrunbrowser.utils.ViewHolderSource
 
@@ -14,7 +16,7 @@ data class ChartOptions(
         val name: String,
         val description: String,
 
-        val setLabels: Map<String, String> = mapOf(),
+        val setLabels: (v: String) -> String,
 
         val xValueFormat: ((v: Float) -> String)? = null,
         val yValueFormat: ((v: Float) -> String)? = null,

@@ -80,12 +80,14 @@
         <activity android:name=".stats.GameStatisticsActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_game_stats"
-            android:parentActivityName=".ItemDetailActivity"
             android:theme="@style/AppTheme">
 
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="danb.speedrunbrowser.ItemDetailActivity" />
+        </activity>
+
+        <activity android:name=".stats.LeaderboardStatisticsActivity"
+            android:configChanges="orientation|screenSize"
+            android:label="@string/title_leaderboard_stats"
+            android:theme="@style/AppTheme">
 
         </activity>
     </application>
