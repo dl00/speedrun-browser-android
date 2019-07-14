@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import io.reactivex.Observable
@@ -36,13 +37,20 @@ class StatisticsFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIChartDa
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    fun setData(d: Observable<SpeedrunMiddlewareAPI.APIChartData>) {
+    fun setDataSource(d: Observable<SpeedrunMiddlewareAPI.APIChartData>) {
         dispose = d
-                .observeOn(Schedulers.io())
-                .subscribeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-
-                })
+            .observeOn(Schedulers.io())
+            .subscribeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                println("Got data")
+                layout.children.forEach { view ->
+                    when(view) {
+                        is ChartView -> view.chartData = it.charts[view.options.identifier]
+                        is MetricView -> {}
+                        else -> {}
+                    }
+                }
+            }
     }
 
     fun addMetric(options: ChartOptions) = layout.addView(MetricView(context!!, options))
@@ -50,6 +58,10 @@ class StatisticsFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIChartDa
 
     fun addTabbedSwitcher(options: TabbedSwitcherOptions) {
 
+    }
+
+    fun clearCharts() {
+        layout.removeAllViews()
     }
 
     override fun onDestroy() {

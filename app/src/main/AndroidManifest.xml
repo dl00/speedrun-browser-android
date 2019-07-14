@@ -75,18 +75,18 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="danb.speedrunbrowser.ItemDetailActivity" />
+        </activity>
 
-            <intent-filter android:order="2">
-                <action android:name="android.intent.action.VIEW" />
+        <activity android:name=".stats.GameStatisticsActivity"
+            android:configChanges="orientation|screenSize"
+            android:label="@string/title_game_stats"
+            android:parentActivityName=".ItemDetailActivity"
+            android:theme="@style/AppTheme">
 
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="danb.speedrunbrowser.ItemDetailActivity" />
 
-                <data
-                    android:host="www.speedrun.com"
-                    android:pathPattern="/.*/run/.*"
-                    android:scheme="https" />
-            </intent-filter>
         </activity>
     </application>
 

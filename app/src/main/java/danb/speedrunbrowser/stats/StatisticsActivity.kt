@@ -3,26 +3,28 @@ package danb.speedrunbrowser.stats
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ScrollView
 import androidx.appcompat.app.AppCompatActivity
+import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
+import io.reactivex.Observable
 
 abstract class StatisticsActivity : AppCompatActivity() {
 
     private lateinit var rootFrag: StatisticsFragment
 
-    override fun onCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
-        super.onCreate(savedInstanceState, persistentState)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-        val v = View(this)
         val sv = ScrollView(this)
-        sv.addView(v)
+        sv.id = View.generateViewId()
         setContentView(sv)
 
         if(savedInstanceState == null) {
             rootFrag = StatisticsFragment()
 
             supportFragmentManager.beginTransaction()
-                    .add(v.id, rootFrag)
+                    .add(sv.id, rootFrag)
                     .commit()
 
         }
@@ -31,9 +33,24 @@ abstract class StatisticsActivity : AppCompatActivity() {
         }
     }
 
+    override fun onStop() {
+        super.onStop()
+
+        rootFrag.clearCharts()
+    }
+
     fun addMetric(options: ChartOptions) = rootFrag.addMetric(options)
     fun addChart(options: ChartOptions) = rootFrag.addChart(options)
     fun addTabbedSwitcher(options: TabbedSwitcherOptions) = rootFrag.addTabbedSwitcher(options)
+
+    fun setDataSource(d: Observable<SpeedrunMiddlewareAPI.APIChartData>) = rootFrag.setDataSource(d)
+
+    fun setDataSourceAPIResponse(d: Observable<SpeedrunMiddlewareAPI.APIChartResponse>) {
+        setDataSource(d.map {
+            // TODO: Check for error
+            it.data
+        })
+    }
 
     companion object {
         private val TAG = StatisticsActivity::class.java.simpleName

@@ -15,6 +15,7 @@ import java.util.Objects
 import danb.speedrunbrowser.api.PushNotificationData
 import danb.speedrunbrowser.api.objects.User
 import danb.speedrunbrowser.utils.Constants
+import danb.speedrunbrowser.utils.ItemType
 import danb.speedrunbrowser.utils.Util
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -90,7 +91,7 @@ class MessagingService : FirebaseMessagingService() {
                 if (data.oldRun != null) data.oldRun.run.times!!.time else "", data.newRun.run.times!!.time)
 
         val intent = Intent(this, ItemDetailActivity::class.java)
-        intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.PLAYERS)
+        intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemType.PLAYERS)
         intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, players[0].id)
 
         Util.postNotification(this, intent, players[0].id, title, msg, featureImg!!)
@@ -140,7 +141,7 @@ class MessagingService : FirebaseMessagingService() {
                 if (data.oldRun != null) data.oldRun.run.times!!.time else "", data.newRun.run.times!!.time)
 
         val intent = Intent(this, ItemDetailActivity::class.java)
-        intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.GAMES)
+        intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemType.GAMES)
         intent.putExtra(GameDetailFragment.ARG_GAME_ID, data.game.id)
 
         Util.postNotification(this, intent, data.game.id, title, msg, featureImg)

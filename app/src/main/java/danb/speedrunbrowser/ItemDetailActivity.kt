@@ -12,6 +12,7 @@ import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.Run
 import danb.speedrunbrowser.api.objects.WhatIsEntry
 import danb.speedrunbrowser.utils.ConnectionErrorConsumer
+import danb.speedrunbrowser.utils.ItemType
 import danb.speedrunbrowser.utils.Util
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -49,14 +50,14 @@ class ItemDetailActivity : AppCompatActivity(), Consumer<SpeedrunMiddlewareAPI.A
                 finish() // nothing/no way to view...
             }
 
-            val type = args!!.getSerializable(EXTRA_ITEM_TYPE) as ItemListFragment.ItemType?
+            val type = args!!.getSerializable(EXTRA_ITEM_TYPE) as ItemType?
 
             var frag: Fragment? = null
 
             when {
                 type != null -> frag = when (type) {
-                    ItemListFragment.ItemType.GAMES -> GameDetailFragment()
-                    ItemListFragment.ItemType.PLAYERS -> PlayerDetailFragment()
+                    ItemType.GAMES -> GameDetailFragment()
+                    ItemType.PLAYERS -> PlayerDetailFragment()
                     else -> {
                         showMainPage()
                         return

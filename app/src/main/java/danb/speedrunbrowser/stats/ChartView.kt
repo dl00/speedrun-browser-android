@@ -66,7 +66,7 @@ class ChartView(ctx: Context, val options: ChartOptions) : LinearLayout(ctx) {
         applyData()
     }
 
-    fun initializeChart(chartType: String): CombinedChart {
+    private fun initializeChart(chartType: String): CombinedChart {
         val chart = CombinedChart(context)
         chart.setBackgroundColor(resources.getColor(R.color.colorPrimaryDark))
         chart.setDrawGridBackground(chartType == "line")
@@ -80,14 +80,12 @@ class ChartView(ctx: Context, val options: ChartOptions) : LinearLayout(ctx) {
         return chart
     }
 
-    fun initializeList(d: Map<String, List<ChartData>>): ViewPager {
+    private fun initializeList(d: Map<String, List<ChartData>>): ViewPager {
         return ViewPager(context)
     }
 
     private fun applyData() {
-        val data = chartData
-        if(data == null)
-            return
+        val data = chartData ?: return
 
         if(graph == null && list == null) {
             // first init
@@ -101,6 +99,8 @@ class ChartView(ctx: Context, val options: ChartOptions) : LinearLayout(ctx) {
                         cd.setData(data.generateMpLineSetData(options.setLabels))
                     if(data.chart_type == "bar")
                         cd.setData(data.generateMpBarSetData(options.setLabels))
+
+                    println("GRAPH DATA TO BE INVALID" + cd)
 
                     graph!!.data = cd
                     graph!!.invalidate()

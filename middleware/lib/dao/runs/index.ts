@@ -294,14 +294,30 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         if(level_id)
             filter['run.level.id'] = level_id;
 
-        return await this.get_submission_volume(filter);
+        return {
+            item_id: category_id + (level_id ? '_' + level_id : ''),
+            item_type: 'runs',
+            chart_type: 'bar'
+            data: {
+                'main': await this.get_submission_volume(filter)
+            },
+            timestamp: Date
+        }
     }
 
-    async get_game_submission_volume(game_id: string) {
-        return await this.get_submission_volume({
-            'run.game.id': game_id,
-            'run.status.status': 'verified'
-        });
+    async get_game_submission_volume(game_id: string): Chart {
+        return {
+            item_id: game_id,
+            item_type: 'runs',
+            chart_type: 'bar'
+            data: {
+                'main': await this.get_submission_volume({
+                    'run.game.id': game_id,
+                    'run.status.status': 'verified'
+                })
+            },
+            timestamp: Date
+        }
     }
 
     async get_player_favorite_runs(player_id: string) {

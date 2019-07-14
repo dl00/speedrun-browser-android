@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item android:id="@+id/menu_stats"
+        android:icon="@drawable/baseline_insert_chart_24"
+        android:title="@string/menu_charts_and_statistics"
+        app:showAsAction="ifRoom" />
+
     <item android:id="@+id/menu_subscribe"
         android:icon="@android:color/transparent"
         android:title="@string/empty"

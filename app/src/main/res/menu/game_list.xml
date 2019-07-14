@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item android:id="@+id/menu_stats"
+        android:icon="@drawable/baseline_insert_chart_24"
+        android:title="@string/menu_charts_and_statistics"
+        app:showAsAction="ifRoom" />
+
     <item android:id="@+id/menu_genres"
         android:icon="@drawable/baseline_library_books_24"
         android:title="@string/menu_genres"
         app:showAsAction="ifRoom" />
+
     <item android:id="@+id/menu_about"
         android:icon="@drawable/baseline_info_24"
         android:title="@string/menu_about"

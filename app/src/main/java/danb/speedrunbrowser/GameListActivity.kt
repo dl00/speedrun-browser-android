@@ -30,10 +30,7 @@ import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.api.objects.Genre
 import danb.speedrunbrowser.api.objects.User
-import danb.speedrunbrowser.utils.Analytics
-import danb.speedrunbrowser.utils.AppDatabase
-import danb.speedrunbrowser.utils.AutoCompleteAdapter
-import danb.speedrunbrowser.utils.Util
+import danb.speedrunbrowser.utils.*
 import danb.speedrunbrowser.views.SimpleTabStrip
 import io.reactivex.Observable
 import io.reactivex.ObservableSource
@@ -190,7 +187,7 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
                     .commit()
         } else {
             val intent = Intent(this, ItemDetailActivity::class.java)
-            intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.GAMES)
+            intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemType.GAMES)
             intent.putExtra(GameDetailFragment.ARG_GAME_ID, id)
 
             if (fragment != null && transitionOptions != null)
@@ -214,7 +211,7 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
                     .commit()
         } else {
             val intent = Intent(this, ItemDetailActivity::class.java)
-            intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.PLAYERS)
+            intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemType.PLAYERS)
             intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, id)
 
             if (fragment != null && transitionOptions != null)
@@ -252,11 +249,11 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
         dialog.show()
     }
 
-    override fun onItemSelected(itemType: ItemListFragment.ItemType?, itemId: String, fragment: Fragment, options: ActivityOptions?) {
+    override fun onItemSelected(itemType: ItemType?, itemId: String, fragment: Fragment, options: ActivityOptions?) {
         when (itemType) {
-            ItemListFragment.ItemType.GAMES -> showGame(itemId, fragment, options)
-            ItemListFragment.ItemType.PLAYERS -> showPlayer(itemId, fragment, options)
-            ItemListFragment.ItemType.RUNS -> showRun(itemId, fragment, options)
+            ItemType.GAMES -> showGame(itemId, fragment, options)
+            ItemType.PLAYERS -> showPlayer(itemId, fragment, options)
+            ItemType.RUNS -> showRun(itemId, fragment, options)
         }
     }
 
@@ -276,23 +273,23 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
 
         init {
             var args = Bundle()
-            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemListFragment.ItemType.GAMES)
+            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemType.GAMES)
             fragments[0].arguments = args
 
             args = Bundle()
-            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemListFragment.ItemType.RUNS)
+            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemType.RUNS)
             fragments[1].arguments = args
 
             args = Bundle()
-            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemListFragment.ItemType.RUNS)
+            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemType.RUNS)
             fragments[2].arguments = args
 
             args = Bundle()
-            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemListFragment.ItemType.GAMES)
+            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemType.GAMES)
             fragments[3].arguments = args
 
             args = Bundle()
-            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemListFragment.ItemType.PLAYERS)
+            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemType.PLAYERS)
             fragments[4].arguments = args
 
             for (i in 0 until count)

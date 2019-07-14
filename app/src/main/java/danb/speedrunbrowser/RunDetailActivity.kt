@@ -27,13 +27,7 @@ import danb.speedrunbrowser.api.objects.Level
 import danb.speedrunbrowser.api.objects.Run
 import danb.speedrunbrowser.api.objects.User
 import danb.speedrunbrowser.api.objects.Variable
-import danb.speedrunbrowser.utils.Analytics
-import danb.speedrunbrowser.utils.AppDatabase
-import danb.speedrunbrowser.utils.ConnectionErrorConsumer
-import danb.speedrunbrowser.utils.ImageLoader
-import danb.speedrunbrowser.utils.ImageViewPlacerConsumer
-import danb.speedrunbrowser.utils.NoopConsumer
-import danb.speedrunbrowser.utils.Util
+import danb.speedrunbrowser.utils.*
 import danb.speedrunbrowser.views.MultiVideoView
 import danb.speedrunbrowser.views.ProgressSpinnerView
 import io.reactivex.Observable
@@ -394,7 +388,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
 
     private fun viewPlayer(player: User) {
         val intent = Intent(this, ItemDetailActivity::class.java)
-        intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.PLAYERS)
+        intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemType.PLAYERS)
         intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, player.id)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             intent.flags = Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT
@@ -405,7 +399,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
 
     private fun viewGame() {
         val intent = Intent(this, ItemDetailActivity::class.java)
-        intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemListFragment.ItemType.GAMES)
+        intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemType.GAMES)
         intent.putExtra(GameDetailFragment.ARG_GAME_ID, mGame!!.id)
         intent.putExtra(GameDetailFragment.ARG_LEADERBOARD_ID, mCategory!!.id + (if(mLevel != null) "_" + mLevel!!.id else ""))
         intent.putExtra(GameDetailFragment.ARG_VARIABLE_SELECTIONS, Variable.VariableSelections(mRun))

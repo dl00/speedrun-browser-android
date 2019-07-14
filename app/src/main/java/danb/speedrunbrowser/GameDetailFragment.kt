@@ -1,6 +1,7 @@
 package danb.speedrunbrowser
 
 import android.content.DialogInterface
+import android.content.Intent
 import android.os.Bundle
 import android.os.Parcelable
 import androidx.fragment.app.Fragment
@@ -22,6 +23,7 @@ import danb.speedrunbrowser.api.objects.Category
 import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.api.objects.Level
 import danb.speedrunbrowser.api.objects.Variable
+import danb.speedrunbrowser.stats.GameStatisticsActivity
 import danb.speedrunbrowser.utils.*
 import danb.speedrunbrowser.views.CategoryTabStrip
 import danb.speedrunbrowser.views.ProgressSpinnerView
@@ -122,7 +124,11 @@ class GameDetailFragment : Fragment() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.menu_subscribe) {
+
+        if(item.itemId == R.id.menu_stats) {
+            viewStats()
+        }
+        else if (item.itemId == R.id.menu_subscribe) {
             openSubscriptionDialog()
             return true
         }
@@ -358,6 +364,14 @@ class GameDetailFragment : Fragment() {
                     }
             )
         })
+    }
+
+    private fun viewStats() {
+        if(mGame != null) {
+            val intent = Intent(context!!, GameStatisticsActivity::class.java)
+            intent.putExtra(GameStatisticsActivity.EXTRA_GAME_ID, mGame!!.id)
+            startActivity(intent)
+        }
     }
 
     class GameSubscription(game: Game, subs: Collection<AppDatabase.Subscription>) : HashSet<String>() {
