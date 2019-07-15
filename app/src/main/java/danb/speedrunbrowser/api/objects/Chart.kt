@@ -87,7 +87,7 @@ data class ChartData(
             return ChartData(
                 x = context.deserialize(obj.get("x"), Float::class.java),
                 y = context.deserialize(obj.get("y"), Float::class.java),
-                obj = if(t == null || obj.get("obj")?.isJsonNull != false) null else context.deserialize(obj.getNotNull("obj"), t)
+                obj = if(t == null || obj.get("obj")?.isJsonNull != false) null else context.deserialize(obj.getNotNull("obj"), t) as Any
             )
         }
     }

@@ -28,7 +28,7 @@ class RunViewHolder(v: View) : RecyclerView.ViewHolder(v) {
 
     private val mRankImg: ImageView = v.findViewById(R.id.imgRank)
 
-    fun apply(context: Context, disposables: CompositeDisposable, game: Game, entry: LeaderboardRunEntry) {
+    fun apply(context: Context, disposables: CompositeDisposable, game: Game?, entry: LeaderboardRunEntry) {
 
         mPlayerNames.removeAllViews()
         var first = true
@@ -54,25 +54,26 @@ class RunViewHolder(v: View) : RecyclerView.ViewHolder(v) {
 
         val il = ImageLoader(context)
 
-        when {
-            entry.place == 1 && game.assets.trophy1st != null ->
-                disposables.add(il.loadImage(game.assets.trophy1st.uri)
-                        .subscribe(ImageViewPlacerConsumer(mRankImg)))
+        if(game != null) {
+            when {
+                entry.place == 1 && game.assets.trophy1st != null ->
+                    disposables.add(il.loadImage(game.assets.trophy1st.uri)
+                            .subscribe(ImageViewPlacerConsumer(mRankImg)))
 
-            entry.place == 2 && game.assets.trophy2nd != null ->
-                disposables.add(il.loadImage(game.assets.trophy2nd.uri)
-                        .subscribe(ImageViewPlacerConsumer(mRankImg)))
+                entry.place == 2 && game.assets.trophy2nd != null ->
+                    disposables.add(il.loadImage(game.assets.trophy2nd.uri)
+                            .subscribe(ImageViewPlacerConsumer(mRankImg)))
 
-            entry.place == 3 && game.assets.trophy3rd != null ->
-                disposables.add(il.loadImage(game.assets.trophy3rd.uri)
-                        .subscribe(ImageViewPlacerConsumer(mRankImg)))
+                entry.place == 3 && game.assets.trophy3rd != null ->
+                    disposables.add(il.loadImage(game.assets.trophy3rd.uri)
+                            .subscribe(ImageViewPlacerConsumer(mRankImg)))
 
-            entry.place == 4 && game.assets.trophy4th != null ->
-                disposables.add(il.loadImage(game.assets.trophy4th.uri)
-                        .subscribe(ImageViewPlacerConsumer(mRankImg)))
+                entry.place == 4 && game.assets.trophy4th != null ->
+                    disposables.add(il.loadImage(game.assets.trophy4th.uri)
+                            .subscribe(ImageViewPlacerConsumer(mRankImg)))
 
-            else -> mRankImg.setImageDrawable(ColorDrawable(Color.TRANSPARENT))
+                else -> mRankImg.setImageDrawable(ColorDrawable(Color.TRANSPARENT))
+            }
         }
-
     }
 }

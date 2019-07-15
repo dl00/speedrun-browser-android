@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry
+import danb.speedrunbrowser.api.objects.Run
 import danb.speedrunbrowser.api.objects.User
 import danb.speedrunbrowser.holders.GameCoverViewHolder
 import danb.speedrunbrowser.holders.PlayerViewHolder
@@ -35,9 +36,12 @@ enum class ItemType constructor(val layout: Int) : Serializable, ViewHolderSourc
             GAMES -> (holder as GameCoverViewHolder).apply(ctx!!, disposables!!, toApply as Game)
             PLAYERS -> (holder as PlayerViewHolder).apply(ctx!!, disposables!!, toApply as User, false)
             RUNS -> {
-                if((toApply as LeaderboardRunEntry).run == null)
-                    return
-                (holder as WatchRunViewHolder).apply(ctx!!, disposables!!, (toApply as LeaderboardRunEntry).run.game!!, toApply)
+                val lbr: LeaderboardRunEntry = when(toApply) {
+                    is LeaderboardRunEntry -> toApply
+                    else -> LeaderboardRunEntry(run = toApply as Run)
+                }
+
+                (holder as WatchRunViewHolder).apply(ctx!!, disposables!!, lbr.run.game!!, lbr)
             }
         }
     }

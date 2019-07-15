@@ -1,9 +1,18 @@
 package danb.speedrunbrowser.stats
 
+import android.content.Context
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
+import danb.speedrunbrowser.api.objects.LeaderboardRunEntry
+import danb.speedrunbrowser.api.objects.Run
 import danb.speedrunbrowser.api.objects.RunTimes
+import danb.speedrunbrowser.holders.RunViewHolder
 import danb.speedrunbrowser.utils.ItemType
+import danb.speedrunbrowser.utils.ViewHolderSource
+import io.reactivex.disposables.CompositeDisposable
 import java.lang.StringBuilder
 
 class LeaderboardStatisticsActivity : StatisticsActivity() {
@@ -42,7 +51,17 @@ class LeaderboardStatisticsActivity : StatisticsActivity() {
                     },
                     xValueFormat = ::formatMonthYear,
                     yValueFormat = { RunTimes.format(it) ?: it.toString() },
-                    chartListViewHolderSource = ItemType.RUNS
+                    chartListViewHolderSource = object : ViewHolderSource {
+                        override fun newViewHolder(ctx: Context?, parent: ViewGroup): RecyclerView.ViewHolder {
+                            return RunViewHolder((ctx!!.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater).inflate(R.layout.content_leaderboard_list, parent, false))
+                        }
+
+                        override fun applyToViewHolder(ctx: Context?, disposables: CompositeDisposable?, holder: RecyclerView.ViewHolder, toApply: Any) {
+                            val lbr = LeaderboardRunEntry(run = toApply as Run)
+
+                            (holder as RunViewHolder).apply(ctx!!, disposables!!, null, lbr)
+                        }
+                    }
             ))
 
             addChart(ChartOptions(

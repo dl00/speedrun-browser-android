@@ -9,7 +9,7 @@ data class LeaderboardRunEntry(
     val placeName: String
         get() {
             if(place == null)
-                return "Obsolete"
+                return ""
 
             if (place / 10 % 10 == 1)
                 return place.toString() + "th"
