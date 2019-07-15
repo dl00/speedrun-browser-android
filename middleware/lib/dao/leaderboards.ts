@@ -121,7 +121,7 @@ export function make_distribution_chart(lb: Leaderboard, vars: Variable[]): Char
                 subcategory_id = 'main';
             else
                 subcategory_id = _.chain(run.run.values)
-                    .pick(...subcategory_vars)
+                    .pick(..._.map(subcategory_vars, 'id'))
                     .toPairs()
                     .flatten()
                     .join('_')

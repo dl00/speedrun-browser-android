@@ -227,7 +227,6 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx) {
         override fun getItemCount(): Int = chartData.size
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-            println("RENDER " + position + ", " + chartData[position].obj)
             val d = chartData[position]
             if(d.obj != null)
                 options.chartListViewHolderSource!!.applyToViewHolder(context, disposables, holder, d.obj)

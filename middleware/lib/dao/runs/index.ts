@@ -313,7 +313,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
 
         // remove current month, if any
         if(new Date(d[d.length - 1].x).getUTCMonth() == new Date().getUTCMonth() &&
-            new Date(d[d.length - 1].x).getUTCYear() == new Date().getUTCYear())
+            new Date(d[d.length - 1].x).getUTCFullYear() == new Date().getUTCFullYear())
             d.splice(d.length - 1, 1)
 
         return d;
