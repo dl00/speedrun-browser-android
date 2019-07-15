@@ -19,7 +19,7 @@ const router = Router();
 export function get_wr_chart_longest_holders(wr_chart: Chart): Chart {
     let chart: Chart = {
         item_id: wr_chart.item_id + '_holders',
-        item_type: 'leaderboards',
+        item_type: 'users',
         chart_type: 'list',
         data: {},
         timestamp: new Date()

@@ -106,7 +106,7 @@ export function make_distribution_chart(lb: Leaderboard, vars: Variable[]): Char
 
     let chart: Chart = {
         item_id: `leaderboards_distribution`,
-        item_type: 'leaderboards',
+        item_type: 'runs',
         chart_type: 'line',
         data: {},
         timestamp: new Date()

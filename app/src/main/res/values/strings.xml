@@ -129,4 +129,6 @@
     <string name="chart_desc_wrs">Game completion time by world records over time</string>
     <string name="title_leaderboard_stats">Leaderboard Statistics</string>
     <string name="button_view_leaderboard_info">View Rules/Stats</string>
+    <string name="chart_title_distribution">PB Distribution</string>
+    <string name="chart_desc_distribution">Ever wonder how to know if a world record is impressive or not? Check this chart to see every PB on the leaderboard plotted by time. A steep slope may indicate a higher skill level in order to achieve more optimized times.</string>
 </resources>

@@ -3,6 +3,7 @@ package danb.speedrunbrowser.stats
 import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.RunTimes
+import danb.speedrunbrowser.utils.ItemType
 import java.lang.StringBuilder
 
 class LeaderboardStatisticsActivity : StatisticsActivity() {
@@ -40,7 +41,8 @@ class LeaderboardStatisticsActivity : StatisticsActivity() {
                         builder.toString()
                     },
                     xValueFormat = ::formatMonthYear,
-                    yValueFormat = { RunTimes.format(it) ?: it.toString() }
+                    yValueFormat = { RunTimes.format(it) ?: it.toString() },
+                    chartListViewHolderSource = ItemType.RUNS
             ))
 
             addChart(ChartOptions(
@@ -52,8 +54,8 @@ class LeaderboardStatisticsActivity : StatisticsActivity() {
             ))
 
             addChart(ChartOptions(
-                    name = getString(R.string.chart_title_volume),
-                    description = getString(R.string.chart_desc_volume),
+                    name = getString(R.string.chart_title_distribution),
+                    description = getString(R.string.chart_desc_distribution),
                     identifier = "distribution",
                     setLabels = { v -> chartData!!.category?.variables?.find { it.id == v }?.name ?: v },
                     yValueFormat = { RunTimes.format(it) ?: it.toString() }

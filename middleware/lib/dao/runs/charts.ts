@@ -34,7 +34,7 @@ export class RecordChartIndex implements IndexDriver<LeaderboardRunEntry> {
 
         let chart: Chart = {
             item_id: leaderboard_id,
-            item_type: 'leaderboards',
+            item_type: 'runs',
             chart_type: 'line',
             data: {},
             timestamp: new Date()
@@ -161,7 +161,7 @@ export async function get_player_pb_chart(conf: DaoConfig<LeaderboardRunEntry>, 
 
     let chart: Chart = {
         item_id: `${player_id}_${game_id}`,
-        item_type: 'games',
+        item_type: 'runs',
         chart_type: 'line',
         data: {},
         timestamp: new Date()

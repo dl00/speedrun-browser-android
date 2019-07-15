@@ -156,4 +156,12 @@ object Util {
 
         prefs.edit().putString(Constants.PREF_LAST_APP_VERSION, BuildConfig.VERSION_NAME).apply()
     }
+
+    fun showInfoDialog(context: Context, text: String) {
+        AlertDialog.Builder(context, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+                .setIcon(R.drawable.baseline_info_white_24)
+                .setMessage(text)
+                .setNeutralButton(android.R.string.ok, null)
+                .show()
+    }
 }

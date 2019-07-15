@@ -2,8 +2,13 @@ package danb.speedrunbrowser.stats
 
 import android.content.Context
 import android.graphics.Color
+import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
+import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.ListView
+import android.widget.TextView
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
 import com.github.mikephil.charting.charts.CombinedChart
@@ -15,6 +20,8 @@ import com.github.mikephil.charting.utils.ColorTemplate
 import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.objects.Chart
 import danb.speedrunbrowser.api.objects.ChartData
+import danb.speedrunbrowser.utils.ViewPagerAdapter
+import danb.speedrunbrowser.utils.Util
 import io.reactivex.disposables.CompositeDisposable
 
 fun Chart.generateMpLineSetData(context: Context, labels: (v: String) -> String): LineData {
@@ -71,10 +78,9 @@ fun Chart.generateMpBarSetData(context: Context, labels: (v: String) -> String):
     return mpdata
 }
 
-class ChartView(ctx: Context, val options: ChartOptions) : LinearLayout(ctx) {
+class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx) {
 
     private var graph: CombinedChart? = null
-    private var list: ViewPager? = null
 
     private var disposables: CompositeDisposable = CompositeDisposable()
 
@@ -83,6 +89,17 @@ class ChartView(ctx: Context, val options: ChartOptions) : LinearLayout(ctx) {
         field = value
         applyData()
     }
+
+    init {
+        View.inflate(context, R.layout.content_chart_view, this)
+
+        findViewById<TextView>(R.id.textChartTitle).text = options.name
+        findViewById<ImageView>(R.id.buttonShowChartInfo).setOnClickListener {
+            Util.showInfoDialog(context, options.description)
+        }
+    }
+
+    private val listPager: ViewPager = findViewById(R.id.pagerChartList)
 
     private fun initializeChart(chartType: String): CombinedChart {
         val chart = CombinedChart(context)
@@ -142,19 +159,29 @@ class ChartView(ctx: Context, val options: ChartOptions) : LinearLayout(ctx) {
         return chart
     }
 
-    private fun initializeList(d: Map<String, List<ChartData>>): ViewPager {
-        return ViewPager(context)
+    private fun buildChartList() {
+        val adapter = ViewPagerAdapter()
+
+        for(entry in chartData!!.data) {
+            val lv = RecyclerView(context)
+            lv.layoutManager = LinearLayoutManager(context)
+            lv.adapter = ChartDataAdapter(entry.value)
+            lv.minimumHeight = 300
+            adapter.views.add(lv)
+        }
+
+        listPager.adapter = adapter
     }
 
     private fun applyData() {
         val data = chartData ?: return
 
-        if(graph == null && list == null) {
+        if(graph == null) {
             // first init
             when(data.chart_type) {
                 "line", "bar" -> {
                     graph = initializeChart(data.chart_type)
-                    addView(graph)
+                    findViewById<FrameLayout>(R.id.frameChart).addView(graph)
 
                     val cd = CombinedData()
 
@@ -171,17 +198,15 @@ class ChartView(ctx: Context, val options: ChartOptions) : LinearLayout(ctx) {
                         graph!!.xAxis.axisMaximum = graph!!.barData.xMax + 0.5f
                     }
 
-                    graph!!.xAxis.labelRotationAngle = -45.0f
+                    graph!!.xAxis.labelRotationAngle = -30.0f
 
                     graph!!.invalidate()
 
                     if(options.chartListViewHolderSource != null) {
-                        list = initializeList(data.data)
+                        buildChartList()
                     }
                 }
                 "list" -> {
-                    list = initializeList(data.data)
-
                     // load the list with data
                 }
             }
@@ -195,13 +220,14 @@ class ChartView(ctx: Context, val options: ChartOptions) : LinearLayout(ctx) {
         disposables.dispose()
     }
 
-    inner class ChartDataAdapter(val chartData: List<ChartData>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    inner class ChartDataAdapter(private val chartData: List<ChartData>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
             options.chartListViewHolderSource!!.newViewHolder(context, parent)
 
         override fun getItemCount(): Int = chartData.size
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+            println("RENDER " + position + ", " + chartData[position].obj)
             val d = chartData[position]
             if(d.obj != null)
                 options.chartListViewHolderSource!!.applyToViewHolder(context, disposables, holder, d.obj)
