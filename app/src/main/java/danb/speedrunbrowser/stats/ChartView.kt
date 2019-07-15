@@ -2,26 +2,19 @@ package danb.speedrunbrowser.stats
 
 import android.content.Context
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
-import android.widget.BaseAdapter
 import android.widget.LinearLayout
-import android.widget.ListView
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
-import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.charts.CombinedChart
-import com.github.mikephil.charting.components.Description
-import com.github.mikephil.charting.components.MarkerView
+import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.utils.ColorTemplate
 import danb.speedrunbrowser.R
-import danb.speedrunbrowser.api.objects.BarChartData
 import danb.speedrunbrowser.api.objects.Chart
 import danb.speedrunbrowser.api.objects.ChartData
-import danb.speedrunbrowser.api.objects.LineChartData
 import io.reactivex.disposables.CompositeDisposable
 
 fun Chart.generateMpLineSetData(context: Context, labels: (v: String) -> String): LineData {
@@ -29,14 +22,27 @@ fun Chart.generateMpLineSetData(context: Context, labels: (v: String) -> String)
 
     val datasets = this.data.mapValues {
         it.value.map { vv ->
-            val v = vv as LineChartData
-            Entry(v.x, v.y, v.obj)
+            Entry(vv.x, vv.y, vv.obj)
         }
     }
 
+    var curColor = 0
     datasets.forEach {
-        mpdata.addDataSet(LineDataSet(it.value, labels(it.key)))
+
+        val dataset = LineDataSet(it.value, labels(it.key))
+
+        val color = ColorTemplate.VORDIPLOM_COLORS[curColor++ % ColorTemplate.VORDIPLOM_COLORS.size]
+
+        dataset.color = color
+        dataset.setCircleColor(color)
+        dataset.circleHoleColor = context.resources.getColor(R.color.colorPrimary)
+        dataset.circleRadius = 5f
+        dataset.circleHoleRadius = 3f
+
+        mpdata.addDataSet(dataset)
     }
+
+    mpdata.setDrawValues(false)
 
     return mpdata
 }
@@ -47,8 +53,7 @@ fun Chart.generateMpBarSetData(context: Context, labels: (v: String) -> String):
     val datasets = this.data.mapValues {
         var i = 0
         it.value.map { vv ->
-            val v = vv as BarChartData
-            BarEntry(i++.toFloat(), v.y, v.x)
+            BarEntry(i++.toFloat(), vv.y, vv.x)
         }
     }
 
@@ -90,10 +95,15 @@ class ChartView(ctx: Context, val options: ChartOptions) : LinearLayout(ctx) {
         chart.xAxis.textColor = Color.WHITE
         chart.xAxis.position = XAxis.XAxisPosition.BOTTOM
         chart.xAxis.setAvoidFirstLastClipping(true)
-        chart.axisRight.textColor = Color.WHITE
+        chart.xAxis.setDrawGridLines(false)
+        chart.axisRight.isEnabled = false
         chart.legend.textColor = Color.WHITE
+        chart.legend.orientation = Legend.LegendOrientation.VERTICAL
+        chart.legend.horizontalAlignment = Legend.LegendHorizontalAlignment.RIGHT
+        chart.legend.verticalAlignment = Legend.LegendVerticalAlignment.TOP
         chart.description.isEnabled = false
-        chart.background = ColorDrawable(Color.TRANSPARENT)
+
+        chart.setDrawGridBackground(false)
 
         chart.isScaleXEnabled = false
         chart.isScaleYEnabled = false
@@ -121,7 +131,7 @@ class ChartView(ctx: Context, val options: ChartOptions) : LinearLayout(ctx) {
             }
         }
 
-        val markerView = XYMarkerView(context, chart.xAxis.valueFormatter)
+        val markerView = XYMarkerView(context, chart.xAxis.valueFormatter, chart.axisLeft.valueFormatter)
         markerView.chartView = chart
         chart.marker = markerView
 
@@ -150,7 +160,7 @@ class ChartView(ctx: Context, val options: ChartOptions) : LinearLayout(ctx) {
 
                     if(data.chart_type == "line")
                         cd.setData(data.generateMpLineSetData(context, options.setLabels))
-                    if(data.chart_type == "bar")
+                    else if(data.chart_type == "bar")
                         cd.setData(data.generateMpBarSetData(context, options.setLabels))
 
                     graph!!.data = cd
@@ -159,8 +169,9 @@ class ChartView(ctx: Context, val options: ChartOptions) : LinearLayout(ctx) {
                     if(data.chart_type == "bar") {
                         graph!!.xAxis.axisMinimum = -0.5f
                         graph!!.xAxis.axisMaximum = graph!!.barData.xMax + 0.5f
-                        graph!!.xAxis.labelRotationAngle = -45.0f
                     }
+
+                    graph!!.xAxis.labelRotationAngle = -45.0f
 
                     graph!!.invalidate()
 
@@ -192,12 +203,8 @@ class ChartView(ctx: Context, val options: ChartOptions) : LinearLayout(ctx) {
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
             val d = chartData[position]
-            val obj = when(d) {
-                is LineChartData -> d.obj
-                is BarChartData -> null
-            }
-
-            //options.chartListViewHolderSource!!.applyToViewHolder(context, disposables, holder, )
+            if(d.obj != null)
+                options.chartListViewHolderSource!!.applyToViewHolder(context, disposables, holder, d.obj)
         }
     }
 }

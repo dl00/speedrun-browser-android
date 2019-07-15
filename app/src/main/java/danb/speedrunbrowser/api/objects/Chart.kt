@@ -45,12 +45,15 @@ data class Chart(
             val obj = json.asJsonObject
 
             val chartType = obj.getNotNull("chart_type")!!.asString
+            val itemType = obj.getNotNull("item_type")!!.asString
 
-            val chartDataType = when(chartType) {
-                "line" -> object : TypeToken<Map<String, List<LineChartData>>>() {}.type
-                "bar" -> object : TypeToken<Map<String, List<BarChartData>>>() {}.type
-                "pie" -> object : TypeToken<Map<String, List<PieChartData>>>() {}.type
-                else -> null
+            var dataMap = mutableMapOf<String, List<ChartData>>()
+
+            val chartData = obj.getNotNull("data")!!.asJsonObject
+
+            for(entry in chartData.entrySet()) {
+                dataMap[entry.key] =
+                        entry.value.asJsonArray.map { ChartData.deserialize(it, context, itemType) }
             }
 
             return Chart(
@@ -58,26 +61,34 @@ data class Chart(
                 item_type = obj.getNotNull("item_type")!!.asString,
                 chart_type = chartType,
                 timestamp = fromISO8601UTC(obj.getNotNull("timestamp")!!.asString),
-                data = context.deserialize(obj.get("data"), chartDataType)
+                data = dataMap
             )
         }
     }
 }
 
-sealed class ChartData
-
-data class LineChartData(
+data class ChartData(
         val x: Float,
         val y: Float,
-        val obj: JsonObject
-): ChartData()
+        val obj: Any?
+) {
+    companion object {
+        fun deserialize(json: JsonElement, context: JsonDeserializationContext, itemType: String): ChartData {
 
-data class BarChartData(
-        val x: Float,
-        val y: Float
-): ChartData()
+            val obj = json.asJsonObject
 
-data class PieChartData(
-        val x: String,
-        val y: Float
-)
+            val t = when(itemType) {
+                "games" -> Game::class.java
+                "users" -> User::class.java
+                "runs" -> Run::class.java
+                else -> null
+            }
+
+            return ChartData(
+                x = context.deserialize(obj.get("x"), Float::class.java),
+                y = context.deserialize(obj.get("y"), Float::class.java),
+                obj = if(t == null || obj.get("obj")?.isJsonNull != false) null else context.deserialize(obj.getNotNull("obj"), t)
+            )
+        }
+    }
+}

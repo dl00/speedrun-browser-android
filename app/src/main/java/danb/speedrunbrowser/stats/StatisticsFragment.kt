@@ -29,6 +29,7 @@ class StatisticsFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIChartDa
         super.onAttach(context)
 
         layout = LinearLayout(context)
+        layout.orientation = LinearLayout.VERTICAL
     }
 
     override fun onCreateView(inflater: LayoutInflater,

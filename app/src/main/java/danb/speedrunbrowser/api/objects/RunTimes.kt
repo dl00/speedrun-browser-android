@@ -56,13 +56,15 @@ data class RunTimes(
         return format(readTime(ingame))
     }
 
-    private fun format(t: Float?): String? {
+    companion object {
+        fun format(t: Float?): String? {
 
-        if(t == null)
-            return null
+            if(t == null)
+                return null
 
-        return (if (t >= 3600) (t.toInt() / 3600).toString() + "h " else "") + // hours
-                (if (t >= 60) ((t % 3600).toInt() / 60).toString() + "m " else "") + // minutes
-                DecimalFormat("0.##").format((t % 60).toDouble()) + "s" // seconds
+            return (if (t >= 3600) (t.toInt() / 3600).toString() + "h " else "") + // hours
+                    (if (t >= 60) ((t % 3600).toInt() / 60).toString() + "m " else "") + // minutes
+                    DecimalFormat("0.##").format((t % 60).toDouble()) + "s" // seconds
+        }
     }
 }

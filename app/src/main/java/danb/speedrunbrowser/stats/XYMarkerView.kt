@@ -7,6 +7,7 @@ import com.github.mikephil.charting.components.MarkerView
 import android.annotation.SuppressLint
 import android.content.Context
 import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.formatter.DefaultAxisValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
 import danb.speedrunbrowser.R
 import java.text.DecimalFormat
@@ -16,22 +17,18 @@ import java.text.DecimalFormat
  * Source: https://github.com/PhilJay/MPAndroidChart/blob/e5b66192e7b303d7d25fc172b1878c055b554047/MPChartExample/src/main/java/com/xxmassdeveloper/mpchartexample/custom/XYMarkerView.java
  */
 @SuppressLint("ViewConstructor")
-class XYMarkerView(context: Context, private val xAxisValueFormatter: ValueFormatter) : MarkerView(context, R.layout.content_chart_marker) {
+class XYMarkerView(context: Context,
+                   private val xAxisValueFormatter: ValueFormatter,
+                   private val yAxisValueFormatter: ValueFormatter
+) : MarkerView(context, R.layout.content_chart_marker) {
 
-    private val tvContent: TextView
-
-    private val format: DecimalFormat
-
-    init {
-        tvContent = findViewById(R.id.txtMarkerContent)
-        format = DecimalFormat("###.#")
-    }
+    private val tvContent: TextView = findViewById(R.id.txtMarkerContent)
 
     // runs every time the MarkerView is redrawn, can be used to update the
     // content (user-interface)
     override fun refreshContent(e: Entry, highlight: Highlight) {
 
-        tvContent.text = String.format("%s: %s", xAxisValueFormatter.getFormattedValue(e.x), format.format(e.y))
+        tvContent.text = String.format("%s: %s", xAxisValueFormatter.getFormattedValue(e.x), yAxisValueFormatter.getFormattedValue(e.y))
 
         super.refreshContent(e, highlight)
     }

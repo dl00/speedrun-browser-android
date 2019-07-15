@@ -116,11 +116,16 @@ export function make_distribution_chart(lb: Leaderboard, vars: Variable[]): Char
         for(let i = 0;i < lb.runs.length;i++) {
             let run = lb.runs[i];
 
-            let subcategory_id = '';
-
-            for(let v of subcategory_vars) {
-                subcategory_id += run.run.values[v.id];
-            }
+            let subcategory_id;
+            if(!subcategory_vars.length)
+                subcategory_id = 'main';
+            else
+                subcategory_id = _.chain(run.run.values)
+                    .pick(...subcategory_vars)
+                    .toPairs()
+                    .flatten()
+                    .join('_')
+                    .value();
 
             let p = {
                 x: i,
