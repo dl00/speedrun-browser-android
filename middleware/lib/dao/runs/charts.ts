@@ -34,6 +34,7 @@ export class RecordChartIndex implements IndexDriver<LeaderboardRunEntry> {
 
         let chart: Chart = {
             item_id: leaderboard_id,
+            parent_type: 'leaderboards',
             item_type: 'runs',
             chart_type: 'line',
             data: {},
