@@ -50,7 +50,7 @@ export function get_wr_chart_longest_holders(wr_chart: Chart): Chart {
     return chart;
 }
 
-router.get('/site', async (req, res) => {
+router.get('/site', async (_req, res) => {
 
     let run_dao = new RunDao(api.storedb!);
 
@@ -82,7 +82,7 @@ router.get('/games/:id', async (req, res) => {
     let game = (await game_dao.load(game_id))[0];
 
     if(!game)
-        return api_response.error(res, api_response.err.NOT_FOUND);
+        return api_response.error(res, api_response.err.NOT_FOUND());
 
     /// run submission volume over the last 12 months
     let volume_chart = await run_dao.get_game_submission_volume(game_id);
@@ -118,14 +118,17 @@ router.get('/leaderboards/:id', async(req, res) => {
     let leaderboard = (await leaderboard_dao.load(leaderboard_id))[0]!;
     let category = (await category_dao.load(category_id))[0]!;
 
-    let game = (await game_dao.load(category.game))[0]!;
+    if(!category)
+        return api_response.error(res, api_response.err.NOT_FOUND());
+
+    let game = (await game_dao.load(category.game!))[0]!;
 
     let level = null;
     if(level_id)
         level = (await level_dao.load(level_id))[0];
 
-    if(!game || !level)
-        return api_response.error(res, api_response.err.NOT_FOUND);
+    if(!game)
+        return api_response.error(res, api_response.err.NOT_FOUND());
 
     // word records chartify
     let wr_chart = (await chart_dao.load(`leaderboards_${leaderboard_id}`))[0];
