@@ -4,10 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.ImageView
-import android.widget.ListView
-import android.widget.TextView
+import android.widget.*
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
@@ -16,12 +13,15 @@ import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.highlight.Highlight
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.github.mikephil.charting.utils.ColorTemplate
 import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.objects.Chart
 import danb.speedrunbrowser.api.objects.ChartData
 import danb.speedrunbrowser.utils.ViewPagerAdapter
 import danb.speedrunbrowser.utils.Util
+import danb.speedrunbrowser.views.SimpleTabStrip
 import io.reactivex.disposables.CompositeDisposable
 
 fun Chart.generateMpLineSetData(context: Context, labels: (v: String) -> String): LineData {
@@ -78,7 +78,7 @@ fun Chart.generateMpBarSetData(context: Context, labels: (v: String) -> String):
     return mpdata
 }
 
-class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx) {
+class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnChartValueSelectedListener {
 
     private var graph: CombinedChart? = null
 
@@ -99,6 +99,8 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx) {
         }
     }
 
+    private val listContainer: LinearLayout = findViewById(R.id.layoutChartListContainer)
+    private val listTabs: SimpleTabStrip = findViewById(R.id.tabsChartList)
     private val listPager: ViewPager = findViewById(R.id.pagerChartList)
 
     private fun initializeChart(chartType: String): CombinedChart {
@@ -124,8 +126,6 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx) {
 
         chart.isScaleXEnabled = false
         chart.isScaleYEnabled = false
-
-
 
         if(options.xValueFormat != null) {
             chart.xAxis.valueFormatter = object : ValueFormatter() {
@@ -167,10 +167,11 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx) {
             lv.layoutManager = LinearLayoutManager(context)
             lv.adapter = ChartDataAdapter(entry.value)
             lv.minimumHeight = 300
-            adapter.views.add(lv)
+            adapter.views.add(options.setLabels(entry.key) to lv)
         }
 
         listPager.adapter = adapter
+        listTabs.setup(listPager)
     }
 
     private fun applyData() {
@@ -205,6 +206,8 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx) {
                     if(options.chartListViewHolderSource != null) {
                         buildChartList()
                     }
+                    else
+                        listContainer.visibility = View.GONE
                 }
                 "list" -> {
                     // load the list with data
@@ -216,18 +219,32 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx) {
         }
     }
 
+
+    override fun onNothingSelected() {
+
+    }
+
+    override fun onValueSelected(e: Entry?, h: Highlight?) {
+
+    }
+
     fun cleanup() {
         disposables.dispose()
     }
 
     inner class ChartDataAdapter(private val chartData: List<ChartData>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
             options.chartListViewHolderSource!!.newViewHolder(context, parent)
 
         override fun getItemCount(): Int = chartData.size
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-            val d = chartData[position]
+            val d = if(options.chartListReverse)
+                chartData[chartData.size - 1 - position]
+            else
+                chartData[position]
+
             if(d.obj != null)
                 options.chartListViewHolderSource!!.applyToViewHolder(context, disposables, holder, d.obj)
         }

@@ -34,6 +34,8 @@ import androidx.fragment.app.FragmentActivity
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry
 import danb.speedrunbrowser.api.objects.User
+import danb.speedrunbrowser.stats.GameStatisticsActivity
+import danb.speedrunbrowser.stats.PlayerStatisticsActivity
 import danb.speedrunbrowser.utils.Analytics
 import danb.speedrunbrowser.utils.AppDatabase
 import danb.speedrunbrowser.utils.ConnectionErrorConsumer
@@ -142,6 +144,10 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.menu_subscribe) {
             toggleSubscribed()
+            return true
+        }
+        else if(item.itemId == R.id.menu_stats) {
+            viewStats()
             return true
         }
 
@@ -372,6 +378,14 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
         val intent = Intent(context, RunDetailActivity::class.java)
         intent.putExtra(RunDetailActivity.EXTRA_RUN_ID, runId)
         startActivity(intent)
+    }
+
+    private fun viewStats() {
+        if(mPlayer != null) {
+            val intent = Intent(context!!, PlayerStatisticsActivity::class.java)
+            intent.putExtra(PlayerStatisticsActivity.EXTRA_PLAYER_ID, mPlayer!!.id)
+            startActivity(intent)
+        }
     }
 
     private class PersonalBestRunRow(categoryName: String, levelName: String?, var re: LeaderboardRunEntry) {

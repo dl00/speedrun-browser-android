@@ -23,5 +23,7 @@ data class ChartOptions(
 
         val chartListViewHolderSource: ViewHolderSource? = null,
 
+        val chartListReverse: Boolean = false,
+
         val orientation: ChartOrientation = ChartOrientation.HORIZONTAL
 )

@@ -25,6 +25,8 @@ class StatisticsFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIChartDa
 
     var chartData: SpeedrunMiddlewareAPI.APIChartData? = null
 
+    var onDataReadyListener: ((data: SpeedrunMiddlewareAPI.APIChartData) -> Unit)? = null
+
     override fun onAttach(context: Context) {
         super.onAttach(context)
 
@@ -57,6 +59,9 @@ class StatisticsFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIChartDa
                         else -> {}
                     }
                 }
+
+                if(onDataReadyListener != null)
+                    onDataReadyListener!!(it)
             }
     }
 

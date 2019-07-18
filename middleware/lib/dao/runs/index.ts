@@ -218,6 +218,11 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         this.id_key = _.property('run.id');
 
         // TODO: these mongodb indexes are just hardcoded in here for now...
+        // at least this first index for mongodb is overkill, its just used for an aggregation
+        db.mongo.collection(this.collection).createIndex({
+            'run.date': 1
+        }, {partialFilterExpression: {'run.status.status': 'verified'}});
+
         db.mongo.collection(this.collection).createIndex({
             'run.game.id': 1,
             'run.date': 1
@@ -264,6 +269,42 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
     protected async pre_store_transform(run: LeaderboardRunEntry): Promise<LeaderboardRunEntry> {
         normalize_run(<Run>run.run);
         return run;
+    }
+
+    async get_historical_run_count(): Promise<Chart> {
+        let month_bounaries: string[] = generate_month_boundaries(2010, new Date().getUTCFullYear() + 1);
+
+        let data = (await this.db.mongo.collection(this.collection).aggregate([
+            {
+                $match: {'run.status.status': 'verified'}
+            },
+            {
+                $facet: _.chain(month_bounaries)
+                        .map((v) => {
+                            return [v, [{$match: {'run.date': {$lt: v}}}, {$count: 'y'}]]
+                        })
+                        .fromPairs()
+                        .value()
+            }
+        ]).toArray())[0];
+
+        return {
+            item_id: 'site',
+            item_type: 'runs',
+            chart_type: 'line',
+            data: {
+                'main': _.chain(data)
+                    .mapValues((v, k) => {
+                        return {
+                            x: new Date(k).getTime() / 1000,
+                            y: v.y
+                        }
+                    })
+                    .values()
+                    .value()
+            },
+            timestamp: new Date()
+        };
     }
 
     private async get_submission_volume(filter: any) {
@@ -319,6 +360,18 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         return d;
     }
 
+    async get_site_submission_volume(): Promise<Chart> {
+        return {
+            item_id: 'site',
+            item_type: 'runs',
+            chart_type: 'bar',
+            data: {
+                'main': await this.get_submission_volume({ 'run.status.status': 'verified' })
+            },
+            timestamp: new Date()
+        };
+    }
+
     async get_leaderboard_submission_volume(category_id: string, level_id: string|null): Promise<Chart> {
         let filter: any = {
             'run.category.id': category_id,
@@ -354,6 +407,21 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         }
     }
 
+    async get_player_submission_volume(player_id: string): Promise<Chart> {
+        return {
+            item_id: player_id,
+            item_type: 'runs',
+            chart_type: 'bar',
+            data: {
+                'main': await this.get_submission_volume({
+                    'run.player.id': player_id,
+                    'run.status.status': 'verified'
+                })
+            },
+            timestamp: new Date()
+        }
+    }
+
     async get_player_favorite_runs(player_id: string): Promise<Chart> {
         let chart_data = await this.db.mongo.collection(this.collection).aggregate([
             {
@@ -364,7 +432,8 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             {
                 $group: {
                     _id: '$run.game.id',
-                    count: {$sum: 1}
+                    count: {$sum: 1},
+                    game: '$run.game'
                 }
             },
             {
@@ -382,8 +451,9 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
                 'main': _.chain(chart_data)
                 .map(p => {
                     return {
-                        x: p._id,
-                        y: p.count
+                        x: 0,
+                        y: p.count,
+                        obj: p.game
                     }
                 })
                 .value()

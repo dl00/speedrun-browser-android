@@ -37,9 +37,23 @@
 
     </FrameLayout>
 
-    <androidx.viewpager.widget.ViewPager
-        android:id="@+id/pagerChartList"
+    <LinearLayout
+        android:id="@+id/layoutChartListContainer"
         android:layout_width="match_parent"
-        android:layout_height="300dp" />
+        android:layout_height="300dp"
+        android:orientation="vertical">
+
+        <danb.speedrunbrowser.views.SimpleTabStrip
+            android:id="@+id/tabsChartList"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tab_height" />
+
+        <androidx.viewpager.widget.ViewPager
+            android:id="@+id/pagerChartList"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+    </LinearLayout>
 
 </LinearLayout>

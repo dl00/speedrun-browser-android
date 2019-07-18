@@ -1,33 +1,54 @@
 package danb.speedrunbrowser.stats
 
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.view.View
-import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.LinearLayout
 import android.widget.ScrollView
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
+import danb.speedrunbrowser.api.objects.Category
+import danb.speedrunbrowser.api.objects.Variable
 import io.reactivex.Observable
 
 abstract class StatisticsActivity : AppCompatActivity() {
 
     private lateinit var rootFrag: StatisticsFragment
 
+    var onDataReadyListener: ((data: SpeedrunMiddlewareAPI.APIChartData) -> Unit)?
+    get() = rootFrag.onDataReadyListener
+    set(value) { rootFrag.onDataReadyListener = value }
+
     protected val chartData: SpeedrunMiddlewareAPI.APIChartData?
     get() = rootFrag.chartData
+
+    protected lateinit var contentView: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        contentView = LinearLayout(this)
+        contentView.orientation = LinearLayout.VERTICAL
+
+        val statsFrame = FrameLayout(this)
+        statsFrame.id = View.generateViewId()
+
+        val rootLayout = LinearLayout(this)
+        rootLayout.addView(contentView)
+        rootLayout.addView(statsFrame)
+
         val sv = ScrollView(this)
-        sv.id = View.generateViewId()
+        sv.addView(rootLayout)
+
         setContentView(sv)
 
         if(savedInstanceState == null) {
             rootFrag = StatisticsFragment()
 
             supportFragmentManager.beginTransaction()
-                    .add(sv.id, rootFrag)
+                    .add(statsFrame.id, rootFrag)
                     .commit()
 
         }
@@ -52,11 +73,5 @@ abstract class StatisticsActivity : AppCompatActivity() {
             // TODO: Check for error
             it.data
         })
-    }
-
-    companion object {
-        private val TAG = StatisticsActivity::class.java.simpleName
-
-        protected val MAIN_FRAGMENT_ID = "main"
     }
 }

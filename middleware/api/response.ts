@@ -62,6 +62,12 @@ export const err = {
             msg: 'number of requested items is too large. please reduce your request item count.'
         };
     },
+    NOT_FOUND: () => {
+        return {
+            code: 404,
+            msg: 'id does not exist'
+        };
+    },
     INVALID_PARAMS: (invalid: string[], hint?: string) => {
         return {
             code: 400,

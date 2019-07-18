@@ -11,6 +11,9 @@ import android.widget.TextView
 import com.google.android.flexbox.FlexboxLayout
 
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.flexbox.AlignContent
+import com.google.android.flexbox.AlignItems
+import com.google.android.flexbox.JustifyContent
 import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry
@@ -19,7 +22,7 @@ import danb.speedrunbrowser.utils.ImageLoader
 import danb.speedrunbrowser.utils.ImageViewPlacerConsumer
 import io.reactivex.disposables.CompositeDisposable
 
-class RunViewHolder(v: View) : RecyclerView.ViewHolder(v) {
+class RunViewHolder(v: View, val showRank: Boolean = true) : RecyclerView.ViewHolder(v) {
 
     private val mPlayerNames: FlexboxLayout = v.findViewById(R.id.txtPlayerNames)
     private val mRunTime: TextView = v.findViewById(R.id.txtRunTime)
@@ -50,7 +53,13 @@ class RunViewHolder(v: View) : RecyclerView.ViewHolder(v) {
 
         mRunTime.text = entry.run.times!!.time
         mRunDate.text = entry.run.date
-        mRank.text = entry.placeName
+
+        if(showRank)
+            mRank.text = entry.placeName
+        else {
+            (mRank.parent as View).visibility = View.GONE
+            mPlayerNames.justifyContent = JustifyContent.FLEX_START
+        }
 
         val il = ImageLoader(context)
 

@@ -2,9 +2,8 @@ package danb.speedrunbrowser.stats
 
 import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
-import danb.speedrunbrowser.api.objects.makeCategoryNameText
 
-class GameStatisticsActivity : StatisticsActivity() {
+class SiteStatisticsActivity : StatisticsActivity() {
     override fun onStart() {
         super.onStart()
 
@@ -12,9 +11,13 @@ class GameStatisticsActivity : StatisticsActivity() {
 
         if(gameId != null) {
 
-            onDataReadyListener = {
-                title = it.game!!.names["international"]
-            }
+            addChart(ChartOptions(
+                    name = getString(R.string.chart_title_count_over_time),
+                    description = getString(R.string.chart_title_count_over_time),
+                    identifier = "count_over_time",
+                    setLabels = { getString(R.string.chart_legend_volume) },
+                    xValueFormat = ::formatMonthYear
+            ))
 
             addChart(ChartOptions(
                     name = getString(R.string.chart_title_volume),

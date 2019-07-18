@@ -50,12 +50,41 @@ export function get_wr_chart_longest_holders(wr_chart: Chart): Chart {
     return chart;
 }
 
+router.get('/site', async (req, res) => {
+
+    let run_dao = new RunDao(api.storedb!);
+
+    // total run count over time
+    let count_over_time_chart = await run_dao.get_historical_run_count();
+
+    // submitted run volume
+    let volume_chart = await run_dao.get_site_submission_volume();
+
+    // metric: hours recorded in PBs by speedrunners
+
+    // metric: game with the most speedruns this month
+
+    api_response.complete_single(res, {
+        charts: {
+            count_over_time: count_over_time_chart,
+            volume: volume_chart
+        }
+    });
+});
+
 router.get('/games/:id', async (req, res) => {
 
     let game_id = req.params.id;
 
-    /// run submission volume over the last 12 months
+    let game_dao = new GameDao(api.storedb!);
     let run_dao = new RunDao(api.storedb!);
+
+    let game = (await game_dao.load(game_id))[0];
+
+    if(!game)
+        return api_response.error(res, api_response.err.NOT_FOUND);
+
+    /// run submission volume over the last 12 months
     let volume_chart = await run_dao.get_game_submission_volume(game_id);
 
     /// all time longest world record holders overall
@@ -64,9 +93,8 @@ router.get('/games/:id', async (req, res) => {
     /// fastest improving runners, runners who have come out of nowhere/improved/relevant recently
 
 
-
-
     api_response.complete_single(res, {
+        game: game,
         charts: {
             volume: volume_chart
         }
@@ -82,17 +110,22 @@ router.get('/leaderboards/:id', async(req, res) => {
 
     let chart_dao = new ChartDao(api.storedb!);
     let leaderboard_dao = new LeaderboardDao(api.storedb!);
+    let game_dao = new GameDao(api.storedb!);
     let category_dao = new CategoryDao(api.storedb!);
     let level_dao = new LevelDao(api.storedb!);
     let run_dao = new RunDao(api.storedb!);
 
-
     let leaderboard = (await leaderboard_dao.load(leaderboard_id))[0]!;
     let category = (await category_dao.load(category_id))[0]!;
+
+    let game = (await game_dao.load(category.game))[0]!;
 
     let level = null;
     if(level_id)
         level = (await level_dao.load(level_id))[0];
+
+    if(!game || !level)
+        return api_response.error(res, api_response.err.NOT_FOUND);
 
     // word records chartify
     let wr_chart = (await chart_dao.load(`leaderboards_${leaderboard_id}`))[0];
@@ -108,6 +141,7 @@ router.get('/leaderboards/:id', async(req, res) => {
     // fastest improving runners, runners who have come out of nowhere/improved/relevant recently (repackaging of player pb chart)
 
     api_response.complete_single(res, {
+        game: game,
         category: category,
         level: level,
         charts: {
@@ -128,11 +162,13 @@ router.get('/users/:id', async (req, res) => {
 
     /// calculate "favorite" games by count of runs
     let favorite_games_chart = await run_dao.get_player_favorite_runs(player_id);
+    let volume_chart = await run_dao.get_player_submission_volume(player_id);
 
     api_response.complete_single(res, {
         player: player,
         charts: {
-            favorite_games: favorite_games_chart
+            favorite_games: favorite_games_chart,
+            volume: volume_chart
         }
     });
 });

@@ -41,11 +41,26 @@
             android:layout_height="300dp"
             android:layout_weight="1" />
 
-        <androidx.viewpager.widget.ViewPager
-            android:id="@+id/pagerChartList"
+        <LinearLayout
+            android:id="@+id/layoutChartListContainer"
             android:layout_width="0dp"
             android:layout_height="300dp"
-            android:layout_weight="1" />
+            android:orientation="vertical"
+            android:layout_weight="1">
+
+            <danb.speedrunbrowser.views.SimpleTabStrip
+                android:id="@+id/tabsChartList"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/tab_height" />
+
+            <androidx.viewpager.widget.ViewPager
+                android:id="@+id/pagerChartList"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                tools:ignore="NestedWeights" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
