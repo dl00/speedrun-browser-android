@@ -28,7 +28,7 @@
     "express": "^4.17.0",
     "firebase-admin": "^7.3.0",
     "ioredis": "^4.9.3",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.14",
     "moment": "^2.24.0",
     "mongodb": "^3.2.5",
     "request": "^2.88.0",
