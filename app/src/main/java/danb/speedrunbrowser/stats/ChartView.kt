@@ -2,11 +2,14 @@ package danb.speedrunbrowser.stats
 
 import android.content.Context
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.SimpleItemAnimator
 import androidx.viewpager.widget.ViewPager
 import com.github.mikephil.charting.charts.CombinedChart
 import com.github.mikephil.charting.components.Legend
@@ -23,20 +26,21 @@ import danb.speedrunbrowser.utils.ViewPagerAdapter
 import danb.speedrunbrowser.utils.Util
 import danb.speedrunbrowser.views.SimpleTabStrip
 import io.reactivex.disposables.CompositeDisposable
+import kotlinx.android.synthetic.main.content_chart_view.view.*
 
 fun Chart.generateMpLineSetData(context: Context, labels: (v: String) -> String): LineData {
     val mpdata = LineData()
 
-    val datasets = this.data.mapValues {
-        it.value.map { vv ->
+    val ds = datasets.map {
+        it to data.getValue(it).map { vv ->
             Entry(vv.x, vv.y, vv.obj)
         }
     }
 
     var curColor = 0
-    datasets.forEach {
+    ds.forEach {
 
-        val dataset = LineDataSet(it.value, labels(it.key))
+        val dataset = LineDataSet(it.second, labels(it.first))
 
         val color = ColorTemplate.VORDIPLOM_COLORS[curColor++ % ColorTemplate.VORDIPLOM_COLORS.size]
 
@@ -57,16 +61,16 @@ fun Chart.generateMpLineSetData(context: Context, labels: (v: String) -> String)
 fun Chart.generateMpBarSetData(context: Context, labels: (v: String) -> String): BarData {
     val mpdata = BarData()
 
-    val datasets = this.data.mapValues {
+    val datasets = datasets.map {
         var i = 0
-        it.value.map { vv ->
+        it to data.getValue(it).map { vv ->
             BarEntry(i++.toFloat(), vv.y, vv.x)
         }
     }
 
 
     datasets.forEach {
-        val dataSet = BarDataSet(it.value, labels(it.key))
+        val dataSet = BarDataSet(it.second, labels(it.first))
 
         dataSet.color = context.resources.getColor(R.color.colorSelected)
 
@@ -89,6 +93,8 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
         field = value
         applyData()
     }
+
+    val listAdapters: MutableList<ChartDataAdapter> = mutableListOf()
 
     init {
         View.inflate(context, R.layout.content_chart_view, this)
@@ -156,18 +162,39 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
 
         chart.layoutParams = lp
 
+        chart.setOnChartValueSelectedListener(this)
+
         return chart
     }
 
     private fun buildChartList() {
         val adapter = ViewPagerAdapter()
 
-        for(entry in chartData!!.data) {
+        chartData!!.datasets.forEachIndexed { index, s ->
             val lv = RecyclerView(context)
             lv.layoutManager = LinearLayoutManager(context)
-            lv.adapter = ChartDataAdapter(entry.value)
+            // disable animations which do not blend well with the rest of the app
+            (lv.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
+
+            val listAdapter = ChartDataAdapter(chartData!!.data.getValue(s), lv)
+
+            // setup events for highlight
+            listAdapter.onClickListener = {
+                println(it)
+                println(chartData!!.data.getValue(s)[it].x)
+
+                val hl = Highlight(chartData!!.data.getValue(s)[it].x, chartData!!.data.getValue(s)[it].y, index)
+                hl.dataIndex = 0
+
+                graph?.highlightValue(hl, false)
+            }
+
+            lv.adapter = listAdapter
+            listAdapters.add(listAdapter)
+
             lv.minimumHeight = 300
-            adapter.views.add(options.setLabels(entry.key) to lv)
+
+            adapter.views.add(options.setLabels(s) to lv)
         }
 
         listPager.adapter = adapter
@@ -220,19 +247,59 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
     }
 
 
+    // chart call functions when things are selected
     override fun onNothingSelected() {
-
+        listAdapters.forEach {
+            it.selectedIndex = null
+        }
     }
 
     override fun onValueSelected(e: Entry?, h: Highlight?) {
 
+        onNothingSelected()
+
+        if(h != null && listAdapters.size != 0) {
+
+            pagerChartList.currentItem = h.dataSetIndex
+
+            val dataIndex = chartData!!.data
+                .getValue(chartData!!.datasets[h.dataSetIndex]).indexOfFirst {
+                    it.obj == e!!.data
+                }
+
+            // this so complicated because h.dataIndex does not include useful data for some reason
+            listAdapters[h.dataSetIndex].selectedIndex = dataIndex
+        }
     }
 
     fun cleanup() {
         disposables.dispose()
     }
 
-    inner class ChartDataAdapter(private val chartData: List<ChartData>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    inner class ChartDataAdapter(private val chartData: List<ChartData>, private val recyclerView: RecyclerView) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+        var selectedIndex: Int? = null
+        set(value) {
+            if(field != null)
+                notifyItemChanged(reversePosition(field!!))
+
+            field = value
+
+            if(value != null) {
+                notifyItemChanged(reversePosition(value))
+
+                recyclerView.scrollToPosition(reversePosition(value))
+            }
+        }
+
+        private fun reversePosition(position: Int): Int {
+            if(options.chartListReverse)
+                return itemCount - 1 - position
+            else
+                return position
+        }
+
+        var onClickListener: ((position: Int) -> Unit)? = null
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
             options.chartListViewHolderSource!!.newViewHolder(context, parent)
@@ -240,13 +307,41 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
         override fun getItemCount(): Int = chartData.size
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-            val d = if(options.chartListReverse)
-                chartData[chartData.size - 1 - position]
-            else
-                chartData[position]
+            val d = chartData[reversePosition(position)]
 
             if(d.obj != null)
                 options.chartListViewHolderSource!!.applyToViewHolder(context, disposables, holder, d.obj)
+
+            if(reversePosition(position) == selectedIndex)
+                holder.itemView.background = ColorDrawable(resources.getColor(R.color.colorAccent))
+            else
+                holder.itemView.background = ColorDrawable(Color.TRANSPARENT)
+
+            holder.itemView.setOnClickListener {
+                selectedIndex = reversePosition(position)
+
+                if(onClickListener != null)
+                    onClickListener!!(selectedIndex!!)
+            }
+        }
+    }
+
+    inner class ChartListSelectionManager {
+        var selectedDataSet: Int? = null
+        set(value) {
+            field = value
+
+            if(value != null)
+                listPager.currentItem = value
+
+            // TODO: show a different design for the selected set
+        }
+
+        var selectedIndex: Int? = null
+        set(value) {
+            field = value
+
+
         }
     }
 }

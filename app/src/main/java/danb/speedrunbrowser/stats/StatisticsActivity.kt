@@ -5,12 +5,8 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
-import danb.speedrunbrowser.api.objects.Category
-import danb.speedrunbrowser.api.objects.Variable
 import io.reactivex.Observable
 
 abstract class StatisticsActivity : AppCompatActivity() {
@@ -38,6 +34,7 @@ abstract class StatisticsActivity : AppCompatActivity() {
         val rootLayout = LinearLayout(this)
         rootLayout.addView(contentView)
         rootLayout.addView(statsFrame)
+        rootLayout.orientation = LinearLayout.VERTICAL
 
         val sv = ScrollView(this)
         sv.addView(rootLayout)

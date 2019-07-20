@@ -10,10 +10,7 @@ import {
 
 import { RedisMapIndex } from './backing/redis';
 
-import { Game, GameDao, game_assets_to_bulk } from './games';
-import { Category, CategoryDao } from './categories';
-import { LevelDao } from './levels';
-import { Leaderboard } from './leaderboards';
+import { game_assets_to_bulk } from './games';
 import { NewRecord } from './runs';
 
 import { BulkGameAssets } from './games';
@@ -210,71 +207,6 @@ export class UserDao extends Dao<User> {
                 if(player.id)
                     new_records.push(
                         apply_personal_best(players[player.id], run));
-            }
-        }
-
-        this.save(_.values(players));
-
-        return <NewRecord[]>_.reject(new_records, _.isNil);
-    }
-
-    // TODO: deprecate this...
-    async apply_leaderboard_bests(lb: Leaderboard, updated_players: {[id: string]: User}): Promise<NewRecord[]> {
-
-        let player_ids = _.chain(lb.runs)
-            .map(v => _.map(v.run.players, 'id'))
-            .flatten()
-            .reject(_.isNil)
-            .uniq()
-            .value();
-
-        if(!player_ids.length)
-            return []; // nothing to do
-
-        let game_id = (<any>lb.game).id || lb.game;
-        let category_id = (<any>lb.category).id || lb.category;
-        let level_id = lb.level;
-
-        // TODO: Parallelize
-
-        let games = await new GameDao(this.db).load(game_id);
-        let categories = await new CategoryDao(this.db).load(category_id);
-        let level = null;
-        if(level_id) {
-            let levels = await new LevelDao(this.db).load(level_id);
-            level = levels[0]!;
-        }
-
-
-        let game: Game = games[0]!;
-        let category: Category = categories[0]!;
-
-        if(!category)
-            return [];
-
-        // store/update player information
-        // TODO: not sure why, but typescript errors with wrong value here?
-        let players = <{[id: string]: User}>_.keyBy(
-            _.filter(await this.load(player_ids), 'id'),
-            'id');
-
-        // set known leaderboard information to player
-        _.merge(players, updated_players);
-
-        if(!_.keys(players).length) {
-            return []; // still nothing
-        }
-
-        let new_records: (NewRecord|null)[] = [];
-
-        for(let run of lb.runs) {
-            let lbr = _.cloneDeep(run);
-            lbr.run.game = game;
-            lbr.run.category = category;
-            lbr.run.level = level;
-
-            for(let player of run.run.players) {
-                new_records.push(apply_personal_best(players[player.id], lbr));
             }
         }
 

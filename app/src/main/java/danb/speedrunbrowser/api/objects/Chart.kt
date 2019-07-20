@@ -31,6 +31,10 @@ data class Chart(
         val timestamp: Date?,
         val data: Map<String, List<ChartData>>
 ) {
+
+    val datasets: List<String>
+        get() = data.keys.sorted()
+
     // need custom serializer/deserializer due to trophy links
     class JsonConverter : JsonSerializer<Chart>, JsonDeserializer<Chart> {
         override fun serialize(src: Chart, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {

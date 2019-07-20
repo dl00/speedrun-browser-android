@@ -110,20 +110,6 @@ export async function pull_game_categories(runid: string, options: any) {
             }, 9);
         }
 
-        if(grouped_categories['per-game']) {
-            for(let category of grouped_categories['per-game']) {
-                await scraper.push_call({
-                    runid: scraper.join_runid([runid, options.id, category.id, 'leaderboard']),
-                    module: 'leaderboard',
-                    exec: 'pull_leaderboard',
-                    options: {
-                        game_id: options.id,
-                        category_id: category.id
-                    }
-                }, 8);
-            }
-        }
-
         await scraper.push_call({
             runid: scraper.join_runid([runid, options.id, 'postprocess']),
             module: 'gamelist',
@@ -140,7 +126,7 @@ export async function pull_game_categories(runid: string, options: any) {
     }
 }
 
-export async function pull_game_levels(runid: string, options: any) {
+export async function pull_game_levels(_runid: string, options: any) {
     try {
         let res = await puller.do_pull(scraper.storedb!, '/games/' + options.id + '/levels');
 
@@ -150,21 +136,6 @@ export async function pull_game_levels(runid: string, options: any) {
             v.game = options.id;
             return v;
         }));
-
-        for(let level of levels) {
-            for(let category_id of options.categories) {
-                await scraper.push_call({
-                    runid: scraper.join_runid([runid, options.id, level.id + '_' + category_id, 'leaderboard']),
-                    module: 'leaderboard',
-                    exec: 'pull_leaderboard',
-                    options: {
-                        game_id: options.id,
-                        category_id: category_id,
-                        level_id: level.id
-                    }
-                }, 8);
-            }
-        }
     }
     catch(err) {
         console.error('loader/gamelist: could not retrieve levels for single game:', options, err.statusCode, err);

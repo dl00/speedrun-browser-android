@@ -3,6 +3,7 @@ import * as _ from 'lodash';
 import { CategoryDao } from '../../lib/dao/categories';
 import { GameDao } from '../../lib/dao/games';
 import { RunDao } from '../../lib/dao/runs';
+import { LeaderboardDao } from '../../lib/dao/leaderboards';
 import { ChartDao, BarChartData } from '../../lib/dao/charts';
 import { load_db, close_db, DB } from '../../lib/db';
 import { load_config } from '../../lib/config';
@@ -62,11 +63,33 @@ describe('RunDao', () => {
             }
         ]);
 
+        await new CategoryDao(db).save([
+            {
+                id: 'a_category_on_genre',
+                game: 'a_game_with_genre',
+                name: 'Testing',
+                type: 'per-game',
+                weblink: '',
+                miscellaneous: false,
+                variables: []
+            },
+            {
+                id: 'a_category',
+                game: 'a_game',
+                name: 'Testing',
+                type: 'per-game',
+                weblink: '',
+                miscellaneous: false,
+                variables: []
+            }
+        ]);
+
         await run_dao.save([
             {
                 place: 3,
                 run: {
                     id: 'another_run',
+                    category: {id: 'a_category_on_genre'},
                     date: '2018-04-30',
                     status: {status: 'verified', 'verify-date': '2018-04-30'},
                     players: [],
@@ -81,6 +104,7 @@ describe('RunDao', () => {
                 run: {
                     id: 'one_run',
                     date: '2018-05-05',
+                    category: {id: 'a_category'},
                     status: {status: 'verified', 'verify-date': '2018-05-05'},
                     players: [],
                     times: { primary: '135', primary_t: 100 },
@@ -108,6 +132,7 @@ describe('RunDao', () => {
             run: {
                 id: 'yet_another_run',
                 date: '2018-05-01',
+                category: {id: 'a_category_on_genre'},
                 status: {status: 'verified', 'verify-date': '2018-05-01'},
                 players: [],
                 times: { primary: '135', primary_t: 100 },
@@ -137,6 +162,7 @@ describe('RunDao', () => {
             run: {
                 id: 'dummy_run',
                 date: '2018-05-18',
+                category: {id: 'a_category_on_genre'},
                 status: {status: 'verified', 'verify-date': '2018-05-20'},
                 players: [],
                 times: { primary: '0', primary_t: 0.001 },
@@ -159,6 +185,7 @@ describe('RunDao', () => {
             run: {
                 id: 'dummy_run2',
                 date: '2018-08-18',
+                category: {id: 'a_category_on_genre'},
                 status: {status: 'verified', 'verify-date': '2018-08-20'},
                 players: [],
                 times: { primary: '0', primary_t: 0.001 },
@@ -175,6 +202,15 @@ describe('RunDao', () => {
         expect((<BarChartData>chart.data.main[0]).y).to.eql(1);
         expect((<BarChartData>chart.data.main[1]).x).to.eql(new Date('2018-05-01').getTime() / 1000);
         expect((<BarChartData>chart.data.main[1]).y).to.eql(2);
+    });
+
+    it('should set supporting object structures', async () => {
+        // there should be a leaderboard with the previously loaded runs
+        let leaderboard = (await new LeaderboardDao(db).load('a_category_on_genre'))[0];
+
+        expect(leaderboard).to.exist;
+        expect(leaderboard!.runs).to.have.length(1); // players and subcategories are always the same so there will only be 1 entry
+        expect(leaderboard!.runs[0].run).to.have.property('id', 'dummy_run2');
     });
 });
 

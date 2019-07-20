@@ -113,7 +113,7 @@ export function make_distribution_chart(lb: Leaderboard, vars: Variable[]): Char
     };
 
     if(lb.runs) {
-        for(let i = 0;i < lb.runs.length;i++) {
+        for(let i = 0;i < lb.runs.length * 0.95;i++) {
             let run = lb.runs[i];
 
             let subcategory_id;

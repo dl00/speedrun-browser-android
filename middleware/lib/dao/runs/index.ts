@@ -7,6 +7,7 @@ import { Dao, DaoConfig, IndexDriver } from '../';
 import { GameDao, Game, BulkGame, game_to_bulk } from '../games';
 
 import { RecordChartIndex, get_player_pb_chart } from './charts';
+import { SupportingStructuresIndex } from './supporting-structures';
 import { Chart } from '../charts'
 
 import { DB } from '../../db';
@@ -257,7 +258,8 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
                 config && config.latest_runs_history_length ? config.latest_runs_history_length : 1000,
                 config && config.max_items ? config.max_items : 100
             ),
-            new RecordChartIndex('chart_wrs')
+            new RecordChartIndex('chart_wrs'),
+            new SupportingStructuresIndex('supporting_structures')
         ];
     }
 
