@@ -152,14 +152,16 @@ export async function populate_run_sub_documents(db: DB, runs: Run[]): Promise<P
     let drop_runs: Run[] = [];
 
     for(let run of runs) {
-        if(!games[<string>run.game.id] || !categories[<string>run.category.id]) {
+        if(!games[(<BulkGame>run.game).id] || !categories[(<BulkCategory>run.category).id]) {
             drop_runs.push(run);
             continue;
         }
 
-        run.game = <BulkGame>games[<string>run.game.id];
-        run.category = <Category>categories[<string>run.category.id];
-        run.level = <Level|null>levels[<string>run.level.id];
+        run.game = <BulkGame>games[(<BulkGame>run.game).id];
+        run.category = <Category>categories[(<BulkCategory>run.category).id];
+
+        if(run.level && (<BulkLevel>run.level).id)
+            run.level = <Level|null>levels[(<BulkLevel>run.level).id];
 
         // handle special cases for users
         for(let i = 0;i < run.players.length;i++) {
