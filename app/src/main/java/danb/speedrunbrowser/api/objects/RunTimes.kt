@@ -7,6 +7,7 @@ import java.util.regex.Pattern
 
 data class RunTimes(
         val primary: String? = null,
+        val primary_t: Int = 0,
         val realtime: String? = null,
         val realtimeNoloads: String? = null,
         val ingame: String? = null

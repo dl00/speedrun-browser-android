@@ -36,7 +36,7 @@ export function add_leaderboard_run(d: Leaderboard, run: Run, vars: Variable[]):
     if(!d.runs)
         d.runs = [];
 
-    let run_idx = _.sortedIndexBy(d.runs, lbe, v => v.run.times.primary_t)
+    let run_idx = _.sortedIndexBy(d.runs, lbe, v => v.run.times.primary_t + v.run.date)
 
     let subcategory_var_ids = _.map(_.filter(vars, 'is-subcategory'), 'id');
 

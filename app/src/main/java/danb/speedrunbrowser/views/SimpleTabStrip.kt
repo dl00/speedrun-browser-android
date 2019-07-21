@@ -15,6 +15,7 @@ import android.widget.TextView
 
 import androidx.viewpager.widget.ViewPager
 import danb.speedrunbrowser.R
+import kotlin.math.floor
 
 class SimpleTabStrip(context: Context, attrs: AttributeSet) : FrameLayout(context, attrs), ViewPager.OnPageChangeListener {
 
@@ -127,7 +128,7 @@ class SimpleTabStrip(context: Context, attrs: AttributeSet) : FrameLayout(contex
         if (mLayout.childCount > pos + 1 && (pos == -1 || pos + 1 >= mLayout.childCount))
             x2 = getCenterScrollPosition(pos)
 
-        mHsv.scrollTo(x1 + Math.floor(((x2 - x1).toFloat() * offset).toDouble()).toInt(), 0)
+        mHsv.scrollTo(x1 + floor(((x2 - x1).toFloat() * offset).toDouble()).toInt(), 0)
     }
 
     override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {

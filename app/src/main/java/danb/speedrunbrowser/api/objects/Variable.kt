@@ -66,15 +66,13 @@ data class Variable(
             if (run.values != null) {
                 for (selection in activeVariables) {
                     if (!run.values.containsKey(selection.id)) {
-                        if (selection.isSubcategory)
-                            continue
                         return false
                     }
 
                     if (!selections.containsKey(selection.id))
                         continue
 
-                    if (!Objects.requireNonNull<Set<String>>(selections[selection.id]).contains(run.values[selection.id]))
+                    if (!selections.getValue(selection.id).contains(run.values[selection.id]))
                         return false
                 }
 
@@ -91,16 +89,17 @@ data class Variable(
             val shownRuns = ArrayList<LeaderboardRunEntry>()
 
             var lastPlace = 1
-            var curPlace = 0
+            var lastTime = 0
 
             for (re in lb.runs!!) {
                 if (shouldShowRun(re.run, activeVariables)) {
                     val newRunEntry = LeaderboardRunEntry(
-                            place = if (re.place != curPlace) shownRuns.size + 1 else lastPlace,
+                            place = if (re.run.times!!.primary_t != lastTime) shownRuns.size + 1 else lastPlace,
                             run = re.run
                     )
 
                     lastPlace = newRunEntry.place!!
+                    lastTime = newRunEntry.run.times!!.primary_t
 
                     shownRuns.add(newRunEntry)
                 }

@@ -264,7 +264,6 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
 
     override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
         val item = parent.adapter.getItem(position)
-        println(item)
         if (item is User) {
             showPlayer(item.id, null, null)
         } else if (item is Game) {
@@ -428,7 +427,6 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
                             val ids = ArrayList<String>()
 
                             for (sub in subscriptions) {
-                                println(sub.fcmTopic)
                                 val id = sub.resourceId.substring(0, sub.resourceId.indexOf('_'))
 
                                 if (!ids.isEmpty() && id == ids[ids.size - 1])

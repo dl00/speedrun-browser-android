@@ -213,7 +213,7 @@ export class UserDao extends Dao<User> {
             }
         }
 
-        this.save(_.values(players));
+        await this.save(_.values(players));
 
         return <NewRecord[]>_.reject(new_records, _.isNil);
     }

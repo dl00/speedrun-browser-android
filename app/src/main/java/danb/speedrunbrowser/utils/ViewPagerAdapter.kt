@@ -15,8 +15,6 @@ class ViewPagerAdapter : PagerAdapter() {
 
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
         container.addView(views[position].second, 0)
-        println("INSTANTIATING AN ITEM")
-
         return views[position].second
     }
 

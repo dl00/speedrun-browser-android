@@ -180,9 +180,6 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
 
             // setup events for highlight
             listAdapter.onClickListener = {
-                println(it)
-                println(chartData!!.data.getValue(s)[it].x)
-
                 val hl = Highlight(chartData!!.data.getValue(s)[it].x, chartData!!.data.getValue(s)[it].y, index)
                 hl.dataIndex = 0
 

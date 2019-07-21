@@ -33,7 +33,7 @@ data class Chart(
 ) {
 
     val datasets: List<String>
-        get() = data.keys.sorted()
+        get() = data.keys.sorted().reversed()
 
     // need custom serializer/deserializer due to trophy links
     class JsonConverter : JsonSerializer<Chart>, JsonDeserializer<Chart> {

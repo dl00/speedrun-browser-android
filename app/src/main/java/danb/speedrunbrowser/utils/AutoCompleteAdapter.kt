@@ -56,7 +56,8 @@ class AutoCompleteAdapter(private val ctx: Context, private val disposables: Com
                 } while (lcsg.maxMatchLength >= lcsp.maxMatchLength && sr.hasNext())
 
                 sr.previous()
-                sr.previous()
+                if(sr.hasPrevious())
+                    sr.previous()
                 sr.add(player)
                 sr.next()
             }

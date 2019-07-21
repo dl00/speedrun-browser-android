@@ -215,7 +215,6 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
                     mVideoFrame.seekTime = seekPos.toInt()
                     onVideoReady()
                 }, NoopConsumer(), Action {
-                    println("No seek record for run: " + mRun!!.id)
                     onVideoReady()
                 }))
     }

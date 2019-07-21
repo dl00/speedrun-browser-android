@@ -3,7 +3,10 @@ package danb.speedrunbrowser.stats
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.view.marginBottom
+import androidx.core.view.setPadding
 import androidx.recyclerview.widget.RecyclerView
 import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
@@ -23,7 +26,10 @@ class LeaderboardStatisticsActivity : StatisticsActivity() {
         if(leaderboardId != null) {
 
             onDataReadyListener = {
-                title = makeCategoryNameText(it.game!!, it.category!!, it.level)
+                title =
+                        StringBuilder(it.game!!.names.getValue("international")).append(" \u2022 ")
+                                .append(makeCategoryNameText(it.category!!, it.level))
+                                .toString()
 
                 // add text with leaderboard rules
                 addRulesText(it.category)
@@ -104,7 +110,20 @@ class LeaderboardStatisticsActivity : StatisticsActivity() {
 
                         builder.toString()
                     },
-                    yValueFormat = { RunTimes.format(it) ?: it.toString() }
+                    yValueFormat = { RunTimes.format(it) ?: it.toString() },
+                    chartListReverse = false,
+                    chartListViewHolderSource = object : ViewHolderSource {
+                        override fun newViewHolder(ctx: Context?, parent: ViewGroup): RecyclerView.ViewHolder {
+                            return RunViewHolder((ctx!!.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater)
+                                    .inflate(R.layout.content_leaderboard_list, parent, false), showRank = false)
+                        }
+
+                        override fun applyToViewHolder(ctx: Context?, disposables: CompositeDisposable?, holder: RecyclerView.ViewHolder, toApply: Any) {
+                            val lbr = LeaderboardRunEntry(run = toApply as Run)
+
+                            (holder as RunViewHolder).apply(ctx!!, disposables!!, null, lbr)
+                        }
+                    }
             ))
 
             setDataSourceAPIResponse(
@@ -119,6 +138,10 @@ class LeaderboardStatisticsActivity : StatisticsActivity() {
         val rulesTv = TextView(this)
         rulesTv.text = getString(R.string.prelude_rules, rulesText)
 
+        rulesTv.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT)
+
+        rulesTv.setPadding(resources.getDimensionPixelSize(R.dimen.half_fab_margin))
         contentView.addView(rulesTv)
     }
 

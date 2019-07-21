@@ -17,6 +17,7 @@ export async function list_all_runs(runid: string, options: any) {
         let updated_players = _.chain(res.data.data)
             .map('players.data')
             .flatten()
+            .filter('id')
             .value();
 
         let user_dao = new UserDao(scraper.storedb!);

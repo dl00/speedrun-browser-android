@@ -32,6 +32,7 @@ export async function pull_latest_runs(runid: string, options: any) {
         let updated_players = _.chain(res.data.data)
             .map('players.data')
             .flatten()
+            .filter('id')
             .value();
 
         let user_dao = new UserDao(scraper.storedb!);
@@ -117,30 +118,6 @@ export async function pull_latest_runs(runid: string, options: any) {
 
         if(lbres.length)
             await new RunDao(scraper.storedb!).save(_.cloneDeep(lbres));
-
-        let clean_leaderboards = _.cloneDeep(_.reject(_.values(leaderboards), _.isNil));
-        if(clean_leaderboards.length)
-            await new LeaderboardDao(scraper.storedb!).save(clean_leaderboards);
-
-        let new_records = await new UserDao(scraper.storedb!).apply_runs(_.cloneDeep(lbres));
-
-        let lbres_idx = _.keyBy(lbres, 'run.id');
-
-        // send push notifications
-        for(let nr of new_records) {
-            let run = lbres_idx[nr.new_run.run.id].run;
-
-            if(nr.new_run.place == 1) {
-                // new record on this category/level, send notification
-                await push_notify.notify_game_record(nr, run.game, run.category, run.level);
-            }
-
-            // this should be a personal best. send notification to all attached players who are regular users
-            for(let p of run.players) {
-                await push_notify.notify_player_record(nr, <User>p,
-                    run.game, run.category, run.level);
-            }
-        }
 
         // reschedule with additional offset to go back sync
         if(remove_after === -1)

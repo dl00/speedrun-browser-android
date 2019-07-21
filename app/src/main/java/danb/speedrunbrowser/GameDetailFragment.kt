@@ -194,12 +194,10 @@ class GameDetailFragment : Fragment() {
     }
 
     private fun loadSubscription() {
-        println("Load subscription " + mGame!!.id)
         mDisposables.add(mDB.subscriptionDao().listOfTypeWithIDPrefix("game", mGame!!.id)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { subscriptions ->
-                    println(subscriptions)
                     mSubscription = GameSubscription(mGame!!, subscriptions)
                     setMenu()
                 })
@@ -329,8 +327,6 @@ class GameDetailFragment : Fragment() {
 
             delSubs.removeAll(newSubs)
             newSubs.removeAll(oldSubs)
-
-            println("Started the subscription changer: $newSubs, $delSubs")
 
             if (newSubs.isEmpty() && delSubs.isEmpty()) {
                 // no change
