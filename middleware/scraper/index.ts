@@ -59,6 +59,18 @@ const BASE_TASKS: Task[] = [
         module: 'all-runs',
         exec: 'list_all_runs',
         repeat: moment.duration(2, 'weeks')
+    },
+    {
+        name: 'hack_chart_site_total_runs',
+        module: 'hack',
+        exec: 'gen_site_total_runs',
+        repeat: moment.duration(1, 'days')
+    },
+    {
+        name: 'hack_chart_site_volume',
+        module: 'hack',
+        exec: 'gen_site_volume',
+        repeat: moment.duration(1, 'days')
     }
 ];
 

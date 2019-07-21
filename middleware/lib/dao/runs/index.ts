@@ -283,7 +283,10 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         // at least this first index for mongodb is overkill, its just used for an aggregation
         db.mongo.collection(this.collection).createIndex({
             'run.date': 1
-        }, {partialFilterExpression: {'run.status.status': 'verified'}});
+        }, {
+            background: true,
+            partialFilterExpression: {'run.status.status': 'verified'}
+        }).then(_.noop);
 
         db.mongo.collection(this.collection).createIndex({
             'run.game.id': 1,
@@ -396,8 +399,9 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         ]).toArray())[0];
 
         return {
-            item_id: 'site',
+            item_id: 'site_historical_runs',
             item_type: 'runs',
+            parent_type: 'runs',
             chart_type: 'line',
             data: {
                 'main': _.chain(data)
@@ -469,8 +473,9 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
 
     async get_site_submission_volume(): Promise<Chart> {
         return {
-            item_id: 'site',
+            item_id: 'site_volume',
             item_type: 'runs',
+            parent_type: 'runs',
             chart_type: 'bar',
             data: {
                 'main': await this.get_submission_volume({ 'run.status.status': 'verified' })

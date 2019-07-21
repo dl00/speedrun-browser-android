@@ -52,13 +52,13 @@ export function get_wr_chart_longest_holders(wr_chart: Chart): Chart {
 
 router.get('/site', async (_req, res) => {
 
-    let run_dao = new RunDao(api.storedb!);
+    let chart_dao = new ChartDao(api.storedb!);
 
     // total run count over time
-    let count_over_time_chart = await run_dao.get_historical_run_count();
+    let count_over_time_chart = (await chart_dao.load('runs_site_historical_runs'))[0];
 
     // submitted run volume
-    let volume_chart = await run_dao.get_site_submission_volume();
+    let volume_chart = (await chart_dao.load('runs_site_volume'))[0];
 
     // metric: hours recorded in PBs by speedrunners
 
