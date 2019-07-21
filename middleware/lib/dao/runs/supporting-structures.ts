@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 
-import { Run, LeaderboardRunEntry } from './';
+import { Run, LeaderboardRunEntry, NewRecord } from './';
 import { IndexDriver, DaoConfig } from '../';
 import { CategoryDao, Category, BulkCategory } from '../categories';
 import { BulkLevel } from '../levels';
@@ -20,8 +20,12 @@ function get_leaderboard_id_for_run(run: Run) {
 export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntry> {
     name: string;
 
+    new_records: NewRecord[];
+
     constructor(name: string) {
         this.name = name;
+
+        this.new_records = [];
     }
 
     async update_leaderboard(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[], categories: {[key: string]: Category|null}) {
@@ -64,7 +68,7 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
     }
 
     async update_player_pbs(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[], _categories: {[key: string]: Category|null}) {
-        await new UserDao(conf.db).apply_runs(runs);
+        this.new_records.push(...await new UserDao(conf.db).apply_runs(runs));
     }
 
     async update_obsoletes(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[], categories: {[key: string]: Category|null}) {
@@ -113,7 +117,7 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
         await Promise.all([
             await this.update_leaderboard(conf, runs, categories),
             await this.update_player_pbs(conf, runs, categories),
-            //await this.update_obsoletes(conf, runs, categories)
+            await this.update_obsoletes(conf, runs, categories)
         ]);
     }
 

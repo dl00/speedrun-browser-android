@@ -116,8 +116,24 @@ export async function pull_latest_runs(runid: string, options: any) {
             );
         }
 
+        let run_dao = new RunDao(scraper.storedb!);
         if(lbres.length)
-            await new RunDao(scraper.storedb!).save(_.cloneDeep(lbres));
+            run_dao.save(_.cloneDeep(lbres));
+
+        // send push notifications for new records
+        let new_records = run_dao.collect_new_records();
+        for(let nr of new_records) {
+            if(nr.new_run.place == 1) {
+                // new record on this category/level, send notification
+                await push_notify.notify_game_record(nr, nr.new_run.run.game, nr.new_run.run.category, nr.new_run.run.level);
+            }
+
+            // this should be a personal best. send notification to all attached players who are regular users
+            for(let p of nr.new_run.run.players) {
+                await push_notify.notify_player_record(nr, <User>p,
+                    nr.new_run.run.game, nr.new_run.run.category, nr.new_run.run.level);
+            }
+        }
 
         // reschedule with additional offset to go back sync
         if(remove_after === -1)

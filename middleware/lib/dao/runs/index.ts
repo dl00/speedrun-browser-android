@@ -324,6 +324,11 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         ];
     }
 
+    /// return new records saved to DB during the lifetime of this Dao instance
+    collect_new_records(): NewRecord[] {
+        return (<SupportingStructuresIndex>this.indexes.find(ind => ind.name === 'supporting_structures')).new_records;
+    }
+
     /// regenerates speedruns remote data matching the given filter
     /// useful when supplementary data structures are changed
     async massage_runs(filter = {}) {
