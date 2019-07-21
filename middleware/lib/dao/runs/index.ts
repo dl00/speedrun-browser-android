@@ -327,6 +327,13 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
     async massage_runs(filter = {}) {
         let cursor = await this.db.mongo.collection(this.collection)
             .find(filter)
+            // sorting gives a significant speed boost because it reduces the number
+            // of arbitrary different categories and levels which may need to be requested,
+            // significantly reducing the number of times data has to be serialized/deserialized
+            .sort({
+                'run.game.id': 1,
+                'run.date': 1
+            });
 
         let batchSize = 500;
         let count = 0;
