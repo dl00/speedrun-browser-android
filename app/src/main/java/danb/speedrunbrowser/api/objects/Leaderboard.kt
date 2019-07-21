@@ -18,4 +18,12 @@ data class Leaderboard(
 
         val runs: List<LeaderboardRunEntry>? = null,
         val players: Map<String, User>? = null
-) : Serializable
+) : Serializable {
+    companion object {
+        val EMPTY_LEADERBOARD = Leaderboard(
+                game = "",
+                category =  "",
+                runs = listOf()
+        )
+    }
+}

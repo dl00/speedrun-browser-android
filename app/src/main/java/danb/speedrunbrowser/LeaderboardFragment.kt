@@ -266,6 +266,9 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
         mLeaderboard = leaderboards[0]
         notifyFilterChanged()
 
+        if(mLeaderboard == null)
+            mLeaderboard = Leaderboard.EMPTY_LEADERBOARD
+
         Log.d(TAG, "Downloaded " + mLeaderboard!!.runs!!.size + " runs!")
         if (mRunsListAdapter != null) {
             Log.d(TAG, "Runs list adapter not created/available")

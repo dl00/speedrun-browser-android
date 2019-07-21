@@ -130,6 +130,18 @@ router.get('/leaderboards/:id', async(req, res) => {
     if(!game)
         return api_response.error(res, api_response.err.NOT_FOUND());
 
+    if(!leaderboard)
+        return api_response.complete_single(res, {
+            game: game,
+            category: category,
+            level: level,
+            charts: {
+                wrs: null,
+                distribution: null,
+                volume: null
+            }
+        });
+
     // word records chartify
     let wr_chart = (await chart_dao.load(`leaderboards_${leaderboard_id}`))[0];
 
