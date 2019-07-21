@@ -147,6 +147,9 @@ object SpeedrunMiddlewareAPI {
         fun whatAreThese(@Path("ids") thingIds: String): Observable<APIResponse<WhatIsEntry>>
 
         // Charts
+        @GET("charts/site")
+        fun getSiteMetrics(): Observable<APIChartResponse>
+
         @GET("charts/games/{id}")
         fun getGameMetrics(@Path("id") gameId: String): Observable<APIChartResponse>
 

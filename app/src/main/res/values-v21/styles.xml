@@ -16,12 +16,37 @@
         <item name="actionBarStyle">@style/AppTheme.ActionBar</item>
 
 
+        <item name="android:windowBackground">@color/colorPrimary</item>
+
         <!-- Transitions -->
         <!-- enable window content transitions -->
         <item name="android:windowActivityTransitions">true</item>
 
         <!-- specify enter and exit transitions -->
-        <item name="android:windowEnterTransition">@android:transition/fade</item>
+        <item name="android:windowEnterTransition">@android:transition/explode</item>
+        <item name="android:windowExitTransition">@android:transition/explode</item>
+
+        <!-- specify shared element transitions -->
+        <!--<item name="android:windowSharedElementEnterTransition">
+            @transition/change_image_transform
+        </item>
+        <item name="android:windowSharedElementExitTransition">
+            @transition/change_image_transform
+        </item>-->
+
+
+    </style>
+
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+
+        <!-- Transitions -->
+        <!-- enable window content transitions -->
+        <item name="android:windowActivityTransitions">true</item>
+
+        <!-- specify enter and exit transitions -->
+        <item name="android:windowEnterTransition">@android:transition/explode</item>
         <item name="android:windowExitTransition">@android:transition/fade</item>
 
         <!-- specify shared element transitions -->
@@ -31,7 +56,5 @@
         <item name="android:windowSharedElementExitTransition">
             @transition/change_image_transform
         </item>
-
-
     </style>
 </resources>

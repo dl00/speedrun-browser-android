@@ -21,6 +21,7 @@ import com.google.firebase.crash.FirebaseCrash
 
 import java.util.ArrayList
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityOptionsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
@@ -30,6 +31,8 @@ import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.api.objects.Genre
 import danb.speedrunbrowser.api.objects.User
+import danb.speedrunbrowser.stats.GameStatisticsActivity
+import danb.speedrunbrowser.stats.SiteStatisticsActivity
 import danb.speedrunbrowser.utils.*
 import danb.speedrunbrowser.views.SimpleTabStrip
 import io.reactivex.Observable
@@ -131,6 +134,8 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
         } else if (item.itemId == R.id.menu_genres) {
             showGenreFilterDialog()
             return true
+        } else if (item.itemId == R.id.menu_stats) {
+            viewStats()
         }
 
         return false
@@ -265,6 +270,13 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
         } else if (item is Game) {
             showGame(item.id, null, null)
         }
+    }
+
+
+
+    private fun viewStats() {
+        val intent = Intent(this, SiteStatisticsActivity::class.java)
+        startActivity(intent)
     }
 
     private inner class PagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm), SimpleTabStrip.IconPagerAdapter {

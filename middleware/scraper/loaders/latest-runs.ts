@@ -10,11 +10,10 @@ import * as scraper from '../index';
 
 import * as push_notify from '../push-notify';
 
-import { Run, RunDao, LeaderboardRunEntry } from '../../lib/dao/runs';
+import { Run, RunDao, LeaderboardRunEntry, populate_run_sub_documents } from '../../lib/dao/runs';
 import { UserDao, User } from '../../lib/dao/users';
 import { Leaderboard, LeaderboardDao, add_leaderboard_run } from '../../lib/dao/leaderboards';
 
-import { populate_run_sub_documents } from './all-runs';
 import { BulkGame } from '../../lib/dao/games';
 import { BulkCategory } from '../../lib/dao/categories';
 import { BulkLevel } from '../../lib/dao/levels';
@@ -50,7 +49,7 @@ export async function pull_latest_runs(runid: string, options: any) {
             runs = runs.slice(0, remove_after);
 
         // install runs on the database
-        let pr = await populate_run_sub_documents(runs);
+        let pr = await populate_run_sub_documents(scraper.storedb!, runs);
 
         if(pr.drop_runs.length)
             // DO NOT use `runs =` here or else it will get an array of what was REMOVED.

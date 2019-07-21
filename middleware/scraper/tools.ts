@@ -25,6 +25,10 @@ export async function send_dummy_player_notify(run_id: string) {
     push_notify.notify_player_record({new_run: runs[0]!, old_run: runs[0]!}, player, game, category, <any>level);
 }
 
+export async function massage_all_runs() {
+    return await new RunDao(scraper.storedb!).massage_runs();
+}
+
 export async function generate_all_charts() {
     await make_all_wr_charts(new RunDao(scraper.storedb!));
 }

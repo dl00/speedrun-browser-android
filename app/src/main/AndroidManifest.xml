@@ -77,6 +77,13 @@
                 android:value="danb.speedrunbrowser.ItemDetailActivity" />
         </activity>
 
+        <activity android:name=".stats.SiteStatisticsActivity"
+            android:configChanges="orientation|screenSize"
+            android:label="@string/title_site_statistics"
+            android:theme="@style/AppTheme">
+
+        </activity>
+
         <activity android:name=".stats.GameStatisticsActivity"
             android:configChanges="orientation|screenSize"
             android:label="@string/title_game_stats"

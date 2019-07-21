@@ -18,8 +18,9 @@ import {
 } from '../../speedrun-api';
 
 import { BulkUser, User, user_to_bulk } from '../users';
-import { Category, BulkCategory, category_to_bulk } from '../categories';
-import { BulkLevel, Level, level_to_bulk } from '../levels';
+import { CategoryDao, Category, BulkCategory, category_to_bulk } from '../categories';
+import { LevelDao, BulkLevel, Level, level_to_bulk } from '../levels';
+import { UserDao } from '../users';
 import { Genre } from '../genres';
 
 /// information about a new PB from a player
@@ -123,6 +124,64 @@ function generate_month_boundaries(start: number, end: number) {
     }
 
     return boundaries;
+}
+
+export interface PopulateRunResponse {
+    drop_runs: Run[],
+    games: {[id: string]: Game|null}
+    categories: {[id: string]: Category|null}
+    levels: {[id: string]: Level|null}
+}
+
+// returns a list of runs which cannot be processed because the game is missing, or similar
+export async function populate_run_sub_documents(db: DB, runs: Run[]): Promise<PopulateRunResponse> {
+    let game_ids = <string[]>_.uniq(_.map(runs, 'game.id'));
+    let category_ids = <string[]>_.uniq(_.map(runs, 'category.id'));
+    let level_ids = <string[]>_.uniq(_.map(runs, 'level.id'));
+
+    let player_ids = <string[]>_.uniq(_.flatten(_.map(runs, (run) => {
+        return _.reject(_.map(run.players, 'id'), _.isNil);
+    })));
+
+    let games = _.zipObject(game_ids, await new GameDao(db).load(game_ids));
+    let categories = _.zipObject(category_ids, await new CategoryDao(db).load(category_ids));
+    let levels = _.zipObject(level_ids, await new LevelDao(db).load(level_ids));
+    let players = _.zipObject(player_ids, await new UserDao(db).load(player_ids));
+
+    // list of runs we are skipping processing
+    let drop_runs: Run[] = [];
+
+    for(let run of runs) {
+        if(!games[<string>run.game] || !categories[<string>run.category]) {
+            drop_runs.push(run);
+            continue;
+        }
+
+        run.game = <BulkGame>games[<string>run.game];
+        run.category = <Category>categories[<string>run.category];
+        run.level = <Level|null>levels[<string>run.level];
+
+        // handle special cases for users
+        for(let i = 0;i < run.players.length;i++) {
+            if(!run.players[i].id)
+                continue;
+            if(!players[run.players[i].id]) {
+                // new player
+                // currently the best way to solve this is to do a game resync
+                drop_runs.push(run);
+                continue;
+            }
+
+            run.players[i] = <BulkUser>players[run.players[i].id];
+        }
+    }
+
+    return {
+        drop_runs: drop_runs,
+        games: games,
+        categories: categories,
+        levels: levels
+    };
 }
 
 export const LATEST_VERIFIED_RUNS_KEY = 'verified_runs';
@@ -258,9 +317,41 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
                 config && config.latest_runs_history_length ? config.latest_runs_history_length : 1000,
                 config && config.max_items ? config.max_items : 100
             ),
-            new RecordChartIndex('chart_wrs'),
-            new SupportingStructuresIndex('supporting_structures')
+            new SupportingStructuresIndex('supporting_structures'),
+            new RecordChartIndex('chart_wrs')
         ];
+    }
+
+    /// regenerates speedruns remote data matching the given filter
+    /// useful when supplementary data structures are changed
+    async massage_runs(filter = {}) {
+        let cursor = await this.db.mongo.collection(this.collection)
+            .find(filter)
+
+        let batchSize = 500;
+        let count = 0;
+
+        let runs = new Array(batchSize);
+
+        while(await cursor.hasNext()) {
+
+            let cur;
+            for(cur = 0;cur < batchSize && await cursor.hasNext();cur++) {
+                runs[cur] = await cursor.next();
+            }
+
+            runs.splice(cur, batchSize);
+
+            count += cur;
+
+            console.log('[MASSAGE]', count);
+
+            // reload the game, category, level, players, and leaderboard place for this run
+            await populate_run_sub_documents(this.db, _.map(runs, 'run'));
+            await this.save(runs);
+        }
+
+        return count;
     }
 
     async load_latest_runs(offset?: number, genreId?: string, verified: boolean = true) {

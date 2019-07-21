@@ -71,6 +71,9 @@ export function user_to_bulk(user: User) {
 // add/update the given personal best entry for the given user
 export function apply_personal_best(player: User, run: LeaderboardRunEntry): NewRecord|null {
 
+    if(!run.run.category || !run.run.category.id)
+        return null;
+
     let category_run: CategoryPersonalBests = {
         id: run.run.category.id,
         name: run.run.category.name,

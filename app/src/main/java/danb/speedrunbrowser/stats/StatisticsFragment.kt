@@ -6,10 +6,13 @@ import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.widget.Spinner
 import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
+import danb.speedrunbrowser.views.ProgressSpinnerView
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -19,7 +22,10 @@ import io.reactivex.schedulers.Schedulers
 
 class StatisticsFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIChartData> {
 
+    private lateinit var rootLayout: FrameLayout
     private lateinit var layout: LinearLayout
+
+    private lateinit var spinner: ProgressSpinnerView
 
     var dispose: Disposable? = null
 
@@ -30,14 +36,24 @@ class StatisticsFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIChartDa
     override fun onAttach(context: Context) {
         super.onAttach(context)
 
+        rootLayout = FrameLayout(context)
+
+        spinner = ProgressSpinnerView(context, null)
+        spinner.layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT)
+        rootLayout.addView(spinner, 0)
+
         layout = LinearLayout(context)
         layout.orientation = LinearLayout.VERTICAL
+        layout.visibility = View.GONE
+
+        rootLayout.addView(layout)
     }
 
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        return layout
+        return rootLayout
     }
 
     override fun accept(t: SpeedrunMiddlewareAPI.APIChartData?) {
@@ -45,10 +61,16 @@ class StatisticsFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIChartDa
     }
 
     fun setDataSource(d: Observable<SpeedrunMiddlewareAPI.APIChartData>) {
+        spinner.visibility = View.VISIBLE
+        layout.visibility = View.GONE
+
         dispose = d
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeOn(Schedulers.io())
             .subscribe {
+
+                spinner.visibility = View.GONE
+                layout.visibility = View.VISIBLE
 
                 chartData = it
 

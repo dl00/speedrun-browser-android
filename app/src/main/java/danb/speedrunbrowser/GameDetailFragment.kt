@@ -16,6 +16,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.app.ActivityOptionsCompat
 import java.util.HashSet
 
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI

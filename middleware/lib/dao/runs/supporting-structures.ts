@@ -9,8 +9,12 @@ import { UserDao } from '../users';
 import { Variable } from '../../speedrun-api';
 
 function get_leaderboard_id_for_run(run: Run) {
+
+    if(!run.category || !(<BulkCategory>run.category).id)
+        return;
+
     return (<BulkCategory>run.category).id +
-        (run.level ? '_' + (<BulkLevel>run.level).id : '')
+        (run.level ? '_' + (<BulkLevel>run.level).id : '');
 }
 
 export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntry> {
@@ -29,19 +33,25 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
 
         for(let run of runs) {
 
-            let leaderboard = leaderboards[get_leaderboard_id_for_run(<Run>run.run)];
+            if(!run.run.category || !run.run.category.id || !categories[(<BulkCategory>run.run.category).id])
+                continue;
 
-            if(!leaderboard) {
+            let leaderboard = leaderboards[<string>get_leaderboard_id_for_run(<Run>run.run)];
+
+            if(!leaderboard || !_.keys(leaderboard).length) {
                 // new leaderboard
                 leaderboard = {
                 	game: run.run.game.id,
                     weblink: '',
-                	category : run.run.category.id,
+                	category: run.run.category.id,
                     players: {},
                     runs: []
-                }
+                };
 
-                leaderboards[get_leaderboard_id_for_run(<Run>run.run)] = leaderboard;
+                if(run.run.level && run.run.level.id)
+                    leaderboard.level = run.run.level.id;
+
+                leaderboards[<string>get_leaderboard_id_for_run(<Run>run.run)] = leaderboard;
             }
 
             add_leaderboard_run(
@@ -50,8 +60,7 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
                 <Variable[]>categories[(<BulkCategory>run.run.category).id]!.variables);
         }
 
-        let clean_leaderboards = _.cloneDeep(_.values(leaderboards));
-        await new LeaderboardDao(conf.db).save(clean_leaderboards);
+        await new LeaderboardDao(conf.db).save(_.values(leaderboards));
     }
 
     async update_player_pbs(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[], _categories: {[key: string]: Category|null}) {
@@ -65,8 +74,8 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
             .map('id')
             .value();
 
-        await conf.db.mongo.collection(conf.collection).update({
-            $or: runs.map(run => {
+        await conf.db.mongo.collection(conf.collection).updateMany({
+            $or: _.filter(runs, 'run.category.id').map(run => {
                 let filter: any = {
                     'run.category.id': run.run.category.id,
                     'run.submitted': {$lt: run.run.submitted},
@@ -101,17 +110,18 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
         let category_ids = <string[]>_.uniq(_.map(runs, 'run.category.id'));
         let categories = _.zipObject(category_ids, await new CategoryDao(conf.db!).load(category_ids));
 
-        await this.update_leaderboard(conf, runs, categories);
-        await this.update_player_pbs(conf, runs, categories);
-        await this.update_obsoletes(conf, runs, categories);
+        await Promise.all([
+            await this.update_leaderboard(conf, runs, categories),
+            await this.update_player_pbs(conf, runs, categories),
+            //await this.update_obsoletes(conf, runs, categories)
+        ]);
     }
 
     async clear(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[]) {
         await this.apply(conf, runs);
     }
 
-    has_changed(old_obj: LeaderboardRunEntry, new_obj: LeaderboardRunEntry): boolean {
-        return old_obj.run.date !== new_obj.run.date ||
-            old_obj.run.times.primary_t !== new_obj.run.times.primary_t;
+    has_changed(_old_obj: LeaderboardRunEntry, _new_obj: LeaderboardRunEntry): boolean {
+        return true//!_.isEqual(old_obj, new_obj);
     }
 }

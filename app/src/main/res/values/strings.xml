@@ -136,4 +136,5 @@
     <string name="chart_title_count_over_time">Total PB Records</string>
     <string name="chart_desc_count_over_time">The number of verified runs recorded on the site over time.</string>
     <string name="prelude_rules">Rules:\n %s</string>
+    <string name="title_site_statistics">Speedrun.com Site Statistics</string>
 </resources>
