@@ -60,7 +60,7 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
                 <Variable[]>categories[(<BulkCategory>run.run.category).id]!.variables);
         }
 
-        await new LeaderboardDao(conf.db).save(_.values(leaderboards));
+        await new LeaderboardDao(conf.db).save(_.reject(_.values(leaderboards), _.isNil));
     }
 
     async update_player_pbs(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[], _categories: {[key: string]: Category|null}) {
