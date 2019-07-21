@@ -46,6 +46,8 @@ export async function pull_latest_runs(runid: string, options: any) {
                 run.level = {id: run.level};
 
             run.players = run.players.data;
+
+            return run;
         });
 
         if(!runs.length)

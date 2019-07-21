@@ -31,6 +31,8 @@ export async function list_all_runs(runid: string, options: any) {
                 run.level = {id: run.level};
 
             run.players = run.players.data;
+
+            return run;
         });
 
         let pr = await populate_run_sub_documents(scraper.storedb!, runs);
