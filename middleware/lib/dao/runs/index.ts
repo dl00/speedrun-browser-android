@@ -398,6 +398,8 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             }
         ]).toArray())[0];
 
+        let now = Date.now() / 1000;
+
         return {
             item_id: 'site_historical_runs',
             item_type: 'runs',
@@ -408,10 +410,11 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
                     .mapValues((v, k) => {
                         return {
                             x: new Date(k).getTime() / 1000,
-                            y: v.y
+                            y: v[0].y
                         }
                     })
                     .values()
+                    .filter(p => p.x < now)
                     .value()
             },
             timestamp: new Date()
