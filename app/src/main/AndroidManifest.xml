@@ -97,6 +97,14 @@
             android:theme="@style/AppTheme">
 
         </activity>
+
+        <activity android:name=".stats.PlayerStatisticsActivity"
+            android:configChanges="orientation|screenSize"
+            android:label="@string/title_player_stats"
+            android:theme="@style/AppTheme">
+
+        </activity>
+
     </application>
 
 </manifest>

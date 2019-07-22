@@ -47,6 +47,11 @@ class StatisticsFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIChartDa
         layout.orientation = LinearLayout.VERTICAL
         layout.visibility = View.GONE
 
+        layout.layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+
         rootLayout.addView(layout)
     }
 

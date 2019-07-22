@@ -30,6 +30,10 @@ abstract class StatisticsActivity : AppCompatActivity() {
 
         val statsFrame = FrameLayout(this)
         statsFrame.id = View.generateViewId()
+        statsFrame.layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        )
 
         val rootLayout = LinearLayout(this)
         rootLayout.addView(contentView)

@@ -545,6 +545,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
                 $group: {
                     _id: '$run.game.id',
                     count: {$sum: 1},
+                    game: {$mergeObjects: "$run.game"}
                 }
             },
             {
@@ -557,6 +558,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         return {
             item_id: player_id,
             item_type: 'games',
+            parent_type: 'runs',
             chart_type: 'pie',
             data: {
                 'main': _.chain(chart_data)
@@ -564,7 +566,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
                     return {
                         x: 0,
                         y: p.count,
-                        obj: p._id
+                        obj: p.game
                     }
                 })
                 .value()

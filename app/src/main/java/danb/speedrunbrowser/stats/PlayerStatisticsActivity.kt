@@ -34,7 +34,7 @@ class PlayerStatisticsActivity : StatisticsActivity() {
             ))
 
             setDataSourceAPIResponse(
-                    SpeedrunMiddlewareAPI.make().getGameMetrics(playerId)
+                    SpeedrunMiddlewareAPI.make().getUserMetrics(playerId)
             )
         }
     }
