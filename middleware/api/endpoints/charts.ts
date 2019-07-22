@@ -8,8 +8,8 @@ import * as api_response from '../response';
 import { ChartDao, Chart, LineChartData } from '../../lib/dao/charts';
 import { LeaderboardDao, make_distribution_chart } from '../../lib/dao/leaderboards';
 import { GameDao } from '../../lib/dao/games';
-import { CategoryDao } from '../../lib/dao/categories';
-import { LevelDao } from '../../lib/dao/levels';
+import { CategoryDao, Category, standard_sort_categories } from '../../lib/dao/categories';
+import { LevelDao, Level } from '../../lib/dao/levels';
 import { UserDao } from '../../lib/dao/users';
 import { RunDao, Run } from '../../lib/dao/runs';
 import { Variable } from '../../lib/speedrun-api';
@@ -196,6 +196,18 @@ router.get('/games/:game_id/players/:player_id', async (req, res) => {
     let run_dao = new RunDao(api.storedb!);
 
     let game = (await game_dao.load(game_id))[0]!;
+
+    game.categories = <Category[]>await new CategoryDao(api.storedb!)
+        .load_by_index('game', game.id);
+
+    // since we don't preserve the order from speedrun.com of categories, we have to sort them on our own
+    game.categories = standard_sort_categories(game.categories);
+
+    game.levels = <Level[]>await new LevelDao(api.storedb!)
+        .load_by_index('game', game.id);
+
+    // since we don't preserve the order from speedrun.com, we have to sort them on our own
+    game.levels = _.sortBy(game.levels, l => l.name.toLowerCase())
 
     /// personal bests chartify
     let pb_chart = await run_dao.get_player_pb_chart(player_id, game_id);

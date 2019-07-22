@@ -107,9 +107,6 @@ export function normalize_run(d: Run) {
 /// TODO: Use decorators
 export function run_to_bulk(run: Run): BulkRun {
     let newr = _.pick(run, 'id', 'date', 'players', 'times', 'system', 'values');
-
-    newr.players = newr.players.map(v => user_to_bulk(<User>v));
-
     return newr;
 }
 
@@ -529,7 +526,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             chart_type: 'bar',
             data: {
                 'main': await this.get_submission_volume({
-                    'run.player.id': player_id,
+                    'run.players.id': player_id,
                     'run.status.status': 'verified'
                 })
             },
@@ -548,7 +545,6 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
                 $group: {
                     _id: '$run.game.id',
                     count: {$sum: 1},
-                    game: '$run.game'
                 }
             },
             {
@@ -568,7 +564,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
                     return {
                         x: 0,
                         y: p.count,
-                        obj: p.game
+                        obj: p._id
                     }
                 })
                 .value()

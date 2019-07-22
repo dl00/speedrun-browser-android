@@ -185,7 +185,7 @@ export async function get_player_pb_chart(conf: DaoConfig<LeaderboardRunEntry>, 
                         {
                             x: '$run.date',
                             y: '$run.times.primary_t',
-                            obj: '$$ROOT'
+                            obj: '$run'
                         }
                     }
                 }
