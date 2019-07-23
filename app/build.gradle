@@ -6,13 +6,13 @@ apply plugin: 'com.google.gms.google-services'
 apply plugin: 'io.fabric'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
     defaultConfig {
         applicationId "danb.speedrunbrowser"
         minSdkVersion 19
-        targetSdkVersion 28
-        versionCode 15
-        versionName "1.8"
+        targetSdkVersion 29
+        versionCode 16
+        versionName "1.9"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         multiDexEnabled true

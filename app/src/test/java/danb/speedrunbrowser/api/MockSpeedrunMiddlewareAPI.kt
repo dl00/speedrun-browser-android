@@ -78,4 +78,24 @@ class MockSpeedrunMiddlewareAPI : SpeedrunMiddlewareAPI.Endpoints {
                     error = null
             ))
     }
+
+    override fun getSiteMetrics(): Observable<SpeedrunMiddlewareAPI.APIChartResponse> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun getGameMetrics(gameId: String): Observable<SpeedrunMiddlewareAPI.APIChartResponse> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun getLeaderboardMetrics(gameId: String): Observable<SpeedrunMiddlewareAPI.APIChartResponse> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun getUserMetrics(gameId: String): Observable<SpeedrunMiddlewareAPI.APIChartResponse> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun getUserGameMetrics(gameId: String, playerId: String): Observable<SpeedrunMiddlewareAPI.APIChartResponse> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 }
