@@ -205,7 +205,7 @@ describe('add_leaderboard_run', () => {
             runs: [
                 {
                     run: {
-                        id: 'one',
+                        id: 'two',
                         date: '2019-05-05',
                         players: [],
                         system: {},
@@ -218,7 +218,7 @@ describe('add_leaderboard_run', () => {
                 },
                 {
                     run: {
-                        id: 'one',
+                        id: 'another',
                         date: '2019-05-05',
                         players: [],
                         system: {},
@@ -231,7 +231,7 @@ describe('add_leaderboard_run', () => {
                 },
                 {
                     run: {
-                        id: 'one',
+                        id: 'thing',
                         date: '2019-05-05',
                         players: [],
                         system: {},
@@ -263,7 +263,7 @@ describe('add_leaderboard_run', () => {
 
         // try to add a non-verified run
         lre = add_leaderboard_run(lb, <Run><unknown>{
-            id: 'one',
+            id: 'yet',
             date: '2019-05-05',
             players: [{id: 'dummy'}],
             status: {status: 'rejected'},
@@ -277,6 +277,22 @@ describe('add_leaderboard_run', () => {
 
         expect(lre.place).to.eql(3);
         expect(lb.runs[2].run.times.primary_t).to.eql(17);
+
+        // bug: if the time gets converted to a string then runs could be elevated way higher than they should be!
+        lre = add_leaderboard_run(lb, <Run><unknown>{
+            id: 'last',
+            date: '2019-05-05',
+            players: [{id: 'newp'}],
+            status: {'verify-date': '2019-05-06', status: 'verified'},
+            system: {},
+            values: {},
+            times: {
+                primary: '18M20T',
+                primary_t: 1100
+            }
+        }, []);
+
+        expect(lre.place).to.not.eql(1);
     });
 
     it('should add run to empty leaderboard', async () => {
