@@ -266,8 +266,13 @@ class ItemListFragment : Fragment() {
 
         @Throws(Exception::class)
         override fun apply(res: SpeedrunMiddlewareAPI.APIResponse<T>): SpeedrunMiddlewareAPI.APIResponse<Any?> {
+            val arrl = ArrayList<Any?>()
+
+            if(res.data != null)
+                arrl.addAll(res.data)
+
             return SpeedrunMiddlewareAPI.APIResponse(
-                    ArrayList(res.data),
+                    arrl,
                     res.error
             )
         }

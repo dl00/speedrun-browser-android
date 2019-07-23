@@ -55,17 +55,27 @@
     <string name="button_got_it">Got it!</string>
 
     <!-- release notes: edit for each release for now -->
-    <string name="dialog_title_release_notes">1.8!</string>
+    <string name="dialog_title_release_notes">1.9! Charts for games, leaderboards, players</string>
     <string name="dialog_msg_release_notes">
-        Hi, and thanks for being one of the first people to use this app!\n
+        Ever since I started writing this app, I have always wanted to do more with the data
+        this app interacts with. This release includes the introduction of charts-a major step
+        in accomplishing this goal.\n
         \n
-        There were a variety of simple and small issues fixed, but under the hood nearly every line of code has changed (both client and server) with this release.
-        New features you can expect within the coming weeks:\n
-        * Speedrun statistics and graphs like those shown on speedrun.com\n
-        * Splits information for runs, when available\n
-        * More subscription options\n
+        Here are the charts to look for:\n
+        * World record progression, as seen on speedrun.com. Includes the ability to view as part of
+        a list and view the videos for all the runs!\n
+        * Submission volume-for all of the above :)\n
+        * Player\'s "favorite" games based on PB submissions\n
+        * All time runs submitted to the site (also as seen on speedrun.com)\n
         \n
-        Enjoy and please use the complain button in the About page if you run into any issues!
+        Coming soon:\n
+        * Player PBs chart\n
+        * Biggest improvers and new contenders for the WR in a game/category\n
+        * Longest world record holders\n
+        This is just the beginning. I plan to continue adding new charts regularly as they come
+        to mind/are suggested.\n
+        \n
+        It has been really great to see this project grow. Thanks for all the support!
     </string>
 
     <string name="dialog_button_rate_now">Rate now!</string>

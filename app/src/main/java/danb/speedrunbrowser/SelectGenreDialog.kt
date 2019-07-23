@@ -115,7 +115,8 @@ class SelectGenreDialog(ctx: Context, private val mDisposables: CompositeDisposa
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(Consumer { genreAPIResponse ->
                     mGenreAdapter.clear()
-                    mGenreAdapter.addAll(genreAPIResponse.data)
+                    if(genreAPIResponse.data != null)
+                        mGenreAdapter.addAll(genreAPIResponse.data)
                     mGenreAdapter.notifyDataSetChanged()
                     //((ListView)mGenreListScroller.getChildAt(0)).scrollTo(0, 0);
                 }, ConnectionErrorConsumer(context)))

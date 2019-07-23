@@ -134,7 +134,7 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
         } else if (item.itemId == R.id.menu_genres) {
             showGenreFilterDialog()
             return true
-        } else if (item.itemId == R.id.menu_stats) {
+        } else if (item.itemId == R.id.menu_site_stats) {
             viewStats()
         }
 

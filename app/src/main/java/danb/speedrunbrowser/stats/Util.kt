@@ -6,5 +6,5 @@ import java.util.*
 fun formatMonthYear(v: Float): String {
     val d = Date(v.toLong() * 1000)
 
-    return SimpleDateFormat("MMM YYYY", Locale.getDefault()).format(d)
+    return SimpleDateFormat("MMM yyyy", Locale.getDefault()).format(d)
 }

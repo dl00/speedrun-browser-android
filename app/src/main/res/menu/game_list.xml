@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <item android:id="@+id/menu_stats"
+    <item android:id="@+id/menu_site_stats"
         android:icon="@drawable/baseline_insert_chart_24"
         android:title="@string/menu_charts_and_statistics"
         app:showAsAction="ifRoom" />
