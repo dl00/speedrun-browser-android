@@ -332,7 +332,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
 
     /// regenerates speedruns remote data matching the given filter
     /// useful when supplementary data structures are changed
-    async massage_runs(filter = {}) {
+    async massage_runs(filter = {}, skip = 0) {
         let cursor = await this.db.mongo.collection(this.collection)
             .find(filter)
             // sorting gives a significant speed boost because it reduces the number
@@ -341,7 +341,8 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             .sort({
                 'run.game.id': 1,
                 'run.date': 1
-            });
+            })
+            .skip(skip);
 
         let batchSize = 500;
         let count = 0;
