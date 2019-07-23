@@ -1,6 +1,7 @@
 package danb.speedrunbrowser.stats
 
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.view.MotionEvent
@@ -12,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
 import androidx.viewpager.widget.ViewPager
 import com.github.mikephil.charting.charts.CombinedChart
+import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.*
@@ -82,9 +84,35 @@ fun Chart.generateMpBarSetData(context: Context, labels: (v: String) -> String):
     return mpdata
 }
 
+fun Chart.generateMpPieSetData(context: Context, labels: ((v: Any) -> String)?): PieData {
+    val mpdata = PieDataSet(data.getValue("main").map {
+        if(labels != null)
+            PieEntry(
+                    it.y,
+                    labels(it.obj!!),
+                    it.obj
+            )
+        else
+            PieEntry(
+                    it.y,
+                    it.obj
+            )
+    }, "")
+
+    mpdata.colors = ColorTemplate.MATERIAL_COLORS.asList()
+    mpdata.setDrawValues(false)
+    mpdata.setDrawIcons(false)
+
+    val d = PieData()
+    d.addDataSet(mpdata)
+
+    return d
+}
+
 class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnChartValueSelectedListener {
 
     private var graph: CombinedChart? = null
+    private var pie: PieChart? = null
 
     private var disposables: CompositeDisposable = CompositeDisposable()
 
@@ -97,17 +125,32 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
     val listAdapters: MutableList<ChartDataAdapter> = mutableListOf()
 
     init {
+        onConfigurationChanged(null)
+    }
+
+    private lateinit var listContainer: LinearLayout
+    private lateinit var listTabs: SimpleTabStrip
+    private lateinit var listPager: ViewPager
+
+    override fun onConfigurationChanged(newConfig: Configuration?) {
+
+        removeAllViews()
+
         View.inflate(context, R.layout.content_chart_view, this)
 
         findViewById<TextView>(R.id.textChartTitle).text = options.name
         findViewById<ImageView>(R.id.buttonShowChartInfo).setOnClickListener {
             Util.showInfoDialog(context, options.description)
         }
-    }
 
-    private val listContainer: LinearLayout = findViewById(R.id.layoutChartListContainer)
-    private val listTabs: SimpleTabStrip = findViewById(R.id.tabsChartList)
-    private val listPager: ViewPager = findViewById(R.id.pagerChartList)
+        graph = null
+        pie = null
+        listContainer = findViewById(R.id.layoutChartListContainer)
+        listTabs = findViewById(R.id.tabsChartList)
+        listPager = findViewById(R.id.pagerChartList)
+        listAdapters.clear()
+        applyData()
+    }
 
     private fun initializeChart(chartType: String): CombinedChart {
         val chart = CombinedChart(context)
@@ -167,6 +210,19 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
         return chart
     }
 
+    private fun initializePie() {
+        val chart = PieChart(context)
+        chart.description.isEnabled = false
+        chart.setHoleColor(resources.getColor(R.color.colorPrimary))
+        chart.legend.isEnabled = false
+        chart.legend.setDrawInside(false)
+        chart.setEntryLabelTextSize(8f)
+        //chart.setDrawEntryLabels(false)
+        chart.isRotationEnabled = false
+
+        pie = chart
+    }
+
     private fun buildChartList() {
         val adapter = ViewPagerAdapter()
 
@@ -195,7 +251,14 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
         }
 
         listPager.adapter = adapter
-        listTabs.setup(listPager)
+
+        if(chartData!!.datasets.size <= 1) {
+            listTabs.visibility = View.GONE
+        }
+        else {
+            listTabs.visibility = View.VISIBLE
+            listTabs.setup(listPager)
+        }
     }
 
     private fun applyData() {
@@ -232,6 +295,16 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
                     }
                     else
                         listContainer.visibility = View.GONE
+                }
+                "pie" -> {
+                    initializePie()
+                    findViewById<FrameLayout>(R.id.frameChart).addView(pie)
+
+                    pie!!.data = data.generateMpPieSetData(context, options.pieLabels)
+
+                    pie!!.invalidate()
+
+                    listContainer.visibility = View.GONE
                 }
                 "list" -> {
                     // load the list with data
@@ -315,30 +388,16 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
                 holder.itemView.background = ColorDrawable(Color.TRANSPARENT)
 
             holder.itemView.setOnClickListener {
+
+                if(selectedIndex == reversePosition(position) &&
+                        options.chartListOnSelected != null && chartData[position].obj != null)
+                    options.chartListOnSelected!!(chartData[position].obj!!)
+
                 selectedIndex = reversePosition(position)
 
                 if(onClickListener != null)
                     onClickListener!!(selectedIndex!!)
             }
-        }
-    }
-
-    inner class ChartListSelectionManager {
-        var selectedDataSet: Int? = null
-        set(value) {
-            field = value
-
-            if(value != null)
-                listPager.currentItem = value
-
-            // TODO: show a different design for the selected set
-        }
-
-        var selectedIndex: Int? = null
-        set(value) {
-            field = value
-
-
         }
     }
 }

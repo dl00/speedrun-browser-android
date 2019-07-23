@@ -1,5 +1,6 @@
 package danb.speedrunbrowser.stats
 
+import android.animation.Animator
 import android.content.Context
 import android.os.Bundle
 import android.os.Looper
@@ -11,6 +12,7 @@ import android.widget.LinearLayout
 import android.widget.Spinner
 import androidx.core.view.children
 import androidx.fragment.app.Fragment
+import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.views.ProgressSpinnerView
 import io.reactivex.Observable
@@ -74,8 +76,7 @@ class StatisticsFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIChartDa
             .subscribeOn(Schedulers.io())
             .subscribe {
 
-                spinner.visibility = View.GONE
-                layout.visibility = View.VISIBLE
+                animateChartsIn()
 
                 chartData = it
 
@@ -108,6 +109,32 @@ class StatisticsFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIChartDa
 
     fun clearCharts() {
         layout.removeAllViews()
+    }
+
+    fun animateChartsIn() {
+
+
+        val animTime = resources.getInteger(
+                android.R.integer.config_longAnimTime)
+
+        val translationDistance = resources.getDimensionPixelSize(R.dimen.anim_slide_transition_distance)
+
+        spinner.visibility = View.GONE
+
+        rootLayout.alpha = 0.0f
+        layout.visibility = View.VISIBLE
+
+        rootLayout.translationY = translationDistance.toFloat()
+        rootLayout.scaleY = 0.975f
+        rootLayout.scaleX = 0.975f
+
+        rootLayout.animate()
+                .alpha(1.0f)
+                .setDuration(animTime.toLong())
+                .translationY(0f)
+                .scaleX(1.0f)
+                .scaleY(1.0f)
+                .setListener(null)
     }
 
     override fun onDestroy() {

@@ -18,12 +18,16 @@ data class ChartOptions(
 
         val setLabels: (v: String) -> String,
 
+        val pieLabels: ((v: Any) -> String)? = null,
+
         val xValueFormat: ((v: Float) -> String)? = null,
         val yValueFormat: ((v: Float) -> String)? = null,
 
         val chartListViewHolderSource: ViewHolderSource? = null,
 
         val chartListReverse: Boolean = false,
+
+        val chartListOnSelected: ((obj: Any) -> Unit)? = null,
 
         val orientation: ChartOrientation = ChartOrientation.HORIZONTAL
 )

@@ -1,6 +1,7 @@
 package danb.speedrunbrowser.stats
 
 import android.content.Context
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.LinearLayout
@@ -9,6 +10,7 @@ import androidx.core.view.marginBottom
 import androidx.core.view.setPadding
 import androidx.recyclerview.widget.RecyclerView
 import danb.speedrunbrowser.R
+import danb.speedrunbrowser.RunDetailActivity
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.*
 import danb.speedrunbrowser.holders.RunViewHolder
@@ -23,7 +25,7 @@ class LeaderboardStatisticsActivity : StatisticsActivity() {
 
         val leaderboardId: String? = intent.getStringExtra(EXTRA_LEADERBOARD_ID)
 
-        if(leaderboardId != null) {
+        if (leaderboardId != null) {
 
             onDataReadyListener = {
                 title =
@@ -44,13 +46,13 @@ class LeaderboardStatisticsActivity : StatisticsActivity() {
 
                         val builder = StringBuilder()
 
-                        for(i in 0 until spl.size - 1 step 2) {
+                        for (i in 0 until spl.size - 1 step 2) {
                             val variableId = spl[i]
                             val valueId = spl[i + 1]
 
                             val variable = chartData!!.category?.variables?.find { v -> v.id == variableId }
 
-                            if(variable == null)
+                            if (variable == null)
                                 continue
                             else {
                                 val valueLabel = variable.values[valueId]?.label ?: continue
@@ -74,7 +76,8 @@ class LeaderboardStatisticsActivity : StatisticsActivity() {
                             (holder as RunViewHolder).apply(ctx!!, disposables!!, null, lbr)
                         }
                     },
-                    chartListReverse = true
+                    chartListReverse = true,
+                    chartListOnSelected = { viewRun(it as Run) }
             ))
 
             addChart(ChartOptions(
@@ -94,13 +97,13 @@ class LeaderboardStatisticsActivity : StatisticsActivity() {
 
                         val builder = StringBuilder()
 
-                        for(i in 0 until spl.size - 1 step 2) {
+                        for (i in 0 until spl.size - 1 step 2) {
                             val variableId = spl[i]
                             val valueId = spl[i + 1]
 
                             val variable = chartData!!.category?.variables?.find { v -> v.id == variableId }
 
-                            if(variable == null)
+                            if (variable == null)
                                 continue
                             else {
                                 val valueLabel = variable.values[valueId]?.label ?: continue
@@ -123,7 +126,8 @@ class LeaderboardStatisticsActivity : StatisticsActivity() {
 
                             (holder as RunViewHolder).apply(ctx!!, disposables!!, null, lbr)
                         }
-                    }
+                    },
+                    chartListOnSelected = { viewRun(it as Run) }
             ))
 
             setDataSourceAPIResponse(
@@ -143,6 +147,12 @@ class LeaderboardStatisticsActivity : StatisticsActivity() {
 
         rulesTv.setPadding(resources.getDimensionPixelSize(R.dimen.half_fab_margin))
         contentView.addView(rulesTv)
+    }
+
+    private fun viewRun(run: Run) {
+        val intent = Intent(this, RunDetailActivity::class.java)
+        intent.putExtra(RunDetailActivity.EXTRA_RUN_ID, run.id)
+        startActivity(intent)
     }
 
     companion object {

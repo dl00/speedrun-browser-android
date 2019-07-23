@@ -234,7 +234,7 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
             mProgressSpinner!!.visibility = View.GONE
             mContentLayout!!.visibility = View.VISIBLE
 
-            if (mFilteredLeaderboardRuns!!.isEmpty()) {
+            if (mFilteredLeaderboardRuns != null && mFilteredLeaderboardRuns!!.isEmpty()) {
                 mEmptyRuns!!.visibility = View.VISIBLE
             }
         }

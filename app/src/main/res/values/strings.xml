@@ -126,11 +126,18 @@
     <string name="title_game_stats">Game Statistics</string>
     <string name="chart_legend_volume">PBs Submitted</string>
     <string name="chart_title_wrs">World Record Progression</string>
-    <string name="chart_desc_wrs">Game completion time by world records over time. Double tap on a run on the list below to view the video!</string>
+    <string name="chart_desc_wrs">Tap on a list item while selected to view the run!\n
+        \n
+        Game completion time by world records over time. Plotted by each subcategory on the same line.</string>
     <string name="title_leaderboard_stats">Leaderboard Statistics</string>
     <string name="button_view_leaderboard_info">View Rules/Stats</string>
     <string name="chart_title_distribution">PB Distribution</string>
-    <string name="chart_desc_distribution">Ever wonder how to know if a world record is impressive or not? Check this chart to see every PB on the leaderboard plotted by time. A steep slope may indicate a higher skill level in order to achieve more optimized times.</string>
+    <string name="chart_desc_distribution">
+        Plots all leaderboard runs on a single chart.
+
+        This chart gives a wholistic view on what a "typical" skilled time might look like what separates
+        the seasoned runners from newbies.
+    </string>
     <string name="chart_title_favorite_games">Favorite Games</string>
     <string name="chart_desc_favorite_games">The number of PBs this player has submitted for each game, displayed as a Pie wheel.</string>
     <string name="chart_title_count_over_time">Total PB Records</string>

@@ -38,7 +38,7 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
 
     init {
         // configure the webview to support playing video
-        mWebView.settings.setAppCacheMaxSize((10 * 1024 * 1024).toLong())
+        mWebView.settings.setAppCacheMaxSize((1 * 1024 * 1024).toLong())
         mWebView.settings.javaScriptEnabled = true
         mWebView.settings.mediaPlaybackRequiresUserGesture = false
     }
