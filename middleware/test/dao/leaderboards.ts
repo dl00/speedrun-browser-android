@@ -281,8 +281,8 @@ describe('add_leaderboard_run', () => {
         // bug: if the time gets converted to a string then runs could be elevated way higher than they should be!
         lre = add_leaderboard_run(lb, <Run><unknown>{
             id: 'last',
-            date: '2019-05-05',
-            players: [{id: 'newp'}],
+            date: '2019-05-06',
+            players: [{id: 'dummy'}],
             status: {'verify-date': '2019-05-06', status: 'verified'},
             system: {},
             values: {},
@@ -293,6 +293,12 @@ describe('add_leaderboard_run', () => {
         }, []);
 
         expect(lre.place).to.not.eql(1);
+
+        expect(lb.runs[2].run.times.primary_t).to.eql(20);
+
+
+        // bug: this run is "newer", so it should be accepted over the faster run by the same player
+        expect(lre.place).to.eql(4);
     });
 
     it('should add run to empty leaderboard', async () => {

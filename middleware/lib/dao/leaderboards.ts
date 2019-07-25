@@ -49,7 +49,7 @@ export function add_leaderboard_run(d: Leaderboard, run: Run, vars: Variable[]):
         );
     });
 
-    if(existing_idx !== -1 && d.runs[existing_idx].run.times.primary_t < run.times.primary_t)
+    if(existing_idx !== -1 && d.runs[existing_idx].run.submitted > run.submitted)
         return { run: run }; // has no place on this leaderboard because its obsolete
 
     // simulate leaderboard changes for unverified runs
@@ -57,8 +57,12 @@ export function add_leaderboard_run(d: Leaderboard, run: Run, vars: Variable[]):
         d = _.cloneDeep(d);
     }
 
-    if(existing_idx !== -1)
+    if(existing_idx !== -1) {
         d.runs.splice(existing_idx, 1);
+
+        if(existing_idx < run_idx)
+            run_idx--;
+    }
 
     d.runs.splice(run_idx, 0, lbe);
 
@@ -128,7 +132,7 @@ export function make_distribution_chart(lb: Leaderboard, vars: Variable[]): Char
                     .value();
 
             let p = {
-                x: i,
+                x: <number>run.place,
                 y: run.run.times.primary_t,
                 obj: run_to_bulk(<Run>run.run)
             }
