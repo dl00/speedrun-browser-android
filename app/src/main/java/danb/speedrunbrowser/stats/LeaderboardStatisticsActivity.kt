@@ -137,6 +137,8 @@ class LeaderboardStatisticsActivity : StatisticsActivity() {
     }
 
     private fun addRulesText(category: Category) {
+        contentView.removeAllViews()
+
         val rulesText = category.getRulesText(Variable.VariableSelections())
 
         val rulesTv = TextView(this)
