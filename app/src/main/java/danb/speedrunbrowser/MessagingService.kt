@@ -94,7 +94,7 @@ class MessagingService : FirebaseMessagingService() {
         intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemType.PLAYERS)
         intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, players[0].id)
 
-        Util.postNotification(this, intent, players[0].id, title, msg, featureImg!!)
+        Util.postNotification(this, intent, players[0].id, title, msg, featureImg)
     }
 
     private fun makeGameNotification(data: PushNotificationData) {

@@ -20,7 +20,7 @@ class GameCoverViewHolder(v: View) : RecyclerView.ViewHolder(v) {
     private val mCover: ImageView = v.findViewById(R.id.imgGameCover)
 
     fun apply(ctx: Context, disposables: CompositeDisposable, game: Game) {
-        mName.text = game.names["international"]
+        mName.text = game.resolvedName
         mDate.text = game.releaseDate
         mRunnersCount.text = ""
 

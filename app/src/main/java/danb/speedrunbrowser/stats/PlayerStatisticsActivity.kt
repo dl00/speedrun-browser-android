@@ -24,7 +24,7 @@ class PlayerStatisticsActivity : StatisticsActivity() {
                     description = getString(R.string.chart_desc_favorite_games),
                     identifier = "favorite_games",
                     pieLabels = {
-                        (it as Game).names.getValue("international")
+                        (it as Game).resolvedName
                     },
                     setLabels = {""}
             ))

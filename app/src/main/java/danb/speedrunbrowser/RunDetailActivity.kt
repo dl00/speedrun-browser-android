@@ -435,7 +435,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
                     .setType("text/plain")
                     .putExtra(Intent.EXTRA_TEXT,
                             getString(R.string.msg_share_run, User.printPlayerNames(mRun!!.players!!),
-                                    mRun!!.game!!.names["international"],
+                                    mRun!!.game!!.resolvedName,
                                     mRun!!.times?.time ?: "", mRun!!.weblink))
 
             startActivity(Intent.createChooser(intent, getString(R.string.msg_share_run_explain)))

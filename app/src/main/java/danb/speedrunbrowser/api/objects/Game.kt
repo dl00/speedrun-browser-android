@@ -8,7 +8,7 @@ import java.util.Date
 
 data class Game(
     val id: String,
-    val names: Map<String, String> = mapOf(),
+    val names: Map<String, String>? = mapOf(),
     val abbreviation: String = "",
     val weblink: String = "",
 
@@ -33,7 +33,7 @@ data class Game(
 ) : Serializable, SearchResultItem {
 
     override val resolvedName: String
-    get() = names["international"] ?: "? Unknown Name ?"
+    get() = names?.get("international") ?: "? Unknown Name ?"
 
     override val type: String
             get() = "game"

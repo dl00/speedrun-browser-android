@@ -63,6 +63,15 @@
                 android:textSize="20sp" />
 
             <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/fab_margin"
+                android:text="@string/label_about_speedrun_legal"
+                android:textAlignment="center"
+                android:typeface="monospace"
+                android:textSize="8sp" />
+
+            <TextView
                 android:id="@+id/linkRateThis"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

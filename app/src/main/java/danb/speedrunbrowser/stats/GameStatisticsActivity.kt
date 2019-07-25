@@ -13,7 +13,7 @@ class GameStatisticsActivity : StatisticsActivity() {
         if(gameId != null) {
 
             onDataReadyListener = {
-                title = it.game!!.names["international"]
+                title = it.game!!.resolvedName
             }
 
             addChart(ChartOptions(

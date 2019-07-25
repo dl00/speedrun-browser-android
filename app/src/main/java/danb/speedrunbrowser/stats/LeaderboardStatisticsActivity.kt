@@ -29,7 +29,7 @@ class LeaderboardStatisticsActivity : StatisticsActivity() {
 
             onDataReadyListener = {
                 title =
-                        StringBuilder(it.game!!.names.getValue("international")).append(" \u2022 ")
+                        StringBuilder(it.game!!.resolvedName).append(" \u2022 ")
                                 .append(makeCategoryNameText(it.category!!, it.level))
                                 .toString()
 

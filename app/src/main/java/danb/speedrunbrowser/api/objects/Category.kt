@@ -30,7 +30,7 @@ data class Category(
                 if (selections?.isEmpty() != false)
                     continue
 
-                val moreRules = values.getValue(selections.iterator().next()).rules
+                val moreRules = values[selections.iterator().next()]?.rules
 
                 if (moreRules != null)
                     rulesText.append("\n\n").append(moreRules)
