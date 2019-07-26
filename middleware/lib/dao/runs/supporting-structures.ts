@@ -120,7 +120,7 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
         await Promise.all([
             await this.update_leaderboard(conf, runs, categories),
             await this.update_player_pbs(conf, runs, categories),
-            await this.update_obsoletes(conf, runs, categories)
+            await this.update_obsoletes(conf, _.cloneDeep(runs), categories)
         ]);
     }
 
