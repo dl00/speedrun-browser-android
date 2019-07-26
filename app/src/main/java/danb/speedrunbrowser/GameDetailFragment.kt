@@ -245,8 +245,6 @@ class GameDetailFragment : Fragment() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
-        val pa = mCategoryTabStrip!!.pagerAdapter
-
         outState.putParcelable(SAVED_PAGER, mLeaderboardPager.onSaveInstanceState())
         outState.putSerializable(SAVED_GAME, mGame)
         outState.putSerializable(SAVED_FILTERS, mVariableSelections)

@@ -2,6 +2,7 @@ package danb.speedrunbrowser
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.PersistableBundle
 import android.util.Log
 import android.view.MenuItem
 
@@ -31,69 +32,63 @@ class ItemDetailActivity : AppCompatActivity(), Consumer<SpeedrunMiddlewareAPI.A
         val actionBar = supportActionBar
         actionBar?.setDisplayHomeAsUpEnabled(true)
 
-        // savedInstanceState is non-null when there is fragment state
-        // saved from previous configurations of this activity
-        // (e.g. when rotating the screen from portrait to landscape).
-        // In this case, the fragment will automatically be re-added
-        // to its container so we don't need to manually add it.
-        // For more information, see the Fragments API guide at:
-        //
-        // http://developer.android.com/guide/components/fragments.html
-        //
-        if (savedInstanceState == null) {
-            // Create the detail fragment and add it to the activity
-            // using a fragment transaction.
-            val intent = intent
-            val args = intent.extras
+        // Create the detail fragment and add it to the activity
+        // using a fragment transaction.
+        val intent = intent
+        val args = intent.extras
 
-            if (args == null) {
-                finish() // nothing/no way to view...
-            }
+        if (args == null) {
+            finish() // nothing/no way to view...
+        }
 
-            val type = args!!.getSerializable(EXTRA_ITEM_TYPE) as ItemType?
+        val type = args!!.getSerializable(EXTRA_ITEM_TYPE) as ItemType?
 
-            var frag: Fragment? = null
+        var frag: Fragment? = null
 
-            when {
-                type != null -> frag = when (type) {
-                    ItemType.GAMES -> GameDetailFragment()
-                    ItemType.PLAYERS -> PlayerDetailFragment()
-                    else -> {
-                        showMainPage()
-                        return
-                    }
-                }
-                intent.data != null -> {
-                    val segs = intent.data!!.pathSegments
-
-                    if (segs.isEmpty()) {
-                        showMainPage()
-                        return
-                    }
-
-                    val id = segs[segs.size - 1]
-
-                    Log.d(TAG, "Decoded game or player ID: " + id + ", from URL: " + intent.data)
-
-                    // use the whatis api to resolve the type of object
-                    whatIsQuery = SpeedrunMiddlewareAPI.make().whatAreThese(id)
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(this, ConnectionErrorConsumer(this))
-                }
+        when {
+            type != null -> frag = when (type) {
+                ItemType.GAMES -> GameDetailFragment()
+                ItemType.PLAYERS -> PlayerDetailFragment()
                 else -> {
-                    Log.w(TAG, "Could not find game ID argument")
-
-                    Util.showErrorToast(this, getString(R.string.error_could_not_find, "No data provided"))
-
-                    finish()
+                    showMainPage()
+                    return
                 }
             }
+            intent.data != null -> {
+                val segs = intent.data!!.pathSegments
 
-            if (frag != null) {
-                showFragment(frag, args)
+                if (segs.isEmpty()) {
+                    showMainPage()
+                    return
+                }
+
+                val id = segs[segs.size - 1]
+
+                Log.d(TAG, "Decoded game or player ID: " + id + ", from URL: " + intent.data)
+
+                // use the whatis api to resolve the type of object
+                whatIsQuery = SpeedrunMiddlewareAPI.make().whatAreThese(id)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(this, ConnectionErrorConsumer(this))
+            }
+            else -> {
+                Log.w(TAG, "Could not find game ID argument")
+
+                Util.showErrorToast(this, getString(R.string.error_could_not_find, "No data provided"))
+
+                finish()
             }
         }
+
+        if (frag != null) {
+            showFragment(frag, args)
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.remove("android:support:fragments")
     }
 
     override fun onDestroy() {
