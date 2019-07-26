@@ -391,7 +391,7 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
 
                 if(selectedIndex == reversePosition(position) &&
                         options.chartListOnSelected != null && chartData[position].obj != null)
-                    options.chartListOnSelected!!(chartData[position].obj!!)
+                    options.chartListOnSelected!!(chartData[selectedIndex!!].obj!!)
 
                 selectedIndex = reversePosition(position)
 
