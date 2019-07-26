@@ -344,7 +344,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             })
             .skip(skip);
 
-        let batchSize = 500;
+        let batchSize = 200;
         let count = 0;
 
         let runs = new Array(batchSize);
