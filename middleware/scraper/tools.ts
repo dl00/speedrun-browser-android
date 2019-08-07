@@ -29,6 +29,12 @@ export async function massage_all_runs(skip = 0) {
     return await new RunDao(scraper.storedb!).massage_runs({}, skip);
 }
 
+export async function restore_single_run(id: string) {
+    let run_dao = new RunDao(scraper.storedb!);
+    let run = await run_dao.load(id);
+    return await run_dao.save(run);
+}
+
 export async function generate_all_charts() {
     await make_all_wr_charts(new RunDao(scraper.storedb!));
 }
