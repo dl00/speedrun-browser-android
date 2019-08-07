@@ -6,6 +6,7 @@ import * as config from '../lib/config';
 import { Category } from '../lib/dao/categories';
 import { Level } from '../lib/dao/levels';
 import { UserDao, User } from '../lib/dao/users';
+import { LeaderboardRunEntry } from '../lib/dao/leaderboards';
 
 import { RunDao, Run } from '../lib/dao/runs';
 import { GameDao, Game } from '../lib/dao/games';
