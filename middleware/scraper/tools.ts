@@ -6,9 +6,8 @@ import * as config from '../lib/config';
 import { Category } from '../lib/dao/categories';
 import { Level } from '../lib/dao/levels';
 import { UserDao, User } from '../lib/dao/users';
-import { LeaderboardRunEntry } from '../lib/dao/leaderboards';
 
-import { RunDao, Run } from '../lib/dao/runs';
+import { RunDao, Run, LeaderboardRunEntry } from '../lib/dao/runs';
 import { GameDao, Game } from '../lib/dao/games';
 
 import { make_all_wr_charts } from '../lib/dao/runs/charts';
@@ -33,8 +32,8 @@ export async function massage_all_runs(skip = 0) {
 export async function restore_single_run(id: string) {
     let run_dao = new RunDao(scraper.storedb!);
     let run = await run_dao.load(id);
-    if(run != null)
-        return await run_dao.save(<LeaderboardRunEntry>run);
+    if(run[0] != null)
+        return await run_dao.save(<LeaderboardRunEntry>run[0]);
     else
         return "Run does not exist.";
 }
