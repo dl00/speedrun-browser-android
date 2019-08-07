@@ -32,7 +32,10 @@ export async function massage_all_runs(skip = 0) {
 export async function restore_single_run(id: string) {
     let run_dao = new RunDao(scraper.storedb!);
     let run = await run_dao.load(id);
-    return await run_dao.save(run);
+    if(run != null)
+        return await run_dao.save(<LeaderboardRunEntry>run);
+    else
+        return "Run does not exist.";
 }
 
 export async function generate_all_charts() {
