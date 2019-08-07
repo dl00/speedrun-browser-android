@@ -140,10 +140,18 @@ export async function populate_run_sub_documents(db: DB, runs: Run[]): Promise<P
         return _.reject(_.map(run.players, 'id'), _.isNil);
     })));
 
-    let games = _.zipObject(game_ids, await new GameDao(db).load(game_ids));
-    let categories = _.zipObject(category_ids, await new CategoryDao(db).load(category_ids));
-    let levels = _.zipObject(level_ids, await new LevelDao(db).load(level_ids));
-    let players = _.zipObject(player_ids, await new UserDao(db).load(player_ids));
+    let games: {[id: string]: Game|null} = {};
+    if(game_ids.length)
+        games = _.zipObject(game_ids, await new GameDao(db).load(game_ids));
+    let categories: {[id: string]: Category|null} = {};
+    if(category_ids.length)
+        categories = _.zipObject(category_ids, await new CategoryDao(db).load(category_ids));
+    let levels: {[id: string]: Level|null} = {};
+    if(level_ids.length)
+        levels = _.zipObject(level_ids, await new LevelDao(db).load(level_ids));
+    let players: {[id: string]: User|null} = {};
+    if(player_ids.length)
+        players = _.zipObject(player_ids, await new UserDao(db).load(player_ids));
 
     // list of runs we are skipping processing
     let drop_runs: Run[] = [];
