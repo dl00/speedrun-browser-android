@@ -7,7 +7,7 @@ import java.util.regex.Pattern
 
 data class RunTimes(
         val primary: String? = null,
-        val primary_t: Int = 0,
+        val primary_t: Float = 0.0f,
         val realtime: String? = null,
         val realtimeNoloads: String? = null,
         val ingame: String? = null
@@ -27,13 +27,13 @@ data class RunTimes(
 
             // hours
             if (m.group(2) != null)
-                t += 3600 * java.lang.Float.parseFloat(m.group(2))
+                t += 3600 * java.lang.Float.parseFloat(m.group(2)!!)
             // minutes
             if (m.group(4) != null)
-                t += 60 * java.lang.Float.parseFloat(m.group(4))
+                t += 60 * java.lang.Float.parseFloat(m.group(4)!!)
             // seconds
             if (m.group(6) != null)
-                t += java.lang.Float.parseFloat(m.group(6))
+                t += java.lang.Float.parseFloat(m.group(6)!!)
 
             return t
         } else {
