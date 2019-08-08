@@ -156,7 +156,7 @@ async function pop_call(): Promise<any> {
     let q_to_call = ks[0];
 
     for(let k of ks) {
-        if(parseInt(q_to_call.split(':')[1]) < parseInt(k.split(':')[1]))
+        if(parseInt(q_to_call.split(':')[1]) > parseInt(k.split(':')[1]))
             q_to_call = k;
     }
 
