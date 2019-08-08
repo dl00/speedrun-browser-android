@@ -139,17 +139,7 @@ async function do_call(call: Call, priority: number) {
     }
 }
 
-
-// arguments for later passing to the iblpushrpop command
-const LISTEN_CMD: string[] = [];
-for(let i = 0;i < 20;i++) {
-    LISTEN_CMD.push(ScraperDB.join([ScraperDB.locs.callqueue, i.toString()]))
-}
-
-// timeout: do not block for more than a second!
-LISTEN_CMD.push('1');
-
-async function pop_call() {
+async function pop_call(): Promise<any> {
     let rawc = null;
 
     // using custom command for redis stored in middleware/redis/iblpoprpush.lua
@@ -157,15 +147,29 @@ async function pop_call() {
 
     // there is technically a small chance that a job could be dropped here. but its unlikely
     // and we cannot use a script to go around this just yet. Could be something todo later!
-    rawc = await rdb!.blpop.apply(rdb, LISTEN_CMD);
 
-    if(!rawc)
+    let ks = await rdb!.keys(ScraperDB.locs.callqueue + ':*');
+
+    if(!ks.length)
         return null;
 
-    let priority = rawc[0].split(':')[1];
-    let raw_running_task = ScraperDB.join([Date.now(), rawc[1]]);
+    let q_to_call = ks[0];
 
-    let d = rawc[1].split(':');
+    for(let k of ks) {
+        if(parseInt(q_to_call.split(':')[1]) < parseInt(k.split(':')[1]))
+            q_to_call = k;
+    }
+
+    rawc = await rdb!.lpop(q_to_call);
+
+    if(!rawc)
+        // retry pulling from the queue
+        return await pop_call();
+
+    let priority = parseInt(q_to_call.split(':')[1]);
+    let raw_running_task = ScraperDB.join([Date.now().toString(), rawc]);
+
+    let d = rawc.split(':');
 
     let call: Call = {
         runid: d[0],
