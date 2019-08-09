@@ -58,9 +58,13 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
                     leaderboards[leaderboard_id].level = level_id;
             }
 
+            let category = categories[<string>leaderboards[leaderboard_id].category];
+            if(!category)
+                continue;
+
             leaderboards[leaderboard_id].runs = await (<RunDao>conf).calculate_leaderboard_runs(<string>leaderboards[leaderboard_id].game, <string>leaderboards[leaderboard_id].category, <string|undefined>leaderboards[leaderboard_id].level);
 
-            correct_leaderboard_run_places(leaderboards[leaderboard_id], <Variable[]>categories[<string>leaderboards[leaderboard_id].category]!.variables);
+            correct_leaderboard_run_places(leaderboards[leaderboard_id], <Variable[]>category.variables);
         }
 
         let clean_leaderboards = _.reject(_.values(leaderboards), _.isNil);
@@ -91,6 +95,7 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
         let filter: any = {
             $or: _.filter(runs, 'run.category.id').map(run => {
                 let filter: any = {
+                    'run.game.id': run.run.game.id,
                     'run.category.id': run.run.category.id,
                     'run.date': {$lt: run.run.date},
                 };
