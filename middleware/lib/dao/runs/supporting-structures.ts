@@ -79,21 +79,12 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
 
     async update_obsoletes(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[], categories: {[key: string]: Category|null}) {
 
-        let subcategory_var_ids = _.chain(categories.variables)
-            .filter('is-subcategory')
-            .map('id')
-            .value();
-
-        // we check if its false here because the behavior of `obsoletes` appears to be as follows:
-        // if false, only mark as obsolete if the subcategory variable remains the same
-        // if true, always mark as obsolete regardless of filter value (aka no filter needed)
-        let obsoletes_var_ids = _.chain(categories.variables)
-            .reject('obsoletes')
-            .map('id')
-            .value();
-
         let filter: any = {
             $or: _.filter(runs, 'run.category.id').map(run => {
+
+                if(!categories[run.run.category.id])
+                    return;
+
                 let filter: any = {
                     'run.game.id': run.run.game.id,
                     'run.category.id': run.run.category.id,
@@ -103,10 +94,23 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
                 if(run.run.level)
                     filter['run.level.id'] = run.run.level.id;
 
+                let subcategory_var_ids = _.chain(categories[run.run.category.id]!.variables)
+                    .filter('is-subcategory')
+                    .map('id')
+                    .value();
+
                 // matching subcategories
                 for(let id of subcategory_var_ids) {
                     filter[`run.values.${id}`] = run.run.values[id];
                 }
+
+                // we check if its false here because the behavior of `obsoletes` appears to be as follows:
+                // if false, only mark as obsolete if the subcategory variable remains the same
+                // if true, always mark as obsolete regardless of filter value (aka no filter needed)
+                let obsoletes_var_ids = _.chain(categories[run.run.category.id]!.variables)
+                    .reject('obsoletes')
+                    .map('id')
+                    .value();
 
                 // matching "obsoletes" var ids
                 for(let id of obsoletes_var_ids) {
