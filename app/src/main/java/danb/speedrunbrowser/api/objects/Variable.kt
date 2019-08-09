@@ -77,7 +77,9 @@ data class Variable(
                 }
 
                 // platforms and regions can also be filtered if special keys are provided
-                if (selections.containsKey(FILTER_KEY_PLATFORM) && (run.system == null || !Objects.requireNonNull<Set<String>>(selections[FILTER_KEY_PLATFORM]).contains(run.system.platform)) || selections.containsKey(FILTER_KEY_REGION) && (run.system == null || !Objects.requireNonNull<Set<String>>(selections[FILTER_KEY_REGION]).contains(run.system.region))) {
+                if (selections.containsKey(FILTER_KEY_PLATFORM) && (run.system == null || !selections[FILTER_KEY_PLATFORM]!!.contains(run.system.platform)) || selections.containsKey(FILTER_KEY_REGION) && (run.system == null || !selections[FILTER_KEY_REGION]!!.contains(run.system.region))) {
+                    println(run.system!!.platform)
+                    println(selections[FILTER_KEY_PLATFORM])
                     return false
                 }
             }
@@ -89,7 +91,7 @@ data class Variable(
             val shownRuns = ArrayList<LeaderboardRunEntry>()
 
             var lastPlace = 1
-            var lastTime = 0
+            var lastTime = 0.0f
 
             for (re in lb.runs!!) {
                 if (shouldShowRun(re.run, activeVariables)) {

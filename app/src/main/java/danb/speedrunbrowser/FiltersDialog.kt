@@ -13,11 +13,8 @@ import android.widget.TextView
 
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
-import java.util.Objects
 
 import danb.speedrunbrowser.api.objects.Game
-import danb.speedrunbrowser.api.objects.Platform
-import danb.speedrunbrowser.api.objects.Region
 import danb.speedrunbrowser.api.objects.Variable
 
 class FiltersDialog(
@@ -54,7 +51,7 @@ class FiltersDialog(
 
             val cgv = ChipGroup(context)
             for ((id, name) in mGame.platforms!!) {
-                val cv = makeChip(Variable.VariableSelections.FILTER_KEY_REGION, id)
+                val cv = makeChip(Variable.VariableSelections.FILTER_KEY_PLATFORM, id)
                 cv.text = name
                 cgv.addView(cv)
             }
