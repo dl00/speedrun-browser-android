@@ -82,9 +82,6 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
         let filter: any = {
             $or: _.filter(runs, 'run.category.id').map(run => {
 
-                if(!categories[run.run.category.id])
-                    return;
-
                 let filter: any = {
                     'run.game.id': run.run.game.id,
                     'run.category.id': run.run.category.id,
@@ -93,6 +90,17 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
 
                 if(run.run.level)
                     filter['run.level.id'] = run.run.level.id;
+
+                // matching players
+                filter['run.players'] = {$size: run.run.players.length};
+                run.run.players.forEach((player, i) => {
+                    filter[`run.players.${i}.id`] = player.id
+                });
+
+
+	        // return early if we dont have a category with variables to pull
+                if(!categories[run.run.category.id])
+                    return filter;
 
                 let subcategory_var_ids = _.chain(categories[run.run.category.id]!.variables)
                     .filter('is-subcategory')
@@ -118,12 +126,6 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
                     if(run.run.values[id])
                         filter[`run.values.${id}`] = run.run.values[id];
                 }
-
-                // matching players
-                filter['run.players'] = {$size: run.run.players.length};
-                run.run.players.forEach((player, i) => {
-                    filter[`run.players.${i}.id`] = player.id
-                });
 
                 return filter;
             })
