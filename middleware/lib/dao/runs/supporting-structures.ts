@@ -101,7 +101,8 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
 
                 // matching subcategories
                 for(let id of subcategory_var_ids) {
-                    filter[`run.values.${id}`] = run.run.values[id];
+                    if(run.run.values[id])
+                        filter[`run.values.${id}`] = run.run.values[id];
                 }
 
                 // we check if its false here because the behavior of `obsoletes` appears to be as follows:
@@ -114,7 +115,8 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
 
                 // matching "obsoletes" var ids
                 for(let id of obsoletes_var_ids) {
-                    filter[`run.values.${id}`] = run.run.values[id]
+                    if(run.run.values[id])
+                        filter[`run.values.${id}`] = run.run.values[id];
                 }
 
                 // matching players
