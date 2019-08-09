@@ -1,11 +1,12 @@
 import * as _ from 'lodash';
 
-import { Run, LeaderboardRunEntry, NewRecord } from './';
+import { RunDao, Run, LeaderboardRunEntry, NewRecord } from './';
 import { IndexDriver, DaoConfig } from '../';
 import { CategoryDao, Category, BulkCategory } from '../categories';
 import { BulkLevel } from '../levels';
-import { LeaderboardDao, Leaderboard, add_leaderboard_run } from '../leaderboards';
+import { LeaderboardDao, Leaderboard, correct_leaderboard_run_places } from '../leaderboards';
 import { UserDao } from '../users';
+
 import { Variable } from '../../speedrun-api';
 
 function get_leaderboard_id_for_run(run: Run) {
@@ -35,33 +36,31 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
         let leaderboards = <{[id: string]: Leaderboard}>_.zipObject(leaderboard_ids_deduped,
             await new LeaderboardDao(conf.db).load(leaderboard_ids_deduped));
 
-        for(let run of runs) {
+        for(let leaderboard_id in leaderboards) {
 
-            if(!run.run.category || !run.run.category.id || !categories[(<BulkCategory>run.run.category).id])
-                continue;
-
-            let leaderboard = leaderboards[<string>get_leaderboard_id_for_run(<Run>run.run)];
-
-            if(!leaderboard || !_.keys(leaderboard).length) {
+            if(!leaderboards[leaderboard_id]) {
                 // new leaderboard
-                leaderboard = {
-                	game: run.run.game.id,
+                let category_id = leaderboard_id.split('_')[0];
+                let level_id = leaderboard_id.split('_')[1];
+
+                if(!categories[category_id])
+                    continue;
+
+                leaderboards[leaderboard_id] = {
+                	game: <string>categories[category_id]!.game,
                     weblink: '',
-                	category: run.run.category.id,
+                	category: category_id,
                     players: {},
                     runs: []
                 };
 
-                if(run.run.level && run.run.level.id)
-                    leaderboard.level = run.run.level.id;
-
-                leaderboards[<string>get_leaderboard_id_for_run(<Run>run.run)] = leaderboard;
+                if(level_id)
+                    leaderboards[leaderboard_id].level = level_id;
             }
 
-            add_leaderboard_run(
-                leaderboard,
-                <Run>run.run,
-                <Variable[]>categories[(<BulkCategory>run.run.category).id]!.variables);
+            leaderboards[leaderboard_id].runs = await (<RunDao>conf).calculate_leaderboard_runs(<string>leaderboards[leaderboard_id].game, <string>leaderboards[leaderboard_id].category, <string|undefined>leaderboards[leaderboard_id].level);
+
+            correct_leaderboard_run_places(leaderboards[leaderboard_id], <Variable[]>categories[<string>leaderboards[leaderboard_id].category]!.variables);
         }
 
         let clean_leaderboards = _.reject(_.values(leaderboards), _.isNil);
@@ -81,11 +80,19 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
             .map('id')
             .value();
 
-        await conf.db.mongo.collection(conf.collection).updateMany({
+        // we check if its false here because the behavior of `obsoletes` appears to be as follows:
+        // if false, only mark as obsolete if the subcategory variable remains the same
+        // if true, always mark as obsolete regardless of filter value (aka no filter needed)
+        let obsoletes_var_ids = _.chain(categories.variables)
+            .reject('obsoletes')
+            .map('id')
+            .value();
+
+        let filter: any = {
             $or: _.filter(runs, 'run.category.id').map(run => {
                 let filter: any = {
                     'run.category.id': run.run.category.id,
-                    'run.submitted': {$lt: run.run.submitted},
+                    'run.date': {$lt: run.run.date},
                 };
 
                 if(run.run.level)
@@ -96,6 +103,11 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
                     filter[`run.values.${id}`] = run.run.values[id];
                 }
 
+                // matching "obsoletes" var ids
+                for(let id of obsoletes_var_ids) {
+                    filter[`run.values.${id}`] = run.run.values[id]
+                }
+
                 // matching players
                 filter['run.players'] = {$size: run.run.players.length};
                 run.run.players.forEach((player, i) => {
@@ -104,7 +116,9 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
 
                 return filter;
             })
-        }, {
+        };
+
+        await conf.db.mongo.collection(conf.collection).updateMany(filter, {
             $set: {'obsolete': true}
         });
     }
@@ -117,10 +131,11 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
         let category_ids = <string[]>_.uniq(_.map(runs, 'run.category.id'));
         let categories = _.zipObject(category_ids, await new CategoryDao(conf.db!).load(category_ids));
 
+        await this.update_obsoletes(conf, _.cloneDeep(runs), categories);
+
         await Promise.all([
             this.update_leaderboard(conf, runs, categories),
             this.update_player_pbs(conf, runs, categories),
-            this.update_obsoletes(conf, _.cloneDeep(runs), categories)
         ]);
     }
 

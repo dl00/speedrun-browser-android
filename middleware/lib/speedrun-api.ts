@@ -36,6 +36,7 @@ export interface Asset {
 export interface Variable extends BaseMiddleware {
     id: string
     'is-subcategory'?: boolean
+    obsoletes?: boolean
     values: any
 }
 

@@ -12,12 +12,11 @@ import * as push_notify from '../push-notify';
 
 import { Run, RunDao, LeaderboardRunEntry, populate_run_sub_documents } from '../../lib/dao/runs';
 import { UserDao, User } from '../../lib/dao/users';
-import { Leaderboard, LeaderboardDao, add_leaderboard_run } from '../../lib/dao/leaderboards';
+import { Leaderboard, LeaderboardDao } from '../../lib/dao/leaderboards';
 
 import { BulkGame } from '../../lib/dao/games';
 import { BulkCategory } from '../../lib/dao/categories';
 import { BulkLevel } from '../../lib/dao/levels';
-import { Variable } from '../../lib/speedrun-api';
 
 export async function pull_latest_runs(runid: string, options: any) {
     try {
@@ -109,11 +108,7 @@ export async function pull_latest_runs(runid: string, options: any) {
                 continue;
             }
 
-            lbres.push(add_leaderboard_run(
-                leaderboard,
-                run,
-                <Variable[]>pr.categories[(<BulkCategory>run.category).id]!.variables)
-            );
+            lbres.push({run: run});
         }
 
         let run_dao = new RunDao(scraper.storedb!);

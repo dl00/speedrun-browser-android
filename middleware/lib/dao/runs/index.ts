@@ -81,6 +81,7 @@ export interface Run extends BulkRun, BaseMiddleware {
 }
 
 export interface LeaderboardRunEntry {
+    obsolete?: boolean // TODO: maybe a date later
     place?: number|null
     run: BulkRun
 }
@@ -319,6 +320,21 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             background: true
         }).then(_.noop);
 
+        // used to calculate leaderboards
+        db.mongo.collection(this.collection).createIndex({
+            'run.game.id': 1,
+            'run.category.id': 1,
+            'run.level.id': 1,
+            'run.times.primary_t': 1,
+            'run.date': 1
+        }, {
+            background: true,
+            partialFilterExpression: {
+                'run.status.status': 'verified',
+                'obsolete': false,
+            }
+        });
+
         this.indexes = [
             new RecentRunsIndex('latest_new_runs', 'submitted', LATEST_NEW_RUNS_KEY,
                 config && config.latest_runs_history_length ? config.latest_runs_history_length : 1000,
@@ -331,6 +347,37 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             new SupportingStructuresIndex('supporting_structures'),
             new RecordChartIndex('chart_wrs')
         ];
+    }
+
+    // not used in prod: see leaderboards instaed.
+    async calculate_leaderboard_runs(game_id: string, category_id: string, level_id?: string): Promise<LeaderboardRunEntry[]> {
+
+        let filter: any = {
+            'run.game.id': game_id,
+            'run.category.id': category_id,
+            'obsolete': false,
+            'run.status.status': 'verified',
+        };
+
+        if(level_id)
+            filter['run.level.id'] = level_id;
+
+        return await this.db.mongo.collection(this.collection).find(filter, {
+            projection: {
+                '_id': 0,
+                'run.id': 1,
+                'run.date': 1,
+                'run.players': 1,
+                'run.times': 1,
+                'run.system': 1,
+                'run.values': 1
+            }
+        })
+        .sort({
+            'run.times.primary_t': 1,
+            'run.date': 1
+        })
+        .toArray();
     }
 
     /// return new records saved to DB during the lifetime of this Dao instance
@@ -385,6 +432,11 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
 
     protected async pre_store_transform(run: LeaderboardRunEntry): Promise<LeaderboardRunEntry> {
         normalize_run(<Run>run.run);
+
+        // have to make sure this is set to please the index
+        if(!run.obsolete)
+            run.obsolete = false;
+
         return run;
     }
 

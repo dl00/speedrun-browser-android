@@ -1,12 +1,10 @@
 import * as _ from 'lodash';
 
-import { correct_leaderboard_run_places, add_leaderboard_run } from '../../lib/dao/leaderboards';
+import { correct_leaderboard_run_places } from '../../lib/dao/leaderboards';
 
 import { expect } from 'chai';
 
 import 'mocha';
-import { Run } from '../../lib/dao/runs';
-import { Leaderboard } from '../../lib/dao/leaderboards';
 
 describe('correct_leaderboard_run_places', () => {
     it('should have a monotonically increasing list with no ties or subcategories', async () => {
@@ -21,7 +19,7 @@ describe('correct_leaderboard_run_places', () => {
                     run: {
                         id: 'one',
                         date: '2019-05-05',
-                        players: [],
+                        players: [{id: '1'}],
                         system: {},
                         values: {},
                         times: {
@@ -34,7 +32,7 @@ describe('correct_leaderboard_run_places', () => {
                     run: {
                         id: 'one',
                         date: '2019-05-05',
-                        players: [],
+                        players: [{id: '2'}],
                         system: {},
                         values: {},
                         times: {
@@ -47,7 +45,7 @@ describe('correct_leaderboard_run_places', () => {
                     run: {
                         id: 'one',
                         date: '2019-05-05',
-                        players: [],
+                        players: [{id: '3'}],
                         system: {},
                         values: {},
                         times: {
@@ -76,7 +74,7 @@ describe('correct_leaderboard_run_places', () => {
                     run: {
                         id: 'one',
                         date: '2019-05-05',
-                        players: [],
+                        players: [{id: '4'}],
                         system: {},
                         values: {},
                         times: {
@@ -89,7 +87,7 @@ describe('correct_leaderboard_run_places', () => {
                     run: {
                         id: 'one',
                         date: '2019-05-05',
-                        players: [],
+                        players: [{id: '5'}],
                         system: {},
                         values: {},
                         times: {
@@ -102,7 +100,7 @@ describe('correct_leaderboard_run_places', () => {
                     run: {
                         id: 'one',
                         date: '2019-05-05',
-                        players: [],
+                        players: [{id: '6'}],
                         system: {},
                         values: {},
                         times: {
@@ -132,7 +130,7 @@ describe('correct_leaderboard_run_places', () => {
                     run: {
                         id: 'one',
                         date: '2019-05-05',
-                        players: [],
+                        players: [{id: '6'}],
                         system: {},
                         values: {subc: 'one', test: 'argo'},
                         times: {
@@ -145,7 +143,7 @@ describe('correct_leaderboard_run_places', () => {
                     run: {
                         id: 'one',
                         date: '2019-05-05',
-                        players: [],
+                        players: [{id: '7'}],
                         system: {},
                         values: {subc: 'two', test: 'arlo'},
                         times: {
@@ -158,7 +156,7 @@ describe('correct_leaderboard_run_places', () => {
                     run: {
                         id: 'one',
                         date: '2019-05-05',
-                        players: [],
+                        players: [{id: '8'}],
                         system: {},
                         values: {subc: 'one', test: 'ammo'},
                         times: {
@@ -171,7 +169,7 @@ describe('correct_leaderboard_run_places', () => {
                     run: {
                         id: 'one',
                         date: '2019-05-05',
-                        players: [],
+                        players: [{id: '9'}],
                         system: {},
                         values: {subc: 'two', test: 'algo'},
                         times: {
@@ -192,152 +190,5 @@ describe('correct_leaderboard_run_places', () => {
         expect(lb.runs[1]).to.have.property('place', 1);
         expect(lb.runs[2]).to.have.property('place', 2);
         expect(lb.runs[3]).to.have.property('place', 2);
-    });
-});
-
-describe('add_leaderboard_run', () => {
-    it('should add verified run', async () => {
-        let lb = {
-            weblink: '',
-            game: '',
-            category: '',
-            players: {},
-            runs: [
-                {
-                    run: {
-                        id: 'two',
-                        date: '2019-05-05',
-                        players: [],
-                        system: {},
-                        values: {},
-                        times: {
-                            primary: '12T',
-                            primary_t: 12
-                        }
-                    }
-                },
-                {
-                    run: {
-                        id: 'another',
-                        date: '2019-05-05',
-                        players: [],
-                        system: {},
-                        values: {},
-                        times: {
-                            primary: '12T',
-                            primary_t: 12
-                        }
-                    }
-                },
-                {
-                    run: {
-                        id: 'thing',
-                        date: '2019-05-05',
-                        players: [],
-                        system: {},
-                        values: {},
-                        times: {
-                            primary: '20T',
-                            primary_t: 20
-                        }
-                    }
-                }
-            ]
-        };
-
-        let lre = add_leaderboard_run(lb, <Run><unknown>{
-            id: 'one',
-            date: '2019-05-05',
-            players: [{id: 'dummy'}],
-            status: {'verify-date': '2019-05-06', status: 'verified'},
-            system: {},
-            values: {},
-            times: {
-                primary: '17T',
-                primary_t: 17
-            }
-        }, []);
-
-        expect(lre.place).to.eql(3);
-        expect(lb.runs[2].run.times.primary_t).to.eql(17);
-
-        // try to add a non-verified run
-        lre = add_leaderboard_run(lb, <Run><unknown>{
-            id: 'yet',
-            date: '2019-05-05',
-            players: [{id: 'dummy'}],
-            status: {status: 'rejected'},
-            system: {},
-            values: {},
-            times: {
-                primary: '16T',
-                primary_t: 16
-            }
-        }, []);
-
-        expect(lre.place).to.eql(3);
-        expect(lb.runs[2].run.times.primary_t).to.eql(17);
-
-        // bug: if the time gets converted to a string then runs could be elevated way higher than they should be!
-        lre = add_leaderboard_run(lb, <Run><unknown>{
-            id: 'last',
-            date: '2019-05-06',
-            players: [{id: 'dummy'}],
-            status: {'verify-date': '2019-05-06', status: 'verified'},
-            system: {},
-            values: {},
-            times: {
-                primary: '18M20T',
-                primary_t: 1100
-            }
-        }, []);
-
-        expect(lre.place).to.not.eql(1);
-
-        expect(lb.runs[2].run.times.primary_t).to.eql(20);
-
-
-        // bug: this run is "newer", so it should be accepted over the faster run by the same player
-        expect(lre.place).to.eql(4);
-    });
-
-    it('should add run to empty leaderboard', async () => {
-        let lbs: Leaderboard[] = [
-            {
-                weblink: '',
-                game: '',
-                category: '',
-                players: {},
-                runs: []
-            },
-            <Leaderboard><unknown>{
-                weblink: '',
-                game: '',
-                category: '',
-                players: {},
-                runs: null
-            }
-        ];
-
-        let run_to_add = <Run><unknown>{
-            id: 'one',
-            date: '2019-05-05',
-            players: [{id: 'dummy'}],
-            status: {status: 'verified', 'verify-date': '2019-05-05'},
-            system: {},
-            values: {},
-            times: {
-                primary: '16T',
-                primary_t: 16
-            }
-        };
-
-        for(let lb of lbs) {
-            let lre = add_leaderboard_run(lb, run_to_add, []);
-
-            expect(lre.place).to.eql(1);
-            expect(lb.runs[0]).to.exist;
-            expect(lb.runs).to.have.length(1);
-        }
     });
 });

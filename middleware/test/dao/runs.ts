@@ -65,7 +65,7 @@ describe('RunDao', () => {
 
         await new CategoryDao(db).save([
             {
-                id: 'a_category_on_genre',
+                id: 'aCategoryOnGenre',
                 game: 'a_game_with_genre',
                 name: 'Testing',
                 type: 'per-game',
@@ -74,7 +74,7 @@ describe('RunDao', () => {
                 variables: []
             },
             {
-                id: 'a_category',
+                id: 'aCategory',
                 game: 'a_game',
                 name: 'Testing',
                 type: 'per-game',
@@ -89,10 +89,10 @@ describe('RunDao', () => {
                 place: 3,
                 run: {
                     id: 'another_run',
-                    category: {id: 'a_category_on_genre'},
+                    category: {id: 'aCategoryOnGenre'},
                     date: '2018-04-30',
                     status: {status: 'verified', 'verify-date': '2018-04-30'},
-                    players: [],
+                    players: [{id: '1'}],
                     times: { primary: '100', primary_t: 100 },
                     system: {},
                     values: {},
@@ -104,9 +104,9 @@ describe('RunDao', () => {
                 run: {
                     id: 'one_run',
                     date: '2018-05-05',
-                    category: {id: 'a_category'},
+                    category: {id: 'aCategory'},
                     status: {status: 'verified', 'verify-date': '2018-05-05'},
-                    players: [],
+                    players: [{id: '1'}],
                     times: { primary: '135', primary_t: 100 },
                     system: {},
                     values: {},
@@ -132,9 +132,9 @@ describe('RunDao', () => {
             run: {
                 id: 'yet_another_run',
                 date: '2018-05-01',
-                category: {id: 'a_category_on_genre'},
+                category: {id: 'aCategoryOnGenre'},
                 status: {status: 'verified', 'verify-date': '2018-05-01'},
-                players: [],
+                players: [{id: '1'}],
                 times: { primary: '135', primary_t: 100 },
                 system: {},
                 values: {},
@@ -162,9 +162,9 @@ describe('RunDao', () => {
             run: {
                 id: 'dummy_run',
                 date: '2018-05-18',
-                category: {id: 'a_category_on_genre'},
+                category: {id: 'aCategoryOnGenre'},
                 status: {status: 'verified', 'verify-date': '2018-05-20'},
-                players: [],
+                players: [{id: '1'}],
                 times: { primary: '0', primary_t: 0.001 },
                 system: {},
                 values: {},
@@ -185,9 +185,9 @@ describe('RunDao', () => {
             run: {
                 id: 'dummy_run2',
                 date: '2018-08-18',
-                category: {id: 'a_category_on_genre'},
+                category: {id: 'aCategoryOnGenre'},
                 status: {status: 'verified', 'verify-date': '2018-08-20'},
-                players: [],
+                players: [{id: '1'}],
                 times: { primary: '0', primary_t: 0.001 },
                 system: {},
                 values: {},
@@ -206,7 +206,7 @@ describe('RunDao', () => {
 
     it('should set supporting object structures', async () => {
         // there should be a leaderboard with the previously loaded runs
-        let leaderboard = (await new LeaderboardDao(db).load('a_category_on_genre'))[0];
+        let leaderboard = (await new LeaderboardDao(db).load('aCategoryOnGenre'))[0];
 
         expect(leaderboard).to.exist;
         expect(leaderboard!.runs).to.have.length(1); // players and subcategories are always the same so there will only be 1 entry
@@ -253,6 +253,7 @@ describe('RecentChartIndex', () => {
 
         await new CategoryDao(db).save({
             id: 'mysubcategory',
+            game: 'a_game',
             name: 'Testing',
             type: 'per-game',
             weblink: '',
@@ -332,7 +333,7 @@ describe('RecentChartIndex', () => {
         let chart_dao = new ChartDao(db);
 
         new CategoryDao(db).save({
-            id: 'variabled_subcategory',
+            id: 'variabledSubcategory',
             name: 'Testing',
             type: 'per-game',
             weblink: '',
@@ -385,7 +386,7 @@ describe('RecentChartIndex', () => {
                         'var_2': 'var_2_a'
                     },
                     game: {id: 'a_game'},
-                    category: {id: 'variabled_subcategory'}
+                    category: {id: 'variabledSubcategory'}
                 }
             },
             {
@@ -401,7 +402,7 @@ describe('RecentChartIndex', () => {
                         'var_2': 'var_2_b'
                     },
                     game: {id: 'a_game'},
-                    category: {id: 'variabled_subcategory'}
+                    category: {id: 'variabledSubcategory'}
                 }
             },
             {
@@ -418,7 +419,7 @@ describe('RecentChartIndex', () => {
                         'var_2': 'var_2_a'
                     },
                     game: {id: 'a_game'},
-                    category: {id: 'variabled_subcategory'}
+                    category: {id: 'variabledSubcategory'}
                 }
             }
         ];
@@ -426,7 +427,7 @@ describe('RecentChartIndex', () => {
         await run_dao.save(saved_runs);
 
         // check the generated chart
-        let chart = (await chart_dao.load('leaderboards_variabled_subcategory'))[0];
+        let chart = (await chart_dao.load('leaderboards_variabledSubcategory'))[0];
 
         expect(chart).to.exist;
         expect(chart!.data.var_1_var_1_b_var_2_var_2_a).to.have.lengthOf(2);

@@ -29,66 +29,31 @@ export interface Leaderboard extends BaseMiddleware {
     players: {[id: string]: User}|{data: User[]}
 }
 
-export function add_leaderboard_run(d: Leaderboard, run: Run, vars: Variable[]): LeaderboardRunEntry {
-
-    let lbe: LeaderboardRunEntry = { run: run };
-
-    if(!d.runs)
-        d.runs = [];
-
-    let run_idx = _.sortedIndexBy(d.runs, lbe, v => _.padStart(v.run.times.primary_t.toFixed(6), 18, '0') + v.run.date)
-
-    let subcategory_var_ids = _.map(_.filter(vars, 'is-subcategory'), 'id');
-
-    // check for existing role with the same player and parameters
-    let existing_idx = _.findIndex(d.runs, v => {
-        return _.isEqual(_.map(run.players, 'id').sort(), _.map(v.run.players, 'id').sort()) &&
-        _.isEqual(
-            _.pick(run.values, subcategory_var_ids),
-            _.pick(v.run.values, subcategory_var_ids)
-        );
-    });
-
-    if(existing_idx !== -1 && d.runs[existing_idx].run.submitted > run.submitted)
-        return { run: run }; // has no place on this leaderboard because its obsolete
-
-    // simulate leaderboard changes for unverified runs
-    if(lbe.run.status.status !== 'verified') {
-        d = _.cloneDeep(d);
-    }
-
-    if(existing_idx !== -1) {
-        d.runs.splice(existing_idx, 1);
-
-        if(existing_idx < run_idx)
-            run_idx--;
-    }
-
-    d.runs.splice(run_idx, 0, lbe);
-
-    correct_leaderboard_run_places(d, vars);
-    return d.runs[run_idx];
-}
-
 // leaderboards can have subcategories. correct the places returned by the speedrun
 // api to take these subcategories into account
 export function correct_leaderboard_run_places(d: Leaderboard, vars: Variable[]) {
+    if(!d.runs)
+        return;
 
     let subcategory_vars = _.filter(vars, 'is-subcategory');
 
     let last_places: {[key: string]: number} = {};
     let last_runs: {[key: string]: LeaderboardRunEntry} = {};
+    let seen_players: {[key: string]: Set<string>} = {};
 
-    if(d.runs) {
-        for(let run of d.runs) {
-            let subcategory_id = '';
+    for(let run of d.runs) {
+        let subcategory_id = '';
 
-            for(let v of subcategory_vars) {
-                subcategory_id += run.run.values[v.id];
-            }
+        for(let v of subcategory_vars) {
+            subcategory_id += run.run.values[v.id];
+        }
 
+        let player_ids = _.map(run.run.players, 'id').join('_');
 
-
+        if(seen_players[subcategory_id] && seen_players[subcategory_id].has(player_ids)) {
+            delete run.place;
+        }
+        else {
             last_places[subcategory_id] = last_places[subcategory_id] ?
                 last_places[subcategory_id] + 1 : 1;
 
@@ -100,6 +65,10 @@ export function correct_leaderboard_run_places(d: Leaderboard, vars: Variable[])
                 last_places[subcategory_id];
 
             last_runs[subcategory_id] = run;
+
+            if(!seen_players[subcategory_id])
+                seen_players[subcategory_id] = new Set();
+            seen_players[subcategory_id].add(player_ids);
         }
     }
 }
