@@ -1,7 +1,7 @@
 
 import * as _ from 'lodash';
 
-import { DaoConfig, IndexDriver } from '../';
+import { DaoConfig, IndexDriver, ScanOptions } from '../';
 
 export async function save(conf: DaoConfig<any>, objs: any[]) {
     let ids = _.map(objs, conf.id_key);
@@ -28,6 +28,28 @@ export async function load(conf: DaoConfig<any>, ids: string[]) {
 
 export async function remove(conf: DaoConfig<any>, ids: string[]) {
     await conf.db.redis.hdel(conf.collection, ...ids);
+}
+
+export async function scan(conf: DaoConfig<any>, options: ScanOptions, func: Function): Promise<number> {
+    let cur = 0;
+    let count = 0;
+
+    do {
+        let scan = await conf.db.redis.hscan(conf.collection, cur, 'COUNT', options.batchSize)
+
+        count += scan[1].length;
+
+        let objs = _.chain(scan[1])
+            .filter((_v: any, i: number) => i % 2 === 1)
+            .map(JSON.parse)
+            .value();
+
+        await func(objs);
+
+        cur = scan[0];
+    } while(cur != 0);
+
+    return count;
 }
 
 export class RedisMapIndex<T> implements IndexDriver<T> {

@@ -33,8 +33,11 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
         let leaderboard_ids = <string[]>_.map(runs, run => get_leaderboard_id_for_run(<Run>run.run));
 
         let leaderboard_ids_deduped = _.uniq(leaderboard_ids);
-        let leaderboards = <{[id: string]: Leaderboard}>_.zipObject(leaderboard_ids_deduped,
-            await new LeaderboardDao(conf.db).load(leaderboard_ids_deduped));
+
+        let leaderboards: {[id: string]: Leaderboard} = {};
+        if(leaderboard_ids_deduped.length)
+            leaderboards = <{[id: string]: Leaderboard}>_.zipObject(leaderboard_ids_deduped,
+                await new LeaderboardDao(conf.db).load(leaderboard_ids_deduped));
 
         for(let leaderboard_id in leaderboards) {
 
@@ -80,7 +83,10 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
     async update_obsoletes(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[], categories: {[key: string]: Category|null}) {
 
         let filter: any = {
-            $or: runs.filter(v => v.run.status.status === 'verified' && v.run.category.id).map(run => {
+            // only runs with a category we have and which are verified can
+            $or: runs.filter(v => v.run.status.status === 'verified' &&
+                v.run.category &&
+                v.run.category.id).map(run => {
 
                 let filter: any = {
                     'run.game.id': run.run.game.id,
@@ -137,6 +143,9 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
             })
         };
 
+        if(!filter.$or.length)
+            return;
+
         await conf.db.mongo.collection(conf.collection).updateMany(filter, {
             $set: {
                 'obsolete': true
@@ -154,7 +163,9 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
         runs = _.reject(runs, 'obsolete');
 
         let category_ids = <string[]>_.uniq(_.map(runs, 'run.category.id'));
-        let categories = _.zipObject(category_ids, await new CategoryDao(conf.db!).load(category_ids));
+        let categories: {[id: string]: Category|null} = {};
+        if(category_ids.length)
+            categories = _.zipObject(category_ids, await new CategoryDao(conf.db!).load(category_ids));
 
         await this.update_obsoletes(conf, _.cloneDeep(runs), categories);
 

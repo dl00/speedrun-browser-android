@@ -26,7 +26,7 @@ export async function send_dummy_player_notify(run_id: string) {
 }
 
 export async function massage_all_runs(skip = 0) {
-    return await new RunDao(scraper.storedb!).massage_runs({}, skip);
+    return await new RunDao(scraper.storedb!).massage({}, skip);
 }
 
 export async function restore_single_run(id: string) {
@@ -36,6 +36,18 @@ export async function restore_single_run(id: string) {
         return await run_dao.save(<LeaderboardRunEntry>run[0]);
     else
         return "Run does not exist.";
+}
+
+export async function regenerate_autocomplete() {
+    let game_dao = new GameDao(scraper.storedb!);
+    game_dao.indexes.find(ind => ind.name == 'autocomplete')!.forceIndex = true;
+
+    await game_dao.massage();
+
+    let user_dao = new UserDao(scraper.storedb!);
+    user_dao.indexes.find(ind => ind.name == 'autocomplete')!.forceIndex = true;
+
+    await user_dao.massage();
 }
 
 export async function generate_all_charts() {

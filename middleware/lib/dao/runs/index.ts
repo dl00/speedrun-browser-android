@@ -286,6 +286,11 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
 
         this.id_key = _.property('run.id');
 
+        this.massage_sort = {
+            'run.game.id': 1,
+            'run.date': 1
+        };
+
         // TODO: these mongodb indexes are just hardcoded in here for now...
         // at least this first index for mongodb is overkill, its just used for an aggregation
         db.mongo.collection(this.collection).createIndex({
@@ -383,46 +388,6 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
     /// return new records saved to DB during the lifetime of this Dao instance
     collect_new_records(): NewRecord[] {
         return (<SupportingStructuresIndex>this.indexes.find(ind => ind.name === 'supporting_structures')).new_records;
-    }
-
-    /// regenerates speedruns remote data matching the given filter
-    /// useful when supplementary data structures are changed
-    async massage_runs(filter = {}, skip = 0) {
-        let cursor = await this.db.mongo.collection(this.collection)
-            .find(filter)
-            // sorting gives a significant speed boost because it reduces the number
-            // of arbitrary different categories and levels which may need to be requested,
-            // significantly reducing the number of times data has to be serialized/deserialized
-            .sort({
-                'run.game.id': 1,
-                'run.date': 1
-            })
-            .skip(skip);
-
-        let batchSize = 200;
-        let count = 0;
-
-        let runs = new Array(batchSize);
-
-        while(await cursor.hasNext()) {
-
-            let cur;
-            for(cur = 0;cur < batchSize && await cursor.hasNext();cur++) {
-                runs[cur] = await cursor.next();
-            }
-
-            runs.splice(cur, batchSize);
-
-            count += cur;
-
-            console.log('[MASSAGE]', count);
-
-            // reload the game, category, level, players, and leaderboard place for this run
-            await populate_run_sub_documents(this.db, _.map(runs, 'run'));
-            await this.save(runs);
-        }
-
-        return count;
     }
 
     async load_latest_runs(offset?: number, genreId?: string, verified: boolean = true) {
@@ -639,5 +604,9 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
 
     async get_player_pb_chart(player_id: string, game_id: string) {
         return await get_player_pb_chart(this, player_id, game_id);
+    }
+
+    async massage_hook(runs: LeaderboardRunEntry[]) {
+        await populate_run_sub_documents(this.db, <Run[]>_.map(runs, 'run'));
     }
 }

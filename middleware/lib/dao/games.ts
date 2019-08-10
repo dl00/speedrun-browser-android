@@ -184,7 +184,9 @@ class PopularGamesIndex implements IndexDriver<Game> {
 
 function get_game_search_indexes(game: Game) {
     let indexes: { text: string, score: number, namespace?: string }[] = [];
-    indexes.push({ text: game.abbreviation.toLowerCase(), score: game.score || 1 });
+
+    if(game.abbreviation)
+        indexes.push({ text: game.abbreviation.toLowerCase(), score: game.score || 1 });
 
     for(let name in game.names) {
         if(!game.names[name])

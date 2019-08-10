@@ -5,6 +5,13 @@ import * as util from 'util';
 
 import { DB } from '../db';
 
+export interface ScanOptions {
+    filter?: any
+    sort?: any
+    skip?: number
+    batchSize: number
+}
+
 export interface DaoConfig<T> {
     db: DB;
     collection: string;
@@ -18,6 +25,7 @@ export interface DaoConfig<T> {
 
 export interface IndexDriver<T> {
     name: string;
+    forceIndex?: boolean;
 
     /// retrieve objects using the given string index keys
     load(conf: DaoConfig<T>, keys: string[]): Promise<(T|null)[]>;
@@ -79,6 +87,8 @@ export class Dao<T> implements DaoConfig<T> {
     indexes: IndexDriver<T>[] = [];
     id_key: (obj: T) => string = _.property('id');
 
+    massage_sort: {[key: string]: any} = {};
+
     constructor(db: DB, collection: string, backing?: 'redis'|'mongo') {
         this.collection = collection;
         this.db = db;
@@ -114,7 +124,7 @@ export class Dao<T> implements DaoConfig<T> {
                 // new objects are indicated by null in prev_objs returned values
                 if(_.isNil(prev_objs[i]))
                     insert_indexes_objs.push(objs[i]);
-                else if(idx.has_changed(prev_objs[i], objs[i])) {
+                else if(idx.has_changed(prev_objs[i], objs[i]) || idx.forceIndex) {
                     remove_previous_index_objs.push(prev_objs[i]);
                     insert_indexes_objs.push(objs[i]);
                 }
@@ -168,5 +178,38 @@ export class Dao<T> implements DaoConfig<T> {
 
     protected async pre_store_transform(obj: T): Promise<T> {
         return obj;
+    }
+
+
+    /// regenerates data matching the given filter
+    /// useful when supplementary data structures are changed or index needs a refresh
+    async massage(filter = {}, skip = 0) {
+
+        let scan_options = {
+            filter: filter,
+            skip: skip,
+            sort: this.massage_sort,
+            batchSize: 200
+        };
+
+        let seen = 0;
+
+        let count = await require(`./backing/${this.backing}`).scan(this, scan_options, async (objs: any) => {
+            seen += objs.length;
+            console.log('[MASSAGE]', seen);
+
+            for(let nullobj of _.remove(objs, (v: T) => !this.id_key(v))) {
+                console.log('[IGNORE/CHECK]', nullobj);
+            }
+
+            await this.massage_hook(objs);
+            await this.save(objs);
+        });
+
+        return count;
+    }
+
+    async massage_hook(_objs: any[]) {
+        _.noop()
     }
 }
