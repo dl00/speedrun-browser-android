@@ -94,11 +94,17 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
                 // matching players
                 filter['run.players'] = {$size: run.run.players.length};
                 run.run.players.forEach((player, i) => {
-                    filter[`run.players.${i}.id`] = player.id
+                    if(player.id)
+                        filter[`run.players.${i}.id`] = player.id;
+                    else if(player.name)
+                        filter[`run.players.${i}.name`] = player.name;
+                    else
+                        // TODO: this is hacky
+                        filter[`unused_dummy`] = 'foobar';
                 });
 
 
-	        // return early if we dont have a category with variables to pull
+                // return early if we dont have a category with variables to pull
                 if(!categories[run.run.category.id])
                     return filter;
 
@@ -132,7 +138,10 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
         };
 
         await conf.db.mongo.collection(conf.collection).updateMany(filter, {
-            $set: {'obsolete': true}
+            $set: {
+                'obsolete': true,
+                'obsoletedBy': JSON.stringify(filter.$or)
+            },
         });
     }
 
@@ -141,6 +150,10 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
     }
 
     async apply(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[]) {
+
+        // obsolete runs do not get added to leaderboards and cannot create obsoletes themselves.
+        runs = _.reject(runs, 'obsolete');
+
         let category_ids = <string[]>_.uniq(_.map(runs, 'run.category.id'));
         let categories = _.zipObject(category_ids, await new CategoryDao(conf.db!).load(category_ids));
 
