@@ -39,7 +39,7 @@ export function correct_leaderboard_run_places(d: Leaderboard, vars: Variable[])
 
     let last_places: {[key: string]: number} = {};
     let last_runs: {[key: string]: LeaderboardRunEntry} = {};
-    let seen_players: {[key: string]: Set<string>} = {};
+    let seen_players: {[key: string]: {[key: string]: 1}} = {};
 
     for(let run of d.runs) {
         let subcategory_id = '';
@@ -50,7 +50,7 @@ export function correct_leaderboard_run_places(d: Leaderboard, vars: Variable[])
 
         let player_ids = _.map(run.run.players, 'id').join('_');
 
-        if(seen_players[subcategory_id] && seen_players[subcategory_id].has(player_ids)) {
+        if(seen_players[subcategory_id] && seen_players[subcategory_id][player_ids]) {
             delete run.place;
         }
         else {
@@ -67,8 +67,8 @@ export function correct_leaderboard_run_places(d: Leaderboard, vars: Variable[])
             last_runs[subcategory_id] = run;
 
             if(!seen_players[subcategory_id])
-                seen_players[subcategory_id] = new Set();
-            seen_players[subcategory_id].add(player_ids);
+                seen_players[subcategory_id] = {};
+            seen_players[subcategory_id][player_ids] = 1;
         }
     }
 }

@@ -62,13 +62,10 @@ data class User(
     /// sets the image view attributes appropriately so it shows this player's country
     fun applyCountryImage(iv: ImageView) {
 
-        println("APPLY COUNTRY IMAGE: " + location?.country?.code)
-
         if(location?.country != null) {
             try {
                 val f = R.drawable::class.java.getDeclaredField("flag_" + location.country.code)
                 iv.setImageDrawable(iv.context.resources.getDrawable(f.getInt(null)))
-                //iv.setImageDrawable(R.drawable.flag_us)
             }
             catch(e: Exception) {}
         }

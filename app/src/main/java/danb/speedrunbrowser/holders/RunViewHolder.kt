@@ -34,7 +34,6 @@ class RunViewHolder(v: View, val showRank: Boolean = true) : RecyclerView.ViewHo
     fun apply(context: Context, disposables: CompositeDisposable, game: Game?, entry: LeaderboardRunEntry) {
 
         mPlayerNames.removeAllViews()
-        var first = true
         for (player in entry.run.players!!) {
 
             val iv = ImageView(context)
@@ -45,12 +44,9 @@ class RunViewHolder(v: View, val showRank: Boolean = true) : RecyclerView.ViewHo
             tv.textSize = 16f
             player.applyTextView(tv)
 
-            if (!first) {
-                val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                lp.setMargins(context.resources.getDimensionPixelSize(R.dimen.half_fab_margin), 0, 0, 0)
-                tv.layoutParams = lp
-            } else
-                first = false
+            val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+            lp.setMargins(context.resources.getDimensionPixelSize(R.dimen.half_fab_margin), 0, context.resources.getDimensionPixelSize(R.dimen.half_fab_margin), 0)
+            tv.layoutParams = lp
 
             mPlayerNames.addView(tv)
         }
