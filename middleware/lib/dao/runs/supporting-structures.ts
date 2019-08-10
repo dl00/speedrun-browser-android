@@ -139,8 +139,7 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
 
         await conf.db.mongo.collection(conf.collection).updateMany(filter, {
             $set: {
-                'obsolete': true,
-                'obsoletedBy': JSON.stringify(filter.$or)
+                'obsolete': true
             },
         });
     }
