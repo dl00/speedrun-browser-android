@@ -90,18 +90,33 @@ data class Variable(
         fun filterLeaderboardRuns(lb: Leaderboard, activeVariables: List<Variable>): List<LeaderboardRunEntry> {
             val shownRuns = ArrayList<LeaderboardRunEntry>()
 
-            var lastPlace = 1
-            var lastTime = 0.0f
+            var curPlace = 1
+            var lastTime = -1.0f
+            val seenPlayers = mutableSetOf<String>()
 
             for (re in lb.runs!!) {
                 if (shouldShowRun(re.run, activeVariables)) {
-                    val newRunEntry = LeaderboardRunEntry(
-                            place = if (re.run.times!!.primary_t != lastTime) shownRuns.size + 1 else lastPlace,
-                            run = re.run
-                    )
 
-                    lastPlace = newRunEntry.place!!
-                    lastTime = newRunEntry.run.times!!.primary_t
+                    val playerIds = re.run.players!!.map { it.id }.joinToString("_")
+
+                    val newRunEntry = if(seenPlayers.contains(playerIds)) {
+                        LeaderboardRunEntry(
+                                place = null,
+                                run = re.run
+                        )
+                    }
+                    else {
+                        val newRunEntry = LeaderboardRunEntry(
+                                place = if (re.run.times!!.primary_t != lastTime) curPlace else shownRuns.last().place,
+                                run = re.run
+                        )
+
+                        seenPlayers.add(playerIds)
+                        curPlace++
+                        lastTime = newRunEntry.run.times!!.primary_t
+
+                        newRunEntry
+                    }
 
                     shownRuns.add(newRunEntry)
                 }

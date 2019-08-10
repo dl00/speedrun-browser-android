@@ -89,6 +89,9 @@ export function make_distribution_chart(lb: Leaderboard, vars: Variable[]): Char
         for(let i = 0;i < lb.runs.length * 0.95;i++) {
             let run = lb.runs[i];
 
+            if(!run.place)
+                continue;
+
             let subcategory_id;
             if(!subcategory_vars.length)
                 subcategory_id = 'main';

@@ -80,7 +80,7 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
     async update_obsoletes(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[], categories: {[key: string]: Category|null}) {
 
         let filter: any = {
-            $or: _.filter(runs, 'run.category.id').map(run => {
+            $or: runs.filter(v => v.run.status.status === 'verified' && v.run.category.id).map(run => {
 
                 let filter: any = {
                     'run.game.id': run.run.game.id,
