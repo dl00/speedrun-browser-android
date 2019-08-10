@@ -90,6 +90,7 @@ describe('RunDao', () => {
                 run: {
                     id: 'another_run',
                     category: {id: 'aCategoryOnGenre'},
+                    submitted: '2018-04-30',
                     date: '2018-04-30',
                     status: {status: 'verified', 'verify-date': '2018-04-30'},
                     players: [{id: '1'}],
@@ -103,7 +104,8 @@ describe('RunDao', () => {
                 place: 1,
                 run: {
                     id: 'one_run',
-                    date: '2018-05-05',
+                    submitted: '2018-04-30',
+                    date: '2018-04-30',
                     category: {id: 'aCategory'},
                     status: {status: 'verified', 'verify-date': '2018-05-05'},
                     players: [{id: '1'}],
@@ -131,6 +133,7 @@ describe('RunDao', () => {
             place: 2,
             run: {
                 id: 'yet_another_run',
+                submitted: '2018-05-01',
                 date: '2018-05-01',
                 category: {id: 'aCategoryOnGenre'},
                 status: {status: 'verified', 'verify-date': '2018-05-01'},
@@ -161,6 +164,7 @@ describe('RunDao', () => {
             place: 3,
             run: {
                 id: 'dummy_run',
+                submitted: '2018-05-18',
                 date: '2018-05-18',
                 category: {id: 'aCategoryOnGenre'},
                 status: {status: 'verified', 'verify-date': '2018-05-20'},
@@ -184,6 +188,7 @@ describe('RunDao', () => {
             place: 3,
             run: {
                 id: 'dummy_run2',
+                submitted: '2018-08-18',
                 date: '2018-08-18',
                 category: {id: 'aCategoryOnGenre'},
                 status: {status: 'verified', 'verify-date': '2018-08-20'},
