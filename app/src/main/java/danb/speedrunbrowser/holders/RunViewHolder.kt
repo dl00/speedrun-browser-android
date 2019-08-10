@@ -37,6 +37,10 @@ class RunViewHolder(v: View, val showRank: Boolean = true) : RecyclerView.ViewHo
         var first = true
         for (player in entry.run.players!!) {
 
+            val iv = ImageView(context)
+            player.applyCountryImage(iv)
+            mPlayerNames.addView(iv)
+
             val tv = TextView(context)
             tv.textSize = 16f
             player.applyTextView(tv)

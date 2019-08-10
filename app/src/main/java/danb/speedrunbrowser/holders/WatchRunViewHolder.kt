@@ -18,7 +18,6 @@ class WatchRunViewHolder(v: View) : RecyclerView.ViewHolder(v) {
     private val mLeaderboardHolder: RunViewHolder = RunViewHolder(v)
 
     private val mGameName: TextView = v.findViewById(R.id.txtGameName)
-    private val mPlayerImage: ImageView? = null
     private val mGameImage: ImageView = v.findViewById(R.id.imgGameIcon)
 
     fun apply(context: Context, disposables: CompositeDisposable, game: Game, entry: LeaderboardRunEntry) {

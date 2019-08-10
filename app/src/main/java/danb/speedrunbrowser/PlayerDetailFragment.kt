@@ -69,6 +69,7 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
 
     private lateinit var mPlayerIcon: ImageView
     private lateinit var mPlayerName: TextView
+    private lateinit var mPlayerCountry: ImageView
 
     private lateinit var mIconTwitch: ImageView
     private lateinit var mIconTwitter: ImageView
@@ -118,6 +119,7 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
         mFrameBests = rootView.findViewById(R.id.framePlayerBests)
 
         mPlayerIcon = rootView.findViewById(R.id.imgAvatar)
+        mPlayerCountry = rootView.findViewById(R.id.imgPlayerCountry)
         mPlayerName = rootView.findViewById(R.id.txtPlayerName)
         mIconTwitch = rootView.findViewById(R.id.iconTwitch)
         mIconTwitter = rootView.findViewById(R.id.iconTwitter)
@@ -246,6 +248,7 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
             // find out if we are subscribed
             setMenu()
 
+            mPlayer!!.applyCountryImage(mPlayerCountry)
             mPlayer!!.applyTextView(mPlayerName)
 
             mIconTwitch.visibility = if (mPlayer!!.twitch != null) View.VISIBLE else View.GONE

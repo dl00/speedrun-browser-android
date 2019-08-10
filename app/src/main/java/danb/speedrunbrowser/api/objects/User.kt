@@ -2,7 +2,10 @@ package danb.speedrunbrowser.api.objects
 
 import android.graphics.Rect
 import android.graphics.Typeface
+import android.graphics.drawable.Drawable
+import android.widget.ImageView
 import android.widget.TextView
+import danb.speedrunbrowser.R
 
 import java.io.Serializable
 import java.net.MalformedURLException
@@ -11,11 +14,17 @@ import java.util.Date
 import java.util.HashMap
 
 import danb.speedrunbrowser.utils.Constants
+import java.lang.Exception
 
 data class UserLocation(
     val code: String,
     val names: Map<String, String>? = null
 ) : Serializable
+
+data class UserLocationContainer(
+    val country: UserLocation?,
+    val region: UserLocation
+)
 
 data class User(
     val id: String,
@@ -26,8 +35,7 @@ data class User(
     val nameStyle: UserNameStyle? = null,
     val role: String? = null,
     val signup: Date? = null,
-    val location: UserLocation? = null,
-    val region: UserLocation? = null,
+    val location: UserLocationContainer? = null,
 
     val twitch: MediaLink? = null,
     val hitbox: MediaLink? = null,
@@ -51,7 +59,25 @@ data class User(
     override val resolvedName
         get() = names?.get("international") ?: name ?: id
 
-    // creates a text view with name and appropriate formatting
+    /// sets the image view attributes appropriately so it shows this player's country
+    fun applyCountryImage(iv: ImageView) {
+
+        println("APPLY COUNTRY IMAGE: " + location?.country?.code)
+
+        if(location?.country != null) {
+            try {
+                val f = R.drawable::class.java.getDeclaredField("flag_" + location.country.code)
+                iv.setImageDrawable(iv.context.resources.getDrawable(f.getInt(null)))
+                //iv.setImageDrawable(R.drawable.flag_us)
+            }
+            catch(e: Exception) {}
+        }
+        else {
+            iv.setImageDrawable(null);
+        }
+    }
+
+    /// creates a text view with name and appropriate formatting
     override fun applyTextView(tv: TextView) {
         tv.text = resolvedName
         tv.typeface = Typeface.MONOSPACE

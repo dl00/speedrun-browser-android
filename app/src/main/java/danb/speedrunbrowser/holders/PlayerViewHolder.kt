@@ -19,6 +19,7 @@ import io.reactivex.disposables.CompositeDisposable
 class PlayerViewHolder(v: View) : RecyclerView.ViewHolder(v) {
 
     private val mSubscribedIndicator: ImageView = v.findViewById(R.id.imgSubscribedIndicator)
+    private val mPlayerCountryImage: ImageView = v.findViewById(R.id.imgPlayerCountry)
     private val mPlayerImage: ImageView = v.findViewById(R.id.imgPlayerIcon)
     private val mPlayerName: TextView = v.findViewById(R.id.txtPlayerName)
 
@@ -38,6 +39,7 @@ class PlayerViewHolder(v: View) : RecyclerView.ViewHolder(v) {
         } else
             mPlayerImage.visibility = View.GONE
 
+        user.applyCountryImage(mPlayerCountryImage)
         user.applyTextView(mPlayerName)
     }
 

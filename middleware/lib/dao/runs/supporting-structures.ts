@@ -85,7 +85,7 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
                 let filter: any = {
                     'run.game.id': run.run.game.id,
                     'run.category.id': run.run.category.id,
-                    'run.date': {$lt: run.run.date},
+                    'run.submitted': {$lt: run.run.submitted},
                 };
 
                 if(run.run.level)

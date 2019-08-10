@@ -65,7 +65,7 @@ export interface User extends BulkUser, BaseMiddleware {
 }
 
 export function user_to_bulk(user: User) {
-    return _.pick(user, 'id', 'names', 'name', 'name-style');
+    return _.pick(user, 'id', 'names', 'name', 'name-style', 'location');
 }
 
 // add/update the given personal best entry for the given user
