@@ -224,7 +224,7 @@ export class UserDao extends Dao<User> {
             return []; // nothing to do
 
         let players = <{[id: string]: User}>_.keyBy(
-            _.filter(await this.load(player_ids), 'id'),
+            _.filter(await this.load(player_ids, {skipComputed: true}), 'id'),
             'id');
 
         if(!_.keys(players).length) {

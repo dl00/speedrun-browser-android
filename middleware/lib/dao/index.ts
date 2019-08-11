@@ -139,7 +139,7 @@ export class Dao<T> implements DaoConfig<T> {
         }
     }
 
-    async load(ids: string|string[]): Promise<(T|null)[]> {
+    async load(ids: string|string[], options: any = {}): Promise<(T|null)[]> {
         if(!_.isArray(ids))
             ids = [ids];
 
@@ -148,11 +148,13 @@ export class Dao<T> implements DaoConfig<T> {
 
         let objs = await require(`./backing/${this.backing}`).load(this, ids);
 
-        for(let prop in this.computed) {
-            await Promise.all(_.map(objs, async (obj: any) => {
-                if(obj)
-                    _.set(obj, prop, await this.computed[prop](obj));
-            }));
+        if(!options.skipComputed) {
+            for(let prop in this.computed) {
+                await Promise.all(_.map(objs, async (obj: any) => {
+                    if(obj)
+                        _.set(obj, prop, await this.computed[prop](obj));
+                }));
+            }
         }
 
         return objs;

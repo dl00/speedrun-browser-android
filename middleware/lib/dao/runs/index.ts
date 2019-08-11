@@ -152,7 +152,7 @@ export async function populate_run_sub_documents(db: DB, runs: Run[]): Promise<P
         levels = _.zipObject(level_ids, await new LevelDao(db).load(level_ids));
     let players: {[id: string]: User|null} = {};
     if(player_ids.length)
-        players = _.zipObject(player_ids, await new UserDao(db).load(player_ids));
+        players = _.zipObject(player_ids, await new UserDao(db).load(player_ids, {skipComputed: true}));
 
     // list of runs we are skipping processing
     let drop_runs: Run[] = [];
@@ -344,7 +344,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         this.computed = {
             'place': async (lbr: LeaderboardRunEntry) => {
 
-                if(lbr.obsolete)
+                if(lbr.obsolete || lbr.run.game || !lbr.run.game.id || !lbr.run.category || !lbr.run.category.id)
                     return null;
 
                 let filter: any = {
@@ -360,7 +360,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
 
                 let r = await db.mongo.collection(this.collection).aggregate([
                     {$match: filter},
-                    {$group: {_id: '$run.players.id'}},
+                    {$group: {_id: '$run.players.0.id'}},
                     {$count: 'count'}
                 ]).toArray();
 
