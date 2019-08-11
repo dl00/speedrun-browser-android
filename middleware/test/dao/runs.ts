@@ -86,7 +86,6 @@ describe('RunDao', () => {
 
         await run_dao.save([
             {
-                place: 3,
                 run: {
                     id: 'another_run',
                     category: {id: 'aCategoryOnGenre'},
@@ -101,15 +100,14 @@ describe('RunDao', () => {
                 }
             },
             {
-                place: 1,
                 run: {
                     id: 'one_run',
                     submitted: '2018-04-30',
                     date: '2018-04-30',
                     category: {id: 'aCategory'},
                     status: {status: 'verified', 'verify-date': '2018-05-05'},
-                    players: [{id: '1'}],
-                    times: { primary: '135', primary_t: 100 },
+                    players: [{id: '2'}],
+                    times: { primary: '135', primary_t: 135 },
                     system: {},
                     values: {},
                     game: {id: 'a_game'}
@@ -120,25 +118,24 @@ describe('RunDao', () => {
         // make sure these two runs come back, and they are in the correct order
         let runs = await run_dao.load_latest_runs();
 
-        expect(runs[0]).to.have.property('place', 1);
-        expect(runs[1]).to.have.property('place', 3);
+        expect(runs[0]!.run).to.have.property('id', 'one_run');
+        expect(runs[1]!.run).to.have.property('id', 'another_run');
 
         runs = await run_dao.load_latest_runs(0, 'my_genre');
 
         expect(runs.length).to.eql(1);
-        expect(runs[0]).to.have.property('place', 3);
+        expect(runs[0]!.run).to.have.property('id', 'another_run');
 
         // add another run after the fact, should still be in order
         await run_dao.save({
-            place: 2,
             run: {
                 id: 'yet_another_run',
                 submitted: '2018-05-01',
                 date: '2018-05-01',
                 category: {id: 'aCategoryOnGenre'},
                 status: {status: 'verified', 'verify-date': '2018-05-01'},
-                players: [{id: '1'}],
-                times: { primary: '135', primary_t: 100 },
+                players: [{id: '3'}],
+                times: { primary: '135', primary_t: 135 },
                 system: {},
                 values: {},
                 game: {id: 'a_game_with_genre'}
@@ -147,13 +144,21 @@ describe('RunDao', () => {
 
         runs = await run_dao.load_latest_runs(1);
 
-        expect(runs[0]).to.have.property('place', 2);
-        expect(runs[1]).to.have.property('place', 3);
+        expect(runs[0]!.run).to.have.property('id', 'yet_another_run');
+        expect(runs[1]!.run).to.have.property('id', 'another_run');
 
         runs = await run_dao.load_latest_runs(0, 'my_genre');
 
-        expect(runs[0]).to.have.property('place', 2);
-        expect(runs[1]).to.have.property('place', 3);
+        expect(runs[0]!.run).to.have.property('id', 'yet_another_run');
+        expect(runs[1]!.run).to.have.property('id', 'another_run');
+    });
+
+    it('should compute place property', async () => {
+        let run_dao = new RunDao(db);
+
+        let run = (await run_dao.load('yet_another_run'))[0];
+
+        expect(run).to.have.property('place', 2);
     });
 
     it('should not record latest runs to index if they are not real', async () => {
@@ -168,7 +173,7 @@ describe('RunDao', () => {
                 date: '2018-05-18',
                 category: {id: 'aCategoryOnGenre'},
                 status: {status: 'verified', 'verify-date': '2018-05-20'},
-                players: [{id: '1'}],
+                players: [{id: '4'}],
                 times: { primary: '0', primary_t: 0.001 },
                 system: {},
                 values: {},
@@ -192,7 +197,7 @@ describe('RunDao', () => {
                 date: '2018-08-18',
                 category: {id: 'aCategoryOnGenre'},
                 status: {status: 'verified', 'verify-date': '2018-08-20'},
-                players: [{id: '1'}],
+                players: [{id: '5'}],
                 times: { primary: '0', primary_t: 0.001 },
                 system: {},
                 values: {},
@@ -214,8 +219,8 @@ describe('RunDao', () => {
         let leaderboard = (await new LeaderboardDao(db).load('aCategoryOnGenre'))[0];
 
         expect(leaderboard).to.exist;
-        expect(leaderboard!.runs).to.have.length(1); // players and subcategories are always the same so there will only be 1 entry
-        expect(leaderboard!.runs[0].run).to.have.property('id', 'dummy_run2');
+        expect(leaderboard!.runs).to.have.length(4);
+        expect(leaderboard!.runs[0].run).to.have.property('id', 'dummy_run');
     });
 });
 

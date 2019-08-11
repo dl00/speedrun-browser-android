@@ -331,7 +331,8 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             'run.category.id': 1,
             'run.level.id': 1,
             'run.times.primary_t': 1,
-            'run.date': 1
+            'run.date': 1,
+            'run.players.id': 1
         }, {
             background: true,
             partialFilterExpression: {
@@ -339,6 +340,28 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
                 'obsolete': false,
             }
         });
+
+        this.computed = {
+            'place': async (lbr: LeaderboardRunEntry) => {
+
+                let filter: any = {
+                    'run.game.id': lbr.run.game.id,
+                    'run.category.id': lbr.run.category.id,
+                    'run.times.primary_t': {$lte: lbr.run.times.primary_t},
+                    'obsolete': false,
+                    'run.status.status': 'verified',
+                };
+
+                if(lbr.run.level && lbr.run.level.id)
+                    filter['run.level.id'] = lbr.run.level.id;
+
+                return (await db.mongo.collection(this.collection).aggregate([
+                    {$match: filter},
+                    {$group: {_id: '$run.players.id'}},
+                    {$count: 'count'}
+                ]).toArray())[0].count;
+            }
+        }
 
         this.indexes = [
             new RecentRunsIndex('latest_new_runs', 'submitted', LATEST_NEW_RUNS_KEY,
@@ -401,6 +424,8 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         // have to make sure this is set to please the index
         if(!run.obsolete)
             run.obsolete = false;
+
+        delete run.place;
 
         return run;
     }

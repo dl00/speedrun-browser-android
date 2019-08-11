@@ -89,6 +89,8 @@ export class Dao<T> implements DaoConfig<T> {
 
     massage_sort: {[key: string]: any} = {};
 
+    protected computed: {[path: string]: (obj: T) => Promise<any>} = {};
+
     constructor(db: DB, collection: string, backing?: 'redis'|'mongo') {
         this.collection = collection;
         this.db = db;
@@ -144,7 +146,15 @@ export class Dao<T> implements DaoConfig<T> {
         if(!ids.length)
             throw new Error('Dao load() called with no IDs to load');
 
-        return await require(`./backing/${this.backing}`).load(this, ids);
+        let objs = await require(`./backing/${this.backing}`).load(this, ids);
+
+        for(let prop in this.computed) {
+            await Promise.all(_.map(objs, async (obj: any) => {
+                _.set(obj, prop, await this.computed[prop](obj));
+            }));
+        }
+
+        return objs;
     }
 
     async remove(ids: string|string[]): Promise<(T|null)[]> {
