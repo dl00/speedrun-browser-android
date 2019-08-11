@@ -45,15 +45,15 @@ class AutoCompleteAdapter(private val ctx: Context, private val disposables: Com
             var cur = sr.next()
             for (player in rawSearchData!!.players) {
                 // select the longest matching substring
-                val lcsp = LCSMatcher(query, player.resolvedName.toLowerCase(), 3)
+                val lcsp = LCSMatcher(query.toLowerCase(), player.resolvedName.toLowerCase(), 3)
 
                 var lcsg: LCSMatcher
                 do {
-                    lcsg = LCSMatcher(query, cur.resolvedName.toLowerCase(), 3)
+                    lcsg = LCSMatcher(query.toLowerCase(), cur.resolvedName.toLowerCase(), 3)
 
                     if(sr.hasNext())
                         cur = sr.next()
-                } while (lcsg.maxMatchLength >= lcsp.maxMatchLength && sr.hasNext())
+                } while (lcsg.maxMatchLength >= lcsp.maxMatchLength && lcsp.maxMatchLength < player.resolvedName.length - 1 && sr.hasNext())
 
                 sr.previous()
                 if(sr.hasPrevious())
@@ -119,7 +119,7 @@ class AutoCompleteAdapter(private val ctx: Context, private val disposables: Com
         disposables.add(obs.subscribe { s -> query = s })
 
         disposables.add(obs
-                .throttleFirst(DEBOUNCE_SEARCH_DELAY.toLong(), TimeUnit.MILLISECONDS)
+                .throttleLast(DEBOUNCE_SEARCH_DELAY.toLong(), TimeUnit.MILLISECONDS)
                 .switchMap<SpeedrunMiddlewareAPI.APISearchResponse> { s ->
                     if (s.length < SpeedrunMiddlewareAPI.MIN_AUTOCOMPLETE_LENGTH)
                         Observable.just(SpeedrunMiddlewareAPI.APISearchResponse())

@@ -165,4 +165,7 @@
     <string name="prelude_rules">Rules:\n %s</string>
     <string name="title_site_statistics">Speedrun.com Site Statistics</string>
     <string name="title_player_stats">Player Statistics</string>
+    <string name="try_website">Load this on the website</string>
+    <string name="button_main_page">App Main Page</string>
+    <string name="error_not_loadable">Could not load this URL. It may not be supported by the app.</string>
 </resources>

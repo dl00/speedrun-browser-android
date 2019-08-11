@@ -5,6 +5,11 @@ import android.os.Bundle
 import android.os.PersistableBundle
 import android.util.Log
 import android.view.MenuItem
+import android.view.View
+import android.widget.Button
+import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.TextView
 
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
@@ -19,6 +24,15 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
+import kotlinx.android.synthetic.main.activity_run_detail.*
+import android.os.Parcelable
+import android.R.attr.name
+import android.content.ComponentName
+import android.content.pm.ResolveInfo
+import android.net.Uri
+import androidx.core.view.accessibility.AccessibilityEventCompat.setAction
+
+
 
 class ItemDetailActivity : AppCompatActivity(), Consumer<SpeedrunMiddlewareAPI.APIResponse<WhatIsEntry>> {
 
@@ -132,8 +146,17 @@ class ItemDetailActivity : AppCompatActivity(), Consumer<SpeedrunMiddlewareAPI.A
         val entry = whatIsEntryAPIResponse.data[0]
 
         if(entry == null) {
-            Util.showErrorToast(this, getString(R.string.error_could_not_find))
-            showMainPage()
+            val containerView: FrameLayout = findViewById(R.id.detail_container)
+            containerView.getChildAt(0).visibility = View.VISIBLE
+
+            containerView.findViewById<Button>(R.id.buttonTryWebsite).setOnClickListener {
+                openWebsite()
+            }
+
+            containerView.findViewById<Button>(R.id.buttonMainPage).setOnClickListener {
+                showMainPage()
+            }
+
             return
         }
 
@@ -160,6 +183,26 @@ class ItemDetailActivity : AppCompatActivity(), Consumer<SpeedrunMiddlewareAPI.A
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(intent)
         finish()
+    }
+
+    private fun openWebsite() {
+        val i = Intent(Intent.ACTION_VIEW)
+        // using the actual URI does not work because android is too smart and will only give back my own app. So we use a dummy URL to force it over.
+        i.data = Uri.parse("https://atotallyrealsiterightnow.com/whatever")
+
+        val resInfos = packageManager.queryIntentActivities(i, 0)
+        println(resInfos)
+        if (resInfos.isNotEmpty()) {
+            for (resInfo in resInfos) {
+                val packageName = resInfo.activityInfo.packageName
+                if (!packageName.toLowerCase().contains("danb.speedrunbrowser")) {
+                    val browserIntent = Intent(Intent.ACTION_VIEW, intent.data)
+                    browserIntent.component = ComponentName(packageName, resInfo.activityInfo.name)
+                    browserIntent.setPackage(packageName)
+                    startActivity(browserIntent)
+                }
+            }
+        }
     }
 
     private fun showMainPage() {
