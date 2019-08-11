@@ -150,7 +150,8 @@ export class Dao<T> implements DaoConfig<T> {
 
         for(let prop in this.computed) {
             await Promise.all(_.map(objs, async (obj: any) => {
-                _.set(obj, prop, await this.computed[prop](obj));
+                if(obj)
+                    _.set(obj, prop, await this.computed[prop](obj));
             }));
         }
 

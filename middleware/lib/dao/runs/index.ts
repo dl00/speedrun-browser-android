@@ -344,6 +344,9 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         this.computed = {
             'place': async (lbr: LeaderboardRunEntry) => {
 
+                if(lbr.obsolete)
+                    return null;
+
                 let filter: any = {
                     'run.game.id': lbr.run.game.id,
                     'run.category.id': lbr.run.category.id,
@@ -355,11 +358,13 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
                 if(lbr.run.level && lbr.run.level.id)
                     filter['run.level.id'] = lbr.run.level.id;
 
-                return (await db.mongo.collection(this.collection).aggregate([
+                let r = await db.mongo.collection(this.collection).aggregate([
                     {$match: filter},
                     {$group: {_id: '$run.players.id'}},
                     {$count: 'count'}
-                ]).toArray())[0].count;
+                ]).toArray();
+
+                return r.length ? r[0].count : null;
             }
         }
 

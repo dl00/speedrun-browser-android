@@ -14,7 +14,7 @@ import { game_assets_to_bulk } from './games';
 import { NewRecord } from './runs';
 
 import { BulkGameAssets } from './games';
-import { LeaderboardRunEntry, Run, run_to_bulk } from './runs';
+import { RunDao, LeaderboardRunEntry, Run, run_to_bulk } from './runs';
 
 import { Dao, IndexerIndex } from './';
 
@@ -165,6 +165,35 @@ export class UserDao extends Dao<User> {
         super(db, 'users', 'redis');
 
         this.id_key = _.property('id');
+
+        this.computed = {
+            /// TODO: simplify this
+            'bests': async (user) => {
+
+                let run_dao = new RunDao(this.db!);
+
+                await Promise.all(_.map(user.bests, async (bg: GamePersonalBests) => {
+                    await Promise.all(_.map(bg.categories, async (bc: CategoryPersonalBests) => {
+                        if(bc.run) {
+                            bc.run = (await run_dao.load(bc.run.run.id))[0] || bc.run;
+                            bc.run.run = run_to_bulk(<Run>bc.run.run);
+                        }
+                        else if(bc.levels) {
+                            let runs = <LeaderboardRunEntry[]>_.reject(await run_dao.load(_.map(bc.levels, 'run.run.id')), _.isNil);
+
+                            for(let id in bc.levels) {
+                                bc.levels[id].run = runs.find((r: LeaderboardRunEntry) => {
+                                    return r.run.level ? r.run.level.id == id : false;
+                                }) || bc.levels[id].run;
+                                bc.levels[id].run.run = run_to_bulk(<Run>bc.levels[id].run.run);
+                            }
+                        }
+                    }))
+                }));
+
+                return user.bests;
+            }
+        }
 
         this.indexes = [
             new RedisMapIndex('abbr', (v: User) => {
