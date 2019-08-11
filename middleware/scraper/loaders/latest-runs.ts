@@ -27,17 +27,6 @@ export async function pull_latest_runs(runid: string, options: any) {
         let res = await puller.do_pull(scraper.storedb!,
             `/runs?status=verified&orderby=${options.verified ? 'verify-date' : 'submitted'}&direction=desc&offset=${options.offset || 0}&max=100&embed=players`);
 
-        // handle player obj updates before anything else
-        let updated_players = _.chain(res.data.data)
-            .map('players.data')
-            .flatten()
-            .filter('id')
-            .value();
-
-        let user_dao = new UserDao(scraper.storedb!);
-        let players = await user_dao.load(_.map(updated_players, 'id'));
-        await user_dao.save(players.map((v, i) => _.merge(v, <any>updated_players[i])));
-
         let runs: Run[] = res.data.data.map((run: any) => {
             run.game = {id: run.game};
             run.category = {id: run.category};
@@ -67,6 +56,17 @@ export async function pull_latest_runs(runid: string, options: any) {
             return;
         else if(remove_after !== -1)
             runs = runs.slice(0, remove_after);
+
+        // update users
+        let updated_players = _.chain(runs)
+            .map('players')
+            .flatten()
+            .filter('id')
+            .value();
+
+        let user_dao = new UserDao(scraper.storedb!);
+        let players = await user_dao.load(_.map(updated_players, 'id'), {skipComputed: true});
+        await user_dao.save(players.map((v, i) => _.merge(v, <any>updated_players[i])));
 
         // install runs on the database
         let pr = await populate_run_sub_documents(scraper.storedb!, runs);

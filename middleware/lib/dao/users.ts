@@ -175,17 +175,17 @@ export class UserDao extends Dao<User> {
                 await Promise.all(_.map(user.bests, async (bg: GamePersonalBests) => {
                     await Promise.all(_.map(bg.categories, async (bc: CategoryPersonalBests) => {
                         if(bc.run) {
-                            bc.run = (await run_dao.load(bc.run.run.id))[0] || bc.run;
-                            bc.run.run = run_to_bulk(<Run>bc.run.run);
+                            let run = (await run_dao.load(bc.run.run.id))[0]
+                            bc.run.place = run ? run.place : null;
                         }
                         else if(bc.levels) {
-                            let runs = <LeaderboardRunEntry[]>_.reject(await run_dao.load(_.map(bc.levels, 'run.run.id')), _.isNil);
+                            let ids = _.map(bc.levels, 'run.run.id');
+
+                            let runs = _.zipObject(ids, <LeaderboardRunEntry[]>_.reject(await run_dao.load(ids)));
 
                             for(let id in bc.levels) {
-                                bc.levels[id].run = runs.find((r: LeaderboardRunEntry) => {
-                                    return r.run.level ? r.run.level.id == id : false;
-                                }) || bc.levels[id].run;
-                                bc.levels[id].run.run = run_to_bulk(<Run>bc.levels[id].run.run);
+                                let run = runs[bc.levels[id].run.run.id];
+                                bc.levels[id].run.place = run ? run.place : null;
                             }
                         }
                     }))
