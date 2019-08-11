@@ -360,7 +360,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
 
                 let r = await db.mongo.collection(this.collection).aggregate([
                     {$match: filter},
-                    {$group: {_id: '$run.players.0.id'}},
+                    {$group: {_id: {id: '$run.players.id', name: '$run.players.name'}}},
                     {$count: 'count'}
                 ]).toArray();
 
