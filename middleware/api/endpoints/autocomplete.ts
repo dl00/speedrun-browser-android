@@ -6,8 +6,8 @@ import * as _ from 'lodash';
 import * as api from '../';
 import * as api_response from '../response';
 
-import { GameDao } from '../../lib/dao/games';
-import { UserDao } from '../../lib/dao/users';
+import { GameDao, game_to_bulk } from '../../lib/dao/games';
+import { UserDao, user_to_bulk } from '../../lib/dao/users';
 
 type IndexerResponse = {[type: string]: any[]};
 
@@ -24,8 +24,14 @@ router.get('/', async (req, res) => {
     // search all the indexer indexes
     try {
         let results: IndexerResponse = {
-            games: _.reject(await new GameDao(api.storedb!).load_by_index('autocomplete', query), _.isNil),
-            players: _.reject(await new UserDao(api.storedb!).load_by_index('autocomplete', query), _.isNil)
+            games: _.chain(await new GameDao(api.storedb!).load_by_index('autocomplete', query))
+                .reject(_.isNil)
+                .map(game_to_bulk)
+                .value(),
+            players: _.chain(await new UserDao(api.storedb!).load_by_index('autocomplete', query, {skipComputed: true}))
+                .reject(_.isNil)
+                .map(user_to_bulk)
+                .value()
         };
 
         return api_response.custom(res, {

@@ -20,7 +20,7 @@ export interface DaoConfig<T> {
     id_key: (obj: T) => string;
 
     save(objs: T|T[]): Promise<void>;
-    load(ids: string|string[]): Promise<any[]>;
+    load(ids: string|string[], options?: any): Promise<any[]>;
 }
 
 export interface IndexDriver<T> {
@@ -28,7 +28,7 @@ export interface IndexDriver<T> {
     forceIndex?: boolean;
 
     /// retrieve objects using the given string index keys
-    load(conf: DaoConfig<T>, keys: string[]): Promise<(T|null)[]>;
+    load(conf: DaoConfig<T>, keys: string[], options: any): Promise<(T|null)[]>;
 
     /// sets indexes associated with the given objects. the objects have already been stored in the db.
     apply(conf: DaoConfig<T>, objs: T[]): Promise<void>;
@@ -51,7 +51,7 @@ export class IndexerIndex<T> implements IndexDriver<T> {
         this.index_by = index_by;
     }
 
-    async load(conf: DaoConfig<T>, keys: string[]): Promise<(T|null)[]> {
+    async load(conf: DaoConfig<T>, keys: string[], options: any = {}): Promise<(T|null)[]> {
         if(keys.length !== 1)
             throw new Error('IndexerIndex expects only a single text search to load');
 
@@ -59,7 +59,7 @@ export class IndexerIndex<T> implements IndexDriver<T> {
         if(!ids.length)
             return [];
 
-        return await conf.load(ids);
+        return await conf.load(ids, options);
     }
 
     async apply(conf: DaoConfig<T>, objs: T[]) {
@@ -177,7 +177,7 @@ export class Dao<T> implements DaoConfig<T> {
         return await require(`./backing/${this.backing}`).remove(this, ids);
     }
 
-    async load_by_index(index: string, vals: string|string[]): Promise<(T|null)[]> {
+    async load_by_index(index: string, vals: string|string[], options: any = {}): Promise<(T|null)[]> {
         if(!_.isArray(vals))
             vals = [vals];
 
@@ -186,7 +186,7 @@ export class Dao<T> implements DaoConfig<T> {
         if(!idx)
             throw `Undefined Index: ${index}`;
 
-        return await idx.load(this, vals);
+        return await idx.load(this, vals, options);
     }
 
     protected async pre_store_transform(obj: T): Promise<T> {
