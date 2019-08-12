@@ -91,8 +91,16 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
                 let filter: any = {
                     'run.game.id': run.run.game.id,
                     'run.category.id': run.run.category.id,
-                    'run.submitted': {$lt: run.run.submitted},
                 };
+
+                // only obsolete other runs if this run has a submission time
+                // some of the older records do not have any dates attached whatsoever
+                if(run.run.submitted) {
+                    filter.$or = [
+                        {'run.submitted': {$lt: run.run.submitted}},
+                        {'run.submitted': null}
+                    ];
+                }
 
                 if(run.run.level)
                     filter['run.level.id'] = run.run.level.id;
