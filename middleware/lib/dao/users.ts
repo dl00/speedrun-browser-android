@@ -92,7 +92,7 @@ export function apply_personal_best(player: User, run: LeaderboardRunEntry): New
         run: run_to_bulk(<Run>run.run)
     };
 
-    if(!best_run.place)
+    if(!best_run.run.submitted)
         return null;
 
     let old_run = null;
