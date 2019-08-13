@@ -4,38 +4,26 @@ import android.app.AlertDialog
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.Context
-import android.content.DialogInterface
-import android.content.Intent
-import android.content.SharedPreferences
-import android.content.res.Resources
+import android.content.*
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.PorterDuff
-import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
 import android.util.Log
-import android.view.Menu
 import android.widget.Toast
 
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
-import java.util.Random
 import java.util.concurrent.TimeUnit
 
 import androidx.core.app.NotificationCompat
 import androidx.core.app.TaskStackBuilder
 import danb.speedrunbrowser.BuildConfig
 import danb.speedrunbrowser.R
-import io.reactivex.Single
-import io.reactivex.functions.Consumer
 import io.reactivex.plugins.RxJavaPlugins
-import okhttp3.Interceptor
 import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
 
 object Util {
 
@@ -163,5 +151,27 @@ object Util {
                 .setMessage(text)
                 .setNeutralButton(android.R.string.ok, null)
                 .show()
+    }
+
+    fun openInBrowser(ctx: Context, uri: Uri): Intent {
+
+        val i = Intent(Intent.ACTION_VIEW)
+        // using the actual URI does not work because android is too smart and will only give back my own app. So we use a dummy URL to force it over.
+        i.data = Uri.parse("https://atotallyrealsiterightnow.com/whatever")
+
+        val resInfos = ctx.packageManager.queryIntentActivities(i, 0)
+        if (resInfos.isNotEmpty()) {
+            for (resInfo in resInfos) {
+                val packageName = resInfo.activityInfo.packageName
+                if (!packageName.toLowerCase().contains("danb.speedrunbrowser")) {
+                    val browserIntent = Intent(Intent.ACTION_VIEW, uri)
+                    browserIntent.component = ComponentName(packageName, resInfo.activityInfo.name)
+                    browserIntent.setPackage(packageName)
+                    return browserIntent
+                }
+            }
+        }
+
+        throw ClassNotFoundException("Could not find the browser!")
     }
 }

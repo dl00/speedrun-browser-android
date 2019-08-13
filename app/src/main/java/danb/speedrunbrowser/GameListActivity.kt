@@ -15,23 +15,17 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.EditText
 import android.widget.ListView
-
-import com.google.android.gms.security.ProviderInstaller
-import com.google.firebase.crash.FirebaseCrash
-
-import java.util.ArrayList
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityOptionsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager
-import com.gu.toolargetool.TooLargeTool
+import com.google.android.gms.security.ProviderInstaller
+import com.google.firebase.crash.FirebaseCrash
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.api.objects.Genre
 import danb.speedrunbrowser.api.objects.User
-import danb.speedrunbrowser.stats.GameStatisticsActivity
 import danb.speedrunbrowser.stats.SiteStatisticsActivity
 import danb.speedrunbrowser.utils.*
 import danb.speedrunbrowser.views.SimpleTabStrip
@@ -41,6 +35,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.Function
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
+import java.util.*
 
 /**
  * An activity representing a list of Games. This activity
@@ -76,8 +71,6 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_list)
-
-        TooLargeTool.startLogging(application)
 
         mDisposables = CompositeDisposable()
 

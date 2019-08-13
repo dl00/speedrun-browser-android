@@ -1,6 +1,7 @@
 package danb.speedrunbrowser.utils
 
 import android.content.Context
+import android.net.Uri
 import android.os.Bundle
 
 import com.google.firebase.analytics.FirebaseAnalytics
@@ -12,6 +13,8 @@ object Analytics {
     private val EVENT_SUBSCRIBE = "subscribe"
     private val EVENT_UNSUBSCRIBE = "unsubscribe"
     private val EVENT_DELIVER_NOTIFICATION = "deliver_notification"
+
+    private val EVENT_NOT_FOUND = "url_not_found"
 
     private fun getFBAnalytics(ctx: Context): FirebaseAnalytics {
         if (analytics == null) {
@@ -39,5 +42,11 @@ object Analytics {
         val bundle = Bundle()
         bundle.putString(FirebaseAnalytics.Param.ITEM_ID, subjectId)
         getFBAnalytics(ctx).logEvent(EVENT_DELIVER_NOTIFICATION, bundle)
+    }
+
+    fun logNotFound(ctx: Context, uri: Uri) {
+        val bundle = Bundle()
+        bundle.putString(FirebaseAnalytics.Param.SOURCE, uri.toString())
+        getFBAnalytics(ctx).logEvent(EVENT_NOT_FOUND, bundle)
     }
 }

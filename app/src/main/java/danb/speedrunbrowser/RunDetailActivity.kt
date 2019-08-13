@@ -362,6 +362,11 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
 
         mPlayerNames.removeAllViews()
         for (player in mRun!!.players!!) {
+
+            val iv = ImageView(this)
+            player.applyCountryImage(iv)
+            mPlayerNames.addView(iv)
+
             val tv = TextView(this)
             tv.textSize = 16f
             player.applyTextView(tv)

@@ -14,6 +14,7 @@ import danb.speedrunbrowser.RunDetailActivity
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.*
 import danb.speedrunbrowser.holders.RunViewHolder
+import danb.speedrunbrowser.utils.Analytics
 import danb.speedrunbrowser.utils.ItemType
 import danb.speedrunbrowser.utils.ViewHolderSource
 import io.reactivex.disposables.CompositeDisposable
@@ -26,6 +27,8 @@ class LeaderboardStatisticsActivity : StatisticsActivity() {
         val leaderboardId: String? = intent.getStringExtra(EXTRA_LEADERBOARD_ID)
 
         if (leaderboardId != null) {
+
+            Analytics.logItemView(this, "leaderboard_chart", leaderboardId)
 
             onDataReadyListener = {
                 title =

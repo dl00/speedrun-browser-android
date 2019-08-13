@@ -100,7 +100,7 @@ export function apply_personal_best(player: User, run: LeaderboardRunEntry): New
     if(run.run.level && run.run.level.id) {
 
         old_run = _.get(player, `bests["${run.run.game.id}"].categories["${run.run.category.id}"].levels["${run.run.level.id}"].run`);
-        if(old_run && (old_run.run.id == best_run.run.id || old_run.place > best_run.place))
+        if(old_run && (old_run.run.id == best_run.run.id || old_run.run.submitted > best_run.run.submitted))
             return null;
 
         let level_run: LevelPersonalBests = {
@@ -115,7 +115,7 @@ export function apply_personal_best(player: User, run: LeaderboardRunEntry): New
     }
     else {
         old_run = _.get(player, `bests["${run.run.game.id}"].categories["${run.run.category.id}"].run`);
-        if(old_run && (old_run.run.id == best_run.run.id || old_run.place > best_run.place))
+        if(old_run && (old_run.run.id == best_run.run.id || old_run.run.submitted > best_run.run.submitted))
             return null;
 
         category_run.run = best_run;

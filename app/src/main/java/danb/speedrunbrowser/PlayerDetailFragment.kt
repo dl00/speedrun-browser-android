@@ -19,22 +19,13 @@ import android.widget.TableLayout
 import android.widget.TableRow
 import android.widget.TextView
 
-import com.google.android.gms.tasks.OnCompleteListener
-import com.google.android.gms.tasks.Task
-import com.google.firebase.messaging.FirebaseMessaging
-
 import java.net.MalformedURLException
 import java.net.URL
 import java.util.ArrayList
-import java.util.Collections
-import java.util.Comparator
-import java.util.Objects
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry
 import danb.speedrunbrowser.api.objects.User
-import danb.speedrunbrowser.stats.GameStatisticsActivity
 import danb.speedrunbrowser.stats.PlayerStatisticsActivity
 import danb.speedrunbrowser.utils.Analytics
 import danb.speedrunbrowser.utils.AppDatabase
@@ -47,7 +38,6 @@ import danb.speedrunbrowser.utils.Util
 import danb.speedrunbrowser.views.ProgressSpinnerView
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.functions.Action
 import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 
@@ -150,6 +140,10 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
         }
         else if(item.itemId == R.id.menu_stats) {
             viewStats()
+            return true
+        }
+        else if(item.itemId == R.id.menu_view_website) {
+            startActivity(Util.openInBrowser(context!!, Uri.parse(mPlayer!!.weblink)))
             return true
         }
 

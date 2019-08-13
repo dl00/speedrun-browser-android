@@ -2,6 +2,7 @@ package danb.speedrunbrowser
 
 import android.content.DialogInterface
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
 import androidx.fragment.app.Fragment
@@ -132,6 +133,9 @@ class GameDetailFragment : Fragment() {
         else if (item.itemId == R.id.menu_subscribe) {
             openSubscriptionDialog()
             return true
+        }
+        else if(item.itemId == R.id.menu_view_website) {
+            startActivity(Util.openInBrowser(context!!, Uri.parse(mGame!!.weblink)))
         }
 
         return false

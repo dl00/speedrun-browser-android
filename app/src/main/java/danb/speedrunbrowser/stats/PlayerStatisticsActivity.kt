@@ -3,6 +3,7 @@ package danb.speedrunbrowser.stats
 import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.Game
+import danb.speedrunbrowser.utils.Analytics
 
 class PlayerStatisticsActivity : StatisticsActivity() {
     override fun onStart() {
@@ -11,6 +12,8 @@ class PlayerStatisticsActivity : StatisticsActivity() {
         val playerId: String? = intent.getStringExtra(EXTRA_PLAYER_ID)
 
         if(playerId != null) {
+
+            Analytics.logItemView(this, "player_chart", playerId)
 
             onDataReadyListener = {
                 title = if(it.player?.names != null)

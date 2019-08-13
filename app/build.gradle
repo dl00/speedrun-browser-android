@@ -92,8 +92,6 @@ dependencies {
     implementation 'com.github.nirhart:parallaxscroll:1.0'
 
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
-
-    implementation 'com.gu.android:toolargetool:0.2.1@aar'
 }
 repositories {
     mavenCentral()

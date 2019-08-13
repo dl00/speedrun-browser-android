@@ -97,7 +97,7 @@ data class Variable(
             for (re in lb.runs!!) {
                 if (shouldShowRun(re.run, activeVariables)) {
 
-                    val playerIds = re.run.players!!.map { it.id }.joinToString("_")
+                    val playerIds = re.run.players!!.joinToString("_") { if(!it.isGuest) { it.id } else { it.name.toString() } }
 
                     val newRunEntry = if(seenPlayers.contains(playerIds)) {
                         LeaderboardRunEntry(

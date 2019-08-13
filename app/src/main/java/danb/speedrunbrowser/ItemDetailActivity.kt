@@ -31,7 +31,7 @@ import android.content.ComponentName
 import android.content.pm.ResolveInfo
 import android.net.Uri
 import androidx.core.view.accessibility.AccessibilityEventCompat.setAction
-
+import danb.speedrunbrowser.utils.Analytics
 
 
 class ItemDetailActivity : AppCompatActivity(), Consumer<SpeedrunMiddlewareAPI.APIResponse<WhatIsEntry>> {
@@ -146,6 +146,8 @@ class ItemDetailActivity : AppCompatActivity(), Consumer<SpeedrunMiddlewareAPI.A
         val entry = whatIsEntryAPIResponse.data[0]
 
         if(entry == null) {
+            Analytics.logNotFound(this, intent.data!!)
+
             val containerView: FrameLayout = findViewById(R.id.detail_container)
             containerView.getChildAt(0).visibility = View.VISIBLE
 
@@ -186,23 +188,7 @@ class ItemDetailActivity : AppCompatActivity(), Consumer<SpeedrunMiddlewareAPI.A
     }
 
     private fun openWebsite() {
-        val i = Intent(Intent.ACTION_VIEW)
-        // using the actual URI does not work because android is too smart and will only give back my own app. So we use a dummy URL to force it over.
-        i.data = Uri.parse("https://atotallyrealsiterightnow.com/whatever")
-
-        val resInfos = packageManager.queryIntentActivities(i, 0)
-        println(resInfos)
-        if (resInfos.isNotEmpty()) {
-            for (resInfo in resInfos) {
-                val packageName = resInfo.activityInfo.packageName
-                if (!packageName.toLowerCase().contains("danb.speedrunbrowser")) {
-                    val browserIntent = Intent(Intent.ACTION_VIEW, intent.data)
-                    browserIntent.component = ComponentName(packageName, resInfo.activityInfo.name)
-                    browserIntent.setPackage(packageName)
-                    startActivity(browserIntent)
-                }
-            }
-        }
+        Util.openInBrowser(this, intent.data!!)
     }
 
     private fun showMainPage() {
