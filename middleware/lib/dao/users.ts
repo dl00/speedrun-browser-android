@@ -71,8 +71,6 @@ export function user_to_bulk(user: User) {
 // add/update the given personal best entry for the given user
 export function apply_personal_best(player: User, run: LeaderboardRunEntry): NewRecord|null {
 
-    console.log('Apply personal best:', run);
-
     if(!run.run.category || !run.run.category.id)
         return null;
 
@@ -129,8 +127,6 @@ export function apply_personal_best(player: User, run: LeaderboardRunEntry): New
     new_bests[run.run.game.id] = game_run;
 
     _.merge(player, {bests: new_bests});
-
-    console.log('Finished: ', player);
 
     return {
         old_run: old_run,
