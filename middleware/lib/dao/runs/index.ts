@@ -107,7 +107,7 @@ export function normalize_run(d: Run) {
 
 /// TODO: Use decorators
 export function run_to_bulk(run: Run): BulkRun {
-    let newr = _.pick(run, 'id', 'date', 'players', 'times', 'system', 'values');
+    let newr = _.pick(run, 'id', 'date', 'submitted', 'players', 'times', 'system', 'values');
     return newr;
 }
 
