@@ -115,7 +115,7 @@ export async function pull_latest_runs(runid: string, options: any) {
         if(lbres.length) {
             await run_dao.save(lbres);
             // reload from db in order to get computed properties
-            lbres = await run_dao.load(_.map(lbres, 'run.id'));
+            lbres = <LeaderboardRunEntry[]>await run_dao.load(_.map(lbres, 'run.id'));
         }
 
         // send push notifications for new records

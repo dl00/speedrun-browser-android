@@ -359,11 +359,12 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
                     filter['run.level.id'] = lbr.run.level.id;
 
                 let category = (await new CategoryDao(this.db).load(lbr.run.category.id))[0];
+                if(category) {
+                    let subcategory_vars = _.filter(category!.variables, 'is-subcategory');
 
-                let subcategory_vars = _.filter(category.variables, 'is-subcategory');
-
-                for(let sv of subcategory_vars) {
-                    filter[`run.values.${sv}`] = lbr.run.values.sv;
+                    for(let sv of subcategory_vars) {
+                        filter[`run.values.${sv}`] = lbr.run.values.sv;
+                    }
                 }
 
                 let r = await db.mongo.collection(this.collection).aggregate([
