@@ -178,7 +178,7 @@ export class UserDao extends Dao<User> {
                             bc.run.place = run ? run.place : null;
                         }
                         else if(bc.levels) {
-                            let ids = _.map(bc.levels, 'run.run.id');
+                            let ids = _.map(bc.levels, 'run.id');
 
                             let runs = _.zipObject(ids, <LeaderboardRunEntry[]>_.reject(await run_dao.load(ids)));
 

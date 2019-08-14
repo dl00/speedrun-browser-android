@@ -125,7 +125,7 @@ class LeaderboardStatisticsActivity : StatisticsActivity() {
                         }
 
                         override fun applyToViewHolder(ctx: Context?, disposables: CompositeDisposable?, holder: RecyclerView.ViewHolder, toApply: Any) {
-                            val lbr = LeaderboardRunEntry(run = toApply as Run)
+                            val lbr = LeaderboardRunEntry(run = toApply as Run, obsolete = false)
 
                             (holder as RunViewHolder).apply(ctx!!, disposables!!, null, lbr)
                         }

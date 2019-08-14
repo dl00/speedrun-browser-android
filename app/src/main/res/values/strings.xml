@@ -37,7 +37,7 @@
     <string name="button_filters">Filters</string>
     <string name="dialog_title_choose_filters">Filter runs by:</string>
     <string name="dialog_title_choose_genres">Show games/runs by genre:</string>
-    <string name="empty_no_splits">No splits provided for this run.</string>
+    <string name="empty_no_splits">Splits are coming soon!</string>
     <string name="empty_no_runs">No runs here (its free!)</string>
     <string name="msg_no_video">This run does not have a video.</string>
     <string name="error_invalod_url">Invalid URL: %s</string>
@@ -65,27 +65,19 @@
     <string name="button_got_it">Got it!</string>
 
     <!-- release notes: edit for each release for now -->
-    <string name="dialog_title_release_notes">1.9! Charts for games, leaderboards, players</string>
+    <string name="dialog_title_release_notes">1.10</string>
     <string name="dialog_msg_release_notes">
-        Ever since I started writing this app, I have always wanted to do more with the data
-        this app interacts with. This release includes the introduction of charts-a major step
-        in accomplishing this goal.\n
+        Thanks for downloading the app and your support!\n
         \n
-        Here are the charts to look for:\n
-        * World record progression, as seen on speedrun.com. Includes the ability to view as part of
-        a list and view the videos for all the runs!\n
-        * Submission volume-for all of the above :)\n
-        * Player\'s "favorite" games based on PB submissions\n
-        * All time runs submitted to the site (also as seen on speedrun.com)\n
+        This is mostly a bugfix release.\n
         \n
-        Coming soon:\n
-        * Player PBs chart\n
-        * Biggest improvers and new contenders for the WR in a game/category\n
-        * Longest world record holders\n
-        This is just the beginning. I plan to continue adding new charts regularly as they come
-        to mind/are suggested.\n
+        I know that there have been a lot of issues lately with leaderboards and player info accuracy.
+        I have been battling this, and most (if not all) of the problems should be solve now in that regard.\n
         \n
-        It has been really great to see this project grow. Thanks for all the support!
+        I have also tried to clean up some unfinished misc. issues around a variety of the app, including:\n
+        * the link handler and the ability to view the official website without needing to enter android settings.\n
+        * searching for games/players with an exact name should *always* show exact matches first now\n
+        * player country icons
     </string>
 
     <string name="dialog_button_rate_now">Rate now!</string>

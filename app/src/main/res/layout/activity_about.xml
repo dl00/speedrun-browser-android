@@ -8,13 +8,13 @@
     android:background="@color/colorPrimary"
     android:gravity="center"
     android:orientation="horizontal"
-    android:padding="@dimen/fab_margin"
     tools:context=".AboutActivity">
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
         <LinearLayout
+            android:layout_margin="@dimen/fab_margin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
@@ -132,6 +132,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="50dp"
+                android:layout_marginBottom="50dp"
                 android:paddingTop="@dimen/half_fab_margin"
                 android:paddingBottom="@dimen/half_fab_margin"
                 android:text="@string/label_about_os_licenses"

@@ -21,12 +21,7 @@ import java.util.concurrent.TimeUnit
 
 import androidx.appcompat.app.AppCompatActivity
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
-import danb.speedrunbrowser.api.objects.Category
-import danb.speedrunbrowser.api.objects.Game
-import danb.speedrunbrowser.api.objects.Level
-import danb.speedrunbrowser.api.objects.Run
-import danb.speedrunbrowser.api.objects.User
-import danb.speedrunbrowser.api.objects.Variable
+import danb.speedrunbrowser.api.objects.*
 import danb.speedrunbrowser.utils.*
 import danb.speedrunbrowser.views.MultiVideoView
 import danb.speedrunbrowser.views.ProgressSpinnerView
@@ -64,6 +59,8 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
     private lateinit var mCategoryName: TextView
     private lateinit var mVariableChips: ChipGroup
     private lateinit var mPlayerNames: FlexboxLayout
+    private lateinit var mRunPlaceImg: ImageView
+    private lateinit var mRunPlaceTxt: TextView
     private lateinit var mRunTime: TextView
 
     private lateinit var mRunComment: TextView
@@ -83,7 +80,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
     private var mGame: Game? = null
     private var mCategory: Category? = null
     private var mLevel: Level? = null
-    private var mRun: Run? = null
+    private var mRun: LeaderboardRunEntry? = null
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,6 +101,8 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
         mCategoryName = findViewById(R.id.txtCategoryName)
         mVariableChips = findViewById(R.id.chipsVariables)
         mPlayerNames = findViewById(R.id.txtPlayerNames)
+        mRunPlaceImg = findViewById(R.id.imgRunPlace)
+        mRunPlaceTxt = findViewById(R.id.txtRunPlace)
         mRunTime = findViewById(R.id.txtRunTime)
         mVideoFrame = findViewById(R.id.videoFrame)
         mViewOnOfficial = findViewById(R.id.buttonViewOnOfficial)
@@ -116,7 +115,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
         val args = intent.extras!!
 
         if (args.getSerializable(EXTRA_RUN) != null) {
-            mRun = args.getSerializable(EXTRA_RUN) as Run
+            mRun = args.getSerializable(EXTRA_RUN) as LeaderboardRunEntry
 
             mGame = args.getSerializable(EXTRA_GAME) as Game
             mCategory = args.getSerializable(EXTRA_CATEGORY) as Category
@@ -143,7 +142,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
             mGame = args.getSerializable(EXTRA_GAME) as Game
             mCategory = args.getSerializable(EXTRA_CATEGORY) as Category
             mLevel = args.getSerializable(EXTRA_LEVEL) as Level
-            mRun = args.getSerializable(EXTRA_RUN) as Run
+            mRun = args.getSerializable(EXTRA_RUN) as LeaderboardRunEntry
 
             onDataReady()
         }
@@ -166,10 +165,10 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
                         return@Consumer
                     }
 
-                    mRun = data[0]!!.run
-                    mGame = mRun!!.game
-                    mCategory = mRun!!.category
-                    mLevel = mRun!!.level
+                    mRun = data[0]!!
+                    mGame = mRun!!.run.game
+                    mCategory = mRun!!.run.category
+                    mLevel = mRun!!.run.level
 
                     onDataReady()
                 }, ConnectionErrorConsumer(this)))
@@ -202,16 +201,16 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
         setViewData()
         mSpinner.visibility = View.GONE
 
-        Analytics.logItemView(this, "run", mRun!!.id)
+        Analytics.logItemView(this, "run", mRun!!.run.id)
 
         onConfigurationChanged(resources.configuration)
 
         // check watch history to set video start time
-        mDisposables.add(mDB.watchHistoryDao()[mRun!!.id]
+        mDisposables.add(mDB.watchHistoryDao()[mRun!!.run.id]
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(Consumer { (_, seekPos) ->
-                    Log.d(TAG, "Got seek record for run: " + mRun!!.id + ", " + seekPos)
+                    Log.d(TAG, "Got seek record for run: " + mRun!!.run.id + ", " + seekPos)
                     mVideoFrame.seekTime = seekPos.toInt()
                     onVideoReady()
                 }, NoopConsumer(), Action {
@@ -223,7 +222,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
 
         mVideoFrame.setListener(this)
 
-        if (mRun!!.videos == null || mRun!!.videos!!.links == null || mRun!!.videos!!.links!!.isEmpty()) {
+        if (mRun!!.run.videos == null || mRun!!.run.videos!!.links == null || mRun!!.run.videos!!.links!!.isEmpty()) {
             mVideoFrame.setVideoNotAvailable()
             mViewOnOfficial.visibility = View.GONE
 
@@ -231,7 +230,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
         }
 
         // find the first available video recognized
-        for (ml in mRun!!.videos!!.links!!) {
+        for (ml in mRun!!.run.videos!!.links!!) {
             if (mVideoFrame.loadVideo(ml))
                 break
         }
@@ -239,7 +238,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
         if (!mVideoFrame.hasLoadedVideo()) {
             Log.w(TAG, "Could not play a video for this run")
             // just record the fact that the video page was accessed
-            mVideoFrame.setVideoFrameOther(mRun!!.videos!!.links!![0])
+            mVideoFrame.setVideoFrameOther(mRun!!.run.videos!!.links!![0])
             mViewOnOfficial.visibility = View.GONE
             writeWatchToDb(0)
         }
@@ -290,7 +289,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
 
         Log.d(TAG, "Record seek time: $seekTime")
 
-        mDisposables.add(mDB.watchHistoryDao().record(AppDatabase.WatchHistoryEntry(mRun!!.id, seekTime))
+        mDisposables.add(mDB.watchHistoryDao().record(AppDatabase.WatchHistoryEntry(mRun!!.run.id, seekTime))
                 .subscribeOn(Schedulers.io())
                 .subscribe())
     }
@@ -319,11 +318,11 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
         if (mLevel != null && mLevel!!.name != null)
             fullCategoryName.append(" \u2022 ").append(mLevel!!.name)
 
-        if (mGame!!.shouldShowPlatformFilter() && mRun!!.system != null) {
+        if (mGame!!.shouldShowPlatformFilter() && mRun!!.run.system != null) {
             val chip = Chip(this)
 
             for ((id, name) in mGame!!.platforms!!) {
-                if (id == mRun!!.system!!.platform) {
+                if (id == mRun!!.run.system!!.platform) {
                     chip.text = name
                     mVariableChips.addView(chip)
                     break
@@ -331,11 +330,11 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
             }
         }
 
-        if (mGame!!.shouldShowRegionFilter() && mRun!!.system != null) {
+        if (mGame!!.shouldShowRegionFilter() && mRun!!.run.system != null) {
             val chip = Chip(this)
 
             for ((id, name) in mGame!!.regions!!) {
-                if (id == mRun!!.system!!.region) {
+                if (id == mRun!!.run.system!!.region) {
                     chip.text = name
                     mVariableChips.addView(chip)
                     break
@@ -345,12 +344,12 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
 
         if (mCategory!!.variables != null) {
             for ((id, name, _, _, _, _, isSubcategory, values) in mCategory!!.variables!!) {
-                if (mRun!!.values!!.containsKey(id) && !isSubcategory && values.containsKey(mRun!!.values!![id])) {
+                if (mRun!!.run.values!!.containsKey(id) && !isSubcategory && values.containsKey(mRun!!.run.values!![id])) {
                     val chip = Chip(this)
-                    chip.text = StringBuilder(name).append(": ").append(values[mRun!!.values!![id]]!!.label)
+                    chip.text = StringBuilder(name).append(": ").append(values[mRun!!.run.values!![id]]!!.label)
                     mVariableChips.addView(chip)
-                } else if (isSubcategory && values.containsKey(mRun!!.values!![id])) {
-                    fullCategoryName.append(" \u2022 ").append(values[mRun!!.values!![id]]!!.label)
+                } else if (isSubcategory && values.containsKey(mRun!!.run.values!![id])) {
+                    fullCategoryName.append(" \u2022 ").append(values[mRun!!.run.values!![id]]!!.label)
                 }
             }
         }
@@ -361,7 +360,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
                             .subscribe(ImageViewPlacerConsumer(mCover)))
 
         mPlayerNames.removeAllViews()
-        for (player in mRun!!.players!!) {
+        for (player in mRun!!.run.players!!) {
 
             val iv = ImageView(this)
             player.applyCountryImage(iv)
@@ -372,18 +371,41 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
             player.applyTextView(tv)
 
             val padding = resources.getDimensionPixelSize(R.dimen.half_fab_margin)
-
             tv.setPadding(padding, padding, padding, padding)
-
             tv.setOnClickListener { viewPlayer(player) }
 
             mPlayerNames.addView(tv)
         }
 
         mCategoryName.text = fullCategoryName
-        mRunTime.text = mRun!!.times!!.time
 
-        mRunComment.text = mRun!!.comment
+        if(mRun?.place != null) {
+            mRunPlaceImg.visibility = View.VISIBLE
+
+            val loadImage = when(mRun!!.place) {
+                1 -> mGame!!.assets.trophy1st?.uri
+                2 -> mGame!!.assets.trophy2nd?.uri
+                3 -> mGame!!.assets.trophy3rd?.uri
+                4 -> mGame!!.assets.trophy4th?.uri
+                else -> null
+            }
+
+            if(loadImage != null) {
+                mDisposables.add(
+                        ImageLoader(this).loadImage(loadImage)
+                                .subscribe(ImageViewPlacerConsumer(mRunPlaceImg)))
+            }
+
+            mRunPlaceTxt.visibility = View.VISIBLE
+            mRunPlaceTxt.text = mRun!!.placeName
+        }
+        else {
+            mRunPlaceImg.visibility = View.GONE
+            mRunPlaceTxt.visibility = View.GONE
+        }
+        mRunTime.text = mRun!!.run.times!!.time
+
+        mRunComment.text = mRun!!.run.comment
 
         val emptyTv = TextView(this)
 
@@ -406,7 +428,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
         intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemType.GAMES)
         intent.putExtra(GameDetailFragment.ARG_GAME_ID, mGame!!.id)
         intent.putExtra(GameDetailFragment.ARG_LEADERBOARD_ID, mCategory!!.id + (if(mLevel != null) "_" + mLevel!!.id else ""))
-        intent.putExtra(GameDetailFragment.ARG_VARIABLE_SELECTIONS, Variable.VariableSelections(mRun))
+        intent.putExtra(GameDetailFragment.ARG_VARIABLE_SELECTIONS, Variable.VariableSelections(mRun?.run))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             intent.flags = Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT
         }
@@ -416,7 +438,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
 
     // show game rules as a Alert Dialog
     private fun viewRules() {
-        var rulesText = mCategory!!.getRulesText(Variable.VariableSelections(mRun))
+        var rulesText = mCategory!!.getRulesText(Variable.VariableSelections(mRun?.run))
 
         if (rulesText.isEmpty())
             rulesText = getString(R.string.msg_no_rules_content)
@@ -430,7 +452,7 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
     }
 
     private fun viewOnOfficial() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(mRun!!.videos!!.links!![0].uri.toString()))
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(mRun!!.run.videos!!.links!![0].uri.toString()))
         startActivity(intent)
     }
 
@@ -439,9 +461,9 @@ class RunDetailActivity : AppCompatActivity(), MultiVideoView.Listener {
             val intent = Intent(Intent.ACTION_SEND)
                     .setType("text/plain")
                     .putExtra(Intent.EXTRA_TEXT,
-                            getString(R.string.msg_share_run, User.printPlayerNames(mRun!!.players!!),
-                                    mRun!!.game!!.resolvedName,
-                                    mRun!!.times?.time ?: "", mRun!!.weblink))
+                            getString(R.string.msg_share_run, User.printPlayerNames(mRun!!.run.players!!),
+                                    mRun!!.run.game!!.resolvedName,
+                                    mRun!!.run.times?.time ?: "", mRun!!.run.weblink))
 
             startActivity(Intent.createChooser(intent, getString(R.string.msg_share_run_explain)))
         }

@@ -58,7 +58,8 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
     private fun viewOpenSourceLicenses() {
         val licenseText: String
         try {
-            licenseText = Util.readToString(javaClass.getResourceAsStream(OPENSOURCE_LICENSES_FILE)!!)
+            licenseText = Util.readToString(
+                    javaClass.getResourceAsStream(OPENSOURCE_LICENSES_FILE)!!)
         } catch (e: Exception) {
             // this basically should not happen
             Log.e(TAG, "Could not load license information from JAR file:", e)
@@ -111,6 +112,6 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
         private val TERMS_AND_CONDITIONS = Uri.parse("https://speedrun-browser-4cc82.firebaseapp.com/terms.html")
         private val PRIVACY_POLICY = Uri.parse("https://speedrun-browser-4cc82.firebaseapp.com/privacy-policy.html")
 
-        private val OPENSOURCE_LICENSES_FILE = "/assets/licenses.txt"
+        private const val OPENSOURCE_LICENSES_FILE = "/assets/licenses.txt"
     }
 }

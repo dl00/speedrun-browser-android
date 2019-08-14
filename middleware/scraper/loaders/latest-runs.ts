@@ -112,8 +112,11 @@ export async function pull_latest_runs(runid: string, options: any) {
         }
 
         let run_dao = new RunDao(scraper.storedb!);
-        if(lbres.length)
-            await run_dao.save(_.cloneDeep(lbres));
+        if(lbres.length) {
+            await run_dao.save(lbres);
+            // reload from db in order to get computed properties
+            lbres = await run_dao.load(_.map(lbres, 'run.id'));
+        }
 
         // send push notifications for new records
         let new_records = run_dao.collect_new_records();

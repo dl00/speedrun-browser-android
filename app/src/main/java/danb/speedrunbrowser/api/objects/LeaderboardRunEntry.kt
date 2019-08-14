@@ -4,7 +4,8 @@ import java.io.Serializable
 
 data class LeaderboardRunEntry(
         val run: Run,
-        val place: Int? = null
+        val place: Int? = null,
+        val obsolete: Boolean = false
 ) : Serializable {
     val placeName: String
         get() {
