@@ -15,6 +15,7 @@ import { DB } from '../../db';
 import {
     BaseMiddleware,
     normalize,
+    Variable
 } from '../../speedrun-api';
 
 import { BulkUser, User, user_to_bulk } from '../users';
@@ -360,10 +361,10 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
 
                 let category = (await new CategoryDao(this.db).load(lbr.run.category.id))[0];
                 if(category) {
-                    let subcategory_vars = _.filter(category!.variables, 'is-subcategory');
+                    let subcategory_vars = <Variable[]>_.filter(category!.variables, 'is-subcategory');
 
                     for(let sv of subcategory_vars) {
-                        filter[`run.values.${sv}`] = lbr.run.values.sv;
+                        filter[`run.values.${sv.id}`] = lbr.run.values[sv.id];
                     }
                 }
 
