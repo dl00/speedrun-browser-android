@@ -13,17 +13,6 @@ export async function list_all_runs(runid: string, options: any) {
         let res = await puller.do_pull(scraper.storedb!,
             '/runs?max=200&offset=' + (options ? options.offset : 0) + '&embed=players');
 
-        // handle player obj updates before anything else
-        let updated_players = _.chain(res.data.data)
-            .map('players.data')
-            .flatten()
-            .filter('id')
-            .value();
-
-        let user_dao = new UserDao(scraper.storedb!);
-        let players = await user_dao.load(_.map(updated_players, 'id'));
-        await user_dao.save(players.map((v, i) => _.merge(v, <any>updated_players[i])));
-
         let runs: Run[] = res.data.data.map((run: any) => {
             run.game = {id: run.game};
             run.category = {id: run.category};
@@ -35,6 +24,17 @@ export async function list_all_runs(runid: string, options: any) {
 
             return run;
         });
+
+        // handle player obj updates before anything else
+        let updated_players = _.chain(res.data.data)
+            .map('players')
+            .flatten()
+            .filter('id')
+            .value();
+
+        let user_dao = new UserDao(scraper.storedb!);
+        let players = await user_dao.load(_.map(updated_players, 'id'), {skipComputed: true});
+        await user_dao.save(players.map((v, i) => _.merge(v, <any>updated_players[i])));
 
         let pr = await populate_run_sub_documents(scraper.storedb!, runs);
         if(pr.drop_runs.length)

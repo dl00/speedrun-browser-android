@@ -127,6 +127,8 @@ export async function pull_latest_runs(runid: string, options: any) {
             if(!record_run)
                 return;
 
+            nr.new_run = record_run;
+
             if(record_run.place == 1) {
                 // new record on this category/level, send notification
                 await push_notify.notify_game_record(nr, record_run.run.game, record_run.run.category, record_run.run.level);
