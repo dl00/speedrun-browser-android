@@ -14,7 +14,7 @@ import { LeaderboardRunEntry, Run, RunDao } from '../lib/dao/runs';
 
 import { make_all_wr_charts } from '../lib/dao/runs/charts';
 
-scraper.connect(config.load_config()).then(_.noop(), console.error);
+scraper.connect(config.load_config()).then(_.noop, console.error);
 
 export async function send_dummy_player_notify(run_id: string) {
     const runs = await new RunDao(scraper.storedb!).load(run_id);
