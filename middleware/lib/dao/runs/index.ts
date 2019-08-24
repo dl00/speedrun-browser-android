@@ -356,7 +356,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         this.computed = {
             place: async (lbr: LeaderboardRunEntry) => {
 
-                if (lbr.obsolete || !lbr.run.game || !lbr.run.game.id || !lbr.run.category || !lbr.run.category.id) {
+                if (lbr.obsolete || !lbr.run || !lbr.run.game || !lbr.run.game.id || !lbr.run.category || !lbr.run.category.id) {
                     return null;
                 }
 
