@@ -132,10 +132,13 @@ export async function pull_game_levels(_runid: string, options: any) {
 
         let levels: Level[] = res.data.data;
 
-        await new LevelDao(scraper.storedb!).apply_for_game(options.id, levels.map(v => {
-            v.game = options.id;
-            return v;
-        }));
+
+        if(levels.length) {
+            await new LevelDao(scraper.storedb!).apply_for_game(options.id, levels.map(v => {
+                v.game = options.id;
+                return v;
+            }));
+        }
     }
     catch(err) {
         console.error('loader/gamelist: could not retrieve levels for single game:', options, err.statusCode, err);
