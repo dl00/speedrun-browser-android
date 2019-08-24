@@ -12,7 +12,7 @@ import { GameDao, Game } from '../lib/dao/games';
 
 import { make_all_wr_charts } from '../lib/dao/runs/charts';
 
-scraper.connect(config.load_config());
+scraper.connect(config.load_config()).then(_.noop(), console.error);
 
 export async function send_dummy_player_notify(run_id: string) {
     let runs = await new RunDao(scraper.storedb!).load(run_id);
@@ -22,7 +22,7 @@ export async function send_dummy_player_notify(run_id: string) {
     let category: Category = <Category>(<Run>runs[0]!.run).category;
     let level: Level|null = <Level|null>(<Run>runs[0]!.run).level;
 
-    push_notify.notify_player_record({new_run: runs[0]!, old_run: runs[0]!}, player, game, category, <any>level);
+    await push_notify.notify_player_record({new_run: runs[0]!, old_run: runs[0]!}, player, game, category, <any>level);
 }
 
 export async function massage_all_runs(skip = 0) {

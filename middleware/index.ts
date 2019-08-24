@@ -5,12 +5,12 @@ import * as api from './api';
 
 import * as cluster from 'cluster';
 
-export function start_scraper(config: any) {
-    scraper.run(config);
+export async function start_scraper(config: any) {
+    await scraper.run(config);
 }
 
-export function start_server(config: any) {
-    api.run(config);
+export async function start_server(config: any) {
+    await api.run(config);
 }
 
 export async function run() {
@@ -21,15 +21,15 @@ export async function run() {
         cluster.fork({ROLE: 'web'});
     }
     else if(process.env.ROLE == 'scraper') {
-        start_scraper(config);
+        await start_scraper(config);
     }
     else if(process.env.ROLE == 'web') {
-        start_server(config);
+        await start_server(config);
     }
 }
 
 if(require.main == module) {
     run().then(() => {
         console.log('Startup completed');
-    });
+    }, console.error);
 }

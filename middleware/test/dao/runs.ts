@@ -23,7 +23,7 @@ describe('RunDao', () => {
     });
 
     after(async () => {
-        close_db(db);
+        await close_db(db);
     });
 
     it('should index latest runs', async () => {
@@ -236,7 +236,7 @@ describe('RecentChartIndex', () => {
     });
 
     after(async () => {
-        close_db(db);
+        await close_db(db);
     });
 
 
@@ -342,7 +342,7 @@ describe('RecentChartIndex', () => {
         let run_dao = new RunDao(db);
         let chart_dao = new ChartDao(db);
 
-        new CategoryDao(db).save({
+        await new CategoryDao(db).save({
             id: 'variabledSubcategory',
             name: 'Testing',
             type: 'per-game',

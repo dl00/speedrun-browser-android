@@ -188,7 +188,7 @@ async function pop_call(): Promise<any> {
     let ret = await do_call(call, priority);
 
     // when the call returns we can safely remove from running tasks
-    rdb!.lrem(ScraperDB.locs.running_tasks, 1, raw_running_task);
+    await rdb!.lrem(ScraperDB.locs.running_tasks, 1, raw_running_task);
 
     if(call.skip_wait)
         setTimeout(pop_call, 1);
@@ -225,7 +225,7 @@ async function init_task(task: Task) {
 
     if(task.repeat) {
         setTimeout(async () => {
-            init_task(task);
+            await init_task(task);
         }, task.repeat.asMilliseconds());
     }
 }
@@ -293,20 +293,20 @@ export async function run(config: Config) {
                 // schedule for the time difference
                 let sched_ms = rtime.diff(moment());
                 console.log('[SCHED]', task.name, sched_ms);
-                setTimeout(() => {
-                    init_task(<Task>task);
+                setTimeout(async () => {
+                    await init_task(<Task>task);
                 }, sched_ms);
                 continue;
             }
         }
 
         // if we make it this far, spawn right now. schedule for later
-        init_task(task);
+        await init_task(task);
     }
 
     // keep pulling calls at the given rate
     setInterval(pop_call, 1000.0 / config.scraper.rate);
 
-    wipe_running_tasks();
+    await wipe_running_tasks();
     setInterval(wipe_running_tasks, 60 * 1000);
 }

@@ -69,7 +69,7 @@ export async function load_db(conf: Config): Promise<DB> {
 }
 
 export async function close_db(db: DB) {
-    db.mongo_client.close();
+    await db.mongo_client.close();
     db.redis.disconnect();
 
     for(let ind in db.indexers)

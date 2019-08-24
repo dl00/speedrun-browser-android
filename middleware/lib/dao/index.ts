@@ -108,7 +108,7 @@ export class Dao<T> implements DaoConfig<T> {
             throw new Error(`Dao ${this.collection} trying to save a null object: ${util.inspect(objs)}`);
 
         // run the transform for each obj
-        Promise.all(objs.map(v => this.pre_store_transform(v)));
+        await Promise.all(objs.map(v => this.pre_store_transform(v)));
 
         // keep a copy of the previous values for index processing
         let prev_objs = await require(`./backing/${this.backing}`).save(this, objs);

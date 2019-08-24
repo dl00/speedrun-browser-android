@@ -20,7 +20,7 @@ describe('GenreDao', () => {
     });
 
     after(async () => {
-        close_db(db);
+        await close_db(db);
     });
 
     it('should index popular genres', async () => {

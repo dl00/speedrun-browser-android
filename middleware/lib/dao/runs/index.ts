@@ -299,14 +299,14 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         }, {
             background: true,
             partialFilterExpression: {'run.status.status': 'verified'}
-        }).then(_.noop);
+        }).then(_.noop, console.error);
 
         db.mongo.collection(this.collection).createIndex({
             'run.game.id': 1,
             'run.date': 1
         }, {
             background: true
-        }).then(_.noop);
+        }).then(_.noop, console.error);
 
         db.mongo.collection(this.collection).createIndex({
             'run.category.id': 1,
@@ -314,7 +314,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             'run.date': 1
         }, {
             background: true
-        }).then(_.noop);
+        }).then(_.noop, console.error);
 
         db.mongo.collection(this.collection).createIndex({
             'run.players.id': 1,
@@ -324,7 +324,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             'run.date': 1
         }, {
             background: true
-        }).then(_.noop);
+        }).then(_.noop, console.error);
 
         // used to calculate leaderboards
         db.mongo.collection(this.collection).createIndex({
@@ -340,7 +340,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
                 'run.status.status': 'verified',
                 'obsolete': false,
             }
-        });
+        }).then(_.noop, console.error);
 
         this.computed = {
             'place': async (lbr: LeaderboardRunEntry) => {

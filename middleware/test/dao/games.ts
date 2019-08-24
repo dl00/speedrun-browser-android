@@ -21,7 +21,7 @@ describe('GameDao', () => {
     });
 
     after(async () => {
-        close_db(db);
+        await close_db(db);
     });
 
     it('should index popular games', async () => {

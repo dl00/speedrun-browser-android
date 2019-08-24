@@ -21,7 +21,7 @@ describe('Dao', () => {
     });
 
     after(async () => {
-        close_db(db);
+        await close_db(db);
     });
 
     function saveLoad(backing_db: 'redis'|'mongo') {
@@ -152,7 +152,7 @@ describe('IndexerIndex', () => {
     });
 
     after(async () => {
-        close_db(db);
+        await close_db(db);
     });
 
     it('should create indexes on an indexer database', async () => {
