@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 
-import { Leaderboard, correct_leaderboard_run_places } from '../../lib/dao/leaderboards';
+import { correct_leaderboard_run_places, Leaderboard } from '../../lib/dao/leaderboards';
 
 import { expect } from 'chai';
 
@@ -9,7 +9,7 @@ import 'mocha';
 describe('correct_leaderboard_run_places', () => {
     it('should have a monotonically increasing list with no ties or subcategories', async () => {
 
-        let lb = {
+        const lb = {
             weblink: '',
             game: '',
             category: '',
@@ -24,9 +24,9 @@ describe('correct_leaderboard_run_places', () => {
                         values: {},
                         times: {
                             primary: '12T',
-                            primary_t: 12
-                        }
-                    }
+                            primary_t: 12,
+                        },
+                    },
                 },
                 {
                     run: {
@@ -37,9 +37,9 @@ describe('correct_leaderboard_run_places', () => {
                         values: {},
                         times: {
                             primary: '13T',
-                            primary_t: 13
-                        }
-                    }
+                            primary_t: 13,
+                        },
+                    },
                 },
                 {
                     run: {
@@ -50,21 +50,21 @@ describe('correct_leaderboard_run_places', () => {
                         values: {},
                         times: {
                             primary: '20T',
-                            primary_t: 20
-                        }
-                    }
-                }
-            ]
+                            primary_t: 20,
+                        },
+                    },
+                },
+            ],
         };
 
-        correct_leaderboard_run_places(lb, [])
+        correct_leaderboard_run_places(lb, []);
 
         expect(lb.runs[0]).to.have.property('place', 1);
         expect(lb.runs[2]).to.have.property('place', 3);
     });
 
     it('should handle ties', () => {
-        let lb = {
+        const lb = {
             weblink: '',
             game: '',
             category: '',
@@ -79,9 +79,9 @@ describe('correct_leaderboard_run_places', () => {
                         values: {},
                         times: {
                             primary: '12T',
-                            primary_t: 12
-                        }
-                    }
+                            primary_t: 12,
+                        },
+                    },
                 },
                 {
                     run: {
@@ -92,9 +92,9 @@ describe('correct_leaderboard_run_places', () => {
                         values: {},
                         times: {
                             primary: '12T',
-                            primary_t: 12
-                        }
-                    }
+                            primary_t: 12,
+                        },
+                    },
                 },
                 {
                     run: {
@@ -105,14 +105,14 @@ describe('correct_leaderboard_run_places', () => {
                         values: {},
                         times: {
                             primary: '20T',
-                            primary_t: 20
-                        }
-                    }
-                }
-            ]
+                            primary_t: 20,
+                        },
+                    },
+                },
+            ],
         };
 
-        correct_leaderboard_run_places(lb, [])
+        correct_leaderboard_run_places(lb, []);
 
         expect(lb.runs[0]).to.have.property('place', 1);
         expect(lb.runs[1]).to.have.property('place', 1);
@@ -120,7 +120,7 @@ describe('correct_leaderboard_run_places', () => {
     });
 
     it('should partition subcategories', () => {
-        let lb = {
+        const lb = {
             weblink: '',
             game: '',
             category: '',
@@ -135,9 +135,9 @@ describe('correct_leaderboard_run_places', () => {
                         values: {subc: 'one', test: 'argo'},
                         times: {
                             primary: '12T',
-                            primary_t: 12
-                        }
-                    }
+                            primary_t: 12,
+                        },
+                    },
                 },
                 {
                     run: {
@@ -148,9 +148,9 @@ describe('correct_leaderboard_run_places', () => {
                         values: {subc: 'two', test: 'arlo'},
                         times: {
                             primary: '12T',
-                            primary_t: 13
-                        }
-                    }
+                            primary_t: 13,
+                        },
+                    },
                 },
                 {
                     run: {
@@ -161,9 +161,9 @@ describe('correct_leaderboard_run_places', () => {
                         values: {subc: 'one', test: 'ammo'},
                         times: {
                             primary: '20T',
-                            primary_t: 20
-                        }
-                    }
+                            primary_t: 20,
+                        },
+                    },
                 },
                 {
                     run: {
@@ -174,17 +174,17 @@ describe('correct_leaderboard_run_places', () => {
                         values: {subc: 'two', test: 'algo'},
                         times: {
                             primary: '20T',
-                            primary_t: 21
-                        }
-                    }
-                }
-            ]
+                            primary_t: 21,
+                        },
+                    },
+                },
+            ],
         };
 
         correct_leaderboard_run_places(lb, [
-            { id: 'subc', 'is-subcategory': true, values: []},
-            { id: 'test', 'is-subcategory': false, values: []}
-        ])
+            { "id": 'subc', 'is-subcategory': true, "values": []},
+            { "id": 'test', 'is-subcategory': false, "values": []},
+        ]);
 
         expect(lb.runs[0]).to.have.property('place', 1);
         expect(lb.runs[1]).to.have.property('place', 1);
@@ -193,7 +193,7 @@ describe('correct_leaderboard_run_places', () => {
     });
 
     it('should handle duplicate players', () => {
-        let lb: Leaderboard = {
+        const lb: Leaderboard = {
             weblink: '',
             game: '',
             category: '',
@@ -208,9 +208,9 @@ describe('correct_leaderboard_run_places', () => {
                         values: {},
                         times: {
                             primary: '12T',
-                            primary_t: 12
-                        }
-                    }
+                            primary_t: 12,
+                        },
+                    },
                 },
                 {
                     run: {
@@ -221,9 +221,9 @@ describe('correct_leaderboard_run_places', () => {
                         values: {},
                         times: {
                             primary: '12T',
-                            primary_t: 12
-                        }
-                    }
+                            primary_t: 12,
+                        },
+                    },
                 },
                 {
                     run: {
@@ -234,17 +234,17 @@ describe('correct_leaderboard_run_places', () => {
                         values: {},
                         times: {
                             primary: '20T',
-                            primary_t: 20
-                        }
-                    }
-                }
-            ]
+                            primary_t: 20,
+                        },
+                    },
+                },
+            ],
         };
 
-        correct_leaderboard_run_places(lb, [])
+        correct_leaderboard_run_places(lb, []);
 
         expect(lb.runs[0]).to.have.property('place', 1);
         expect(lb.runs[1].place).to.not.exist;
         expect(lb.runs[2]).to.have.property('place', 2);
-    })
+    });
 });

@@ -6,24 +6,25 @@ import * as _ from 'lodash';
 import * as api from '../';
 import * as api_response from '../response';
 
-import { GameDao, game_to_bulk } from '../../lib/dao/games';
-import { UserDao, user_to_bulk } from '../../lib/dao/users';
+import { game_to_bulk, GameDao } from '../../lib/dao/games';
+import { user_to_bulk, UserDao } from '../../lib/dao/users';
 
-type IndexerResponse = {[type: string]: any[]};
+interface IndexerResponse {[type: string]: any[]}
 
 const router = Router();
 
 router.get('/', async (req, res) => {
-    let query = <string>req.query.q;
+    let query = req.query.q as string;
 
-    if(!query || query.length > api.config!.api.maxSearchLength)
+    if (!query || query.length > api.config!.api.maxSearchLength) {
         api_response.error(res, api_response.err.INVALID_PARAMS(['q'], 'invalid length'));
+    }
 
     query = query.toLowerCase();
 
     // search all the indexer indexes
     try {
-        let results: IndexerResponse = {
+        const results: IndexerResponse = {
             games: _.chain(await new GameDao(api.storedb!).load_by_index('autocomplete', query))
                 .reject(_.isNil)
                 .map(game_to_bulk)
@@ -31,14 +32,13 @@ router.get('/', async (req, res) => {
             players: _.chain(await new UserDao(api.storedb!).load_by_index('autocomplete', query, {skipComputed: true}))
                 .reject(_.isNil)
                 .map(user_to_bulk)
-                .value()
+                .value(),
         };
 
         return api_response.custom(res, {
-            search: results
+            search: results,
         });
-    }
-    catch(err) {
+    } catch (err) {
         console.log('api/autocomplete: could not autocompleted:', err);
         api_response.error(res, api_response.err.INTERNAL_ERROR());
     }

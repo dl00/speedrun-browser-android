@@ -4,16 +4,16 @@ import * as _ from 'lodash';
 import { DaoConfig, IndexDriver, ScanOptions } from '../';
 
 export async function save(conf: DaoConfig<any>, objs: any[]) {
-    let ids = _.map(objs, conf.id_key);
+    const ids = _.map(objs, conf.id_key);
 
-    let set_vals = <any>_.chain(objs)
+    const set_vals = _.chain(objs)
         .keyBy(conf.id_key)
         .mapValues(JSON.stringify)
         .toPairs()
         .flatten()
-        .value();
+        .value() as any;
 
-    let r = await conf.db.redis.multi()
+    const r = await conf.db.redis.multi()
         .hmget(conf.collection, ...ids)
         .hmset(conf.collection, ...set_vals)
         .exec();
@@ -22,8 +22,8 @@ export async function save(conf: DaoConfig<any>, objs: any[]) {
 }
 
 export async function load(conf: DaoConfig<any>, ids: string[]) {
-    let raw_vals = await conf.db.redis.hmget(conf.collection, ...ids);
-    return <any[]>_.map(raw_vals, JSON.parse);
+    const raw_vals = await conf.db.redis.hmget(conf.collection, ...ids);
+    return _.map(raw_vals, JSON.parse) as any[];
 }
 
 export async function remove(conf: DaoConfig<any>, ids: string[]) {
@@ -35,11 +35,11 @@ export async function scan(conf: DaoConfig<any>, options: ScanOptions, func: Fun
     let count = 0;
 
     do {
-        let scan = await conf.db.redis.hscan(conf.collection, cur, 'COUNT', options.batchSize)
+        const scan = await conf.db.redis.hscan(conf.collection, cur, 'COUNT', options.batchSize);
 
         count += scan[1].length;
 
-        let objs = _.chain(scan[1])
+        const objs = _.chain(scan[1])
             .filter((_v: any, i: number) => i % 2 === 1)
             .map(JSON.parse)
             .value();
@@ -47,98 +47,104 @@ export async function scan(conf: DaoConfig<any>, options: ScanOptions, func: Fun
         await func(objs);
 
         cur = scan[0];
-    } while(cur != 0);
+    } while (cur != 0);
 
     return count;
 }
 
 export class RedisMapIndex<T> implements IndexDriver<T> {
-    name: string;
-    key_by: ((obj: T) => string)|string;
+    public name: string;
+    public key_by: ((obj: T) => string)|string;
 
     constructor(name: string, key_by: ((obj: T) => string)|string) {
         this.name = name;
         this.key_by = key_by;
     }
 
-    async load(conf: DaoConfig<T>, keys: string[]): Promise<(T|null)[]> {
-        let mapIds: string[] = await conf.db.redis.hmget(`${conf.collection}:${this.name}`, ...keys);
+    public async load(conf: DaoConfig<T>, keys: string[]): Promise<Array<T|null>> {
+        const mapIds: string[] = await conf.db.redis.hmget(`${conf.collection}:${this.name}`, ...keys);
         return await conf.load(mapIds);
     }
 
-    async apply(conf: DaoConfig<T>, objs: T[]) {
-        let set_vals = <any>_.chain(objs)
+    public async apply(conf: DaoConfig<T>, objs: T[]) {
+        const set_vals = _.chain(objs)
             .keyBy(this.key_by)
             .mapValues(conf.id_key)
             .toPairs()
             .flatten()
-            .value();
+            .value() as any;
 
         await conf.db.redis.hmset(`${conf.collection}:${this.name}`, ...set_vals);
     }
 
-    async clear(conf: DaoConfig<T>, objs: T[]) {
-        let keys = _.map(objs, <(obj: T) => string>this.key_by);
+    public async clear(conf: DaoConfig<T>, objs: T[]) {
+        const keys = _.map(objs, this.key_by as (obj: T) => string);
 
         await conf.db.redis.hdel(`${conf.collection}:${this.name}`,
             ...keys);
     }
 
-    has_changed(old_obj: T, new_obj: T): boolean {
-        if(_.isString(this.key_by))
+    public has_changed(old_obj: T, new_obj: T): boolean {
+        if (_.isString(this.key_by)) {
             return _.get(old_obj, this.key_by) != _.get(new_obj, this.key_by);
-        else
+        }
+        else {
             return this.key_by(old_obj) != this.key_by(new_obj);
+        }
     }
 }
 
 export class RedisMultiIndex<T> implements IndexDriver<T> {
-    name: string;
-    key_by: ((obj: T) => string)|string;
+    public name: string;
+    public key_by: ((obj: T) => string)|string;
 
     constructor(name: string, key_by: ((obj: T) => string)|string) {
         this.name = name;
         this.key_by = key_by;
     }
 
-    async load(conf: DaoConfig<T>, keys: string[]): Promise<(T|null)[]> {
-        if(keys.length !== 1)
+    public async load(conf: DaoConfig<T>, keys: string[]): Promise<Array<T|null>> {
+        if (keys.length !== 1) {
             throw new Error('RedisMultiIndex expects to only work with a single key');
+        }
 
-        let mapIds: string[] = await conf.db.redis.smembers(`${conf.collection}:${this.name}:${keys[0]}`);
+        const mapIds: string[] = await conf.db.redis.smembers(`${conf.collection}:${this.name}:${keys[0]}`);
 
-        if(!mapIds.length)
+        if (!mapIds.length) {
             return [];
+        }
 
         return await conf.load(mapIds);
     }
 
-    async apply(conf: DaoConfig<T>, objs: T[]) {
-        let m = await conf.db.redis.multi();
+    public async apply(conf: DaoConfig<T>, objs: T[]) {
+        const m = await conf.db.redis.multi();
 
-        for(let obj of objs) {
-            let key = _.isFunction(this.key_by) ? this.key_by(obj) : _.get(obj, this.key_by);
+        for (const obj of objs) {
+            const key = _.isFunction(this.key_by) ? this.key_by(obj) : _.get(obj, this.key_by);
             m.sadd(`${conf.collection}:${this.name}:${key}`, conf.id_key(obj));
         }
 
         await m.exec();
     }
 
-    async clear(conf: DaoConfig<T>, objs: T[]) {
-        let m = await conf.db.redis.multi();
+    public async clear(conf: DaoConfig<T>, objs: T[]) {
+        const m = await conf.db.redis.multi();
 
-        for(let obj of objs) {
-            let key = _.isFunction(this.key_by) ? this.key_by(obj) : _.get(obj, this.key_by);
+        for (const obj of objs) {
+            const key = _.isFunction(this.key_by) ? this.key_by(obj) : _.get(obj, this.key_by);
             m.srem(`${conf.collection}:${this.name}:${key}`, conf.id_key(obj));
         }
 
         await m.exec();
     }
 
-    has_changed(old_obj: T, new_obj: T): boolean {
-        if(_.isString(this.key_by))
+    public has_changed(old_obj: T, new_obj: T): boolean {
+        if (_.isString(this.key_by)) {
             return _.get(old_obj, this.key_by) != _.get(new_obj, this.key_by);
-        else
+        }
+        else {
             return this.key_by(old_obj) != this.key_by(new_obj);
+        }
     }
 }

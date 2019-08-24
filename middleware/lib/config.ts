@@ -8,23 +8,23 @@ import { MongoClientOptions } from 'mongodb';
 
 export interface Config {
 
-    stackName: string,
+    stackName: string;
 
     listen: {
         /// Hostname to accept connections from. Use 0.0.0.0 for all interfaces.
         host: string
 
         /// Port for the API to accept connections from
-        port: number
-    },
+        port: number,
+    };
 
     api: {
         /// Maximum number of individual elements to return in a single request
         maxItems: number
 
         /// Maximum number of characters which may be used to search for an autocomplete result
-        maxSearchLength: number
-    }
+        maxSearchLength: number,
+    };
 
     /// Configure the DB connection
     db: {
@@ -37,12 +37,12 @@ export interface Config {
             dbName: string,
 
             /// Extra options for mongodb
-            options?: MongoClientOptions
+            options?: MongoClientOptions,
         }
 
         /// Redis database connection options
-        redis: ioredis.RedisOptions
-    }
+        redis: ioredis.RedisOptions,
+    };
 
     scraper: {
         /// How fast should the API scan for changes?
@@ -63,7 +63,7 @@ export interface Config {
             enabled: boolean
 
             /// Authentication JSON file as provided by firebase
-            credentialFile: string
+            credentialFile: string,
         }
 
         /// list of database update tasks which should be used by the downloader. empty means run all tasks
@@ -75,9 +75,9 @@ export interface Config {
             latestRunsLength: number
 
             /// The number of gnere-specific runs to keep marked as "latest"
-            latestGenreRunsLength: number
-        }
-    }
+            latestGenreRunsLength: number,
+        },
+    };
 
     /// Settings for the indexing engine--used for autocomplete and any title search
     indexer: {
@@ -86,12 +86,12 @@ export interface Config {
         config: {
             depth: number, // how many letters to match sequences
             spread: number, // extra sequences to generate to account for misspellings/errornous letters
-            scoreLength: number // determines the maximum score understood by the indexer
+            scoreLength: number, // determines the maximum score understood by the indexer
         }
 
         /// Override configuration options for this redis connection
-        redis: ioredis.RedisOptions
-    }
+        redis: ioredis.RedisOptions,
+    };
 }
 
 export const DEFAULT_CONFIG: Config = {
@@ -100,20 +100,20 @@ export const DEFAULT_CONFIG: Config = {
 
     listen: {
         host: '0.0.0.0',
-        port: 3500
+        port: 3500,
     },
 
     api: {
         maxItems: 40,
-        maxSearchLength: 50
+        maxSearchLength: 50,
     },
 
     db: {
         redis: {},
         mongo: {
             uri: 'mongodb://localhost:27017',
-            dbName: 'srbrowser'
-        }
+            dbName: 'srbrowser',
+        },
     },
 
     scraper: {
@@ -125,59 +125,59 @@ export const DEFAULT_CONFIG: Config = {
         runningTaskTimeout: 300, // 5 minutes
 
         redis: {
-            db: 1
+            db: 1,
         },
 
         baseTasks: [],
 
         pushNotify: {
             enabled: false,
-            credentialFile: '/speedrunbrowser-middleware/secrets/firebase-service-account.json'
+            credentialFile: '/speedrunbrowser-middleware/secrets/firebase-service-account.json',
         },
 
         db: {
             latestRunsLength: 10000,
-            latestGenreRunsLength: 1000
-        }
+            latestGenreRunsLength: 1000,
+        },
     },
 
     indexer: {
         config: {
             depth: 3,
             spread: 0,
-            scoreLength: 6
+            scoreLength: 6,
         },
 
         redis: {
-            db: 2
-        }
-    }
-}
+            db: 2,
+        },
+    },
+};
 
 /// A list of places to look for configuration files. Later configurations override prior configs.
-const CONFIG_LOCATIONS: (string|null)[] = [
+const CONFIG_LOCATIONS: Array<string|null> = [
     '/speedrunbrowser-middleware/config/config.json',
     path.join(process.cwd(), 'config.json'),
     path.join(process.cwd(), '../config.json'),
-    process.env.CONFIG_FILE || null
+    process.env.CONFIG_FILE || null,
 ];
 
-export var config = DEFAULT_CONFIG;
+export let config = DEFAULT_CONFIG;
 
-export var load_config = _.memoize(() => {
+export let load_config = _.memoize(() => {
     let config = DEFAULT_CONFIG;
 
-    for(let loc of CONFIG_LOCATIONS) {
+    for (const loc of CONFIG_LOCATIONS) {
 
-        if(loc == null)
+        if (loc == null) {
             continue;
+        }
 
-        if(fs.existsSync(loc)) {
+        if (fs.existsSync(loc)) {
             try {
                 config = _.merge(config, require(loc));
                 console.log('Loaded configuration:', loc);
-            }
-            catch(err) {
+            } catch (err) {
                 // TODO: Might want to make sure this is actually "file not found"
             }
         }

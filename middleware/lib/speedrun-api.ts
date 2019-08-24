@@ -3,14 +3,14 @@ import * as _ from 'lodash';
 /// Constants and type definitions for the speedrun.com api
 /// Docs: https://github.com/speedruncomorg/api/blob/master/version1/games.md#bulkaccess
 
-export const API_PREFIX = 'https://www.speedrun.com/api/v1'
+export const API_PREFIX = 'https://www.speedrun.com/api/v1';
 
 export interface BaseUpstream {
-    links?: Asset[]
+    links?: Asset[];
 }
 
 export interface UpstreamData<T> {
-    data: T[]
+    data: T[];
 }
 
 export function normalize(d: BaseUpstream) {
@@ -19,39 +19,39 @@ export function normalize(d: BaseUpstream) {
 }
 
 export interface BaseMiddleware extends BaseUpstream {
-    updated?: string
+    updated?: string;
 }
 
 export interface Names {
-    international: string
-    [index: string]: string
+    international: string;
+    [index: string]: string;
 }
 
 export interface Asset {
-    uri: string,
-    width: number,
-    height: number
+    uri: string;
+    width: number;
+    height: number;
 }
 
 export interface Variable extends BaseMiddleware {
-    id: string
-    'is-subcategory'?: boolean
-    obsoletes?: boolean
-    values: any
+    id: string;
+    'is-subcategory'?: boolean;
+    obsoletes?: boolean;
+    values: any;
 }
 
 export interface Platform {
-    id: string
-    name: string
-    released: number
+    id: string;
+    name: string;
+    released: number;
 }
 
 export interface Region {
-    id: string
-    name: string
+    id: string;
+    name: string;
 }
 
 export interface Publisher {
-    id: string
-    name: string
+    id: string;
+    name: string;
 }

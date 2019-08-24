@@ -7,15 +7,14 @@ import * as IORedis from 'ioredis';
 export function defineCommands(rdb: IORedis.Redis) {
 
     try {
-        for(let file of fs.readdirSync('./redis')) {
-            let cmdname = file.split('.')[0];
+        for (const file of fs.readdirSync('./redis')) {
+            const cmdname = file.split('.')[0];
 
             rdb.defineCommand(cmdname, {
-                lua: fs.readFileSync(path.join('./redis', file)).toString('utf8')
+                lua: fs.readFileSync(path.join('./redis', file)).toString('utf8'),
             });
         }
-    }
-    catch(err) {
+    } catch (err) {
         console.log('No redis scripts were loaded');
     }
 }

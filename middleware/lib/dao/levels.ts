@@ -11,9 +11,9 @@ import {
 import { Dao } from './';
 
 export interface BulkLevel {
-    id: string
-    name: string
-    game?: string
+    id: string;
+    name: string;
+    game?: string;
 }
 
 export interface Level extends BulkLevel, BaseMiddleware {}
@@ -29,14 +29,15 @@ export class LevelDao extends Dao<Level> {
         this.id_key = _.property('id');
 
         this.indexes = [
-            new RedisMultiIndex('game', 'game')
+            new RedisMultiIndex('game', 'game'),
         ];
     }
 
-    async apply_for_game(game_id: string, new_levels: Level[]) {
-        let old_levels = await this.load_by_index('game', game_id);
-        if(old_levels.length)
-            await this.remove(_.map(old_levels, 'id'))
+    public async apply_for_game(game_id: string, new_levels: Level[]) {
+        const old_levels = await this.load_by_index('game', game_id);
+        if (old_levels.length) {
+            await this.remove(_.map(old_levels, 'id'));
+        }
 
         await this.save(new_levels);
     }

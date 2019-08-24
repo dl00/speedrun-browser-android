@@ -3,14 +3,14 @@ import * as path from 'path';
 
 import * as express from 'express';
 
-import { DB, load_db } from '../lib/db';
 import { Config } from '../lib/config';
+import { DB, load_db } from '../lib/db';
 
-export var storedb: DB|null = null;
-export var config: Config|null = null;
+export let storedb: DB|null = null;
+export let config: Config|null = null;
 
 export function create_express_server() {
-    let app = express();
+    const app = express();
 
     // add middlewares
 
@@ -30,12 +30,13 @@ export async function run(conf: Config) {
     const app = create_express_server();
 
     // load endpoints
-    let endpoint_modules = fs.readdirSync(path.join(__dirname, 'endpoints'));
-    let loaded: {[name: string]: express.Router} = {};
-    for(let endpoint_module of endpoint_modules) {
-        let name = endpoint_module.split('.')[0];
-        if(loaded[name])
+    const endpoint_modules = fs.readdirSync(path.join(__dirname, 'endpoints'));
+    const loaded: {[name: string]: express.Router} = {};
+    for (const endpoint_module of endpoint_modules) {
+        const name = endpoint_module.split('.')[0];
+        if (loaded[name]) {
             continue;
+        }
 
         console.log('Load endpoint:', '/' + name);
         loaded[name] = require(path.join(__dirname, 'endpoints', name));

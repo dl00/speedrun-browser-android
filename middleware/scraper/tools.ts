@@ -1,3 +1,5 @@
+import * as _ from 'lodash';
+
 import * as scraper from './';
 import * as push_notify from './push-notify';
 
@@ -5,24 +7,24 @@ import * as config from '../lib/config';
 
 import { Category } from '../lib/dao/categories';
 import { Level } from '../lib/dao/levels';
-import { UserDao, User } from '../lib/dao/users';
+import { User, UserDao } from '../lib/dao/users';
 
-import { RunDao, Run, LeaderboardRunEntry } from '../lib/dao/runs';
-import { GameDao, Game } from '../lib/dao/games';
+import { Game, GameDao } from '../lib/dao/games';
+import { LeaderboardRunEntry, Run, RunDao } from '../lib/dao/runs';
 
 import { make_all_wr_charts } from '../lib/dao/runs/charts';
 
 scraper.connect(config.load_config()).then(_.noop(), console.error);
 
 export async function send_dummy_player_notify(run_id: string) {
-    let runs = await new RunDao(scraper.storedb!).load(run_id);
+    const runs = await new RunDao(scraper.storedb!).load(run_id);
 
-    let player = <User>(await new UserDao(scraper.storedb!).load((<Run>runs[0]!.run).players[0].id))[0];
-    let game = <Game>(await new GameDao(scraper.storedb!).load((<Game>(<Run>runs[0]!.run).game).id))[0];
-    let category: Category = <Category>(<Run>runs[0]!.run).category;
-    let level: Level|null = <Level|null>(<Run>runs[0]!.run).level;
+    const player = (await new UserDao(scraper.storedb!).load((runs[0]!.run as Run).players[0].id))[0] as User;
+    const game = (await new GameDao(scraper.storedb!).load(((runs[0]!.run as Run).game as Game).id))[0] as Game;
+    const category: Category = (runs[0]!.run as Run).category as Category;
+    const level: Level|null = (runs[0]!.run as Run).level as Level|null;
 
-    await push_notify.notify_player_record({new_run: runs[0]!, old_run: runs[0]!}, player, game, category, <any>level);
+    await push_notify.notify_player_record({new_run: runs[0]!, old_run: runs[0]!}, player, game, category, level as any);
 }
 
 export async function massage_all_runs(skip = 0) {
@@ -30,22 +32,24 @@ export async function massage_all_runs(skip = 0) {
 }
 
 export async function restore_single_run(id: string) {
-    let run_dao = new RunDao(scraper.storedb!);
-    let run = await run_dao.load(id);
-    if(run[0] != null)
-        return await run_dao.save(<LeaderboardRunEntry>run[0]);
-    else
-        return "Run does not exist.";
+    const run_dao = new RunDao(scraper.storedb!);
+    const run = await run_dao.load(id);
+    if (run[0] != null) {
+        return await run_dao.save(run[0] as LeaderboardRunEntry);
+    }
+    else {
+        return 'Run does not exist.';
+    }
 }
 
 export async function regenerate_autocomplete() {
-    let game_dao = new GameDao(scraper.storedb!);
-    game_dao.indexes.find(ind => ind.name == 'autocomplete')!.forceIndex = true;
+    const game_dao = new GameDao(scraper.storedb!);
+    game_dao.indexes.find((ind) => ind.name == 'autocomplete')!.forceIndex = true;
 
     await game_dao.massage();
 
-    let user_dao = new UserDao(scraper.storedb!);
-    user_dao.indexes.find(ind => ind.name == 'autocomplete')!.forceIndex = true;
+    const user_dao = new UserDao(scraper.storedb!);
+    user_dao.indexes.find((ind) => ind.name == 'autocomplete')!.forceIndex = true;
 
     await user_dao.massage();
 }

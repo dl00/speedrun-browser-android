@@ -5,9 +5,9 @@ import { Dao } from './';
 import { DB } from '../db';
 
 export interface Pull {
-    api_url: string,
-    data: any,
-    timestamp: Date
+    api_url: string;
+    data: any;
+    timestamp: Date;
 }
 
 export class PullDao extends Dao<Pull> {

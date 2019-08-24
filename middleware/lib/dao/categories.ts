@@ -5,31 +5,31 @@ import { DB } from '../db';
 import { RedisMultiIndex } from './backing/redis';
 
 import {
-    UpstreamData,
     BaseMiddleware,
+    normalize,
+    UpstreamData,
     Variable,
-    normalize
 } from '../speedrun-api';
 
 import { Dao } from './';
 
 export interface BulkCategory {
-    id: string
-    name: string
-    type: string
+    id: string;
+    name: string;
+    type: string;
 
-    variables?: UpstreamData<Variable>|Variable[]
+    variables?: UpstreamData<Variable>|Variable[];
 }
 
 export interface Category extends BulkCategory, BaseMiddleware {
-    weblink: string
-    rules?: string
-    miscellaneous: boolean
+    weblink: string;
+    rules?: string;
+    miscellaneous: boolean;
     game?: string;
 }
 
 export function category_to_bulk(category: Category): BulkCategory {
-    let ret = _.pick(category, 'id', 'name', 'type', 'variables');
+    const ret = _.pick(category, 'id', 'name', 'type', 'variables');
 
     delete ret.variables;
 
@@ -39,45 +39,56 @@ export function category_to_bulk(category: Category): BulkCategory {
 export function normalize_category(d: Category) {
     normalize(d);
 
-    if(d.variables && (<UpstreamData<Variable>>d.variables).data) {
-        d.variables = (<UpstreamData<Variable>>d.variables).data;
+    if (d.variables && (d.variables as UpstreamData<Variable>).data) {
+        d.variables = (d.variables as UpstreamData<Variable>).data;
     }
 
-    for(let variable in d.variables) {
-        normalize((<any>d.variables)[variable]);
+    for (const variable in d.variables) {
+        normalize((d.variables as any)[variable]);
     }
 }
 
 export function standard_sort_categories(categories: Category[]) {
     // first, sort by some predefined names that should always be in the front
     return _.sortBy(categories, (c) => {
-        let name = c.name.toLowerCase();
+        const name = c.name.toLowerCase();
 
         let score = 0;
 
-        if(name === 'any%')
+        if (name === 'any%') {
             score = 0;
-        else if(name.match(/^all.*/))
+        }
+        else if (name.match(/^all.*/)) {
             score = 1;
-        else if(name === 'low%')
+ }
+        else if (name === 'low%') {
             score = 2;
-        else if(name === '100%')
+ }
+        else if (name === '100%') {
             score = 3;
-        else if(name.match(/^any%/))
+ }
+        else if (name.match(/^any%/)) {
             score = 4;
-        else if(name.match(/^100%/))
+ }
+        else if (name.match(/^100%/)) {
             score = 5;
-        else if(name.match(/%$/))
+ }
+        else if (name.match(/%$/)) {
             score = 6;
-        else if(name.match(/^\d+.*/))
+ }
+        else if (name.match(/^\d+.*/)) {
             score = 1 + parseInt(name.match(/^(\d+).*/)![1]) / 1000000;
-        else
+ }
+        else {
             score = 7;
+ }
 
-        if(c.type !== 'per-game')
+        if (c.type !== 'per-game') {
             score += 100;
-        if(c.miscellaneous)
+        }
+        if (c.miscellaneous) {
             score += 500;
+        }
 
         return _.padStart(score.toFixed(6), 10, '0') + name;
     });
@@ -90,14 +101,15 @@ export class CategoryDao extends Dao<Category> {
         this.id_key = _.property('id');
 
         this.indexes = [
-            new RedisMultiIndex('game', 'game')
+            new RedisMultiIndex('game', 'game'),
         ];
     }
 
-    async apply_for_game(game_id: string, new_categories: Category[]) {
-        let old_categories = await this.load_by_index('game', game_id);
-        if(old_categories.length)
-            await this.remove(_.map(old_categories, 'id'))
+    public async apply_for_game(game_id: string, new_categories: Category[]) {
+        const old_categories = await this.load_by_index('game', game_id);
+        if (old_categories.length) {
+            await this.remove(_.map(old_categories, 'id'));
+        }
 
         await this.save(new_categories);
     }

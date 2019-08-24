@@ -1,5 +1,4 @@
 
-
 import * as _ from 'lodash';
 
 import { Router } from 'express';
@@ -13,13 +12,13 @@ const router = Router();
 
 // retrieve one or more leaderboards by id
 router.get('/:ids', async (req, res) => {
-    let ids = req.params.ids.split(',');
+    const ids = req.params.ids.split(',');
 
-    if(ids.length > api.config!.api.maxItems) {
+    if (ids.length > api.config!.api.maxItems) {
         return api_response.error(res, api_response.err.TOO_MANY_ITEMS());
     }
 
-    let players = await new UserDao(api.storedb!).load(ids);
+    const players = await new UserDao(api.storedb!).load(ids);
     return api_response.complete(res, players);
 });
 

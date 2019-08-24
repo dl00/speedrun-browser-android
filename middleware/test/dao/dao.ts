@@ -1,9 +1,9 @@
 import * as _ from 'lodash';
 
+import { load_config } from '../../lib/config';
 import * as dao from '../../lib/dao';
 import { RedisMapIndex } from '../../lib/dao/backing/redis';
-import { load_db, close_db, DB } from '../../lib/db';
-import { load_config } from '../../lib/config';
+import { close_db, DB, load_db } from '../../lib/db';
 
 import { expect } from 'chai';
 
@@ -11,7 +11,7 @@ import 'mocha';
 
 describe('Dao', () => {
 
-    var db: DB;
+    let db: DB;
 
     before(async () => {
         db = await load_db(load_config());
@@ -26,25 +26,25 @@ describe('Dao', () => {
 
     function saveLoad(backing_db: 'redis'|'mongo') {
         return async function() {
-            let ao = new dao.Dao(db, 'tests');
+            const ao = new dao.Dao(db, 'tests');
             ao.backing = backing_db;
             ao.id_key = _.property('name');
 
-            let objs = [
+            const objs = [
                 {
                     test: '1',
-                    name: 'something'
+                    name: 'something',
                 },
                 {
                     test: '2',
-                    name: 'else'
-                }
+                    name: 'else',
+                },
             ];
 
             await ao.save(objs);
 
             // test that returned documents are both there and preserve order
-            var returned: any = await ao.load(['something', 'else']);
+            let returned: any = await ao.load(['something', 'else']);
             expect(returned).to.eql(objs);
             returned = await ao.load(['else', 'something']);
             expect(returned).to.eql(objs.reverse());
@@ -52,7 +52,7 @@ describe('Dao', () => {
             // update an object
             await ao.save({
                 name: 'something',
-                test: 'changed'
+                test: 'changed',
             });
 
             returned = await ao.load('something');
@@ -62,7 +62,7 @@ describe('Dao', () => {
 
             returned = await ao.load('something');
             expect(returned[0]).to.eql(null);
-        }
+        };
     }
 
     it('should be able to save and load documents from redis', saveLoad('redis'));
@@ -70,58 +70,58 @@ describe('Dao', () => {
     it('should be able to save and load documents from mongo', saveLoad('mongo'));
 
     it('should be able to set indexes', async () => {
-        let ao = new dao.Dao(db, 'indexTests');
+        const ao = new dao.Dao(db, 'indexTests');
         ao.backing = 'mongo';
         ao.id_key = _.property('name');
         ao.indexes = [
-            new RedisMapIndex('test-shorts', 'short')
+            new RedisMapIndex('test-shorts', 'short'),
         ];
 
-        let objs = [
+        const objs = [
             {
                 test: '1',
                 name: 'something',
                 short: 'one',
-                group: 'fiesta'
+                group: 'fiesta',
             },
             {
                 test: '2',
                 name: 'else',
                 short: 'two',
-                group: 'waffle'
+                group: 'waffle',
             },
             {
                 test: '2',
                 name: 'another',
                 short: 'three',
-                group: 'fiesta'
-            }
+                group: 'fiesta',
+            },
         ];
 
         await ao.save(objs);
 
-        let res = await ao.load_by_index('test-shorts', 'two');
+        const res = await ao.load_by_index('test-shorts', 'two');
         expect(res[0]).to.eql(objs[1]);
 
         // check for error on adding duplicate index
     });
 
     it('should be able to update indexes', async () => {
-        let ao = new dao.Dao(db, 'indexTests');
+        const ao = new dao.Dao(db, 'indexTests');
         ao.backing = 'mongo';
         ao.id_key = _.property('name');
         ao.indexes = [
-            new RedisMapIndex('test-shorts', 'short')
+            new RedisMapIndex('test-shorts', 'short'),
         ];
 
         await ao.save({
             test: 'changed2',
             name: 'another',
             short: 'foobar',
-            group: 'fiesta'
+            group: 'fiesta',
         });
 
-        let res = <any>await ao.load_by_index('test-shorts', 'foobar');
+        let res = await ao.load_by_index('test-shorts', 'foobar') as any;
         expect(res[0].name).to.eql('another');
         res = await ao.load_by_index('test-shorts', 'three');
         expect(res[0]).to.not.exist;
@@ -129,7 +129,7 @@ describe('Dao', () => {
 });
 
 describe('IndexerIndex', () => {
-    var db: DB;
+    let db: DB;
 
     let ao: dao.Dao<{id: string, test: string, score: number}>;
 
@@ -145,9 +145,9 @@ describe('IndexerIndex', () => {
             new dao.IndexerIndex('games', (v) => {
                 return [{
                     score: v.score,
-                    text: v.test
+                    text: v.test,
                 }];
-            })
+            }),
         ];
     });
 
@@ -161,18 +161,18 @@ describe('IndexerIndex', () => {
             {
                 id: 'wohoo',
                 test: 'super mario maker',
-                score: 1
+                score: 1,
             },
             {
                 id: 'wawe',
                 test: 'super mario galaxy',
-                score: 2
+                score: 2,
             },
             {
                 id: 'weeboo',
                 test: 'the legend of zelda wind waker galaxy',
-                score: 1
-            }
+                score: 1,
+            },
         ]);
 
         let items = await ao.load_by_index('autocomplete', 'super');
@@ -190,19 +190,19 @@ describe('IndexerIndex', () => {
         await ao.save({
                 id: 'weeboo',
                 test: 'the legend of zelda wind waker galaxy',
-                score: 10000
+                score: 10000,
         });
 
-        let items = await ao.load_by_index('autocomplete', 'galaxy');
+        const items = await ao.load_by_index('autocomplete', 'galaxy');
 
         expect(items[0]).to.have.property('id', 'weeboo');
         expect(items[0]).to.have.property('score', 10000);
     });
 
-    it('should delete indexes on indexer databases', async() => {
+    it('should delete indexes on indexer databases', async () => {
         await ao.remove('wawe');
 
-        let items = await ao.load_by_index('autocomplete', 'galaxy super');
+        const items = await ao.load_by_index('autocomplete', 'galaxy super');
 
         expect(items).to.have.length(2);
         expect(items[0]).to.have.property('id', 'weeboo');

@@ -3,8 +3,8 @@ import * as _ from 'lodash';
 import { DB } from '../db';
 
 import {
-    Names,
     BaseMiddleware,
+    Names,
     normalize,
 } from '../speedrun-api';
 
@@ -14,54 +14,54 @@ import { game_assets_to_bulk } from './games';
 import { NewRecord } from './runs';
 
 import { BulkGameAssets } from './games';
-import { RunDao, LeaderboardRunEntry, Run, run_to_bulk } from './runs';
+import { LeaderboardRunEntry, Run, run_to_bulk, RunDao } from './runs';
 
 import { Dao, IndexerIndex } from './';
 
 export interface GamePersonalBests {
-    id: string
-    names: Names
-    assets: BulkGameAssets
+    id: string;
+    names: Names;
+    assets: BulkGameAssets;
 
-    categories: {[id: string]: CategoryPersonalBests}
+    categories: {[id: string]: CategoryPersonalBests};
 }
 
 export interface CategoryPersonalBests {
-    id: string
-    name: string
-    type: string
+    id: string;
+    name: string;
+    type: string;
 
-    levels?: {[id: string]: LevelPersonalBests}
+    levels?: {[id: string]: LevelPersonalBests};
 
-    run?: LeaderboardRunEntry
+    run?: LeaderboardRunEntry;
 }
 
 export interface LevelPersonalBests {
-    id: string
-    name: string
+    id: string;
+    name: string;
 
-    run: LeaderboardRunEntry
+    run: LeaderboardRunEntry;
 }
 
 export interface BulkUser {
-    id: string,
-    names?: Names,
-    name?: string,
+    id: string;
+    names?: Names;
+    name?: string;
     'name-style'?: {
         style: 'solid'|''
         color: {
             light: string
-            dark: string
-        }
-    }
+            dark: string,
+        },
+    };
 }
 
 export interface User extends BulkUser, BaseMiddleware {
-    weblink?: string
-    role?: 'banned'|'user'|'trusted'|'moderator'|'admin'|'programmer'
-    signup?: string
+    weblink?: string;
+    role?: 'banned'|'user'|'trusted'|'moderator'|'admin'|'programmer';
+    signup?: string;
 
-    bests: {[id: string]: GamePersonalBests}
+    bests: {[id: string]: GamePersonalBests};
 }
 
 export function user_to_bulk(user: User) {
@@ -71,82 +71,87 @@ export function user_to_bulk(user: User) {
 // add/update the given personal best entry for the given user
 export function apply_personal_best(player: User, run: LeaderboardRunEntry): NewRecord|null {
 
-    if(!run.run.category || !run.run.category.id)
+    if (!run.run.category || !run.run.category.id) {
         return null;
+    }
 
-    let category_run: CategoryPersonalBests = {
+    const category_run: CategoryPersonalBests = {
         id: run.run.category.id,
         name: run.run.category.name,
-        type: run.run.category.type
+        type: run.run.category.type,
     };
 
-    let game_run: GamePersonalBests = {
+    const game_run: GamePersonalBests = {
         id: run.run.game.id,
         names: run.run.game.names,
         assets: game_assets_to_bulk(run.run.game.assets),
-        categories: {}
+        categories: {},
     };
 
-    let best_run: LeaderboardRunEntry = {
-        run: run_to_bulk(<Run>run.run)
+    const best_run: LeaderboardRunEntry = {
+        run: run_to_bulk(run.run as Run),
     };
 
-    if(!best_run.run.submitted)
+    if (!best_run.run.submitted) {
         return null;
+    }
 
     let old_run = null;
 
-    if(run.run.level && run.run.level.id) {
+    if (run.run.level && run.run.level.id) {
 
         old_run = _.get(player, `bests["${run.run.game.id}"].categories["${run.run.category.id}"].levels["${run.run.level.id}"].run`);
-        if(old_run && old_run.run.submitted && (old_run.run.id === best_run.run.id || old_run.run.submitted > best_run.run.submitted))
+        if (old_run && old_run.run.submitted && (old_run.run.id === best_run.run.id || old_run.run.submitted > best_run.run.submitted)) {
             return null;
+        }
 
-        let level_run: LevelPersonalBests = {
+        const level_run: LevelPersonalBests = {
             id: run.run.level.id,
             name: run.run.level.name,
 
-            run: best_run
+            run: best_run,
         };
 
         category_run.levels = {};
         category_run.levels[run.run.level.id] = level_run;
-    }
-    else {
+    } else {
         old_run = _.get(player, `bests["${run.run.game.id}"].categories["${run.run.category.id}"].run`);
-        if(old_run && old_run.run.submitted && (old_run.run.id === best_run.run.id || old_run.run.submitted > best_run.run.submitted))
+        if (old_run && old_run.run.submitted && (old_run.run.id === best_run.run.id || old_run.run.submitted > best_run.run.submitted)) {
             return null;
+        }
 
         category_run.run = best_run;
     }
 
     game_run.categories[run.run.category.id] = category_run;
 
-    let new_bests: {[id: string]: GamePersonalBests} = {};
+    const new_bests: {[id: string]: GamePersonalBests} = {};
 
     new_bests[run.run.game.id] = game_run;
 
     _.merge(player, {bests: new_bests});
 
     return {
-        old_run: old_run,
-        new_run: best_run
+        old_run,
+        new_run: best_run,
     };
 }
 
 function get_user_search_indexes(user: User) {
-    let indexes: { text: string, score: number, namespace?: string }[] = [];
+    const indexes: Array<{ text: string, score: number, namespace?: string }> = [];
 
-    if(user.name)
+    if (user.name) {
         indexes.push({ text: user.name.toLowerCase(), score: 1 });
-    else {
-        for(let name in user.names) {
-            if(!user.names[name])
+    } else {
+        for (const name in user.names) {
+            if (!user.names[name]) {
                 continue;
+            }
 
-            let idx: any = { text: user.names[name].toLowerCase(), score: 1 };
-            if(name != 'international')
+            const idx: any = { text: user.names[name].toLowerCase(), score: 1 };
+            if (name != 'international') {
                 idx.namespace = name;
+            }
 
             indexes.push(idx);
         }
@@ -167,81 +172,83 @@ export class UserDao extends Dao<User> {
 
         this.computed = {
             /// TODO: simplify this
-            'bests': async (user) => {
+            bests: async (user) => {
 
-                let run_dao = new RunDao(this.db!);
+                const run_dao = new RunDao(this.db!);
 
                 await Promise.all(_.map(user.bests, async (bg: GamePersonalBests) => {
                     await Promise.all(_.map(bg.categories, async (bc: CategoryPersonalBests) => {
-                        if(bc.run) {
-                            let run = (await run_dao.load(bc.run.run.id))[0]
+                        if (bc.run) {
+                            const run = (await run_dao.load(bc.run.run.id))[0];
                             bc.run.place = run ? run.place : null;
-                        }
-                        else if(bc.levels) {
-                            let ids = _.map(bc.levels, 'run.run.id');
-                            let runs = _.zipObject(ids, await run_dao.load(ids));
+                        } else if (bc.levels) {
+                            const ids = _.map(bc.levels, 'run.run.id');
+                            const runs = _.zipObject(ids, await run_dao.load(ids));
 
-                            for(let id in bc.levels) {
-                                let run = runs[bc.levels[id].run.run.id];
+                            for (const id in bc.levels) {
+                                const run = runs[bc.levels[id].run.run.id];
                                 bc.levels[id].run.place = run ? run.place : null;
                             }
                         }
-                    }))
+                    }));
                 }));
 
                 return user.bests;
-            }
-        }
+            },
+        };
 
         this.indexes = [
             new RedisMapIndex('abbr', (v: User) => {
-                if(v.names && v.names['international'])
-                    return v.names['international'];
+                if (v.names && v.names.international) {
+                    return v.names.international;
+                }
 
                 // TODO: this is kind of dumb
                 return '';
             }),
-            new IndexerIndex('players', get_user_search_indexes)
+            new IndexerIndex('players', get_user_search_indexes),
         ];
     }
 
-    protected async pre_store_transform(user: User): Promise<User> {
-        normalize_user(user);
-        return user;
-    }
-
-    async apply_runs(runs: LeaderboardRunEntry[]): Promise<NewRecord[]> {
-        let player_ids = _.chain(runs)
-            .map(v => _.map(v.run.players, 'id'))
+    public async apply_runs(runs: LeaderboardRunEntry[]): Promise<NewRecord[]> {
+        const player_ids = _.chain(runs)
+            .map((v) => _.map(v.run.players, 'id'))
             .flatten()
             .reject(_.isNil)
             .uniq()
             .value();
 
-        if(!player_ids.length)
-            return []; // nothing to do
+        if (!player_ids.length) {
+            return [];
+        } // nothing to do
 
-        let players = <{[id: string]: User}>_.keyBy(
+        const players = _.keyBy(
             _.filter(await this.load(player_ids, {skipComputed: true}), 'id'),
-            'id');
+            'id') as {[id: string]: User};
 
-        if(!_.keys(players).length) {
+        if (!_.keys(players).length) {
             return []; // still nothing
         }
 
-        let new_records: (NewRecord|null)[] = [];
+        const new_records: Array<NewRecord|null> = [];
 
-        for(let run of runs) {
-            for(let player of run.run.players) {
+        for (const run of runs) {
+            for (const player of run.run.players) {
                 // can only notify for non-guests (with ID)
-                if(player.id)
+                if (player.id) {
                     new_records.push(
                         apply_personal_best(players[player.id], run));
+                }
             }
         }
 
         await this.save(_.values(players));
 
-        return <NewRecord[]>_.reject(new_records, _.isNil);
+        return _.reject(new_records, _.isNil) as NewRecord[];
+    }
+
+    protected async pre_store_transform(user: User): Promise<User> {
+        normalize_user(user);
+        return user;
     }
 }

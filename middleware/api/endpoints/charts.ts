@@ -5,43 +5,45 @@ import { Router } from 'express';
 import * as api from '../';
 import * as api_response from '../response';
 
-import { ChartDao, Chart, LineChartData } from '../../lib/dao/charts';
-import { LeaderboardDao, make_distribution_chart } from '../../lib/dao/leaderboards';
+import { Category, CategoryDao, standard_sort_categories } from '../../lib/dao/categories';
+import { Chart, ChartDao, LineChartData } from '../../lib/dao/charts';
 import { GameDao } from '../../lib/dao/games';
-import { CategoryDao, Category, standard_sort_categories } from '../../lib/dao/categories';
-import { LevelDao, Level } from '../../lib/dao/levels';
+import { LeaderboardDao, make_distribution_chart } from '../../lib/dao/leaderboards';
+import { Level, LevelDao } from '../../lib/dao/levels';
+import { Run, RunDao } from '../../lib/dao/runs';
 import { UserDao } from '../../lib/dao/users';
-import { RunDao, Run } from '../../lib/dao/runs';
 import { Variable } from '../../lib/speedrun-api';
 
 const router = Router();
 
 export function get_wr_chart_longest_holders(wr_chart: Chart): Chart {
-    let chart: Chart = {
+    const chart: Chart = {
         item_id: wr_chart.item_id + '_holders',
         item_type: 'users',
         chart_type: 'list',
         data: {},
-        timestamp: new Date()
+        timestamp: new Date(),
     };
 
-    for(let subcategory in wr_chart.data) {
+    for (const subcategory in wr_chart.data) {
 
-        let holders: {[player_id: string]: any} = {};
+        const holders: {[player_id: string]: any} = {};
 
-        for(let i = 0;i < wr_chart.data[subcategory].length - 1;i++) {
-            let run = <Run>(<LineChartData>wr_chart.data[subcategory][i + 1]).obj;
+        for (let i = 0; i < wr_chart.data[subcategory].length - 1; i++) {
+            const run = (wr_chart.data[subcategory][i + 1] as LineChartData).obj as Run;
 
-            let dt = run.times.primary_t -
-                (<LineChartData>wr_chart.data[subcategory][i]).obj.times.primary_t;
+            const dt = run.times.primary_t -
+                (wr_chart.data[subcategory][i] as LineChartData).obj.times.primary_t;
 
-            if(holders[run.players[0].id])
+            if (holders[run.players[0].id]) {
                 holders[run.players[0].id].score += dt;
-            else
+            }
+            else {
                 holders[run.players[0].id] = {
                     score: dt,
-                    player: run.players[0]
+                    player: run.players[0],
                 };
+            }
         }
 
         chart.data[subcategory] = _.reverse(_.sortBy(_.values(holders), 'score'));
@@ -52,13 +54,13 @@ export function get_wr_chart_longest_holders(wr_chart: Chart): Chart {
 
 router.get('/site', async (_req, res) => {
 
-    let chart_dao = new ChartDao(api.storedb!);
+    const chart_dao = new ChartDao(api.storedb!);
 
     // total run count over time
-    let count_over_time_chart = (await chart_dao.load('runs_site_historical_runs'))[0];
+    const count_over_time_chart = (await chart_dao.load('runs_site_historical_runs'))[0];
 
     // submitted run volume
-    let volume_chart = (await chart_dao.load('runs_site_volume'))[0];
+    const volume_chart = (await chart_dao.load('runs_site_volume'))[0];
 
     // metric: hours recorded in PBs by speedrunners
 
@@ -67,157 +69,160 @@ router.get('/site', async (_req, res) => {
     api_response.complete_single(res, {
         charts: {
             count_over_time: count_over_time_chart,
-            volume: volume_chart
-        }
+            volume: volume_chart,
+        },
     });
 });
 
 router.get('/games/:id', async (req, res) => {
 
-    let game_id = req.params.id;
+    const game_id = req.params.id;
 
-    let game_dao = new GameDao(api.storedb!);
-    let run_dao = new RunDao(api.storedb!);
+    const game_dao = new GameDao(api.storedb!);
+    const run_dao = new RunDao(api.storedb!);
 
-    let game = (await game_dao.load(game_id))[0];
+    const game = (await game_dao.load(game_id))[0];
 
-    if(!game)
+    if (!game) {
         return api_response.error(res, api_response.err.NOT_FOUND());
+    }
 
     /// run submission volume over the last 12 months
-    let volume_chart = await run_dao.get_game_submission_volume(game_id);
+    const volume_chart = await run_dao.get_game_submission_volume(game_id);
 
     /// all time longest world record holders overall
 
-
     /// fastest improving runners, runners who have come out of nowhere/improved/relevant recently
 
-
     api_response.complete_single(res, {
-        game: game,
+        game,
         charts: {
-            volume: volume_chart
-        }
+            volume: volume_chart,
+        },
     });
 });
 
-router.get('/leaderboards/:id', async(req, res) => {
+router.get('/leaderboards/:id', async (req, res) => {
 
-    let leaderboard_id = req.params.id;
+    const leaderboard_id = req.params.id;
 
-    let category_id = leaderboard_id.split('_')[0];
-    let level_id = leaderboard_id.split('_')[1];
+    const category_id = leaderboard_id.split('_')[0];
+    const level_id = leaderboard_id.split('_')[1];
 
-    let chart_dao = new ChartDao(api.storedb!);
-    let leaderboard_dao = new LeaderboardDao(api.storedb!);
-    let game_dao = new GameDao(api.storedb!);
-    let category_dao = new CategoryDao(api.storedb!);
-    let level_dao = new LevelDao(api.storedb!);
-    let run_dao = new RunDao(api.storedb!);
+    const chart_dao = new ChartDao(api.storedb!);
+    const leaderboard_dao = new LeaderboardDao(api.storedb!);
+    const game_dao = new GameDao(api.storedb!);
+    const category_dao = new CategoryDao(api.storedb!);
+    const level_dao = new LevelDao(api.storedb!);
+    const run_dao = new RunDao(api.storedb!);
 
-    let leaderboard = (await leaderboard_dao.load(leaderboard_id))[0]!;
-    let category = (await category_dao.load(category_id))[0]!;
+    const leaderboard = (await leaderboard_dao.load(leaderboard_id))[0]!;
+    const category = (await category_dao.load(category_id))[0]!;
 
-    if(!category)
+    if (!category) {
         return api_response.error(res, api_response.err.NOT_FOUND());
+    }
 
-    let game = (await game_dao.load(category.game!))[0]!;
+    const game = (await game_dao.load(category.game!))[0]!;
 
     let level = null;
-    if(level_id)
+    if (level_id) {
         level = (await level_dao.load(level_id))[0];
+    }
 
-    if(!game)
+    if (!game) {
         return api_response.error(res, api_response.err.NOT_FOUND());
+    }
 
-    if(!leaderboard)
+    if (!leaderboard) {
         return api_response.complete_single(res, {
-            game: game,
-            category: category,
-            level: level,
+            game,
+            category,
+            level,
             charts: {
                 wrs: null,
                 distribution: null,
-                volume: null
-            }
+                volume: null,
+            },
         });
+    }
 
     // word records chartify
-    let wr_chart = (await chart_dao.load(`leaderboards_${leaderboard_id}`))[0];
+    const wr_chart = (await chart_dao.load(`leaderboards_${leaderboard_id}`))[0];
 
     // show the run time distributions
-    let distrib_chart = make_distribution_chart(leaderboard, <Variable[]>category.variables);
+    const distrib_chart = make_distribution_chart(leaderboard, category.variables as Variable[]);
 
     // run submission volume over the last 12 months
-    let volume_chart = await run_dao.get_leaderboard_submission_volume(category_id, level_id);
+    const volume_chart = await run_dao.get_leaderboard_submission_volume(category_id, level_id);
 
     // all time longest world record holders for each category (just a repackaging of wr_chart)
 
     // fastest improving runners, runners who have come out of nowhere/improved/relevant recently (repackaging of player pb chart)
 
     api_response.complete_single(res, {
-        game: game,
-        category: category,
-        level: level,
+        game,
+        category,
+        level,
         charts: {
             wrs: wr_chart,
             distribution: distrib_chart,
-            volume: volume_chart
-        }
+            volume: volume_chart,
+        },
     });
 });
 
 router.get('/users/:id', async (req, res) => {
-    let player_id = req.params.id;
+    const player_id = req.params.id;
 
-    let user_dao = new UserDao(api.storedb!);
-    let run_dao = new RunDao(api.storedb!);
+    const user_dao = new UserDao(api.storedb!);
+    const run_dao = new RunDao(api.storedb!);
 
-    let player = (await user_dao.load(player_id))[0]!;
+    const player = (await user_dao.load(player_id))[0]!;
 
     /// calculate "favorite" games by count of runs
-    let favorite_games_chart = await run_dao.get_player_favorite_runs(player_id);
-    let volume_chart = await run_dao.get_player_submission_volume(player_id);
+    const favorite_games_chart = await run_dao.get_player_favorite_runs(player_id);
+    const volume_chart = await run_dao.get_player_submission_volume(player_id);
 
     api_response.complete_single(res, {
-        player: player,
+        player,
         charts: {
             favorite_games: favorite_games_chart,
-            volume: volume_chart
-        }
+            volume: volume_chart,
+        },
     });
 });
 
 router.get('/games/:game_id/players/:player_id', async (req, res) => {
-    let game_id = req.params.game_id;
-    let player_id = req.params.player_id;
+    const game_id = req.params.game_id;
+    const player_id = req.params.player_id;
 
-    let game_dao = new GameDao(api.storedb!);
-    let run_dao = new RunDao(api.storedb!);
+    const game_dao = new GameDao(api.storedb!);
+    const run_dao = new RunDao(api.storedb!);
 
-    let game = (await game_dao.load(game_id))[0]!;
+    const game = (await game_dao.load(game_id))[0]!;
 
-    game.categories = <Category[]>await new CategoryDao(api.storedb!)
-        .load_by_index('game', game.id);
+    game.categories = (await new CategoryDao(api.storedb!)
+        .load_by_index('game', game.id) as Category[]);
 
     // since we don't preserve the order from speedrun.com of categories, we have to sort them on our own
     game.categories = standard_sort_categories(game.categories);
 
-    game.levels = <Level[]>await new LevelDao(api.storedb!)
-        .load_by_index('game', game.id);
+    game.levels = (await new LevelDao(api.storedb!)
+        .load_by_index('game', game.id) as Level[]);
 
     // since we don't preserve the order from speedrun.com, we have to sort them on our own
-    game.levels = _.sortBy(game.levels, l => l.name.toLowerCase())
+    game.levels = _.sortBy(game.levels, (l) => l.name.toLowerCase());
 
     /// personal bests chartify
-    let pb_chart = await run_dao.get_player_pb_chart(player_id, game_id);
+    const pb_chart = await run_dao.get_player_pb_chart(player_id, game_id);
 
     api_response.complete_single(res, {
-        game: game,
+        game,
         charts: {
-            pbs: pb_chart
-        }
+            pbs: pb_chart,
+        },
     });
-})
+});
 
 module.exports = router;

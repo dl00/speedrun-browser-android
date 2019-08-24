@@ -1,27 +1,28 @@
 import * as _ from 'lodash';
 
-import { RunDao, Run, LeaderboardRunEntry, NewRecord } from './';
-import { IndexDriver, DaoConfig } from '../';
-import { CategoryDao, Category, BulkCategory } from '../categories';
+import { DaoConfig, IndexDriver } from '../';
+import { BulkCategory, Category, CategoryDao } from '../categories';
+import { correct_leaderboard_run_places, Leaderboard, LeaderboardDao } from '../leaderboards';
 import { BulkLevel } from '../levels';
-import { LeaderboardDao, Leaderboard, correct_leaderboard_run_places } from '../leaderboards';
 import { UserDao } from '../users';
+import { LeaderboardRunEntry, NewRecord, Run, RunDao } from './';
 
 import { Variable } from '../../speedrun-api';
 
 function get_leaderboard_id_for_run(run: Run) {
 
-    if(!run.category || !(<BulkCategory>run.category).id)
+    if (!run.category || !(run.category as BulkCategory).id) {
         return;
+    }
 
-    return (<BulkCategory>run.category).id +
-        (run.level ? '_' + (<BulkLevel>run.level).id : '');
+    return (run.category as BulkCategory).id +
+        (run.level ? '_' + (run.level as BulkLevel).id : '');
 }
 
 export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntry> {
-    name: string;
+    public name: string;
 
-    new_records: NewRecord[];
+    public new_records: NewRecord[];
 
     constructor(name: string) {
         this.name = name;
@@ -29,147 +30,160 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
         this.new_records = [];
     }
 
-    async update_leaderboard(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[], categories: {[key: string]: Category|null}) {
-        let leaderboard_ids = <string[]>_.map(runs, run => get_leaderboard_id_for_run(<Run>run.run));
+    public async update_leaderboard(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[], categories: {[key: string]: Category|null}) {
+        const leaderboard_ids = _.map(runs, (run) => get_leaderboard_id_for_run(run.run as Run)) as string[];
 
-        let leaderboard_ids_deduped = _.uniq(leaderboard_ids);
+        const leaderboard_ids_deduped = _.uniq(leaderboard_ids);
 
         let leaderboards: {[id: string]: Leaderboard} = {};
-        if(leaderboard_ids_deduped.length)
-            leaderboards = <{[id: string]: Leaderboard}>_.zipObject(leaderboard_ids_deduped,
-                await new LeaderboardDao(conf.db).load(leaderboard_ids_deduped));
+        if (leaderboard_ids_deduped.length) {
+            leaderboards = (_.zipObject(leaderboard_ids_deduped,
+                await new LeaderboardDao(conf.db).load(leaderboard_ids_deduped)) as {[id: string]: Leaderboard});
+        }
 
-        for(let leaderboard_id in leaderboards) {
+        for (const leaderboard_id in leaderboards) {
 
-            if(!leaderboards[leaderboard_id]) {
+            if (!leaderboards[leaderboard_id]) {
                 // new leaderboard
-                let category_id = leaderboard_id.split('_')[0];
-                let level_id = leaderboard_id.split('_')[1];
+                const category_id = leaderboard_id.split('_')[0];
+                const level_id = leaderboard_id.split('_')[1];
 
-                if(!categories[category_id])
+                if (!categories[category_id]) {
                     continue;
+                }
 
                 leaderboards[leaderboard_id] = {
-                	game: <string>categories[category_id]!.game,
+                	game: categories[category_id]!.game as string,
                     weblink: '',
                 	category: category_id,
                     players: {},
-                    runs: []
+                    runs: [],
                 };
 
-                if(level_id)
+                if (level_id) {
                     leaderboards[leaderboard_id].level = level_id;
+                }
             }
 
-            let category = categories[<string>leaderboards[leaderboard_id].category];
-            if(!category)
+            const category = categories[leaderboards[leaderboard_id].category as string];
+            if (!category) {
                 continue;
+            }
 
-            leaderboards[leaderboard_id].runs = await (<RunDao>conf).calculate_leaderboard_runs(<string>leaderboards[leaderboard_id].game, <string>leaderboards[leaderboard_id].category, <string|undefined>leaderboards[leaderboard_id].level);
+            leaderboards[leaderboard_id].runs = await (conf as RunDao).calculate_leaderboard_runs(leaderboards[leaderboard_id].game as string, leaderboards[leaderboard_id].category as string, leaderboards[leaderboard_id].level as string|undefined);
 
-            correct_leaderboard_run_places(leaderboards[leaderboard_id], <Variable[]>category.variables);
+            correct_leaderboard_run_places(leaderboards[leaderboard_id], category.variables as Variable[]);
         }
 
-        let clean_leaderboards = _.reject(_.values(leaderboards), _.isNil);
+        const clean_leaderboards = _.reject(_.values(leaderboards), _.isNil);
 
-        if(clean_leaderboards.length)
+        if (clean_leaderboards.length) {
             await new LeaderboardDao(conf.db).save(clean_leaderboards);
+        }
     }
 
-    async update_player_pbs(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[], _categories: {[key: string]: Category|null}) {
+    public async update_player_pbs(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[], _categories: {[key: string]: Category|null}) {
         this.new_records.push(...await new UserDao(conf.db).apply_runs(runs));
     }
 
-    async update_obsoletes(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[], categories: {[key: string]: Category|null}) {
+    public async update_obsoletes(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[], categories: {[key: string]: Category|null}) {
 
-        let filter: any = {
+        const filter: any = {
             // only runs with a category we have and which are verified can
-            $or: runs.filter(v => v.run.status.status === 'verified' &&
+            $or: runs.filter((v) => v.run.status.status === 'verified' &&
                 v.run.category &&
                 v.run.category.id &&
-                v.run.submitted).map(run => {
+                v.run.submitted).map((run) => {
 
-                let filter: any = {
+                const filter: any = {
                     'run.game.id': run.run.game.id,
                     'run.category.id': run.run.category.id,
-                    $or: [
+                    "$or": [
                         {'run.submitted': {$lt: run.run.submitted}},
-                        {'run.submitted': null}
-                    ]
+                        {'run.submitted': null},
+                    ],
                 };
 
-                if(run.run.level && run.run.level.id)
+                if (run.run.level && run.run.level.id) {
                     filter['run.level.id'] = run.run.level.id;
+                }
 
                 // matching players
                 filter['run.players'] = {$size: run.run.players.length};
                 run.run.players.forEach((player, i) => {
-                    if(player.id)
+                    if (player.id) {
                         filter[`run.players.${i}.id`] = player.id;
-                    else if(player.name)
+                    }
+                    else if (player.name) {
                         filter[`run.players.${i}.name`] = player.name;
-                    else
+ }
+                    else {
                         // TODO: this is hacky
                         filter[`unused_dummy`] = 'foobar';
+ }
                 });
 
-
                 // return early if we dont have a category with variables to pull
-                if(!categories[run.run.category.id])
+                if (!categories[run.run.category.id]) {
                     return filter;
+                }
 
-                let subcategory_var_ids = _.chain(categories[run.run.category.id]!.variables)
+                const subcategory_var_ids = _.chain(categories[run.run.category.id]!.variables)
                     .filter('is-subcategory')
                     .map('id')
                     .value();
 
                 // matching subcategories
-                for(let id of subcategory_var_ids) {
-                    if(run.run.values[id])
+                for (const id of subcategory_var_ids) {
+                    if (run.run.values[id]) {
                         filter[`run.values.${id}`] = run.run.values[id];
+                    }
                 }
 
                 // we check if its false here because the behavior of `obsoletes` appears to be as follows:
                 // if false, only mark as obsolete if the subcategory variable remains the same
                 // if true, always mark as obsolete regardless of filter value (aka no filter needed)
-                let obsoletes_var_ids = _.chain(categories[run.run.category.id]!.variables)
+                const obsoletes_var_ids = _.chain(categories[run.run.category.id]!.variables)
                     .reject('obsoletes')
                     .map('id')
                     .value();
 
                 // matching "obsoletes" var ids
-                for(let id of obsoletes_var_ids) {
-                    if(run.run.values[id])
+                for (const id of obsoletes_var_ids) {
+                    if (run.run.values[id]) {
                         filter[`run.values.${id}`] = run.run.values[id];
+                    }
                 }
 
                 return filter;
-            })
+            }),
         };
 
-        if(!filter.$or.length)
+        if (!filter.$or.length) {
             return;
+        }
 
         await conf.db.mongo.collection(conf.collection).updateMany(filter, {
             $set: {
-                'obsolete': true
+                obsolete: true,
             },
         });
     }
 
-    async load(_conf: DaoConfig<LeaderboardRunEntry>, _keys: string[]): Promise<(LeaderboardRunEntry|null)[]> {
+    public async load(_conf: DaoConfig<LeaderboardRunEntry>, _keys: string[]): Promise<Array<LeaderboardRunEntry|null>> {
         throw new Error('cannot load data from supporting structures');
     }
 
-    async apply(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[]) {
+    public async apply(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[]) {
 
         // obsolete runs do not get added to leaderboards and cannot create obsoletes themselves.
         runs = _.reject(runs, 'obsolete');
 
-        let category_ids = <string[]>_.uniq(_.map(runs, 'run.category.id'));
+        const category_ids = _.uniq(_.map(runs, 'run.category.id')) as string[];
         let categories: {[id: string]: Category|null} = {};
-        if(category_ids.length)
+        if (category_ids.length) {
             categories = _.zipObject(category_ids, await new CategoryDao(conf.db!).load(category_ids));
+        }
 
         await this.update_obsoletes(conf, _.cloneDeep(runs), categories);
 
@@ -179,11 +193,11 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
         ]);
     }
 
-    async clear(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[]) {
+    public async clear(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[]) {
         await this.apply(conf, runs);
     }
 
-    has_changed(_old_obj: LeaderboardRunEntry, _new_obj: LeaderboardRunEntry): boolean {
-        return true//!_.isEqual(old_obj, new_obj);
+    public has_changed(_old_obj: LeaderboardRunEntry, _new_obj: LeaderboardRunEntry): boolean {
+        return true; // !_.isEqual(old_obj, new_obj);
     }
 }

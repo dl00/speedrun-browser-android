@@ -1,5 +1,4 @@
 
-
 export const ID_LENGTH = 12;
 
 export function join(parts: string[]) {
@@ -16,5 +15,5 @@ export const locs = {
     running_tasks: 'running_tasks',
 
     task_calls: 'task_calls',
-    callqueue: 'queue'
-}
+    callqueue: 'queue',
+};
