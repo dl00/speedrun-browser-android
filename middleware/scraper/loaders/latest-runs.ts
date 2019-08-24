@@ -130,8 +130,6 @@ export async function pull_latest_runs(runid: string, options: any) {
 
             const record_run = lbres.find((r) => r.run.id === nr.new_run.run.id);
 
-            console.log(record_run);
-
             // TODO: these conditions should not be needed yet somehow they are
             if (!record_run || !record_run.run.game || !record_run.run.category) {
                 continue;
