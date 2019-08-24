@@ -137,7 +137,7 @@ export async function pull_latest_runs(runid: string, options: any) {
                 continue;
             }
 
-            nr.new_run = record_run;
+            nr.new_run = _.cloneDeep(record_run);
 
             if (record_run.place == 1) {
                 // new record on this category/level, send notification
