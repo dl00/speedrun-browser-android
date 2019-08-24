@@ -602,12 +602,6 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
 
     protected async pre_store_transform(run: LeaderboardRunEntry): Promise<LeaderboardRunEntry> {
         normalize_run(run.run as Run);
-
-        // have to make sure this is set to please the index
-        if (!run.obsolete) {
-            run.obsolete = false;
-        }
-
         delete run.place;
 
         return run;

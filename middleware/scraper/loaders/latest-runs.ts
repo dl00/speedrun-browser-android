@@ -114,7 +114,12 @@ export async function pull_latest_runs(runid: string, options: any) {
                 continue;
             }
 
-            lbres.push({run});
+            let lbre: any = {run};
+
+            if (!options.verified)
+                lbre.obsolete = false;
+
+            lbres.push(lbre);
         }
 
         const run_dao = new RunDao(scraper.storedb!);
