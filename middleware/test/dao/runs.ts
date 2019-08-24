@@ -287,6 +287,7 @@ describe('RecentChartIndex', () => {
                     game: {id: 'a_game'},
                     category: {id: 'mysubcategory'},
                 },
+                obsolete: false,
             },
             {
                 run: {
@@ -300,6 +301,7 @@ describe('RecentChartIndex', () => {
                     game: {id: 'a_game'},
                     category: {id: 'mysubcategory'},
                 },
+                obsolete: false,
             },
             {
                 run: {
@@ -313,6 +315,7 @@ describe('RecentChartIndex', () => {
                     game: {id: 'a_game'},
                     category: {id: 'mysubcategory'},
                 },
+                obsolete: false,
             },
             {
                 place: 1,
@@ -327,8 +330,8 @@ describe('RecentChartIndex', () => {
                     game: {id: 'a_game'},
                     category: {id: 'mysubcategory'},
                 },
+                obsolete: false,
             },
-            obsolete: false,
         ];
 
         await run_dao.save(saved_runs);
