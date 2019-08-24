@@ -114,12 +114,7 @@ export async function pull_latest_runs(runid: string, options: any) {
                 continue;
             }
 
-            let lbre: any = {run};
-
-            if (!options.verified)
-                lbre.obsolete = false;
-
-            lbres.push(lbre);
+            lbres.push({run});
         }
 
         const run_dao = new RunDao(scraper.storedb!);
@@ -134,6 +129,8 @@ export async function pull_latest_runs(runid: string, options: any) {
         for (const nr of new_records) {
 
             const record_run = lbres.find((r) => r.run.id === nr.new_run.run.id);
+
+            console.log(record_run);
 
             // TODO: these conditions should not be needed yet somehow they are
             if (!record_run || !record_run.run.game || !record_run.run.category) {

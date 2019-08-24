@@ -113,13 +113,15 @@ export class Dao<T> implements DaoConfig<T> {
         }
 
         // run the transform for each obj
-        await Promise.all(objs.map((v) => this.pre_store_transform(v)));
-
-        // keep a copy of the previous values for index processing
-        const prev_objs = await require(`./backing/${this.backing}`).save(this, objs);
-
+        let prev_objs = await this.load(objs.map(this.id_key));
         assert.equal(objs.length, prev_objs.length,
             'previous objects should be same length and mappable to new objs');
+
+        for (let i = 0;i < objs.length;i++) {
+            objs[i] = await this.pre_store_transform(objs[i], prev_objs[i]);
+        }
+
+        prev_objs = await require(`./backing/${this.backing}`).save(this, objs);
 
         // process indexes
         // get a list of deleted and inserted indexes
@@ -132,8 +134,8 @@ export class Dao<T> implements DaoConfig<T> {
                 if (_.isNil(prev_objs[i])) {
                     insert_indexes_objs.push(objs[i]);
                 }
-                else if (idx.has_changed(prev_objs[i], objs[i]) || idx.forceIndex) {
-                    remove_previous_index_objs.push(prev_objs[i]);
+                else if (idx.has_changed(prev_objs[i]!, objs[i]) || idx.forceIndex) {
+                    remove_previous_index_objs.push(prev_objs[i]!);
                     insert_indexes_objs.push(objs[i]);
                 }
             }
@@ -235,7 +237,7 @@ export class Dao<T> implements DaoConfig<T> {
         _.noop();
     }
 
-    protected async pre_store_transform(obj: T): Promise<T> {
-        return obj;
+    protected async pre_store_transform(obj: T, old_obj: T|null): Promise<T> {
+        return _.merge(old_obj, obj);
     }
 }

@@ -98,7 +98,6 @@ describe('RunDao', () => {
                     values: {},
                     game: {id: 'a_game_with_genre'},
                 },
-                obsolete: false,
             },
             {
                 run: {
@@ -113,7 +112,6 @@ describe('RunDao', () => {
                     values: {},
                     game: {id: 'a_game'},
                 },
-                obsolete: false,
             },
         ]);
 
@@ -142,7 +140,6 @@ describe('RunDao', () => {
                 values: {},
                 game: {id: 'a_game_with_genre'},
             },
-            obsolete: false,
         });
 
         runs = await run_dao.load_latest_runs(1);
@@ -182,7 +179,6 @@ describe('RunDao', () => {
                 values: {},
                 game: {id: 'a_game_with_genre'},
             },
-            obsolete: false,
         });
 
         const runs = await run_dao.load_latest_runs(0);
@@ -207,7 +203,6 @@ describe('RunDao', () => {
                 values: {},
                 game: {id: 'a_game_with_genre'},
             },
-            obsolete: false,
         });
 
         const chart = await run_dao.get_game_submission_volume('a_game_with_genre');
@@ -287,7 +282,6 @@ describe('RecentChartIndex', () => {
                     game: {id: 'a_game'},
                     category: {id: 'mysubcategory'},
                 },
-                obsolete: false,
             },
             {
                 run: {
@@ -301,7 +295,6 @@ describe('RecentChartIndex', () => {
                     game: {id: 'a_game'},
                     category: {id: 'mysubcategory'},
                 },
-                obsolete: false,
             },
             {
                 run: {
@@ -315,7 +308,6 @@ describe('RecentChartIndex', () => {
                     game: {id: 'a_game'},
                     category: {id: 'mysubcategory'},
                 },
-                obsolete: false,
             },
             {
                 place: 1,
@@ -330,7 +322,6 @@ describe('RecentChartIndex', () => {
                     game: {id: 'a_game'},
                     category: {id: 'mysubcategory'},
                 },
-                obsolete: false,
             },
         ];
 
@@ -405,7 +396,6 @@ describe('RecentChartIndex', () => {
                     game: {id: 'a_game'},
                     category: {id: 'variabledSubcategory'},
                 },
-                obsolete: false,
             },
             {
                 run: {
@@ -422,7 +412,6 @@ describe('RecentChartIndex', () => {
                     game: {id: 'a_game'},
                     category: {id: 'variabledSubcategory'},
                 },
-                obsolete: false,
             },
             {
                 place: 1,
@@ -440,7 +429,6 @@ describe('RecentChartIndex', () => {
                     game: {id: 'a_game'},
                     category: {id: 'variabledSubcategory'},
                 },
-                obsolete: false,
             },
         ];
 

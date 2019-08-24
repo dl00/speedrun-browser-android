@@ -600,9 +600,12 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         await populate_run_sub_documents(this.db, _.map(runs, 'run') as Run[]);
     }
 
-    protected async pre_store_transform(run: LeaderboardRunEntry): Promise<LeaderboardRunEntry> {
+    protected async pre_store_transform(run: LeaderboardRunEntry, old_obj: LeaderboardRunEntry|null): Promise<LeaderboardRunEntry> {
         normalize_run(run.run as Run);
         delete run.place;
+
+        if(!run.obsolete)
+            run.obsolete = old_obj ? old_obj.obsolete : false;
 
         return run;
     }
