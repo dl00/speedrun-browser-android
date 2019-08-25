@@ -38,12 +38,14 @@ export async function list_all_runs(runid: string, options: any) {
 
         const pr = await populate_run_sub_documents(scraper.storedb!, runs);
         if (pr.drop_runs.length) {
-            runs = _.remove(runs, (r) => _.findIndex(pr.drop_runs, r) !== -1);
+            _.remove(runs, (r) => _.find(pr.drop_runs, (dr) => dr.id === r.id));
         }
 
-        await new RunDao(scraper.storedb!).save(runs.map((run: Run) => {
-            return {run: run}
-        }));
+        if (runs.length) {
+            await new RunDao(scraper.storedb!).save(runs.map((run: Run) => {
+                return {run: run}
+            }));
+        }
 
         if (res.data.pagination.max == res.data.pagination.size) {
             // schedule another load
