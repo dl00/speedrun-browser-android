@@ -28,14 +28,20 @@ export async function save(conf: DaoConfig<any>, objs: any[]): Promise<any[]> {
 
     // somehow it seems like mongodb is incapable of updating/inserting many objects
     // so we use parallel instead
-    await Promise.all(_.map(objs, async (obj, i) => {
-        const _id = conf.id_key(obj);
 
-        const ret = await conf.db.mongo.collection(conf.collection)
-            .findOneAndReplace({_id}, _.assign({_id}, obj), {upsert: true});
-
-        prev_values[i] = ret.value;
-    }));
+    await conf.db.mongo.collection(conf.collection).bulkWrite(
+        objs.map((obj: any) => {
+            return {
+                replaceOne: {
+                    filter: { _id: conf.id_key(obj) },
+                    replacement: obj,
+                    upsert: true,
+                }
+            }
+        }), {
+            ordered: false
+        }
+    );
 
     return prev_values;
 }

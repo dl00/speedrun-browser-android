@@ -121,7 +121,7 @@ export class Dao<T> implements DaoConfig<T> {
             objs[i] = await this.pre_store_transform(objs[i], prev_objs[i]);
         }
 
-        prev_objs = await require(`./backing/${this.backing}`).save(this, objs);
+        await require(`./backing/${this.backing}`).save(this, objs);
 
         // process indexes
         // get a list of deleted and inserted indexes
