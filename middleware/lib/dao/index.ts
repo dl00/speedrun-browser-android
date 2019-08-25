@@ -123,6 +123,9 @@ export class Dao<T> implements DaoConfig<T> {
 
         await require(`./backing/${this.backing}`).save(this, objs);
 
+        console.log(prev_objs);
+        console.log(objs);
+
         // process indexes
         // get a list of deleted and inserted indexes
         // updates will trigger both a delete and insert, whereas inserts will only trigger an insert
@@ -237,7 +240,7 @@ export class Dao<T> implements DaoConfig<T> {
         _.noop();
     }
 
-    protected async pre_store_transform(obj: T, old_obj: T|null): Promise<T> {
-        return _.merge(old_obj, obj);
+    protected async pre_store_transform(obj: T, _old_obj: T|null): Promise<T> {
+        return obj;
     }
 }

@@ -23,12 +23,7 @@ function associate(arr: string[], predicate: string, objs: any[]) {
     return ret;
 }
 
-export async function save(conf: DaoConfig<any>, objs: any[]): Promise<any[]> {
-    const prev_values: any[] = [];
-
-    // somehow it seems like mongodb is incapable of updating/inserting many objects
-    // so we use parallel instead
-
+export async function save(conf: DaoConfig<any>, objs: any[]) {
     await conf.db.mongo.collection(conf.collection).bulkWrite(
         objs.map((obj: any) => {
             return {
@@ -42,8 +37,6 @@ export async function save(conf: DaoConfig<any>, objs: any[]): Promise<any[]> {
             ordered: false
         }
     );
-
-    return prev_values;
 }
 
 export async function load(conf: DaoConfig<any>, ids: any[]) {

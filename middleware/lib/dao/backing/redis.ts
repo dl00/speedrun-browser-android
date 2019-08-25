@@ -13,12 +13,7 @@ export async function save(conf: DaoConfig<any>, objs: any[]) {
         .flatten()
         .value() as any;
 
-    const r = await conf.db.redis.multi()
-        .hmget(conf.collection, ...ids)
-        .hmset(conf.collection, ...set_vals)
-        .exec();
-
-    return r[0][1].map(JSON.parse);
+    const r = await conf.db.redis.hmset(conf.collection, ...set_vals);
 }
 
 export async function load(conf: DaoConfig<any>, ids: string[]) {
