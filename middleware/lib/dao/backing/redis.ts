@@ -4,8 +4,6 @@ import * as _ from 'lodash';
 import { DaoConfig, IndexDriver, ScanOptions } from '../';
 
 export async function save(conf: DaoConfig<any>, objs: any[]) {
-    const ids = _.map(objs, conf.id_key);
-
     const set_vals = _.chain(objs)
         .keyBy(conf.id_key)
         .mapValues(JSON.stringify)
@@ -13,7 +11,7 @@ export async function save(conf: DaoConfig<any>, objs: any[]) {
         .flatten()
         .value() as any;
 
-    const r = await conf.db.redis.hmset(conf.collection, ...set_vals);
+    await conf.db.redis.hmset(conf.collection, ...set_vals);
 }
 
 export async function load(conf: DaoConfig<any>, ids: string[]) {
