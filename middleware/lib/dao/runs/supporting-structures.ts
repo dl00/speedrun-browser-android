@@ -185,7 +185,7 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
             categories = _.zipObject(category_ids, await new CategoryDao(conf.db!).load(category_ids));
         }
 
-        await this.update_obsoletes(conf, runs), categories);
+        await this.update_obsoletes(conf, runs, categories);
 
         await Promise.all([
             this.update_leaderboard(conf, _.cloneDeep(runs), categories),
