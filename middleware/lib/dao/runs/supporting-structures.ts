@@ -88,6 +88,8 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
 
     public async update_obsoletes(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[], categories: {[key: string]: Category|null}) {
 
+        console.log(runs);
+
         const filter: any = {
             // only runs with a category we have and which are verified can
             $or: runs.filter((v) => v.run.status.status === 'verified' &&
@@ -116,11 +118,11 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
                     }
                     else if (player.name) {
                         filter[`run.players.${i}.name`] = player.name;
- }
+                    }
                     else {
                         // TODO: this is hacky
                         filter[`unused_dummy`] = 'foobar';
- }
+                    }
                 });
 
                 // return early if we dont have a category with variables to pull
