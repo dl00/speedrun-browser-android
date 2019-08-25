@@ -177,7 +177,7 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
     public async apply(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[]) {
 
         // obsolete runs do not get added to leaderboards and cannot create obsoletes themselves.
-        runs = _.reject(runs, 'obsolete');
+        runs = _.reject(runs, r => _.isNil(r) || !_.keys(r).length || r.obsolete);
 
         const category_ids = _.uniq(_.map(runs, 'run.category.id')) as string[];
         let categories: {[id: string]: Category|null} = {};
