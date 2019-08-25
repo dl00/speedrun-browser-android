@@ -88,8 +88,6 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
 
     public async update_obsoletes(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[], categories: {[key: string]: Category|null}) {
 
-        console.log(runs);
-
         const filter: any = {
             // only runs with a category we have and which are verified can
             $or: runs.filter((v) => v.run.status.status === 'verified' &&
@@ -187,11 +185,11 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
             categories = _.zipObject(category_ids, await new CategoryDao(conf.db!).load(category_ids));
         }
 
-        await this.update_obsoletes(conf, _.cloneDeep(runs), categories);
+        await this.update_obsoletes(conf, runs), categories);
 
         await Promise.all([
-            this.update_leaderboard(conf, runs, categories),
-            this.update_player_pbs(conf, runs, categories),
+            this.update_leaderboard(conf, _.cloneDeep(runs), categories),
+            this.update_player_pbs(conf, _.cloneDeep(runs), categories),
         ]);
     }
 
