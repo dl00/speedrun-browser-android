@@ -11,7 +11,7 @@ import * as scraper from '../index';
 export async function list_all_runs(runid: string, options: any) {
     try {
         const res = await puller.do_pull(scraper.storedb!,
-            '/runs?max=200&offset=' + (options ? options.offset : 0) + '&embed=players');
+            '/runs?max=200&orderby=submitted&offset=' + (options ? options.offset : 0) + '&embed=players');
 
         let runs: Run[] = res.data.data.map((run: any) => {
             run.game = {id: run.game};
