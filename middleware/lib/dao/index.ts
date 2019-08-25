@@ -113,7 +113,7 @@ export class Dao<T> implements DaoConfig<T> {
         }
 
         // run the transform for each obj
-        let prev_objs = await this.load(objs.map(this.id_key));
+        let prev_objs = await this.load(objs.map(this.id_key), {skipComputed: true});
         assert.equal(objs.length, prev_objs.length,
             'previous objects should be same length and mappable to new objs');
 
