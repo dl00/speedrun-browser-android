@@ -48,7 +48,12 @@ export async function load(conf: DaoConfig<any>, ids: any[]) {
         return _.fill(new Array(ids.length), null);
     }
 
-    return _.map(associate(ids, '_id', data), (v) => _.omit(v, '_id'));
+    return _.map(associate(ids, '_id', data), (v) => {
+        if (_.isNil(v))
+            return null;
+        else
+            return _.omit(v, '_id')
+    });
 }
 
 export async function remove(conf: DaoConfig<any>, ids: string[]) {
