@@ -79,7 +79,7 @@ export class RecordChartIndex implements IndexDriver<LeaderboardRunEntry> {
             const point: LineChartData = {
                 x: t,
                 y: lbr.run.times.primary_t,
-                obj: run_to_bulk(lbr.run),
+                obj: run_to_bulk(_.cloneDeep(lbr.run)),
             };
 
             if (!chart.data[subcategory_id]) {

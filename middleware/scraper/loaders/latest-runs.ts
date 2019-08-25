@@ -10,13 +10,10 @@ import * as scraper from '../index';
 
 import * as push_notify from '../push-notify';
 
-import { Leaderboard, LeaderboardDao } from '../../lib/dao/leaderboards';
-import { LeaderboardRunEntry, populate_run_sub_documents, Run, RunDao } from '../../lib/dao/runs';
+import { populate_run_sub_documents, LeaderboardRunEntry, Run, RunDao } from '../../lib/dao/runs';
 import { User, UserDao } from '../../lib/dao/users';
 
-import { BulkCategory } from '../../lib/dao/categories';
 import { BulkGame } from '../../lib/dao/games';
-import { BulkLevel } from '../../lib/dao/levels';
 
 export async function pull_latest_runs(runid: string, options: any) {
     try {
@@ -97,32 +94,13 @@ export async function pull_latest_runs(runid: string, options: any) {
             return;
         }
 
-        const leaderboard_ids = _.map(runs, (run) =>
-            (run.category as BulkCategory).id +
-            (run.level ? '_' + (run.level as BulkLevel).id : '')) as string[];
-
-        const leaderboard_ids_deduped = _.uniq(leaderboard_ids);
-        const leaderboards = _.zipObject(leaderboard_ids_deduped, await new LeaderboardDao(scraper.storedb!).load(leaderboard_ids_deduped)) as {[id: string]: Leaderboard};
-
-        let lbres: LeaderboardRunEntry[] = [];
-
-        for (const run of runs) {
-
-            const leaderboard = leaderboards[(run.category as BulkCategory).id + (run.level ? '_' + (run.level as BulkLevel).id : '')];
-
-            if (!leaderboard) {
-                continue;
-            }
-
-            lbres.push({run});
-        }
-
         const run_dao = new RunDao(scraper.storedb!);
-        if (lbres.length) {
-            await run_dao.save(lbres);
-            // reload from db in order to get computed properties
-            lbres = (await run_dao.load(_.map(lbres, 'run.id')) as LeaderboardRunEntry[]);
-        }
+
+        await run_dao.save(runs.map((run: Run) => {
+            return {run: run}
+        }));
+        // reload from db in order to get computed properties
+        let lbres = (await run_dao.load(_.map(runs, 'id')) as LeaderboardRunEntry[]);
 
         // send push notifications for new records
         const new_records = run_dao.collect_new_records();

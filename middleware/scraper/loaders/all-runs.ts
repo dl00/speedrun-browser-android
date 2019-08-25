@@ -1,7 +1,6 @@
 import * as _ from 'lodash';
 
-import { Leaderboard, LeaderboardDao } from '../../lib/dao/leaderboards';
-import { LeaderboardRunEntry, populate_run_sub_documents, Run, RunDao } from '../../lib/dao/runs';
+import { populate_run_sub_documents, Run, RunDao } from '../../lib/dao/runs';
 import { UserDao } from '../../lib/dao/users';
 
 import * as puller from '../puller';
@@ -42,26 +41,9 @@ export async function list_all_runs(runid: string, options: any) {
             runs = _.remove(runs, (r) => _.findIndex(pr.drop_runs, r) !== -1);
         }
 
-        const leaderboard_ids = _.map(runs, (run) => run.category + (run.level ? '_' + run.level : '')) as string[];
-
-        const leaderboard_ids_deduped = _.uniq(leaderboard_ids);
-        const leaderboards = _.zipObject(leaderboard_ids_deduped, await new LeaderboardDao(scraper.storedb!).load(leaderboard_ids_deduped)) as {[id: string]: Leaderboard};
-
-        const lbrs: LeaderboardRunEntry[] = runs.map((run, i) => {
-
-            if (!leaderboards[leaderboard_ids[i]]) {
-                return { run };
-            }
-
-            const entry = _.find(leaderboards[leaderboard_ids[i]].runs, (r) => r.run.id === run.id);
-
-            return {
-                place: entry ? entry.place : null,
-                run,
-            };
-        });
-
-        await new RunDao(scraper.storedb!).save(lbrs);
+        await new RunDao(scraper.storedb!).save(runs.map((run: Run) => {
+            return {run: run}
+        }));
 
         if (res.data.pagination.max == res.data.pagination.size) {
             // schedule another load
