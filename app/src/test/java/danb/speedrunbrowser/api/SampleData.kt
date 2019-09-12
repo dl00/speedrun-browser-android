@@ -46,8 +46,9 @@ val samplePlayers = listOf(
                 nameStyle = UserNameStyle("solid", color = UserNameStyleColor("#135", "#135")),
                 role = "player",
                 signup = Date("2019-05-05"),
-                location = UserLocation("us", names = mapOf("international" to "USA")),
-                region = UserLocation("ca", names = mapOf("international" to "California")),
+                location = UserLocationContainer(
+                        country = UserLocation("us", names = mapOf("international" to "USA")),
+                        region = UserLocation("ca", names = mapOf("international" to "California"))),
 
                 twitch = MediaLink(URL("https://twitch.tv/v123412345")),
                 youtube = MediaLink(URL("https://youtube.com/channel/johnny95")),
@@ -67,8 +68,9 @@ val samplePlayers = listOf(
                 nameStyle = UserNameStyle("solid", color = UserNameStyleColor("#999", "#999")),
                 role = "player",
                 signup = Date("2019-05-05"),
-                location = UserLocation("us", names = mapOf("international" to "USA")),
-                region = UserLocation("ca", names = mapOf("international" to "California")),
+                location = UserLocationContainer(
+                        country = UserLocation("us", names = mapOf("international" to "USA")),
+                        region = UserLocation("ca", names = mapOf("international" to "California"))),
 
                 twitch = MediaLink(URL("https://twitch.tv/v12341?some=extra")),
                 youtube = MediaLink(URL("https://youtube.com/channel/philly")),
