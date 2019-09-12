@@ -67,6 +67,9 @@ abstract class AppDatabase : RoomDatabase() {
         @Query("SELECT * FROM Subscription WHERE type = :type AND resourceId LIKE :idPrefix || '%'")
         fun listOfTypeWithIDPrefix(type: String, idPrefix: String): Single<List<Subscription>>
 
+        @Query("SELECT *, substr(origResourceId, 1, pos - 1) as resourceId FROM (SELECT *, instr(resourceId, '_') as pos, resourceId as origResourceId FROM Subscription WHERE type = :type) GROUP BY substr(origResourceId, 1, pos - 1) ORDER BY name LIMIT 40 OFFSET :offset")
+        fun listOfTypeGrouped(type: String, offset: Int): Single<List<Subscription>>
+
         @Query("SELECT * FROM Subscription WHERE type = :type AND name LIKE :filter ORDER BY name LIMIT 40 OFFSET :offset")
         fun listOfTypeWithFilter(type: String, filter: String, offset: Int): Single<List<Subscription>>
 
@@ -94,13 +97,13 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
 
-        val MIGRATION_1_2: Migration = object : Migration(1, 2) {
+        private val MIGRATION_1_2: Migration = object : Migration(1, 2) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("CREATE TABLE IF NOT EXISTS `Subscription` (`resourceId` TEXT NOT NULL, `type` TEXT NOT NULL, PRIMARY KEY(`resourceId`))")
             }
         }
 
-        val MIGRATION_2_3: Migration = object : Migration(2, 3) {
+        private val MIGRATION_2_3: Migration = object : Migration(2, 3) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("ALTER TABLE `Subscription` ADD COLUMN `name` TEXT NOT NULL DEFAULT '';")
             }

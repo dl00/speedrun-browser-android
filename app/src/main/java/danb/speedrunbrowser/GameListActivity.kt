@@ -406,33 +406,18 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
                 3 -> fragments[3].setItemsSource(object : ItemListFragment.ItemSource {
                     override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
 
-                        // TODO: hack for now
-                        if (offset != 0)
-                            return Observable.just(SpeedrunMiddlewareAPI.APIResponse())
-
                         val subs = mDB!!.subscriptionDao()
-                                .listOfType("game", offset)
+                                .listOfTypeGrouped("game", offset)
 
                         return subs.flatMapObservable<SpeedrunMiddlewareAPI.APIResponse<Any?>>(Function<List<AppDatabase.Subscription>, ObservableSource<SpeedrunMiddlewareAPI.APIResponse<Any?>>> { subscriptions ->
                             if (subscriptions.isEmpty())
                                 return@Function Observable.just(SpeedrunMiddlewareAPI.APIResponse())
 
-                            val ids = ArrayList<String>()
-
-                            for (sub in subscriptions) {
-                                val id = sub.resourceId.substring(0, sub.resourceId.indexOf('_'))
-
-                                if (!ids.isEmpty() && id == ids[ids.size - 1])
-                                    continue
-
-                                ids.add(id)
-                            }
-
                             val builder = StringBuilder(subscriptions.size)
-                            for (id in ids) {
+                            for (sub in subscriptions) {
                                 if (builder.isNotEmpty())
                                     builder.append(",")
-                                builder.append(id)
+                                builder.append(sub.resourceId)
                             }
 
                             SpeedrunMiddlewareAPI.make().listGames(builder.toString()).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
@@ -450,7 +435,7 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
 
                             val builder = StringBuilder(subscriptions.size)
                             for ((_, resourceId) in subscriptions) {
-                                if (builder.length != 0)
+                                if (builder.isNotEmpty())
                                     builder.append(",")
                                 builder.append(resourceId)
                             }

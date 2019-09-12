@@ -1,5 +1,6 @@
 package danb.speedrunbrowser
 
+import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
@@ -275,7 +276,7 @@ class GameDetailFragment : Fragment() {
 
             // we have to join the string manually because it is java 7
             val sb = StringBuilder()
-            for (i in 0 until mGame!!.platforms!!.size) {
+            for (i in mGame!!.platforms!!.indices) {
                 sb.append(mGame!!.platforms!![i].name)
                 if (i < mGame!!.platforms!!.size - 1)
                     sb.append(", ")
@@ -378,6 +379,7 @@ class GameDetailFragment : Fragment() {
             private set
 
         val baseSubscriptions: MutableSet<AppDatabase.Subscription>
+            @SuppressLint("DefaultLocale")
             get() {
 
                 val subs = HashSet<AppDatabase.Subscription>(size)
