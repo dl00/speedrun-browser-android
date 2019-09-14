@@ -134,10 +134,14 @@ object SpeedrunMiddlewareAPI {
 
         // Runs
         @GET("runs/latest")
-        fun listLatestRuns(@Query("start") offset: Int): Observable<APIResponse<LeaderboardRunEntry>>
+        fun listLatestRuns(@Query("start") offset: Int,
+                           @Query("verified") verified: Boolean): Observable<APIResponse<LeaderboardRunEntry>>
 
-        @GET("runs/latest/genre/{id}")
-        fun listLatestRunsByGenre(@Path("id") genreId: String, @Query("start") offset: Int): Observable<APIResponse<LeaderboardRunEntry>>
+        @GET("runs/latest")
+        fun listLatestRunsByGenre(
+                @Query("id") genreId: String,
+                @Query("start") offset: Int,
+                @Query("verified") verified: Boolean): Observable<APIResponse<LeaderboardRunEntry>>
 
         @GET("runs/{ids}")
         fun listRuns(@Path("ids") runIds: String): Observable<APIResponse<LeaderboardRunEntry>>

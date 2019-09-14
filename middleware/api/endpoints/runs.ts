@@ -11,8 +11,9 @@ import * as api_response from '../response';
 
 const router = Router();
 
-async function get_latest_runs(req: Request, res: Response, verified: boolean) {
+async function get_latest_runs(req: Request, res: Response) {
     let start = 0;
+    let verified = req.query.verified !== 'false';
 
     if (req.query.start) {
         start = parseInt(req.query.start);
@@ -32,7 +33,8 @@ async function get_latest_runs(req: Request, res: Response, verified: boolean) {
     }
 
     try {
-        const runs = await new RunDao(api.storedb!, { max_items: api.config!.api.maxItems }).load_latest_runs(start, req.params.id, verified);
+        const runs = await new RunDao(api.storedb!, { max_items: api.config!.api.maxItems })
+            .load_latest_runs(start, req.params.id || req.query.id, verified);
 
         return api_response.complete(res, runs, {
             code: (end + 1).toString(),
@@ -44,11 +46,8 @@ async function get_latest_runs(req: Request, res: Response, verified: boolean) {
     }
 }
 
-router.get('/latest/genre/:id', (req, res) => get_latest_runs(req, res, true));
-router.get('/latest', (req, res) => get_latest_runs(req, res, true));
-
-router.get('/latest-new/genre/:id', (req, res) => get_latest_runs(req, res, false));
-router.get('/latest-new', (req, res) => get_latest_runs(req, res, false));
+router.get('/latest/genre/:id', (req, res) => get_latest_runs(req, res));
+router.get('/latest', (req, res) => get_latest_runs(req, res));
 
 // retrieve one or more runs by id
 router.get('/:ids', async (req, res) => {

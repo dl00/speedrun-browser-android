@@ -5,7 +5,7 @@ import * as mongodb from 'mongodb';
 
 import { Config } from './config';
 
-const CURRENT_INDEXERS = ['games', 'players', 'genres'];
+const CURRENT_INDEXERS = ['games', 'players', 'game_groups'];
 
 const Indexer = require('@13013/indexer');
 

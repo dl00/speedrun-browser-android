@@ -8,6 +8,7 @@ import * as api_response from '../response';
 
 import { game_to_bulk, GameDao } from '../../lib/dao/games';
 import { user_to_bulk, UserDao } from '../../lib/dao/users';
+import { GameGroupDao } from '../../lib/dao/game-groups';
 
 interface IndexerResponse {[type: string]: any[]}
 
@@ -33,6 +34,9 @@ router.get('/', async (req, res) => {
                 .reject(_.isNil)
                 .map(user_to_bulk)
                 .value(),
+            game_groups: _.chain(await new GameGroupDao(api.storedb!).load_by_index('autocomplete', query))
+                .reject(_.isNil)
+                .value()
         };
 
         return api_response.custom(res, {

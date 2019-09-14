@@ -8,7 +8,6 @@ import { DB } from '../db';
 import { RedisMapIndex } from './backing/redis';
 
 import { Category } from './categories';
-import { Genre } from './genres';
 import { Leaderboard, LeaderboardDao } from './leaderboards';
 import { Level } from './levels';
 
@@ -17,8 +16,10 @@ import { Asset,
     Names,
     normalize,
     Platform,
+    Developer,
     Publisher,
     Region,
+    Genre,
     UpstreamData,
 } from '../speedrun-api';
 
@@ -30,6 +31,8 @@ export interface BulkGame {
     abbreviation: string;
     weblink: string;
     assets: BulkGameAssets;
+    developers: string[]|UpstreamData<Developer>|Developer[];
+    publishers: string[]|UpstreamData<Publisher>|Publisher[];
     platforms: string[]|UpstreamData<Platform>|Platform[];
     regions: string[]|UpstreamData<Region>|Region[];
     genres: string[]|UpstreamData<Genre>|Genre[];
@@ -61,8 +64,6 @@ export function game_assets_to_bulk(game_assets: GameAssets): BulkGameAssets {
 export interface Game extends BulkGame, BaseMiddleware {
     released: number;
     romhack?: boolean;
-    developers: string[];
-    publishers: string[]|Publisher[];
     created: string;
     assets: GameAssets;
     score?: number;
@@ -74,7 +75,7 @@ export interface Game extends BulkGame, BaseMiddleware {
 /// TODO: Use decorators
 export function game_to_bulk(game: Game): BulkGame {
     const bulkGame: BulkGame = _.pick(game, 'id', 'names', 'abbreviation', 'weblink',
-        'assets', 'platforms', 'regions', 'genres', 'release-date');
+        'assets', 'platforms', 'regions', 'genres', 'developers', 'publishers', 'release-date');
 
     bulkGame.assets = game_assets_to_bulk(game.assets);
 
@@ -92,8 +93,8 @@ export function normalize_game(d: Game) {
         d.regions = (d.regions as UpstreamData<Region>).data;
     }
 
-    if (d.genres && (d.genres as UpstreamData<Genre>).data) {
-        d.genres = (d.genres as UpstreamData<Genre>).data;
+    if (d.genres && (d.genres as UpstreamData<{id: string, name: string}>).data) {
+        d.genres = (d.genres as UpstreamData<{id: string, name: string}>).data;
     }
 
     for (const platform in d.platforms) {
@@ -151,8 +152,20 @@ class PopularGamesIndex implements IndexDriver<Game> {
 
             // install on category lists
             // TODO: switch to `speedrun_api.Genre[] instead of any[]`
-            for (const genre of game.genres as any[]) {
+            for (const genre of game.genres as {id: string, name: string}[]) {
                 m.zadd(POPULAR_GAMES_KEY + ':' + (genre.id || genre), game_score.toString(), game.id);
+            }
+
+            for (const platform of game.platforms as Platform[]) {
+                m.zadd(POPULAR_GAMES_KEY + ':' + (platform.id || platform), game_score.toString(), game.id);
+            }
+
+            for (const developer of game.developers as Developer[]) {
+                m.zadd(POPULAR_GAMES_KEY + ':' + (developer.id || developer), game_score.toString(), game.id);
+            }
+
+            for (const publisher of game.publishers as Publisher[]) {
+                m.zadd(POPULAR_GAMES_KEY + ':' + (publisher.id || publisher), game_score.toString(), game.id);
             }
         }
 
@@ -170,11 +183,11 @@ class PopularGamesIndex implements IndexDriver<Game> {
         return old_obj.score != new_obj.score;
     }
 
-    public async get_genre_count(conf: DaoConfig<Game>, genre_ids: string[]): Promise<number[]> {
+    public async get_game_group_count(conf: DaoConfig<Game>, gg_ids: string[]): Promise<number[]> {
 
         const m = conf.db.redis.multi();
 
-        for (const id of genre_ids) {
+        for (const id of gg_ids) {
             m.zcard(POPULAR_GAMES_KEY + ':' + id);
         }
 
@@ -268,14 +281,14 @@ export class GameDao extends Dao<Game> {
         return games;
     }
 
-    public async load_popular(offset?: number, genre_id?: string) {
-        const key = `${genre_id || ''}:${offset || 0}`;
+    public async load_popular(offset?: number, gg_id?: string) {
+        const key = `${gg_id || ''}:${offset || 0}`;
         return await this.load_by_index('popular_games', key);
     }
 
-    public async get_genre_count(genre_id: string[]): Promise<number[]> {
+    public async get_game_group_count(gg_id: string[]): Promise<number[]> {
         // TODO: this is kind of loose
-        return await (this.indexes[2] as PopularGamesIndex).get_genre_count(this, genre_id);
+        return await (this.indexes[2] as PopularGamesIndex).get_game_group_count(this, gg_id);
     }
 
     protected async pre_store_transform(game: Game): Promise<Game> {

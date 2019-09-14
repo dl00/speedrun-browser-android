@@ -376,10 +376,17 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
                 })
                 1 -> fragments[1].setItemsSource(object : ItemListFragment.ItemSource {
                     override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
-                        return if (mSelectedGenre != null)
-                            SpeedrunMiddlewareAPI.make().listLatestRunsByGenre(mSelectedGenre!!.id, offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
+
+                        val shouldShowBleedingEdge = (fragments[1] as RunItemListFragment).shouldShowBleedingEdgeRun
+
+                        return (if (mSelectedGenre != null)
+                            SpeedrunMiddlewareAPI.make().listLatestRunsByGenre(
+                                    mSelectedGenre!!.id,
+                                    offset, shouldShowBleedingEdge)
                         else
-                            SpeedrunMiddlewareAPI.make().listLatestRuns(offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
+                            SpeedrunMiddlewareAPI.make().listLatestRuns(
+                                    offset, shouldShowBleedingEdge)
+                        ).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                     }
                 })
                 2 -> fragments[2].setItemsSource(object : ItemListFragment.ItemSource {

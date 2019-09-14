@@ -161,4 +161,5 @@
     <string name="button_main_page">App Main Page</string>
     <string name="error_not_loadable">Could not load this URL. It may not be supported by the app.</string>
     <string name="menu_view_website">View On Website</string>
+    <string name="switch_bleeding_edge">Show Unverified Runs</string>
 </resources>

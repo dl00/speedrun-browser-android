@@ -8,7 +8,7 @@ import * as puller from '../puller';
 
 import { Category, CategoryDao } from '../../lib/dao/categories';
 import { Game, GameDao, normalize_game } from '../../lib/dao/games';
-import { Genre, GenreDao } from '../../lib/dao/genres';
+import { GameGroup, GameGroupDao } from '../../lib/dao/game-groups';
 import { Level, LevelDao } from '../../lib/dao/levels';
 
 import * as scraper from '../index';
@@ -49,7 +49,7 @@ export async function list_all_games(runid: string, options: any) {
 
 export async function pull_game(runid: string, options: any) {
     try {
-        const res = await puller.do_pull(scraper.storedb!, '/games/' + options.id + '?embed=platforms,regions,genres');
+        const res = await puller.do_pull(scraper.storedb!, '/games/' + options.id + '?embed=platforms,regions,developers,publishers,genres');
 
         const game: Game = res.data.data;
 
@@ -59,11 +59,23 @@ export async function pull_game(runid: string, options: any) {
         await new GameDao(scraper.storedb!, scraper.config).save(game);
 
         // write any genres to the db
-        if (game.genres && (game.genres as Genre[]).length) {
-            const genre_dao = await new GenreDao(scraper.storedb!);
-            await genre_dao.save(game.genres as Genre[]);
-            for (const genre of game.genres as Genre[]) {
-                await genre_dao.rescore_genre(genre.id);
+        const gg_dao = await new GameGroupDao(scraper.storedb!);
+
+        for(let groupable of ['genres', 'platforms', 'developers', 'publishers']) {
+            let ggg: GameGroup[] = (game as { [key: string]: any })[groupable];
+
+            if (ggg && ggg.length) {
+                let type = groupable.substr(0, groupable.length - 1);
+                let game_groups = _.map(
+                    _.cloneDeep(ggg), v => {
+                        v.type = type;
+                        return v;
+                    });
+
+                await gg_dao.save(game_groups);
+                for (const gg of game_groups) {
+                    await gg_dao.rescore_game_group(gg.id);
+                }
             }
         }
 

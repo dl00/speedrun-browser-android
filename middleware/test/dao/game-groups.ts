@@ -2,14 +2,14 @@ import * as _ from 'lodash';
 
 import { load_config } from '../../lib/config';
 import { GameDao } from '../../lib/dao/games';
-import { GenreDao } from '../../lib/dao/genres';
+import { GameGroupDao } from '../../lib/dao/game-groups';
 import { close_db, DB, load_db } from '../../lib/db';
 
 import { expect } from 'chai';
 
 import 'mocha';
 
-describe('GenreDao', () => {
+describe('GameGroupDao', () => {
     let db: DB;
 
     before(async () => {
@@ -23,8 +23,8 @@ describe('GenreDao', () => {
         await close_db(db);
     });
 
-    it('should index popular genres', async () => {
-        const genre_dao = new GenreDao(db);
+    it('should index popular game groups', async () => {
+        const gg_dao = new GameGroupDao(db);
         const game_dao = new GameDao(db);
 
         await game_dao.save([
@@ -78,36 +78,38 @@ describe('GenreDao', () => {
             },
         ]);
 
-        await genre_dao.save([
+        await gg_dao.save([
             {
                 id: 'a_genre',
                 name: 'a genre',
+                type: 'genre',
                 game_count: 5,
             },
             {
                 id: 'a_genre_2',
                 name: 'a second genre',
+                type: 'genre',
                 game_count: 4,
             },
         ]);
 
         // make sure these two runs come back, and they are in the correct order
-        let genres = await genre_dao.load_popular();
+        let ggs = await gg_dao.load_popular();
 
-        expect(genres[0]).to.have.property('id', 'a_genre');
-        expect(genres[1]).to.have.property('id', 'a_genre_2');
+        expect(ggs[0]).to.have.property('id', 'a_genre');
+        expect(ggs[1]).to.have.property('id', 'a_genre_2');
 
-        genres = await genre_dao.load_popular(1);
+        ggs = await gg_dao.load_popular(1);
 
-        expect(genres.length).to.eql(1);
-        expect(genres[0]).to.have.property('id', 'a_genre_2');
+        expect(ggs.length).to.eql(1);
+        expect(ggs[0]).to.have.property('id', 'a_genre_2');
 
-        await genre_dao.rescore_genre(['a_genre', 'a_genre_2']);
+        await gg_dao.rescore_game_group(['a_genre', 'a_genre_2']);
 
         // order of the leaderboards should be switched now
-        genres = await genre_dao.load_popular();
+        ggs = await gg_dao.load_popular();
 
-        expect(genres[0]).to.have.property('id', 'a_genre_2');
-        expect(genres[0]).to.have.property('game_count', 2);
+        expect(ggs[0]).to.have.property('id', 'a_genre_2');
+        expect(ggs[0]).to.have.property('game_count', 2);
     });
 });

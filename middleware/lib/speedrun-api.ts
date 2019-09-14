@@ -51,7 +51,17 @@ export interface Region {
     name: string;
 }
 
+export interface Developer {
+    id: string;
+    name: string;
+}
+
 export interface Publisher {
+    id: string;
+    name: string;
+}
+
+export interface Genre {
     id: string;
     name: string;
 }

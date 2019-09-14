@@ -1,45 +1,35 @@
 package danb.speedrunbrowser
 
-import android.app.Activity
 import android.app.ActivityOptions
 import android.content.Context
-import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry
 import danb.speedrunbrowser.api.objects.User
-import danb.speedrunbrowser.holders.GameCoverViewHolder
-import danb.speedrunbrowser.holders.PlayerViewHolder
 import danb.speedrunbrowser.holders.ProgressSpinnerViewHolder
-import danb.speedrunbrowser.holders.WatchRunViewHolder
-import danb.speedrunbrowser.utils.ConnectionErrorConsumer
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
-import io.reactivex.functions.Consumer
 import io.reactivex.functions.Function
 import io.reactivex.schedulers.Schedulers
 
 import android.os.Handler
 import android.os.Looper
-import android.os.Message
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import danb.speedrunbrowser.utils.ItemType
 
-import java.io.Serializable
 import java.util.ArrayList
 
 
-class ItemListFragment : Fragment() {
+open class ItemListFragment : Fragment() {
 
     var itemType: ItemType? = null
         private set

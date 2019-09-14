@@ -19,7 +19,7 @@ import {
 } from '../../speedrun-api';
 
 import { BulkCategory, Category, category_to_bulk, CategoryDao } from '../categories';
-import { Genre } from '../genres';
+import { GameGroup } from '../game-groups';
 import { BulkLevel, Level, level_to_bulk, LevelDao } from '../levels';
 import { BulkUser, User, user_to_bulk } from '../users';
 import { UserDao } from '../users';
@@ -265,10 +265,13 @@ export class RecentRunsIndex implements IndexDriver<LeaderboardRunEntry> {
                 throw new Error(`Missing game for run: ${lbr.run.id}, game id: ${((lbr.run as Run).game as BulkGame).id}`);
             }
 
-            for (const genre of game.genres as Genre[]) {
-                const genre_runs = this.redis_key + ':' + genre.id;
-                m.zadd(genre_runs, date_score, lbr.run.id)
-                    .zremrangebyrank(genre_runs, 0, -this.keep_count - 1);
+            for(let grouping of ['platforms', 'genres', 'publishers', 'developers']) {
+                let ggg: GameGroup[] = (game as {[key: string]: any})[grouping];
+                for (const group of ggg) {
+                    const gg_runs = this.redis_key + ':' + group.id;
+                    m.zadd(gg_runs, date_score, lbr.run.id)
+                        .zremrangebyrank(gg_runs, 0, -this.keep_count - 1);
+                }
             }
         }
 
@@ -442,8 +445,8 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         return (this.indexes.find((ind) => ind.name === 'supporting_structures') as SupportingStructuresIndex).new_records;
     }
 
-    public async load_latest_runs(offset?: number, genreId?: string, verified: boolean = true) {
-        const key = `${genreId || ''}:${offset || 0}`;
+    public async load_latest_runs(offset?: number, ggId?: string, verified: boolean = true) {
+        const key = `${ggId || ''}:${offset || 0}`;
         return await this.load_by_index(verified ? 'latest_verified_runs' : 'latest_new_runs', key);
     }
 
