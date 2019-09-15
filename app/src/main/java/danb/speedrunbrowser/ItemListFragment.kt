@@ -86,7 +86,9 @@ open class ItemListFragment : Fragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        if (context is OnFragmentInteractionListener) {
+        if (parentFragment is OnFragmentInteractionListener) {
+            mListener = parentFragment as OnFragmentInteractionListener
+        } else if (context is OnFragmentInteractionListener) {
             mListener = context
         } else {
             throw RuntimeException("$context must implement OnFragmentInteractionListener")
@@ -100,7 +102,7 @@ open class ItemListFragment : Fragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        mDisposables!!.dispose()
+        mDisposables.dispose()
     }
 
     fun setItemsSource(source: ItemSource) {

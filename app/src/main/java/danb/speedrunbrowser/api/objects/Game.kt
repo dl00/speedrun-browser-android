@@ -1,10 +1,38 @@
 package danb.speedrunbrowser.api.objects
 
 import android.widget.TextView
-
+import java.lang.reflect.Type
 import java.io.Serializable
 import java.net.URL
-import java.util.Date
+import java.util.*
+
+import com.google.gson.*
+
+data class GameMaker(
+        val id: String,
+        val name: String
+) {
+    class JsonConverter : JsonDeserializer<GameMaker> {
+
+        @Throws(JsonParseException::class)
+        override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): GameMaker {
+
+            if (json.isJsonObject) {
+                val obj = json.asJsonObject
+                return GameMaker(
+                        id = obj.get("id").asString,
+                        name = obj.get("name").asString
+                )
+            }
+            else {
+                return GameMaker(
+                        id = json.asString,
+                        name = ""
+                )
+            }
+        }
+    }
+}
 
 data class Game(
     val id: String,
@@ -21,8 +49,8 @@ data class Game(
     val regions: List<Region>? = null,
     val genres: List<Genre>? = null,
     val engines: List<String>? = null,
-    val developers: List<String>? = null,
-    val publishers: List<String>? = null,
+    val developers: List<GameMaker>? = null,
+    val publishers: List<GameMaker>? = null,
     val moderators: HashMap<String, String>? = null,
     val created: Date? = null,
 

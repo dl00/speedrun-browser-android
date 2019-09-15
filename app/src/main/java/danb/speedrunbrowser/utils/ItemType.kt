@@ -19,7 +19,7 @@ import io.reactivex.disposables.CompositeDisposable
 import java.io.Serializable
 
 enum class ItemType constructor(val layout: Int) : Serializable, ViewHolderSource {
-    GAMES(R.layout.fragment_game_list),
+    GAMES(R.layout.content_game_list),
     PLAYERS(R.layout.fragment_player_list),
     RUNS(R.layout.fragment_run_list);
 

@@ -1,7 +1,6 @@
 package danb.speedrunbrowser
 
 import android.animation.Animator
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -14,7 +13,6 @@ import android.widget.Button
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.app.ActivityOptionsCompat
 
 import java.util.Objects
 import androidx.fragment.app.Fragment
@@ -33,6 +31,7 @@ import danb.speedrunbrowser.api.objects.Variable
 import danb.speedrunbrowser.holders.RunViewHolder
 import danb.speedrunbrowser.stats.LeaderboardStatisticsActivity
 import danb.speedrunbrowser.utils.ConnectionErrorConsumer
+import danb.speedrunbrowser.utils.ItemType
 import danb.speedrunbrowser.utils.Util
 import danb.speedrunbrowser.views.ProgressSpinnerView
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -347,8 +346,9 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
         private val mOnClickListener = View.OnClickListener { view ->
             val (run) = view.tag as LeaderboardRunEntry
 
-            val intent = Intent(context, RunDetailActivity::class.java)
-            intent.putExtra(RunDetailActivity.EXTRA_RUN_ID, run.id)
+            val intent = Intent(context, SpeedrunBrowserActivity::class.java)
+            intent.putExtra(SpeedrunBrowserActivity.EXTRA_ITEM_TYPE, ItemType.RUNS)
+            intent.putExtra(RunDetailFragment.ARG_RUN_ID, run.id)
             startActivity(intent)
         }
 

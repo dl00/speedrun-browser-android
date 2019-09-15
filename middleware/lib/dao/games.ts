@@ -93,8 +93,16 @@ export function normalize_game(d: Game) {
         d.regions = (d.regions as UpstreamData<Region>).data;
     }
 
-    if (d.genres && (d.genres as UpstreamData<{id: string, name: string}>).data) {
-        d.genres = (d.genres as UpstreamData<{id: string, name: string}>).data;
+    if (d.genres && (d.genres as UpstreamData<Genre>).data) {
+        d.genres = (d.genres as UpstreamData<Genre>).data;
+    }
+
+    if (d.publishers && (d.publishers as UpstreamData<Publisher>).data) {
+        d.publishers = (d.publishers as UpstreamData<Publisher>).data;
+    }
+
+    if (d.developers && (d.developers as UpstreamData<Developer>).data) {
+        d.developers = (d.developers as UpstreamData<Developer>).data;
     }
 
     for (const platform in d.platforms) {
@@ -103,9 +111,14 @@ export function normalize_game(d: Game) {
     for (const region in d.regions) {
         normalize((d.regions as any)[region]);
     }
-
     for (const genre in d.genres) {
         normalize((d.genres as any)[genre]);
+    }
+    for (const publisher in d.publishers) {
+        normalize((d.publishers as any)[publisher]);
+    }
+    for (const developer in d.developers) {
+        normalize((d.developers as any)[developer]);
     }
 }
 

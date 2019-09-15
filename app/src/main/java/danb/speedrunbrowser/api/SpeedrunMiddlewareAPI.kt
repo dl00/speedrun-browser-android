@@ -45,6 +45,7 @@ object SpeedrunMiddlewareAPI {
             gson.registerTypeAdapter(Run::class.java, Run.JsonConverter())
             gson.registerTypeAdapter(Variable::class.java, Variable.JsonConverter())
             gson.registerTypeAdapter(Chart::class.java, Chart.JsonConverter())
+            gson.registerTypeAdapter(GameMaker::class.java, GameMaker.JsonConverter())
 
             return gson.create()
         }

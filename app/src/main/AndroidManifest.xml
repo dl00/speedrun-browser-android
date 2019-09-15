@@ -25,36 +25,18 @@
         </service>
 
         <activity
-            android:name=".AboutActivity"
-            android:label="@string/title_activity_about"
-            android:parentActivityName=".GameListActivity"
-            android:theme="@style/AppTheme">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="danb.speedrunbrowser.GameListActivity" />
-        </activity>
-        <activity
-            android:name=".GameListActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".ItemDetailActivity"
+            android:name=".SpeedrunBrowserActivity"
             android:label="@string/title_item_detail"
-            android:parentActivityName=".GameListActivity"
+            android:launchMode="singleTop"
             android:theme="@style/AppTheme">
             <tools:validation testUrl="https://www.speedrun.com/botw" />
 
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="danb.speedrunbrowser.GameListActivity" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
 
-            <intent-filter android:order="1">
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
@@ -66,15 +48,15 @@
                     android:scheme="https" />
             </intent-filter>
         </activity>
+
         <activity
-            android:name=".RunDetailActivity"
-            android:configChanges="orientation|screenSize"
-            android:label="@string/title_run_detail"
-            android:parentActivityName=".ItemDetailActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:name=".AboutActivity"
+            android:label="@string/title_activity_about"
+            android:parentActivityName=".SpeedrunBrowserActivity"
+            android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="danb.speedrunbrowser.ItemDetailActivity" />
+                android:value="danb.speedrunbrowser.SpeedrunBrowserActivity" />
         </activity>
 
         <activity android:name=".stats.SiteStatisticsActivity"

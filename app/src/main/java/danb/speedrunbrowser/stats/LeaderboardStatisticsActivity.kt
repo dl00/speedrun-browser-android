@@ -6,11 +6,11 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.view.marginBottom
 import androidx.core.view.setPadding
 import androidx.recyclerview.widget.RecyclerView
 import danb.speedrunbrowser.R
-import danb.speedrunbrowser.RunDetailActivity
+import danb.speedrunbrowser.RunDetailFragment
+import danb.speedrunbrowser.SpeedrunBrowserActivity
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.*
 import danb.speedrunbrowser.holders.RunViewHolder
@@ -155,8 +155,9 @@ class LeaderboardStatisticsActivity : StatisticsActivity() {
     }
 
     private fun viewRun(run: Run) {
-        val intent = Intent(this, RunDetailActivity::class.java)
-        intent.putExtra(RunDetailActivity.EXTRA_RUN_ID, run.id)
+        val intent = Intent(this, SpeedrunBrowserActivity::class.java)
+        intent.putExtra(SpeedrunBrowserActivity.EXTRA_ITEM_TYPE, ItemType.RUNS)
+        intent.putExtra(RunDetailFragment.ARG_RUN_ID, run.id)
         startActivity(intent)
     }
 

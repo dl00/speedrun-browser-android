@@ -13,7 +13,6 @@ import android.widget.TextView
 
 import androidx.fragment.app.FragmentManager
 import androidx.viewpager.widget.ViewPager
-import danb.speedrunbrowser.GameListActivity
 import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.objects.Category
 import danb.speedrunbrowser.api.objects.Game

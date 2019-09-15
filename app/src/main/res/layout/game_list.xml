@@ -7,18 +7,6 @@
     android:background="@color/colorPrimary"
     android:orientation="vertical">
 
-
-    <EditText
-        android:id="@+id/editGameFilter"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_marginStart="@dimen/fab_margin"
-        android:layout_marginEnd="@dimen/fab_margin"
-        android:ems="10"
-        android:hint="@string/enter_game_name"
-        android:textColor="@android:color/white"
-        android:inputType="textPersonName" />
-
     <ListView
         android:id="@+id/listAutoCompleteResults"
         android:visibility="gone"

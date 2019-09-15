@@ -9,7 +9,7 @@
     android:orientation="horizontal"
     android:showDividers="middle"
     android:background="@color/colorPrimary"
-    tools:context=".GameListActivity">
+    tools:context=".GameListFragment">
 
     <!--
     This layout is a two-pane layout for the Games
@@ -32,12 +32,6 @@
             android:hint="@string/enter_game_name"
             android:textColor="@android:color/white"
             android:inputType="textPersonName" />
-
-        <ListView
-            android:id="@+id/listAutoCompleteResults"
-            android:visibility="gone"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
 
         <danb.speedrunbrowser.views.SimpleTabStrip
             android:id="@+id/tabsType"

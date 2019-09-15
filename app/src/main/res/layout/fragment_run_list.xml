@@ -44,7 +44,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        tools:context=".GameListActivity"
+        tools:context=".GameListFragment"
         tools:listitem="@layout/content_watch_list" />
 
 </LinearLayout>

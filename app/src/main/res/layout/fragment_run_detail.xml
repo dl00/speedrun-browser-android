@@ -6,8 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:id="@+id/contentLayout"
-    android:background="@color/colorPrimary"
-    tools:context=".RunDetailActivity">
+    tools:context=".RunDetailFragment">
 
     <danb.speedrunbrowser.views.ProgressSpinnerView
         android:id="@+id/spinner"

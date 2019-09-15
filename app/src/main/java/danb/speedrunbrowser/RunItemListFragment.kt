@@ -8,15 +8,15 @@ import android.widget.Switch
 
 class RunItemListFragment : ItemListFragment() {
 
-    private lateinit var mBleedingEdgeSwitch: Switch
+    private var mBleedingEdgeSwitch: Switch? = null
 
     val shouldShowBleedingEdgeRun: Boolean
-    get() = mBleedingEdgeSwitch.isEnabled
+    get() = mBleedingEdgeSwitch?.isEnabled ?: false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val v = super.onCreateView(inflater, container, savedInstanceState)
         mBleedingEdgeSwitch = v!!.findViewById(R.id.switchBleedingEdge)
-        mBleedingEdgeSwitch.setOnCheckedChangeListener { _, _ -> reload() }
+        mBleedingEdgeSwitch!!.setOnCheckedChangeListener { _, _ -> reload() }
         return v
     }
 }

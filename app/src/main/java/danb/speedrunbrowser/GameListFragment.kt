@@ -8,14 +8,10 @@ import android.os.Parcelable
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.AdapterView
 import android.widget.EditText
 import android.widget.ListView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
@@ -35,24 +31,18 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.Function
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
-import java.util.*
 
 /**
  * An activity representing a list of Games. This activity
  * has different presentations for handset and tablet-size devices. On
  * handsets, the activity presents a list of items, which when touched,
- * lead to a [ItemDetailActivity] representing
+ * lead to a [SpeedrunBrowserActivity] representing
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFragmentInteractionListener, AdapterView.OnItemClickListener {
+class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListener {
 
     private var mDB: AppDatabase? = null
-
-    private var mGameFilterSearchSubject: PublishSubject<String>? = null
-
-    private var mGameFilter: EditText? = null
-    private var mAutoCompleteResults: ListView? = null
 
     private var mSelectedGenre: Genre? = null
 
@@ -61,52 +51,44 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
 
     private var mDisposables: CompositeDisposable? = null
 
+    private lateinit var mMainView: View
+
     // The detail container view will be present only in the
     // large-screen layouts (res/values-w900dp).
     // If this view is present, then the
     // activity should be in two-pane mode.
     private val isTwoPane: Boolean
-        get() = findViewById<View>(R.id.detail_container) != null
+        get() = mMainView.findViewById<View>(R.id.detail_container) != null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_game_list)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        mMainView = inflater.inflate(R.layout.fragment_game_list, container, false)
 
         mDisposables = CompositeDisposable()
 
-        mDB = AppDatabase.make(this)
+        mDB = AppDatabase.make(context!!)
 
         FirebaseCrash.setCrashCollectionEnabled(!BuildConfig.DEBUG)
 
-        Util.showNewFeaturesDialog(this)
+        Util.showNewFeaturesDialog(context!!)
 
         // might need to update certificates/connection modes on older android versions
         // TODO: this is the synchronous call, may block user interation when installing provider. Consider using async
         try {
-            ProviderInstaller.installIfNeeded(applicationContext)
+            ProviderInstaller.installIfNeeded(context!!.applicationContext)
         } catch (e: Exception) {
             Log.w(TAG, "Could not install latest certificates using Google Play Services")
         }
 
-        mGameFilter = findViewById(R.id.editGameFilter)
-        mViewPager = findViewById(R.id.pager)
-        mAutoCompleteResults = findViewById(R.id.listAutoCompleteResults)
+        mViewPager = mMainView.findViewById(R.id.pager)
 
-        val pagerAdapter = PagerAdapter(supportFragmentManager)
+        val pagerAdapter = PagerAdapter(childFragmentManager)
 
         mViewPager!!.adapter = pagerAdapter
 
-        mTabs = findViewById(R.id.tabsType)
+        mTabs = mMainView.findViewById(R.id.tabsType)
         mTabs!!.setup(mViewPager!!)
 
-        mGameFilter!!.addTextChangedListener(this)
-
-        mGameFilterSearchSubject = PublishSubject.create()
-
-        val autoCompleteAdapter = AutoCompleteAdapter(this, mDisposables!!)
-        autoCompleteAdapter.setPublishSubject(mGameFilterSearchSubject!!)
-        mAutoCompleteResults!!.adapter = autoCompleteAdapter
-        mAutoCompleteResults!!.onItemClickListener = this
+        return mMainView
     }
 
     override fun onDestroy() {
@@ -114,10 +96,8 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
         mDisposables!!.dispose()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        val inflater = menuInflater
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.game_list, menu)
-        return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -140,36 +120,15 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
         outState.putParcelable(SAVED_MAIN_PAGER, mViewPager!!.onSaveInstanceState())
     }
 
-    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
-        super.onRestoreInstanceState(savedInstanceState)
-
+    /*override fun restoreChildFragmentState(savedInstanceState: Bundle?) {
         if (savedInstanceState != null) {
             mViewPager!!.onRestoreInstanceState(savedInstanceState.getParcelable<Parcelable>(SAVED_MAIN_PAGER))
         }
-    }
-
-    override fun onBackPressed() {
-        if (mGameFilter!!.text.isEmpty())
-            finish()
-        else
-            mGameFilter!!.setText("")
-    }
+    }*/
 
     private fun showAbout() {
-        val intent = Intent(this, AboutActivity::class.java)
+        val intent = Intent(context!!, AboutActivity::class.java)
         startActivity(intent)
-    }
-
-    override fun beforeTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {
-
-    }
-
-    override fun onTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {}
-
-    override fun afterTextChanged(editable: Editable) {
-        val q = mGameFilter!!.text.toString().trim { it <= ' ' }
-        mGameFilterSearchSubject!!.onNext(q)
-        mAutoCompleteResults!!.visibility = if (q.isEmpty()) View.GONE else View.VISIBLE
     }
 
     private fun showGame(id: String, fragment: Fragment?, transitionOptions: ActivityOptions?) {
@@ -180,19 +139,15 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
             val newFrag = GameDetailFragment()
             newFrag.arguments = arguments
 
-            supportFragmentManager.beginTransaction()
+            childFragmentManager.beginTransaction()
                     .replace(R.id.detail_container, newFrag)
                     .commit()
         } else {
-            val intent = Intent(this, ItemDetailActivity::class.java)
-            intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemType.GAMES)
+            val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
+            intent.putExtra(SpeedrunBrowserActivity.EXTRA_ITEM_TYPE, ItemType.GAMES)
             intent.putExtra(GameDetailFragment.ARG_GAME_ID, id)
 
-            if (fragment != null && transitionOptions != null)
-                startActivityFromFragment(fragment, intent, 0, transitionOptions.toBundle())
-            else
-                startActivity(intent)
-
+            startActivity(intent)
         }
     }
 
@@ -204,33 +159,27 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
             val newFrag = PlayerDetailFragment()
             newFrag.arguments = arguments
 
-            supportFragmentManager.beginTransaction()
+            childFragmentManager.beginTransaction()
                     .replace(R.id.detail_container, newFrag)
                     .commit()
         } else {
-            val intent = Intent(this, ItemDetailActivity::class.java)
-            intent.putExtra(ItemDetailActivity.EXTRA_ITEM_TYPE, ItemType.PLAYERS)
+            val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
+            intent.putExtra(SpeedrunBrowserActivity.EXTRA_ITEM_TYPE, ItemType.PLAYERS)
             intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, id)
 
-            if (fragment != null && transitionOptions != null)
-                startActivityFromFragment(fragment, intent, 0, transitionOptions.toBundle())
-            else
-                startActivity(intent)
+            startActivity(intent)
         }
     }
 
     private fun showRun(id: String, fragment: Fragment?, transitionOptions: ActivityOptions?) {
-        val intent = Intent(this, RunDetailActivity::class.java)
-        intent.putExtra(RunDetailActivity.EXTRA_RUN_ID, id)
+        val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
+        intent.putExtra(RunDetailFragment.ARG_RUN_ID, id)
 
-        if (fragment != null && transitionOptions != null)
-            startActivityFromFragment(fragment, intent, 0, transitionOptions.toBundle())
-        else
-            startActivity(intent)
+        startActivity(intent)
     }
 
     private fun showGenreFilterDialog() {
-        val dialog = SelectGenreDialog(this, mDisposables!!)
+        val dialog = SelectGenreDialog(context!!, mDisposables!!)
 
         dialog.setOnDismissListener {
 
@@ -255,25 +204,20 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
         }
     }
 
-    override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
-        val item = parent.adapter.getItem(position)
-        if (item is User) {
-            showPlayer(item.id, null, null)
-        } else if (item is Game) {
-            showGame(item.id, null, null)
-        }
-    }
-
-
-
     private fun viewStats() {
-        val intent = Intent(this, SiteStatisticsActivity::class.java)
+        val intent = Intent(context!!, SiteStatisticsActivity::class.java)
         startActivity(intent)
     }
 
     private inner class PagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm), SimpleTabStrip.IconPagerAdapter {
 
-        private val fragments: Array<ItemListFragment> = Array(5) { ItemListFragment() }
+        private val fragments: Array<ItemListFragment> = arrayOf(
+            ItemListFragment(),
+            RunItemListFragment(),
+            ItemListFragment(),
+            ItemListFragment(),
+            ItemListFragment()
+        )
 
         init {
             var args = Bundle()
@@ -317,7 +261,7 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
                         3 -> listName = "subscribed"
                     }
 
-                    Analytics.logItemView(this@GameListActivity, type, listName)
+                    Analytics.logItemView(context!!, type, listName)
                 }
 
                 override fun onPageScrollStateChanged(state: Int) {}
@@ -462,7 +406,7 @@ class GameListActivity : AppCompatActivity(), TextWatcher, ItemListFragment.OnFr
     }
 
     companion object {
-        private val TAG = GameListActivity::class.java.simpleName
+        private val TAG = GameListFragment::class.java.simpleName
 
         private const val SAVED_MAIN_PAGER = "main_pager"
     }

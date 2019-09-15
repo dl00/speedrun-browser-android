@@ -27,14 +27,7 @@ import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry
 import danb.speedrunbrowser.api.objects.User
 import danb.speedrunbrowser.stats.PlayerStatisticsActivity
-import danb.speedrunbrowser.utils.Analytics
-import danb.speedrunbrowser.utils.AppDatabase
-import danb.speedrunbrowser.utils.ConnectionErrorConsumer
-import danb.speedrunbrowser.utils.Constants
-import danb.speedrunbrowser.utils.ImageLoader
-import danb.speedrunbrowser.utils.ImageViewPlacerConsumer
-import danb.speedrunbrowser.utils.SubscriptionChanger
-import danb.speedrunbrowser.utils.Util
+import danb.speedrunbrowser.utils.*
 import danb.speedrunbrowser.views.ProgressSpinnerView
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -372,8 +365,9 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
     }
 
     private fun viewRun(runId: String) {
-        val intent = Intent(context, RunDetailActivity::class.java)
-        intent.putExtra(RunDetailActivity.EXTRA_RUN_ID, runId)
+        val intent = Intent(context, SpeedrunBrowserActivity::class.java)
+        intent.putExtra(SpeedrunBrowserActivity.EXTRA_ITEM_TYPE, ItemType.RUNS)
+        intent.putExtra(RunDetailFragment.ARG_RUN_ID, runId)
         startActivity(intent)
     }
 

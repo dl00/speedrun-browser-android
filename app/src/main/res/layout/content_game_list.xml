@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
     tools:context=".ItemListFragment">
 
     <danb.speedrunbrowser.views.ProgressSpinnerView
@@ -22,7 +22,7 @@
         android:layout_margin="@dimen/fab_margin"
         android:textSize="14sp"
         android:textAlignment="center"
-        android:text="@string/empty_no_players" />
+        android:text="@string/empty_no_games" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/listSearchItems"
@@ -30,8 +30,9 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layoutManager="danb.speedrunbrowser.utils.PreCachingGridLayoutManager"
+        app:spanCount="3"
         tools:context=".GameListFragment"
-        tools:listitem="@layout/content_player_list" />
+        tools:listitem="@layout/content_game_cover" />
 
 </LinearLayout>
