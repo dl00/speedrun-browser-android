@@ -47,6 +47,8 @@ object SpeedrunMiddlewareAPI {
             gson.registerTypeAdapter(Chart::class.java, Chart.JsonConverter())
             gson.registerTypeAdapter(GameMaker::class.java, GameMaker.JsonConverter())
 
+            gson.registerTypeAdapter(List::class.java, NestedListDeserializer())
+
             return gson.create()
         }
 
@@ -83,7 +85,8 @@ object SpeedrunMiddlewareAPI {
 
     data class APISearchData(
         val games: List<Game> = listOf(),
-        val players: List<User> = listOf()
+        val players: List<User> = listOf(),
+        val game_groups: List<GameGroup> = listOf()
     )
 
     data class APISearchResponse(

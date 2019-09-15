@@ -77,7 +77,7 @@ open class ItemListFragment : Fragment() {
                         itemType!!.makeSceneTransition(activity, v))
             }
         })
-        mSearchItemsView!!.adapter = mAdapter
+        mSearchItemsView.adapter = mAdapter
         if (mItemSource != null)
             mAdapter!!.loadListTop()
 
@@ -207,7 +207,6 @@ open class ItemListFragment : Fragment() {
                         isAtEndOfList = true
                         notifyDataSetChanged()
                     })
-            notifyDataSetChanged()
         }
 
         fun loadListMore() {

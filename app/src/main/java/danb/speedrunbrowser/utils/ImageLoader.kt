@@ -74,10 +74,12 @@ class ImageLoader(ctx: Context) {
 
             val res = client!!.newCall(req).execute()
 
-            if (!res.isSuccessful)
-            // TODO properly throw this error
-            //throw new IOException();
+            if (!res.isSuccessful) {
+                // TODO properly throw this error
+                //throw new IOException();
                 Log.w(TAG, "failed to download image: " + res.body()!!.string())
+                return null
+            }
 
 
             val data = res.body()!!.bytes()
@@ -111,7 +113,7 @@ class ImageLoader(ctx: Context) {
                 }
 
                 val b = BitmapFactory.decodeStream(strm) // will trigger an IOException to log the message otherwise
-                strm!!.close()
+                strm?.close()
 
                 if (b == null) {
                     throw InvalidObjectException("could not decode bitmap")

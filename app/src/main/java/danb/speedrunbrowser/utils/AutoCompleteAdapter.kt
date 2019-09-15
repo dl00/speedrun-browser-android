@@ -35,17 +35,13 @@ class AutoCompleteAdapter(private val ctx: Context, private val disposables: Com
         searchResults = ArrayList()
     }
 
-    private fun recalculateSearchResults() {
-        searchResults = LinkedList()
-
-        searchResults!!.addAll(rawSearchData!!.games)
-
+    private fun mergeSearchResults(results: List<SearchResultItem>) {
         if (searchResults!!.isNotEmpty()) {
             val sr = searchResults!!.listIterator()
             var cur = sr.next()
-            for (player in rawSearchData!!.players) {
+            for (resultItem in results) {
                 // select the longest matching substring
-                val lcsp = LCSMatcher(query.toLowerCase(), player.resolvedName.toLowerCase(), 3)
+                val lcsp = LCSMatcher(query.toLowerCase(), resultItem.resolvedName.toLowerCase(), 3)
 
                 var lcsg: LCSMatcher
                 do {
@@ -53,17 +49,25 @@ class AutoCompleteAdapter(private val ctx: Context, private val disposables: Com
 
                     if(sr.hasNext())
                         cur = sr.next()
-                } while (lcsg.maxMatchLength >= lcsp.maxMatchLength && lcsp.maxMatchLength < player.resolvedName.length - 1 && sr.hasNext())
+                } while (lcsg.maxMatchLength >= lcsp.maxMatchLength && lcsp.maxMatchLength < resultItem.resolvedName.length - 1 && sr.hasNext())
 
                 sr.previous()
                 if(sr.hasPrevious())
                     sr.previous()
-                sr.add(player)
+                sr.add(resultItem)
                 sr.next()
             }
         }
 
-        searchResults!!.addAll(rawSearchData!!.players)
+        searchResults!!.addAll(results)
+    }
+
+    private fun recalculateSearchResults() {
+        searchResults = LinkedList()
+
+        searchResults!!.addAll(rawSearchData!!.games)
+        mergeSearchResults(rawSearchData!!.players)
+        mergeSearchResults(rawSearchData!!.game_groups)
 
         searchResults = ArrayList(searchResults!!)
 
@@ -98,6 +102,8 @@ class AutoCompleteAdapter(private val ctx: Context, private val disposables: Com
             disposables.add(ImageLoader(ctx).loadImage(iconUrl)
                     .subscribe(ImageViewPlacerConsumer(viewIcon)))
         }
+        else
+            viewIcon.setImageDrawable(null)
 
         viewName.removeAllViews()
 

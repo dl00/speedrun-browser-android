@@ -12,11 +12,18 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <Switch
+        <CheckBox
             android:id="@+id/switchBleedingEdge"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:text="@string/switch_bleeding_edge" />
+            android:textColor="@android:color/white"
+            android:buttonTint="@android:color/white"
+            android:layout_marginStart="@dimen/fab_margin"
+            android:layout_marginTop="@dimen/half_fab_margin"
+            android:layout_marginBottom="@dimen/half_fab_margin"
+            android:text="@string/switch_bleeding_edge"
+            android:visibility="gone"
+            tools:targetApi="lollipop" />
 
     </LinearLayout>
 

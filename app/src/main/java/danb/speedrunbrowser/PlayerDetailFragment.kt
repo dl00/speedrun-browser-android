@@ -230,7 +230,7 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
         if (mPlayer != null) {
             val il = ImageLoader(context!!)
 
-            activity!!.setTitle(mPlayer!!.name)
+            activity!!.setTitle(mPlayer!!.resolvedName)
 
             // find out if we are subscribed
             setMenu()

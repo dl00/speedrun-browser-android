@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Speedrun.com Browser</string>
     <string name="title_game_detail">View Game Leaderboards</string>
-    <string name="enter_game_name">Search Game, Player, Console, Genre, Platform, Publisher&#8230;</string>
+    <string name="enter_game_name">Search  for anything&#8230;</string>
     <string name="enter_genre_filter">Filter by genre&#8230;</string>
     <string name="label_key_platforms">Platforms</string>
     <string name="empty" />

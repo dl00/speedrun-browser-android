@@ -1,6 +1,7 @@
 package danb.speedrunbrowser
 
 import android.app.ActivityOptions
+import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -44,7 +45,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
 
     private var mDB: AppDatabase? = null
 
-    private var mSelectedGenre: Genre? = null
+    private var mGameGroupId: String? = null
 
     private var mTabs: SimpleTabStrip? = null
     private var mViewPager: ViewPager? = null
@@ -59,6 +60,19 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
     // activity should be in two-pane mode.
     private val isTwoPane: Boolean
         get() = mMainView.findViewById<View>(R.id.detail_container) != null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        if(arguments != null)
+            mGameGroupId = arguments!!.getString(ARG_GAME_GROUP_ID)
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+
+        activity!!.setTitle(R.string.app_name)
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         mMainView = inflater.inflate(R.layout.fragment_game_list, container, false)
@@ -96,39 +110,10 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
         mDisposables!!.dispose()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.game_list, menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.menu_about) {
-            showAbout()
-            return true
-        } else if (item.itemId == R.id.menu_genres) {
-            showGenreFilterDialog()
-            return true
-        } else if (item.itemId == R.id.menu_site_stats) {
-            viewStats()
-        }
-
-        return false
-    }
-
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
         outState.putParcelable(SAVED_MAIN_PAGER, mViewPager!!.onSaveInstanceState())
-    }
-
-    /*override fun restoreChildFragmentState(savedInstanceState: Bundle?) {
-        if (savedInstanceState != null) {
-            mViewPager!!.onRestoreInstanceState(savedInstanceState.getParcelable<Parcelable>(SAVED_MAIN_PAGER))
-        }
-    }*/
-
-    private fun showAbout() {
-        val intent = Intent(context!!, AboutActivity::class.java)
-        startActivity(intent)
     }
 
     private fun showGame(id: String, fragment: Fragment?, transitionOptions: ActivityOptions?) {
@@ -173,27 +158,10 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
 
     private fun showRun(id: String, fragment: Fragment?, transitionOptions: ActivityOptions?) {
         val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
+        intent.putExtra(SpeedrunBrowserActivity.EXTRA_ITEM_TYPE, ItemType.RUNS)
         intent.putExtra(RunDetailFragment.ARG_RUN_ID, id)
 
         startActivity(intent)
-    }
-
-    private fun showGenreFilterDialog() {
-        val dialog = SelectGenreDialog(context!!, mDisposables!!)
-
-        dialog.setOnDismissListener {
-
-            if(dialog.selectedGenre != null && mSelectedGenre != dialog.selectedGenre) {
-                mSelectedGenre = if(dialog.selectedGenre == Genre.ALL_GENRES_GENRE)
-                    null
-                else
-                    dialog.selectedGenre
-
-                (mViewPager!!.adapter as PagerAdapter).reloadSearchResults()
-            }
-        }
-
-        dialog.show()
     }
 
     override fun onItemSelected(itemType: ItemType?, itemId: String, fragment: Fragment, options: ActivityOptions?) {
@@ -219,7 +187,10 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
             ItemListFragment()
         )
 
+
+
         init {
+
             var args = Bundle()
             args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemType.GAMES)
             fragments[0].arguments = args
@@ -228,17 +199,19 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
             args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemType.RUNS)
             fragments[1].arguments = args
 
-            args = Bundle()
-            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemType.RUNS)
-            fragments[2].arguments = args
+            if (mGameGroupId == null) {
+                args = Bundle()
+                args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemType.RUNS)
+                fragments[2].arguments = args
 
-            args = Bundle()
-            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemType.GAMES)
-            fragments[3].arguments = args
+                args = Bundle()
+                args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemType.GAMES)
+                fragments[3].arguments = args
 
-            args = Bundle()
-            args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemType.PLAYERS)
-            fragments[4].arguments = args
+                args = Bundle()
+                args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemType.PLAYERS)
+                fragments[4].arguments = args
+            }
 
             for (i in 0 until count)
                 initializePage(i)
@@ -282,7 +255,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
         }
 
         override fun getCount(): Int {
-            return fragments.size
+            return if (mGameGroupId != null) 2 else fragments.size
         }
 
         override fun getPageTitle(position: Int): CharSequence? {
@@ -312,8 +285,8 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
             when (position) {
                 0 -> fragments[0].setItemsSource(object : ItemListFragment.ItemSource {
                     override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
-                        return if (mSelectedGenre != null)
-                            SpeedrunMiddlewareAPI.make().listGamesByGenre(mSelectedGenre!!.id, offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
+                        return if (mGameGroupId != null)
+                            SpeedrunMiddlewareAPI.make().listGamesByGenre(mGameGroupId!!, offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                         else
                             SpeedrunMiddlewareAPI.make().listGames(offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                     }
@@ -323,9 +296,9 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
 
                         val shouldShowBleedingEdge = (fragments[1] as RunItemListFragment).shouldShowBleedingEdgeRun
 
-                        return (if (mSelectedGenre != null)
+                        return (if (mGameGroupId != null)
                             SpeedrunMiddlewareAPI.make().listLatestRunsByGenre(
-                                    mSelectedGenre!!.id,
+                                    mGameGroupId!!,
                                     offset, shouldShowBleedingEdge)
                         else
                             SpeedrunMiddlewareAPI.make().listLatestRuns(
@@ -407,6 +380,8 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
 
     companion object {
         private val TAG = GameListFragment::class.java.simpleName
+
+        const val ARG_GAME_GROUP_ID = "gg_id"
 
         private const val SAVED_MAIN_PAGER = "main_pager"
     }

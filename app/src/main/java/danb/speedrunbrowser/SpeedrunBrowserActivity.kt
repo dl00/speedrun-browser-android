@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.Game
+import danb.speedrunbrowser.api.objects.GameGroup
 import danb.speedrunbrowser.api.objects.User
 import danb.speedrunbrowser.api.objects.WhatIsEntry
 import danb.speedrunbrowser.utils.*
@@ -68,8 +69,6 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         if(this.intent != intent && this.intent != null)
             mBackStack.push(this.intent)
 
-        setIntent(intent)
-
         if(intent == null)
             return
 
@@ -91,13 +90,7 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
         if (id == android.R.id.home) {
-            // This ID represents the Home or Up button. In the case of this
-            // activity, the Up button is shown. For
-            // more details, see the Navigation pattern on Android Design:
-            //
-            // http://developer.android.com/design/patterns/navigation.html#up-vs-back
-            //
-            navigateUpTo(Intent(this, GameListFragment::class.java))
+            showIntent(mBackStack[0])
             return true
         }
         return super.onOptionsItemSelected(item)
@@ -116,6 +109,8 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
 
     private fun showIntent(intent: Intent) {
 
+        setIntent(intent)
+
         applyFullscreenMode(false)
 
         // Create the detail fragment and add it to the activity
@@ -129,6 +124,7 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         when {
             type != null -> frag = when (type) {
                 ItemType.GAMES -> GameDetailFragment()
+                ItemType.GAME_GROUPS -> GameListFragment()
                 ItemType.PLAYERS -> PlayerDetailFragment()
                 ItemType.RUNS -> RunDetailFragment()
             }
@@ -164,17 +160,17 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
 
         if (enabled) {
             window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-            //supportActionBar!!.hide()
-            findViewById<View>(android.R.id.content).background = ColorDrawable(resources.getColor(android.R.color.black))
+            supportActionBar!!.hide()
+            findViewById<View>(R.id.layoutRoot).background = ColorDrawable(resources.getColor(android.R.color.black))
             mGameFilter.visibility = View.GONE
-            mAutoCompleteResults.visibility = View.GONE
+            //mAutoCompleteResults.visibility = View.GONE
         }
         else {
             window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
-            //supportActionBar!!.show()
-            findViewById<View>(android.R.id.content).background = ColorDrawable(resources.getColor(R.color.colorPrimary))
+            supportActionBar!!.show()
+            findViewById<View>(R.id.layoutRoot).background = ColorDrawable(resources.getColor(R.color.colorPrimary))
             mGameFilter.visibility = View.VISIBLE
-            mAutoCompleteResults.visibility = View.VISIBLE
+            //mAutoCompleteResults.visibility = View.VISIBLE
         }
     }
 
@@ -247,8 +243,11 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         if (args != null)
             frag.arguments = args
 
-        supportFragmentManager.beginTransaction()
-                .replace(R.id.detail_container, frag)
+        val transaction = supportFragmentManager.beginTransaction()
+
+        transaction.setCustomAnimations(R.anim.fade_shift_top_in, R.anim.fade_shift_top_out)
+
+        transaction.replace(R.id.detail_container, frag)
                 .commit()
     }
 
@@ -271,6 +270,8 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
             showPlayer(item.id)
         } else if (item is Game) {
             showGame(item.id)
+        } else if (item is GameGroup) {
+            showGameGroup(item.id)
         }
     }
 
@@ -278,6 +279,14 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         val intent = Intent(this, SpeedrunBrowserActivity::class.java)
         intent.putExtra(EXTRA_ITEM_TYPE, ItemType.GAMES)
         intent.putExtra(GameDetailFragment.ARG_GAME_ID, gameId)
+
+        startActivity(intent)
+    }
+
+    fun showGameGroup(ggId: String) {
+        val intent = Intent(this, SpeedrunBrowserActivity::class.java)
+        intent.putExtra(EXTRA_ITEM_TYPE, ItemType.GAME_GROUPS)
+        intent.putExtra(GameListFragment.ARG_GAME_GROUP_ID, ggId)
 
         startActivity(intent)
     }
