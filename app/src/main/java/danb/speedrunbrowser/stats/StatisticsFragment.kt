@@ -1,28 +1,57 @@
 package danb.speedrunbrowser.stats
 
-import android.animation.Animator
 import android.content.Context
 import android.os.Bundle
-import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
-import android.widget.Spinner
+import android.widget.ScrollView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.views.ProgressSpinnerView
 import io.reactivex.Observable
-import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
-import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 
-class StatisticsFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIChartData> {
+abstract class StatisticsFragment : Fragment() {
+
+    protected lateinit var contentView: LinearLayout
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        contentView = LinearLayout(context!!)
+        contentView.orientation = LinearLayout.VERTICAL
+
+        val v = inflater.inflate(R.layout.fragment_statistics, container, false)
+
+        contentView = v.findViewById(R.id.contentView)
+
+        val statsView = v.findViewById<FrameLayout>(R.id.statsView)
+
+        if (rootLayout.parent != null)
+            (rootLayout.parent as ViewGroup).removeView(rootLayout)
+
+        statsView.addView(rootLayout)
+
+        return v
+    }
+
+    override fun onStop() {
+        super.onStop()
+        clearCharts()
+    }
+
+    fun setDataSourceAPIResponse(d: Observable<SpeedrunMiddlewareAPI.APIChartResponse>) {
+        setDataSource(d.map {
+            // TODO: Check for error
+            it.data
+        })
+    }
 
     private lateinit var rootLayout: FrameLayout
     private lateinit var layout: LinearLayout
@@ -57,40 +86,30 @@ class StatisticsFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIChartDa
         rootLayout.addView(layout)
     }
 
-    override fun onCreateView(inflater: LayoutInflater,
-                              container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
-        return rootLayout
-    }
-
-    override fun accept(t: SpeedrunMiddlewareAPI.APIChartData?) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
     fun setDataSource(d: Observable<SpeedrunMiddlewareAPI.APIChartData>) {
         spinner.visibility = View.VISIBLE
         layout.visibility = View.GONE
 
         dispose = d
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeOn(Schedulers.io())
-            .subscribe {
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe {
 
-                animateChartsIn()
+                    animateChartsIn()
 
-                chartData = it
+                    chartData = it
 
-                layout.children.forEach { view ->
-                    when(view) {
-                        is ChartView -> view.chartData = it.charts[view.options.identifier]
-                        is MetricView -> {}
-                        else -> {}
+                    layout.children.forEach { view ->
+                        when(view) {
+                            is ChartView -> view.chartData = it.charts[view.options.identifier]
+                            is MetricView -> {}
+                            else -> {}
+                        }
                     }
-                }
 
-                if(onDataReadyListener != null)
-                    onDataReadyListener!!(it)
-            }
+                    if(onDataReadyListener != null)
+                        onDataReadyListener!!(it)
+                }
     }
 
     fun addMetric(options: ChartOptions) = layout.addView(MetricView(context!!, options))

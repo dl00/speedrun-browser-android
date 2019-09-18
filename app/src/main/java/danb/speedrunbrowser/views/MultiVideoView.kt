@@ -212,6 +212,11 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
         addView(ll)
     }
 
+    fun disable() {
+        mWebView.destroy()
+        removeAllViews()
+    }
+
     fun setListener(listener: Listener) {
         mListener = listener
     }

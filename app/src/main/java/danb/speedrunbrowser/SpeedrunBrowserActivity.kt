@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.*
@@ -17,6 +18,7 @@ import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.api.objects.GameGroup
 import danb.speedrunbrowser.api.objects.User
 import danb.speedrunbrowser.api.objects.WhatIsEntry
+import danb.speedrunbrowser.stats.SiteStatisticsFragment
 import danb.speedrunbrowser.utils.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -24,7 +26,6 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
-import java.util.*
 
 
 class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.OnItemClickListener, Consumer<SpeedrunMiddlewareAPI.APIResponse<WhatIsEntry>> {
@@ -38,8 +39,6 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
     private lateinit var mAutoCompleteResults: ListView
 
     private val mDisposables = CompositeDisposable()
-
-    private val mBackStack = Stack<Intent>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,18 +65,10 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
 
-        if(this.intent != intent && this.intent != null)
-            mBackStack.push(this.intent)
-
         if(intent == null)
             return
 
         showIntent(intent)
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.remove("android:support:fragments")
     }
 
     override fun onDestroy() {
@@ -87,27 +78,36 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
             whatIsQuery!!.dispose()
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        super.onCreateOptionsMenu(menu)
+        menuInflater.inflate(R.menu.game_list, menu)
+
+        return true
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
         if (id == android.R.id.home) {
-            showIntent(mBackStack[0])
-            return true
+            //showFragment(mBackStack[0], null)
+            //return true
+        }
+        else if (id == R.id.menu_site_stats) {
+            showFragment(SiteStatisticsFragment(), null)
+        }
+        else if (id == R.id.menu_about) {
+            showAbout()
         }
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onBackPressed() {
-        if (mGameFilter.text.isEmpty()) {
-            if(mBackStack.empty())
-                finish()
-            else
-                showIntent(mBackStack.pop())
-        }
-        else
-            mGameFilter.setText("")
+    private fun showAbout() {
+        val intent = Intent(this, AboutActivity::class.java)
+        startActivity(intent)
     }
 
     private fun showIntent(intent: Intent) {
+
+        val prevCp = this.intent.extras?.getString(EXTRA_FRAGMENT_CLASSPATH)
 
         setIntent(intent)
 
@@ -117,17 +117,12 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         // using a fragment transaction.
         val args = intent.extras
 
-        val type = args?.getSerializable(EXTRA_ITEM_TYPE) as ItemType?
+        val cp = args?.getString(EXTRA_FRAGMENT_CLASSPATH)
 
         val frag: Fragment?
 
         when {
-            type != null -> frag = when (type) {
-                ItemType.GAMES -> GameDetailFragment()
-                ItemType.GAME_GROUPS -> GameListFragment()
-                ItemType.PLAYERS -> PlayerDetailFragment()
-                ItemType.RUNS -> RunDetailFragment()
-            }
+            cp != null -> frag = (Class.forName(cp) as Class<Fragment>).getConstructor().newInstance()
             intent.data != null -> {
                 val segs = intent.data!!.pathSegments
 
@@ -150,7 +145,27 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
             else -> frag = GameListFragment()
         }
 
-        showFragment(frag, args)
+        showFragment(frag, args, true)
+    }
+
+    private fun showFragment(frag: Fragment, args: Bundle?, backstack: Boolean = true) {
+
+        if (args != null)
+            frag.arguments = args
+
+        val transaction = supportFragmentManager.beginTransaction()
+        transaction
+                .setCustomAnimations(
+                        R.anim.fade_shift_top_in,
+                        R.anim.fade_shift_top_out,
+                        R.anim.fade_shift_top_in,
+                        R.anim.fade_shift_top_out)
+                .replace(R.id.detail_container, frag)
+
+        if (backstack && supportFragmentManager.fragments.isNotEmpty())
+            transaction.addToBackStack(null)
+
+        transaction.commit()
     }
 
     fun applyFullscreenMode(enabled: Boolean) {
@@ -239,18 +254,6 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         finish()
     }
 
-    private fun showFragment(frag: Fragment, args: Bundle?) {
-        if (args != null)
-            frag.arguments = args
-
-        val transaction = supportFragmentManager.beginTransaction()
-
-        transaction.setCustomAnimations(R.anim.fade_shift_top_in, R.anim.fade_shift_top_out)
-
-        transaction.replace(R.id.detail_container, frag)
-                .commit()
-    }
-
     override fun beforeTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {
 
     }
@@ -271,29 +274,29 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         } else if (item is Game) {
             showGame(item.id)
         } else if (item is GameGroup) {
-            showGameGroup(item.id)
+            showGameGroup(item)
         }
     }
 
-    fun showGame(gameId: String) {
+    private fun showGame(gameId: String) {
         val intent = Intent(this, SpeedrunBrowserActivity::class.java)
-        intent.putExtra(EXTRA_ITEM_TYPE, ItemType.GAMES)
+        intent.putExtra(EXTRA_FRAGMENT_CLASSPATH, GameDetailFragment::class.java.canonicalName)
         intent.putExtra(GameDetailFragment.ARG_GAME_ID, gameId)
 
         startActivity(intent)
     }
 
-    fun showGameGroup(ggId: String) {
+    private fun showGameGroup(gameGroup: GameGroup) {
         val intent = Intent(this, SpeedrunBrowserActivity::class.java)
-        intent.putExtra(EXTRA_ITEM_TYPE, ItemType.GAME_GROUPS)
-        intent.putExtra(GameListFragment.ARG_GAME_GROUP_ID, ggId)
+        intent.putExtra(EXTRA_FRAGMENT_CLASSPATH, GameListFragment::class.java.canonicalName)
+        intent.putExtra(GameListFragment.ARG_GAME_GROUP, gameGroup)
 
         startActivity(intent)
     }
 
-    fun showPlayer(playerId: String) {
+    private fun showPlayer(playerId: String) {
         val intent = Intent(this, SpeedrunBrowserActivity::class.java)
-        intent.putExtra(EXTRA_ITEM_TYPE, ItemType.PLAYERS)
+        intent.putExtra(EXTRA_FRAGMENT_CLASSPATH, PlayerDetailFragment::class.java.canonicalName)
         intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, playerId)
 
         startActivity(intent)
@@ -302,6 +305,6 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
     companion object {
         private val TAG = SpeedrunBrowserActivity::class.java.simpleName
 
-        const val EXTRA_ITEM_TYPE = "item_type"
+        const val EXTRA_FRAGMENT_CLASSPATH = "fragment_classpath"
     }
 }

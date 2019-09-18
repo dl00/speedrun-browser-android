@@ -90,7 +90,7 @@ class MessagingService : FirebaseMessagingService() {
                 if (data.oldRun != null) data.oldRun.run.times!!.time else "", data.newRun.run.times!!.time)
 
         val intent = Intent(this, SpeedrunBrowserActivity::class.java)
-        intent.putExtra(SpeedrunBrowserActivity.EXTRA_ITEM_TYPE, ItemType.PLAYERS)
+        intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, PlayerDetailFragment::class.java.canonicalName)
         intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, players[0].id)
 
         Util.postNotification(this, intent, players[0].id, title, msg, featureImg)
@@ -140,7 +140,7 @@ class MessagingService : FirebaseMessagingService() {
                 if (data.oldRun != null) data.oldRun.run.times!!.time else "", data.newRun.run.times!!.time)
 
         val intent = Intent(this, SpeedrunBrowserActivity::class.java)
-        intent.putExtra(SpeedrunBrowserActivity.EXTRA_ITEM_TYPE, ItemType.GAMES)
+        intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, GameDetailFragment::class.java.canonicalName)
         intent.putExtra(GameDetailFragment.ARG_GAME_ID, data.game.id)
 
         Util.postNotification(this, intent, data.game.id, title, msg, featureImg)

@@ -54,7 +54,7 @@ class ImageLoader(ctx: Context) {
                 return null
             }
 
-            Log.d(TAG, "Had Cached Image Asset: $url")
+            Log.v(TAG, "Had Cached Image Asset: $url")
         } catch (_e: IOException) {
         }
 
@@ -63,7 +63,7 @@ class ImageLoader(ctx: Context) {
 
     @Throws(IOException::class)
     private fun downloadImage(url: URL): InputStream? {
-        Log.d(TAG, "Download Image Asset: $url")
+        Log.v(TAG, "Download Image Asset: $url")
 
         var bais: ByteArrayInputStream? = null
 

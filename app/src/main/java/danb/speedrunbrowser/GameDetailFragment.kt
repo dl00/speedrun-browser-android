@@ -18,7 +18,6 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.app.ActivityOptionsCompat
 import java.util.HashSet
 
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
@@ -26,7 +25,7 @@ import danb.speedrunbrowser.api.objects.Category
 import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.api.objects.Level
 import danb.speedrunbrowser.api.objects.Variable
-import danb.speedrunbrowser.stats.GameStatisticsActivity
+import danb.speedrunbrowser.stats.GameStatisticsFragment
 import danb.speedrunbrowser.utils.*
 import danb.speedrunbrowser.views.CategoryTabStrip
 import danb.speedrunbrowser.views.ProgressSpinnerView
@@ -368,8 +367,9 @@ class GameDetailFragment : Fragment() {
 
     private fun viewStats() {
         if(mGame != null) {
-            val intent = Intent(context!!, GameStatisticsActivity::class.java)
-            intent.putExtra(GameStatisticsActivity.EXTRA_GAME_ID, mGame!!.id)
+            val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
+            intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, GameStatisticsFragment::class.java.canonicalName)
+            intent.putExtra(GameStatisticsFragment.EXTRA_GAME_ID, mGame!!.id)
             startActivity(intent)
         }
     }

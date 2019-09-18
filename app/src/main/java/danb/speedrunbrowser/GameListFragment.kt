@@ -5,14 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.os.Bundle
-import android.os.Parcelable
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.Log
 import android.view.*
-import android.widget.AdapterView
-import android.widget.EditText
-import android.widget.ListView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
@@ -20,18 +14,18 @@ import androidx.viewpager.widget.ViewPager
 import com.google.android.gms.security.ProviderInstaller
 import com.google.firebase.crash.FirebaseCrash
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
-import danb.speedrunbrowser.api.objects.Game
-import danb.speedrunbrowser.api.objects.Genre
-import danb.speedrunbrowser.api.objects.User
-import danb.speedrunbrowser.stats.SiteStatisticsActivity
-import danb.speedrunbrowser.utils.*
+import danb.speedrunbrowser.api.objects.GameGroup
+import danb.speedrunbrowser.stats.SiteStatisticsFragment
+import danb.speedrunbrowser.utils.Analytics
+import danb.speedrunbrowser.utils.AppDatabase
+import danb.speedrunbrowser.utils.ItemType
+import danb.speedrunbrowser.utils.Util
 import danb.speedrunbrowser.views.SimpleTabStrip
 import io.reactivex.Observable
 import io.reactivex.ObservableSource
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.Function
 import io.reactivex.schedulers.Schedulers
-import io.reactivex.subjects.PublishSubject
 
 /**
  * An activity representing a list of Games. This activity
@@ -45,7 +39,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
 
     private var mDB: AppDatabase? = null
 
-    private var mGameGroupId: String? = null
+    private var mGameGroup: GameGroup? = null
 
     private var mTabs: SimpleTabStrip? = null
     private var mViewPager: ViewPager? = null
@@ -65,16 +59,14 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
         super.onCreate(savedInstanceState)
 
         if(arguments != null)
-            mGameGroupId = arguments!!.getString(ARG_GAME_GROUP_ID)
-    }
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-
-        activity!!.setTitle(R.string.app_name)
+            mGameGroup = arguments!!.getSerializable(ARG_GAME_GROUP) as GameGroup
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        super.onCreateView(inflater, container, savedInstanceState)
+
+        setHasOptionsMenu(true)
+
         mMainView = inflater.inflate(R.layout.fragment_game_list, container, false)
 
         mDisposables = CompositeDisposable()
@@ -105,6 +97,15 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
         return mMainView
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        activity!!.title = if (mGameGroup != null)
+            "${mGameGroup!!.type.capitalize()}: ${mGameGroup!!.name}"
+        else
+            getString(R.string.app_name)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         mDisposables!!.dispose()
@@ -114,6 +115,19 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
         super.onSaveInstanceState(outState)
 
         outState.putParcelable(SAVED_MAIN_PAGER, mViewPager!!.onSaveInstanceState())
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        inflater.inflate(R.menu.game_group, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return if(item.itemId == R.id.menu_site_stats) {
+            viewStats()
+            true
+        }
+        else super.onOptionsItemSelected(item)
     }
 
     private fun showGame(id: String, fragment: Fragment?, transitionOptions: ActivityOptions?) {
@@ -129,7 +143,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                     .commit()
         } else {
             val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
-            intent.putExtra(SpeedrunBrowserActivity.EXTRA_ITEM_TYPE, ItemType.GAMES)
+            intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, GameDetailFragment::class.java.canonicalName)
             intent.putExtra(GameDetailFragment.ARG_GAME_ID, id)
 
             startActivity(intent)
@@ -149,7 +163,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                     .commit()
         } else {
             val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
-            intent.putExtra(SpeedrunBrowserActivity.EXTRA_ITEM_TYPE, ItemType.PLAYERS)
+            intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, PlayerDetailFragment::class.java.canonicalName)
             intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, id)
 
             startActivity(intent)
@@ -158,7 +172,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
 
     private fun showRun(id: String, fragment: Fragment?, transitionOptions: ActivityOptions?) {
         val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
-        intent.putExtra(SpeedrunBrowserActivity.EXTRA_ITEM_TYPE, ItemType.RUNS)
+        intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, RunDetailFragment::class.java.canonicalName)
         intent.putExtra(RunDetailFragment.ARG_RUN_ID, id)
 
         startActivity(intent)
@@ -173,7 +187,8 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
     }
 
     private fun viewStats() {
-        val intent = Intent(context!!, SiteStatisticsActivity::class.java)
+        val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
+        intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, SiteStatisticsFragment::class.java.canonicalName)
         startActivity(intent)
     }
 
@@ -199,7 +214,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
             args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemType.RUNS)
             fragments[1].arguments = args
 
-            if (mGameGroupId == null) {
+            if (mGameGroup == null) {
                 args = Bundle()
                 args.putSerializable(ItemListFragment.ARG_ITEM_TYPE, ItemType.RUNS)
                 fragments[2].arguments = args
@@ -255,7 +270,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
         }
 
         override fun getCount(): Int {
-            return if (mGameGroupId != null) 2 else fragments.size
+            return if (mGameGroup != null) 2 else fragments.size
         }
 
         override fun getPageTitle(position: Int): CharSequence? {
@@ -285,8 +300,8 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
             when (position) {
                 0 -> fragments[0].setItemsSource(object : ItemListFragment.ItemSource {
                     override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
-                        return if (mGameGroupId != null)
-                            SpeedrunMiddlewareAPI.make().listGamesByGenre(mGameGroupId!!, offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
+                        return if (mGameGroup != null)
+                            SpeedrunMiddlewareAPI.make().listGamesByGenre(mGameGroup!!.id, offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                         else
                             SpeedrunMiddlewareAPI.make().listGames(offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                     }
@@ -296,9 +311,9 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
 
                         val shouldShowBleedingEdge = (fragments[1] as RunItemListFragment).shouldShowBleedingEdgeRun
 
-                        return (if (mGameGroupId != null)
+                        return (if (mGameGroup != null)
                             SpeedrunMiddlewareAPI.make().listLatestRunsByGenre(
-                                    mGameGroupId!!,
+                                    mGameGroup!!.id,
                                     offset, shouldShowBleedingEdge)
                         else
                             SpeedrunMiddlewareAPI.make().listLatestRuns(
@@ -381,7 +396,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
     companion object {
         private val TAG = GameListFragment::class.java.simpleName
 
-        const val ARG_GAME_GROUP_ID = "gg_id"
+        const val ARG_GAME_GROUP = "game_group"
 
         private const val SAVED_MAIN_PAGER = "main_pager"
     }

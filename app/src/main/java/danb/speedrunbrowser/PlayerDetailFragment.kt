@@ -26,7 +26,7 @@ import androidx.fragment.app.Fragment
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry
 import danb.speedrunbrowser.api.objects.User
-import danb.speedrunbrowser.stats.PlayerStatisticsActivity
+import danb.speedrunbrowser.stats.PlayerStatisticsFragment
 import danb.speedrunbrowser.utils.*
 import danb.speedrunbrowser.views.ProgressSpinnerView
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -215,7 +215,8 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
         if (mMenu == null)
             return
 
-        val subscribeItem = mMenu!!.findItem(R.id.menu_subscribe)
+        val subscribeItem = mMenu!!.findItem(R.id.menu_subscribe) ?: return
+
         subscribeItem.actionView = null
         if (mSubscription != null) {
             subscribeItem.setIcon(R.drawable.baseline_star_24)
@@ -226,11 +227,17 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (mPlayer != null)
+            activity!!.title = mPlayer!!.resolvedName
+    }
+
     private fun setViewData() {
         if (mPlayer != null) {
             val il = ImageLoader(context!!)
 
-            activity!!.setTitle(mPlayer!!.resolvedName)
+            activity!!.title = mPlayer!!.resolvedName
 
             // find out if we are subscribed
             setMenu()
@@ -366,15 +373,16 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
 
     private fun viewRun(runId: String) {
         val intent = Intent(context, SpeedrunBrowserActivity::class.java)
-        intent.putExtra(SpeedrunBrowserActivity.EXTRA_ITEM_TYPE, ItemType.RUNS)
+        intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, RunDetailFragment::class.java.canonicalName)
         intent.putExtra(RunDetailFragment.ARG_RUN_ID, runId)
         startActivity(intent)
     }
 
     private fun viewStats() {
         if(mPlayer != null) {
-            val intent = Intent(context!!, PlayerStatisticsActivity::class.java)
-            intent.putExtra(PlayerStatisticsActivity.EXTRA_PLAYER_ID, mPlayer!!.id)
+            val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
+            intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, PlayerStatisticsFragment::class.java.canonicalName)
+            intent.putExtra(PlayerStatisticsFragment.ARG_PLAYER_ID, mPlayer!!.id)
             startActivity(intent)
         }
     }

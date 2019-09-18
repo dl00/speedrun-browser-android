@@ -1,12 +1,13 @@
 package danb.speedrunbrowser.api.objects
 
 import android.widget.TextView
+import java.io.Serializable
 import java.net.URL
 
 data class GameGroup(
         val id: String,
         val name: String
-) : SearchResultItem {
+) : SearchResultItem, Serializable {
 
     override val resolvedName: String
         get() = name

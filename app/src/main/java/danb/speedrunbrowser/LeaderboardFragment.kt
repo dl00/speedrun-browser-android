@@ -29,7 +29,7 @@ import danb.speedrunbrowser.api.objects.LeaderboardRunEntry
 import danb.speedrunbrowser.api.objects.Level
 import danb.speedrunbrowser.api.objects.Variable
 import danb.speedrunbrowser.holders.RunViewHolder
-import danb.speedrunbrowser.stats.LeaderboardStatisticsActivity
+import danb.speedrunbrowser.stats.LeaderboardStatisticsFragment
 import danb.speedrunbrowser.utils.ConnectionErrorConsumer
 import danb.speedrunbrowser.utils.ItemType
 import danb.speedrunbrowser.utils.Util
@@ -241,8 +241,9 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
 
     // show game rules as a Alert Dialog
     private fun viewInfo() {
-        val intent = Intent(context!!, LeaderboardStatisticsActivity::class.java)
-        intent.putExtra(LeaderboardStatisticsActivity.EXTRA_LEADERBOARD_ID, leaderboardId)
+        val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
+        intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, LeaderboardStatisticsFragment::class.java.canonicalName)
+        intent.putExtra(LeaderboardStatisticsFragment.EXTRA_LEADERBOARD_ID, leaderboardId)
         startActivity(intent)
     }
 
@@ -347,7 +348,7 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
             val (run) = view.tag as LeaderboardRunEntry
 
             val intent = Intent(context, SpeedrunBrowserActivity::class.java)
-            intent.putExtra(SpeedrunBrowserActivity.EXTRA_ITEM_TYPE, ItemType.RUNS)
+            intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, RunDetailFragment::class.java.canonicalName)
             intent.putExtra(RunDetailFragment.ARG_RUN_ID, run.id)
             startActivity(intent)
         }

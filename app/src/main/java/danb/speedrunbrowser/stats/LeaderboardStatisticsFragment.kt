@@ -20,18 +20,18 @@ import danb.speedrunbrowser.utils.ViewHolderSource
 import io.reactivex.disposables.CompositeDisposable
 import java.lang.StringBuilder
 
-class LeaderboardStatisticsActivity : StatisticsActivity() {
+class LeaderboardStatisticsFragment : StatisticsFragment() {
     override fun onStart() {
         super.onStart()
 
-        val leaderboardId: String? = intent.getStringExtra(EXTRA_LEADERBOARD_ID)
+        val leaderboardId: String? = arguments!!.getString(EXTRA_LEADERBOARD_ID)
 
         if (leaderboardId != null) {
 
-            Analytics.logItemView(this, "leaderboard_chart", leaderboardId)
+            Analytics.logItemView(context!!, "leaderboard_chart", leaderboardId)
 
             onDataReadyListener = {
-                title =
+                activity!!.title =
                         StringBuilder(it.game!!.resolvedName).append(" \u2022 ")
                                 .append(makeCategoryNameText(it.category!!, it.level))
                                 .toString()
@@ -144,7 +144,7 @@ class LeaderboardStatisticsActivity : StatisticsActivity() {
 
         val rulesText = category.getRulesText(Variable.VariableSelections())
 
-        val rulesTv = TextView(this)
+        val rulesTv = TextView(context!!)
         rulesTv.text = getString(R.string.prelude_rules, rulesText)
 
         rulesTv.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
@@ -155,8 +155,8 @@ class LeaderboardStatisticsActivity : StatisticsActivity() {
     }
 
     private fun viewRun(run: Run) {
-        val intent = Intent(this, SpeedrunBrowserActivity::class.java)
-        intent.putExtra(SpeedrunBrowserActivity.EXTRA_ITEM_TYPE, ItemType.RUNS)
+        val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
+        intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, RunDetailFragment::class.java.canonicalName)
         intent.putExtra(RunDetailFragment.ARG_RUN_ID, run.id)
         startActivity(intent)
     }

@@ -4,11 +4,11 @@ import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.utils.Analytics
 
-class SiteStatisticsActivity : StatisticsActivity() {
+class SiteStatisticsFragment : StatisticsFragment() {
     override fun onStart() {
         super.onStart()
 
-        Analytics.logItemView(this, "chart", "site")
+        Analytics.logItemView(context!!, "chart", "site")
 
         addChart(ChartOptions(
                 name = getString(R.string.chart_title_count_over_time),

@@ -2,21 +2,20 @@ package danb.speedrunbrowser.stats
 
 import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
-import danb.speedrunbrowser.api.objects.makeCategoryNameText
 import danb.speedrunbrowser.utils.Analytics
 
-class GameStatisticsActivity : StatisticsActivity() {
+class GameStatisticsFragment : StatisticsFragment() {
     override fun onStart() {
         super.onStart()
 
-        val gameId: String? = intent.getStringExtra(EXTRA_GAME_ID)
+        val gameId: String? = arguments!!.getString(EXTRA_GAME_ID)
 
         if(gameId != null) {
 
-            Analytics.logItemView(this, "game_chart", gameId)
+            Analytics.logItemView(context!!, "game_chart", gameId)
 
             onDataReadyListener = {
-                title = it.game!!.resolvedName
+                activity!!.title = it.game!!.resolvedName
             }
 
             addChart(ChartOptions(

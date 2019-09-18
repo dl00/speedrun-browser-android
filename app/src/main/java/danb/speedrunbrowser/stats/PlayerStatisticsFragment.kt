@@ -5,18 +5,18 @@ import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.utils.Analytics
 
-class PlayerStatisticsActivity : StatisticsActivity() {
+class PlayerStatisticsFragment : StatisticsFragment() {
     override fun onStart() {
         super.onStart()
 
-        val playerId: String? = intent.getStringExtra(EXTRA_PLAYER_ID)
+        val playerId: String? = arguments!!.getString(ARG_PLAYER_ID)
 
         if(playerId != null) {
 
-            Analytics.logItemView(this, "player_chart", playerId)
+            Analytics.logItemView(context!!, "player_chart", playerId)
 
             onDataReadyListener = {
-                title = if(it.player?.names != null)
+                activity!!.title = if(it.player?.names != null)
                     it.player.names["international"]
                 else
                     it.player?.name
@@ -47,6 +47,6 @@ class PlayerStatisticsActivity : StatisticsActivity() {
     }
 
     companion object {
-        const val EXTRA_PLAYER_ID = "player_id"
+        const val ARG_PLAYER_ID = "player_id"
     }
 }

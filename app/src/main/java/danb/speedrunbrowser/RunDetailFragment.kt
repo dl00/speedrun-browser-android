@@ -169,6 +169,10 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
     override fun onResume() {
         super.onResume()
 
+        activity!!.title = ""
+
+        if (mRun != null && mVideoFrame.seekTime != 0)
+            onVideoReady()
 
         // set an interval to record the watch time
         mDisposableBackgroundSaveInterval = FlowableInterval(BACKGROUND_SEEK_SAVE_START.toLong(), BACKGROUND_SEEK_SAVE_PERIOD.toLong(), TimeUnit.SECONDS, Schedulers.io())
@@ -179,6 +183,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
     override fun onPause() {
         super.onPause()
 
+        mVideoFrame.disable()
         mDisposableBackgroundSaveInterval!!.dispose()
     }
 
@@ -409,7 +414,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
 
     private fun viewPlayer(player: User) {
         val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
-        intent.putExtra(SpeedrunBrowserActivity.EXTRA_ITEM_TYPE, ItemType.PLAYERS)
+        intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, PlayerDetailFragment::class.java.canonicalName)
         intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, player.id)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             intent.flags = Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT
@@ -420,7 +425,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
 
     private fun viewGame() {
         val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
-        intent.putExtra(SpeedrunBrowserActivity.EXTRA_ITEM_TYPE, ItemType.GAMES)
+        intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, GameDetailFragment::class.java.canonicalName)
         intent.putExtra(GameDetailFragment.ARG_GAME_ID, mGame!!.id)
         intent.putExtra(GameDetailFragment.ARG_LEADERBOARD_ID, mCategory!!.id + (if(mLevel != null) "_" + mLevel!!.id else ""))
         intent.putExtra(GameDetailFragment.ARG_VARIABLE_SELECTIONS, Variable.VariableSelections(mRun?.run))
