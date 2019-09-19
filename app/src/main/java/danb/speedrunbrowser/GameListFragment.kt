@@ -58,7 +58,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if(arguments != null)
+        if(arguments?.containsKey(ARG_GAME_GROUP) == true)
             mGameGroup = arguments!!.getSerializable(ARG_GAME_GROUP) as GameGroup
     }
 

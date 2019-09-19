@@ -28,7 +28,9 @@
             android:name=".SpeedrunBrowserActivity"
             android:label="@string/title_item_detail"
             android:launchMode="singleTop"
-            android:configChanges="orientation|screenSize"
+            android:resizeableActivity="true"
+            android:supportsPictureInPicture="true"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"
             android:theme="@style/AppTheme">
             <tools:validation testUrl="https://www.speedrun.com/botw" />
 

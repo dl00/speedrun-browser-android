@@ -170,9 +170,12 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
         super.onResume()
 
         activity!!.title = ""
+    }
 
-        if (mRun != null && mVideoFrame.seekTime != 0)
-            onVideoReady()
+    override fun onStart() {
+        super.onStart()
+
+        mVideoFrame.enable()
 
         // set an interval to record the watch time
         mDisposableBackgroundSaveInterval = FlowableInterval(BACKGROUND_SEEK_SAVE_START.toLong(), BACKGROUND_SEEK_SAVE_PERIOD.toLong(), TimeUnit.SECONDS, Schedulers.io())
@@ -180,8 +183,8 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
                 .subscribe({ recordStartPlaybackTime() }, { throwable -> Log.w(TAG, "Problem running background save interval: ", throwable) })
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onStop() {
+        super.onStop()
 
         mVideoFrame.disable()
         mDisposableBackgroundSaveInterval!!.dispose()

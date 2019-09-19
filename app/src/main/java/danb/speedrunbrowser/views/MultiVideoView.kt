@@ -49,11 +49,6 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
 
     private var mPeriodicUpdate: Disposable? = null
 
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-        mPeriodicUpdate?.dispose()
-    }
-
     fun loadVideo(ml: MediaLink): Boolean {
         Log.d(TAG, "Trying to find YT/Twitch video: " + ml.uri)
 
@@ -91,10 +86,7 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
         mWebView.loadDataWithBaseURL("https://www.youtube.com", pageContent,
                 "text/html", null, null)
 
-        // due to restrictions of JS eval, we have to continuously pull seek time on an interval
-        mPeriodicUpdate = FlowableInterval(0, 5, TimeUnit.SECONDS, Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ updateTwitchSeekTime() }, { throwable -> Log.w(TAG, "Problem running background save interval: ", throwable) })
+        enable()
 
         removeAllViews()
         addView(mWebView)
@@ -123,10 +115,7 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
         mWebView.loadDataWithBaseURL("https://twitch.tv", pageContent,
                 "text/html", null, null)
 
-        // due to restrictions of JS eval, we have to continuously pull seek time on an interval
-        mPeriodicUpdate = FlowableInterval(0, 5, TimeUnit.SECONDS, Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ updateTwitchSeekTime() }, { throwable -> Log.w(TAG, "Problem running background save interval: ", throwable) })
+        enable()
 
         removeAllViews()
         addView(mWebView)
@@ -212,9 +201,16 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
         addView(ll)
     }
 
+    fun enable() {
+        // due to restrictions of JS eval, we have to continuously pull seek time on an interval
+        mPeriodicUpdate = FlowableInterval(0, 5, TimeUnit.SECONDS, Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({ updateTwitchSeekTime() }, { throwable -> Log.w(TAG, "Problem running background save interval: ", throwable) })
+
+    }
+
     fun disable() {
-        mWebView.destroy()
-        removeAllViews()
+        mPeriodicUpdate?.dispose()
     }
 
     fun setListener(listener: Listener) {

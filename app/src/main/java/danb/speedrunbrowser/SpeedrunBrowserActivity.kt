@@ -1,6 +1,7 @@
 package danb.speedrunbrowser
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.text.Editable
@@ -26,6 +27,10 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
+import androidx.core.app.ComponentActivity.ExtraData
+import androidx.core.content.ContextCompat.getSystemService
+import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+import androidx.fragment.app.FragmentManager
 
 
 class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.OnItemClickListener, Consumer<SpeedrunMiddlewareAPI.APIResponse<WhatIsEntry>> {
@@ -55,11 +60,22 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         mAutoCompleteResults.adapter = autoCompleteAdapter
         mAutoCompleteResults.onItemClickListener = this
 
+        supportFragmentManager.removeOnBackStackChangedListener {
+            configureUpButton()
+        }
+
+        supportFragmentManager.addOnBackStackChangedListener {
+            configureUpButton()
+        }
+
         // Show the Up button in the action bar.
         val actionBar = supportActionBar
-        actionBar?.setDisplayHomeAsUpEnabled(true)
-
         onNewIntent(intent)
+    }
+
+    fun configureUpButton() {
+        supportActionBar!!.setDisplayHomeAsUpEnabled(supportFragmentManager.backStackEntryCount != 0 ||
+                supportFragmentManager.fragments[0] !is GameListFragment)
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -78,6 +94,22 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
             whatIsQuery!!.dispose()
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        // reattach current fragment
+        val frag = supportFragmentManager.fragments[0]
+
+        // TODO: clean this up
+        if (frag is RunDetailFragment)
+            return
+
+        supportFragmentManager.beginTransaction()
+                .detach(frag)
+                .attach(frag)
+                .commit()
+    }
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         super.onCreateOptionsMenu(menu)
         menuInflater.inflate(R.menu.game_list, menu)
@@ -88,8 +120,14 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
         if (id == android.R.id.home) {
-            //showFragment(mBackStack[0], null)
-            //return true
+            val entry = supportFragmentManager.getBackStackEntryAt(
+                    0)
+
+            // clear the backstack and return to app root
+            supportFragmentManager.popBackStack(entry.id,
+                    FragmentManager.POP_BACK_STACK_INCLUSIVE)
+            supportFragmentManager.executePendingTransactions()
+            showFragment(GameListFragment(), null, false)
         }
         else if (id == R.id.menu_site_stats) {
             showFragment(SiteStatisticsFragment(), null)
@@ -162,8 +200,10 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
                         R.anim.fade_shift_top_out)
                 .replace(R.id.detail_container, frag)
 
-        if (backstack && supportFragmentManager.fragments.isNotEmpty())
+        if (backstack && supportFragmentManager.fragments.isNotEmpty()) {
             transaction.addToBackStack(null)
+            supportActionBar?.setDisplayShowHomeEnabled(true)
+        }
 
         transaction.commit()
     }
