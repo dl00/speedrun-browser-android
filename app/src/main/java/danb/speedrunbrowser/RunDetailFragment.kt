@@ -170,6 +170,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
         super.onResume()
 
         activity!!.title = ""
+        onConfigurationChanged(resources.configuration)
     }
 
     override fun onStart() {

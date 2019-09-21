@@ -1,9 +1,11 @@
 package danb.speedrunbrowser.stats
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.os.Build
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -29,6 +31,8 @@ import danb.speedrunbrowser.utils.Util
 import danb.speedrunbrowser.views.SimpleTabStrip
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.content_chart_view.view.*
+import org.xmlpull.v1.XmlPullParser
+import org.xmlpull.v1.XmlPullParserFactory
 
 fun Chart.generateMpLineSetData(context: Context, labels: (v: String) -> String): LineData {
     val mpdata = LineData()
@@ -122,7 +126,9 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
         applyData()
     }
 
-    val listAdapters: MutableList<ChartDataAdapter> = mutableListOf()
+    private val dataFilter = mutableSetOf<String>()
+
+    private val listAdapters: MutableList<ChartDataAdapter> = mutableListOf()
 
     init {
         onConfigurationChanged(null)
@@ -173,8 +179,13 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
 
         chart.setDrawGridBackground(false)
 
-        chart.isScaleXEnabled = false
-        chart.isScaleYEnabled = false
+        chart.isScaleXEnabled = true
+        chart.isScaleYEnabled = true
+
+        chart.setPinchZoom(true)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            chart.isNestedScrollingEnabled = true
+        }
 
         if(options.xValueFormat != null) {
             chart.xAxis.valueFormatter = object : ValueFormatter() {
@@ -247,7 +258,39 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
 
             lv.minimumHeight = 300
 
-            adapter.views.add(options.setLabels(s) to lv)
+            val cb = CheckBox(context!!)
+
+            cb.setText(R.string.label_filter_this)
+            cb.setTextColor(Color.WHITE)
+
+            if (Build.VERSION.SDK_INT >= 21){
+                cb.buttonTintList = resources.getColorStateList(R.color.all_white)
+            }
+
+
+            cb.setOnCheckedChangeListener { _, checked ->
+
+                if (checked) {
+                    dataFilter.add(s)
+                }
+                else {
+                    dataFilter.remove(s)
+                }
+
+                applyData()
+            }
+
+            val ll = LinearLayout(context!!)
+
+            ll.orientation = LinearLayout.VERTICAL
+
+            if(chartData!!.datasets.size > 1) {
+                ll.addView(cb)
+            }
+
+            ll.addView(lv)
+
+            adapter.views.add(options.setLabels(s) to ll)
         }
 
         listPager.adapter = adapter
@@ -262,57 +305,60 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
     }
 
     private fun applyData() {
-        val data = chartData ?: return
+        val data = chartData?.copy(
+                data = chartData!!.data.filterKeys { dataFilter.isEmpty() || dataFilter.contains(it) }
+        ) ?: return
 
-        if(graph == null) {
-            // first init
-            when(data.chart_type) {
-                "line", "bar" -> {
+        // first init
+        when(data.chart_type) {
+            "line", "bar" -> {
+                if(graph == null) {
                     graph = initializeChart(data.chart_type)
                     findViewById<FrameLayout>(R.id.frameChart).addView(graph)
+                }
 
-                    val cd = CombinedData()
+                val cd = CombinedData()
 
-                    if(data.chart_type == "line")
-                        cd.setData(data.generateMpLineSetData(context, options.setLabels))
-                    else if(data.chart_type == "bar")
-                        cd.setData(data.generateMpBarSetData(context, options.setLabels))
+                if(data.chart_type == "line")
+                    cd.setData(data.generateMpLineSetData(context, options.setLabels))
+                else if(data.chart_type == "bar")
+                    cd.setData(data.generateMpBarSetData(context, options.setLabels))
 
-                    graph!!.data = cd
+                graph!!.data = cd
 
-                    // hack to prevent bar clipping
-                    if(data.chart_type == "bar") {
-                        graph!!.xAxis.axisMinimum = -0.5f
-                        graph!!.xAxis.axisMaximum = graph!!.barData.xMax + 0.5f
-                    }
+                // hack to prevent bar clipping
+                if(data.chart_type == "bar") {
+                    graph!!.xAxis.axisMinimum = -0.5f
+                    graph!!.xAxis.axisMaximum = graph!!.barData.xMax + 0.5f
+                }
 
-                    graph!!.xAxis.labelRotationAngle = -30.0f
+                graph!!.xAxis.labelRotationAngle = -30.0f
 
-                    graph!!.invalidate()
+                graph!!.invalidate()
 
+                if (listPager.adapter == null) {
                     if(options.chartListViewHolderSource != null) {
                         buildChartList()
                     }
                     else
                         listContainer.visibility = View.GONE
                 }
-                "pie" -> {
+            }
+            "pie" -> {
+                if(pie == null) {
                     initializePie()
                     findViewById<FrameLayout>(R.id.frameChart).addView(pie)
-
-                    pie!!.data = data.generateMpPieSetData(context, options.pieLabels)
-
-                    pie!!.invalidate()
-
-                    listContainer.visibility = View.GONE
                 }
-                "list" -> {
-                    // load the list with data
-                }
+
+                pie!!.data = data.generateMpPieSetData(context, options.pieLabels)
+
+                pie!!.invalidate()
+
+                listContainer.visibility = View.GONE
             }
-        }
-        else {
-            // in-place update...
+            "list" -> {
+                // load the list with data
+            }
         }
     }
 
@@ -363,10 +409,10 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
         }
 
         private fun reversePosition(position: Int): Int {
-            if(options.chartListReverse)
-                return itemCount - 1 - position
+            return if(options.chartListReverse)
+                itemCount - 1 - position
             else
-                return position
+                position
         }
 
         var onClickListener: ((position: Int) -> Unit)? = null

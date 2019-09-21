@@ -314,8 +314,6 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
     }
 
     fun notifyFilterChanged() {
-        Log.d(TAG, "Notified filter changed")
-
         updateSubcategorySelections()
 
         if (mLeaderboard != null) {

@@ -27,9 +27,6 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
-import androidx.core.app.ComponentActivity.ExtraData
-import androidx.core.content.ContextCompat.getSystemService
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
 import androidx.fragment.app.FragmentManager
 
 
@@ -61,11 +58,11 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         mAutoCompleteResults.onItemClickListener = this
 
         supportFragmentManager.removeOnBackStackChangedListener {
-            configureUpButton()
+            onFragmentMove()
         }
 
         supportFragmentManager.addOnBackStackChangedListener {
-            configureUpButton()
+            onFragmentMove()
         }
 
         // Show the Up button in the action bar.
@@ -73,7 +70,9 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         onNewIntent(intent)
     }
 
-    fun configureUpButton() {
+    private fun onFragmentMove() {
+        applyFullscreenMode(false)
+
         supportActionBar!!.setDisplayHomeAsUpEnabled(supportFragmentManager.backStackEntryCount != 0 ||
                 supportFragmentManager.fragments[0] !is GameListFragment)
     }
@@ -148,8 +147,6 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         val prevCp = this.intent.extras?.getString(EXTRA_FRAGMENT_CLASSPATH)
 
         setIntent(intent)
-
-        applyFullscreenMode(false)
 
         // Create the detail fragment and add it to the activity
         // using a fragment transaction.
