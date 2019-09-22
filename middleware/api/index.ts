@@ -32,7 +32,7 @@ export async function run(conf: Config) {
     const app = create_express_server();
 
     // min app version
-    app.use((req, res, next) => {
+    app.use((_req, res, next) => {
         res.setHeader('x-sr-appversion', MIN_APP_VERSION);
         next();
     });
