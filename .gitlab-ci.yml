@@ -6,7 +6,7 @@ variables:
   ANDROID_SDK_TOOLS:   "4333796"
 
 
-  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
   DOCKER_HOST: tcp://localhost:2375
 
 services:
@@ -66,5 +66,3 @@ debugTests:
   stage: test
   script:
     - ./gradlew -Pci --console=plain :app:testDebug
-
-
