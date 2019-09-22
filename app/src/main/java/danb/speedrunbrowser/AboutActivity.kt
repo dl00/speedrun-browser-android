@@ -21,6 +21,7 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var mAppTitle: TextView
 
     private lateinit var mLinkRateThis: TextView
+    private lateinit var mLinkShareThis: TextView
     private lateinit var mLinkComplain: TextView
     private lateinit var mLinkTermsAndConditions: TextView
     private lateinit var mLinkPrivacyPolicy: TextView
@@ -35,6 +36,7 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
         mLinkSpeedrunComLogo = findViewById(R.id.linkSpeedrunComWebsite)
         mLinkComplain = findViewById(R.id.linkComplain)
         mLinkRateThis = findViewById(R.id.linkRateThis)
+        mLinkShareThis = findViewById(R.id.linkShareThis)
         mLinkPrivacyPolicy = findViewById(R.id.linkPrivacyPolicy)
         mLinkTermsAndConditions = findViewById(R.id.linkTermsAndConditions)
         mLinkOpenSourceLicenses = findViewById(R.id.linkOpenSourceLicenses)
@@ -42,6 +44,7 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
         mLinkSpeedrunComTrophy.setOnClickListener(this)
         mLinkSpeedrunComLogo.setOnClickListener(this)
         mLinkRateThis.setOnClickListener(this)
+        mLinkShareThis.setOnClickListener(this)
         mLinkComplain.setOnClickListener(this)
         mLinkTermsAndConditions.setOnClickListener(this)
         mLinkPrivacyPolicy.setOnClickListener(this)
@@ -91,6 +94,8 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
         }
         else if (v === mLinkRateThis)
             openLink(PLAY_STORE_APP)
+        else if (v === mLinkShareThis)
+            Util.openShare(this)
         else if (v === mLinkTermsAndConditions)
             openLink(TERMS_AND_CONDITIONS)
         else if (v === mLinkPrivacyPolicy)

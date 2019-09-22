@@ -53,7 +53,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
     // If this view is present, then the
     // activity should be in two-pane mode.
     private val isTwoPane: Boolean
-        get() = mMainView.findViewById<View>(R.id.detail_container) != null
+        get() = mMainView.findViewById<View>(R.id.detail_container)?.visibility == View.VISIBLE
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -181,6 +181,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
     override fun onItemSelected(itemType: ItemType?, itemId: String, fragment: Fragment, options: ActivityOptions?) {
         when (itemType) {
             ItemType.GAMES -> showGame(itemId, fragment, options)
+            ItemType.GAME_GROUPS -> {}
             ItemType.PLAYERS -> showPlayer(itemId, fragment, options)
             ItemType.RUNS -> showRun(itemId, fragment, options)
         }
@@ -301,9 +302,9 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                 0 -> fragments[0].setItemsSource(object : ItemListFragment.ItemSource {
                     override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
                         return if (mGameGroup != null)
-                            SpeedrunMiddlewareAPI.make().listGamesByGenre(mGameGroup!!.id, offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
+                            SpeedrunMiddlewareAPI.make(context!!).listGamesByGenre(mGameGroup!!.id, offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                         else
-                            SpeedrunMiddlewareAPI.make().listGames(offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
+                            SpeedrunMiddlewareAPI.make(context!!).listGames(offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                     }
                 })
                 1 -> fragments[1].setItemsSource(object : ItemListFragment.ItemSource {
@@ -312,11 +313,11 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                         val shouldShowBleedingEdge = (fragments[1] as RunItemListFragment).shouldShowBleedingEdgeRun
 
                         return (if (mGameGroup != null)
-                            SpeedrunMiddlewareAPI.make().listLatestRunsByGenre(
+                            SpeedrunMiddlewareAPI.make(context!!).listLatestRunsByGenre(
                                     mGameGroup!!.id,
                                     offset, shouldShowBleedingEdge)
                         else
-                            SpeedrunMiddlewareAPI.make().listLatestRuns(
+                            SpeedrunMiddlewareAPI.make(context!!).listLatestRuns(
                                     offset, shouldShowBleedingEdge)
                         ).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                     }
@@ -338,7 +339,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                                 builder.append(runId)
                             }
 
-                            SpeedrunMiddlewareAPI.make().listRuns(builder.toString()).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
+                            SpeedrunMiddlewareAPI.make(context!!).listRuns(builder.toString()).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                         })
                     }
                 })
@@ -359,7 +360,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                                 builder.append(sub.resourceId)
                             }
 
-                            SpeedrunMiddlewareAPI.make().listGames(builder.toString()).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
+                            SpeedrunMiddlewareAPI.make(context!!).listGames(builder.toString()).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                         })
                     }
                 })
@@ -379,7 +380,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                                 builder.append(resourceId)
                             }
 
-                            SpeedrunMiddlewareAPI.make().listPlayers(builder.toString()).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
+                            SpeedrunMiddlewareAPI.make(context!!).listPlayers(builder.toString()).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                         })
                     }
                 })

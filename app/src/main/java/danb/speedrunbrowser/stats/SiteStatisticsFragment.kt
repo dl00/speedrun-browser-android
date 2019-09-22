@@ -27,7 +27,7 @@ class SiteStatisticsFragment : StatisticsFragment() {
         ))
 
         setDataSourceAPIResponse(
-                SpeedrunMiddlewareAPI.make().getSiteMetrics()
+                SpeedrunMiddlewareAPI.make(context!!).getSiteMetrics()
         )
     }
 }

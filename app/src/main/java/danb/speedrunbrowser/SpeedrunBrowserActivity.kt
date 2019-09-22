@@ -28,6 +28,11 @@ import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import androidx.fragment.app.FragmentManager
+import android.app.Activity
+import androidx.core.app.ComponentActivity.ExtraData
+import androidx.core.content.ContextCompat.getSystemService
+import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+import android.view.inputmethod.InputMethodManager
 
 
 class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.OnItemClickListener, Consumer<SpeedrunMiddlewareAPI.APIResponse<WhatIsEntry>> {
@@ -72,6 +77,8 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
 
     private fun onFragmentMove() {
         applyFullscreenMode(false)
+
+        hideKeyboard()
 
         supportActionBar!!.setDisplayHomeAsUpEnabled(supportFragmentManager.backStackEntryCount != 0 ||
                 supportFragmentManager.fragments[0] !is GameListFragment)
@@ -167,7 +174,7 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
                     Log.d(TAG, "Decoded game or player ID: " + id + ", from URL: " + intent.data)
 
                     // use the whatis api to resolve the type of object
-                    whatIsQuery = SpeedrunMiddlewareAPI.make().whatAreThese(id)
+                    whatIsQuery = SpeedrunMiddlewareAPI.make(this).whatAreThese(id)
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(this, ConnectionErrorConsumer(this))
@@ -337,6 +344,17 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, playerId)
 
         startActivity(intent)
+    }
+
+    fun hideKeyboard() {
+        val imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+        //Find the currently focused view, so we can grab the correct window token from it.
+        var view = currentFocus
+        //If no view currently has focus, create a new one, just so we can grab a window token from it
+        if (view == null) {
+            view = View(this)
+        }
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
     companion object {

@@ -115,7 +115,7 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
 
         Log.d(TAG, "Loading leaderboard: $leaderboardId")
 
-        return SpeedrunMiddlewareAPI.make().listLeaderboards(leaderboardId)
+        return SpeedrunMiddlewareAPI.make(context!!).listLeaderboards(leaderboardId)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this, ConnectionErrorConsumer(context!!))
     }

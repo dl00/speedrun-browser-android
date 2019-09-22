@@ -65,19 +65,25 @@
     <string name="button_got_it">Got it!</string>
 
     <!-- release notes: edit for each release for now -->
-    <string name="dialog_title_release_notes">1.10</string>
+    <string name="dialog_title_release_notes">1.11</string>
     <string name="dialog_msg_release_notes">
         Thanks for downloading the app and your support!\n
         \n
-        This is mostly a bugfix release.\n
+        This is one of the largest updates to date!
+        Major improvements to the interface and more search functionality were added for this release.
+        Some bugfixes and minor performance tune-ups all around were also completed.\n
         \n
-        I know that there have been a lot of issues lately with leaderboards and player info accuracy.
-        I have been battling this, and most (if not all) of the problems should be solve now in that regard.\n
+        Features to look for:\n
+        * Search for any platform, genre, developer, publisher, or the usual game and developer
+        all from the search box. Platforms, genres, developers, publishers show a list of relevant
+        games and latest runs. Statistics section is coming, but it got shoved off so I could get
+        this release completed!\n
+        * Search using the search bar from anywhere in the app.\n
+        * Can now show "unverified" runs in latest run section.\n
+        * Zooming of charts and graphs.\n
+        * Filtering of shown datasets in charts/graphs.\n
         \n
-        I have also tried to clean up some unfinished misc. issues around a variety of the app, including:\n
-        * the link handler and the ability to view the official website without needing to enter android settings.\n
-        * searching for games/players with an exact name should *always* show exact matches first now\n
-        * player country icons
+        If you are enjoying the app, please consider sharing!
     </string>
 
     <string name="dialog_button_rate_now">Rate now!</string>
@@ -163,4 +169,11 @@
     <string name="menu_view_website">View On Website</string>
     <string name="switch_bleeding_edge">Show Unverified Runs</string>
     <string name="label_filter_this">Filter to this group</string>
+    <string name="dialog_msg_old_version">The server has indicated your app version is too old. Some features may not work as expected. To fix, update the app.</string>
+    <string name="dialog_title_old_version">App Out of Date</string>
+    <string name="dialog_button_play_store">Open Play Store</string>
+    <string name="ignore">Ignore</string>
+    <string name="dialog_button_share">Share App</string>
+    <string name="msg_share_app">Check out klbyte\'s Unofficial Speedrun.com Browser for Android https://play.google.com/store/apps/details?id=danb.speedrunbrowser</string>
+    <string name="label_about_share_this">Share this app!</string>
 </resources>

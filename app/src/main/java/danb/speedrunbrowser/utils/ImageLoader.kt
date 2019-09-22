@@ -25,7 +25,7 @@ import okhttp3.Request
 
 class ImageLoader(ctx: Context) {
     private val cacheDir: File = ctx.cacheDir
-    private val client: OkHttpClient? = Util.getHTTPClient()
+    private val client: OkHttpClient? = Util.getHTTPClient(ctx)
 
     init {
         cleanCache()

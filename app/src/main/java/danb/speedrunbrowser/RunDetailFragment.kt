@@ -148,7 +148,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
 
     private fun loadRun(runId: String?) {
         Log.d(TAG, "Download runId: " + runId!!)
-        mDisposables.add(SpeedrunMiddlewareAPI.make().listRuns(runId)
+        mDisposables.add(SpeedrunMiddlewareAPI.make(context!!).listRuns(runId)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(Consumer { (data) ->
                     if (data == null) {

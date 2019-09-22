@@ -9,4 +9,7 @@ object Constants {
     const val SHARED_PREFERENCES_NAME = "prefs"
 
     const val PREF_LAST_APP_VERSION = "last_app_version"
+    const val PREF_FIRST_APP_CODE = "first_app_code"
+
+    const val MIN_VERSION_SERVER_HEADER = "x-sr-appversion"
 }

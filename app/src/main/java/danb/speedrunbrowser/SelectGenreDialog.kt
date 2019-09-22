@@ -110,7 +110,7 @@ class SelectGenreDialog(ctx: Context, private val mDisposables: CompositeDisposa
     }
 
     private fun triggerSearchGenres(query: String) {
-        mDisposables.add(SpeedrunMiddlewareAPI.make().listGenres(query)
+        mDisposables.add(SpeedrunMiddlewareAPI.make(context).listGenres(query)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(Consumer { genreAPIResponse ->

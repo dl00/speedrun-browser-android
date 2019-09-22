@@ -157,7 +157,7 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
         Log.d(TAG, "Download playerId: " + playerId!!)
 
         /// TODO: ideally this would be zipped/run in parallel
-        mDisposables.add(SpeedrunMiddlewareAPI.make().listPlayers(playerId)
+        mDisposables.add(SpeedrunMiddlewareAPI.make(context!!).listPlayers(playerId)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(Consumer { gameAPIResponse ->
                     if (gameAPIResponse.data == null || gameAPIResponse.data.isEmpty()) {

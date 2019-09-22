@@ -41,7 +41,7 @@ class PlayerStatisticsFragment : StatisticsFragment() {
             ))
 
             setDataSourceAPIResponse(
-                    SpeedrunMiddlewareAPI.make().getUserMetrics(playerId)
+                    SpeedrunMiddlewareAPI.make(context!!).getUserMetrics(playerId)
             )
         }
     }

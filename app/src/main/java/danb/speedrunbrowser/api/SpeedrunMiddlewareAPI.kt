@@ -1,5 +1,6 @@
 package danb.speedrunbrowser.api
 
+import android.content.Context
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -47,17 +48,17 @@ object SpeedrunMiddlewareAPI {
             gson.registerTypeAdapter(Chart::class.java, Chart.JsonConverter())
             gson.registerTypeAdapter(GameMaker::class.java, GameMaker.JsonConverter())
 
-            gson.registerTypeAdapter(List::class.java, NestedListDeserializer())
+            //gson.registerTypeAdapter(List::class.java, NestedListDeserializer())
 
             return gson.create()
         }
 
-    fun make(): Endpoints {
+    fun make(context: Context): Endpoints {
         val retrofit = Retrofit.Builder()
                 .baseUrl(baseUrl)
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
                 .addConverterFactory(GsonConverterFactory.create(gson))
-                .client(Objects.requireNonNull<OkHttpClient>(Util.getHTTPClient()))
+                .client(Objects.requireNonNull<OkHttpClient>(Util.getHTTPClient(context)))
                 .build()
 
         return retrofit.create(Endpoints::class.java)

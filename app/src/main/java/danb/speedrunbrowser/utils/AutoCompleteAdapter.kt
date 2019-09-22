@@ -65,9 +65,9 @@ class AutoCompleteAdapter(private val ctx: Context, private val disposables: Com
     private fun recalculateSearchResults() {
         searchResults = LinkedList()
 
-        searchResults!!.addAll(rawSearchData!!.games)
+        searchResults!!.addAll(rawSearchData!!.game_groups)
+        mergeSearchResults(rawSearchData!!.games)
         mergeSearchResults(rawSearchData!!.players)
-        mergeSearchResults(rawSearchData!!.game_groups)
 
         searchResults = ArrayList(searchResults!!)
 
@@ -130,7 +130,7 @@ class AutoCompleteAdapter(private val ctx: Context, private val disposables: Com
                     if (s.length < SpeedrunMiddlewareAPI.MIN_AUTOCOMPLETE_LENGTH)
                         Observable.just(SpeedrunMiddlewareAPI.APISearchResponse())
                     else
-                        SpeedrunMiddlewareAPI.make().autocomplete(s)
+                        SpeedrunMiddlewareAPI.make(ctx).autocomplete(s)
                 }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this))

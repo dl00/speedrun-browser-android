@@ -27,7 +27,7 @@ class GameStatisticsFragment : StatisticsFragment() {
             ))
 
             setDataSourceAPIResponse(
-                    SpeedrunMiddlewareAPI.make().getGameMetrics(gameId)
+                    SpeedrunMiddlewareAPI.make(context!!).getGameMetrics(gameId)
             )
         }
     }

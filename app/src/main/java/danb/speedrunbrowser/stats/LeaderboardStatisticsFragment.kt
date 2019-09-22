@@ -134,7 +134,7 @@ class LeaderboardStatisticsFragment : StatisticsFragment() {
             ))
 
             setDataSourceAPIResponse(
-                    SpeedrunMiddlewareAPI.make().getLeaderboardMetrics(leaderboardId)
+                    SpeedrunMiddlewareAPI.make(context!!).getLeaderboardMetrics(leaderboardId)
             )
         }
     }

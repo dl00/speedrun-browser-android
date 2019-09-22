@@ -9,6 +9,8 @@ import { DB, load_db } from '../lib/db';
 export let storedb: DB|null = null;
 export let config: Config|null = null;
 
+export let MIN_APP_VERSION = '20';
+
 export function create_express_server() {
     const app = express();
 
@@ -28,6 +30,12 @@ export async function run(conf: Config) {
 
     // create an express server
     const app = create_express_server();
+
+    // min app version
+    app.use((req, res, next) => {
+        res.setHeader('x-sr-appversion', MIN_APP_VERSION);
+        next();
+    });
 
     // load endpoints
     const endpoint_modules = fs.readdirSync(path.join(__dirname, 'endpoints'));

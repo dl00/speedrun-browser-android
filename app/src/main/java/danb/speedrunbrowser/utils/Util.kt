@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 
@@ -22,8 +23,11 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.TaskStackBuilder
 import danb.speedrunbrowser.BuildConfig
 import danb.speedrunbrowser.R
+import danb.speedrunbrowser.api.objects.User
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.plugins.RxJavaPlugins
 import okhttp3.OkHttpClient
+import okhttp3.Response
 
 object Util {
 
@@ -38,7 +42,7 @@ object Util {
         Toast.makeText(ctx, msg, Toast.LENGTH_LONG).show()
     }
 
-    fun getHTTPClient(): OkHttpClient? {
+    fun getHTTPClient(context: Context): OkHttpClient? {
 
         if (httpClient != null)
             return httpClient
@@ -60,6 +64,30 @@ object Util {
                                 .build()
 
                         chain.proceed(newReq)
+                    }
+                    .addInterceptor { chain ->
+                        val res = chain.proceed(chain.request())
+
+                        try {
+                            val minVersion = res.header(Constants.MIN_VERSION_SERVER_HEADER)
+                            if (!shownOodDialog && (minVersion != null && Integer.parseInt(minVersion) > BuildConfig.VERSION_CODE)) {
+                                shownOodDialog = true
+                                // open an upgrade warning dialog
+                                AndroidSchedulers.mainThread().scheduleDirect {
+                                    AlertDialog.Builder(context, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+                                            .setIcon(R.drawable.baseline_info_white_24)
+                                            .setTitle(R.string.dialog_title_old_version)
+                                            .setMessage(R.string.dialog_msg_old_version)
+                                            .setPositiveButton(R.string.dialog_button_play_store) { _, _ ->
+                                                openPlayStorePage(context)
+                                            }
+                                            .setNeutralButton(R.string.ignore, null)
+                                            .show()
+                                }
+                            }
+                        } catch (e: java.lang.Exception) {}
+
+                        res
                     }
                     .build()
 
@@ -124,7 +152,7 @@ object Util {
     fun showNewFeaturesDialog(ctx: Context) {
         val prefs = ctx.getSharedPreferences(Constants.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
 
-        val lastVersion = prefs.getString(Constants.PREF_LAST_APP_VERSION, "unset")
+        val lastVersion = prefs.getString(Constants.PREF_LAST_APP_VERSION, BuildConfig.VERSION_NAME)
 
         if (lastVersion == BuildConfig.VERSION_NAME) {
             return
@@ -138,11 +166,20 @@ object Util {
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + BuildConfig.APPLICATION_ID))
                     ctx.startActivity(intent)
                 }*/
+                .setPositiveButton(R.string.dialog_button_share) { _, _ ->
+                    openShare(ctx)
+                }
                 .create()
 
         dialog.show()
 
-        prefs.edit().putString(Constants.PREF_LAST_APP_VERSION, BuildConfig.VERSION_NAME).apply()
+        val edit = prefs.edit()
+                .putString(Constants.PREF_LAST_APP_VERSION, BuildConfig.VERSION_NAME)
+
+        if (prefs.getInt(Constants.PREF_FIRST_APP_CODE, -1) == -1)
+            edit.putInt(Constants.PREF_FIRST_APP_CODE, BuildConfig.VERSION_CODE)
+
+        edit.apply()
     }
 
     fun showInfoDialog(context: Context, text: String) {
@@ -174,4 +211,27 @@ object Util {
 
         throw ClassNotFoundException("Could not find the browser!")
     }
+
+    fun openPlayStorePage(context: Context, packageName: String? = null) {
+        val pn = packageName ?: context.packageName
+
+        try {
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=${pn}")))
+        } catch (anfe: ActivityNotFoundException) {
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=${pn}")))
+        }
+    }
+
+    fun openShare(ctx: Context) {
+        val intent = Intent(Intent.ACTION_SEND)
+                .setType("text/plain")
+                .putExtra(Intent.EXTRA_TEXT,
+                        ctx.getString(R.string.msg_share_app))
+
+
+
+        ctx.startActivity(Intent.createChooser(intent, ctx.getString(R.string.msg_share_run_explain)))
+    }
+
+    private var shownOodDialog = false
 }

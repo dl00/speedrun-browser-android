@@ -158,7 +158,7 @@ class GameDetailFragment : Fragment() {
 
     private fun loadGame(gameId: String?, leaderboardId: String?): Disposable {
         Log.d(TAG, "Downloading game data: " + gameId!!)
-        return SpeedrunMiddlewareAPI.make().listGames(gameId)
+        return SpeedrunMiddlewareAPI.make(context!!).listGames(gameId)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(Consumer { gameAPIResponse ->
 

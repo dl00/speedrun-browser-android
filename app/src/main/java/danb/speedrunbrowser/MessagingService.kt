@@ -68,7 +68,7 @@ class MessagingService : FirebaseMessagingService() {
                     .url(playerImgUrl)
                     .build()
 
-            val res = Objects.requireNonNull<OkHttpClient>(Util.getHTTPClient()).newCall(req).execute()
+            val res = Objects.requireNonNull<OkHttpClient>(Util.getHTTPClient(this)).newCall(req).execute()
 
             if (!res.isSuccessful)
                 throw IOException()
@@ -117,7 +117,7 @@ class MessagingService : FirebaseMessagingService() {
                     .url(gameCoverUrl)
                     .build()
 
-            val res = Objects.requireNonNull<OkHttpClient>(Util.getHTTPClient()).newCall(req).execute()
+            val res = Objects.requireNonNull<OkHttpClient>(Util.getHTTPClient(this)).newCall(req).execute()
 
             if (!res.isSuccessful)
                 throw IOException()
