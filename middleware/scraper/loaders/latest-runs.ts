@@ -115,13 +115,13 @@ export async function pull_latest_runs(runid: string, options: any) {
 
             nr.new_run = _.cloneDeep(record_run);
 
-            if (record_run.place == 1) {
+            if (record_run.place == 1 && record_run.run.status.status == 'verified') {
                 // new record on this category/level, send notification
                 await push_notify.notify_game_record(nr, record_run.run.game, record_run.run.category, record_run.run.level);
             }
 
             // this should be a personal best. send notification to all attached players who are regular users
-            for (const p of record_run.run.players) {
+            for (const p of record_run.run.players && record_run.run.status.status != 'verified') {
                 await push_notify.notify_player_record(nr, p as User,
                     record_run.run.game, record_run.run.category, record_run.run.level);
             }

@@ -76,7 +76,7 @@ class GameDetailFragment : Fragment() {
     private var mBackground: ImageView? = null
 
     private var mCategoryTabStrip: CategoryTabStrip? = null
-    private lateinit var mLeaderboardPager: ViewPager
+    private var mLeaderboardPager: ViewPager? = null
 
     private val mStartPositionCategory: Category? = null
     private val mStartPositionLevel: Level? = null
@@ -134,7 +134,7 @@ class GameDetailFragment : Fragment() {
             openSubscriptionDialog()
             return true
         }
-        else if(item.itemId == R.id.menu_view_website) {
+        else if(item.itemId == R.id.menu_view_website && mGame != null) {
             startActivity(Util.openInBrowser(context!!, Uri.parse(mGame!!.weblink)))
         }
 
@@ -192,7 +192,7 @@ class GameDetailFragment : Fragment() {
 
             val level = if(spl.size > 1) mGame!!.levels?.find { it.id == spl[1] } else null
 
-            mLeaderboardPager.currentItem = (mLeaderboardPager.adapter as LeaderboardPagerAdapter)
+            mLeaderboardPager!!.currentItem = (mLeaderboardPager!!.adapter as LeaderboardPagerAdapter)
                     .indexOf(category, level)
         }
     }
@@ -211,7 +211,7 @@ class GameDetailFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
 
         if (savedInstanceState != null) {
-            mLeaderboardPager.onRestoreInstanceState(savedInstanceState.getParcelable<Parcelable>(SAVED_PAGER))
+            mLeaderboardPager?.onRestoreInstanceState(savedInstanceState.getParcelable<Parcelable>(SAVED_PAGER))
             Log.d(TAG, "Loaded from saved instance state")
         }
     }
@@ -249,7 +249,7 @@ class GameDetailFragment : Fragment() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
-        outState.putParcelable(SAVED_PAGER, mLeaderboardPager.onSaveInstanceState())
+        outState.putParcelable(SAVED_PAGER, mLeaderboardPager!!.onSaveInstanceState())
         outState.putSerializable(SAVED_GAME, mGame)
         outState.putSerializable(SAVED_FILTERS, mVariableSelections)
     }
@@ -260,7 +260,7 @@ class GameDetailFragment : Fragment() {
         else if (mVariableSelections == null)
             mVariableSelections = Variable.VariableSelections()
 
-        mCategoryTabStrip!!.setup(mGame!!, mVariableSelections!!, mLeaderboardPager, childFragmentManager)
+        mCategoryTabStrip!!.setup(mGame!!, mVariableSelections!!, mLeaderboardPager!!, childFragmentManager)
 
         if (mStartPositionCategory != null)
             mCategoryTabStrip!!.selectLeaderboard(mStartPositionCategory, mStartPositionLevel)
@@ -309,7 +309,7 @@ class GameDetailFragment : Fragment() {
 
     private fun openFiltersDialog() {
         val dialog = FiltersDialog(context!!, mGame!!,
-                mCategoryTabStrip!!.pagerAdapter!!.getCategoryOfIndex(mLeaderboardPager.currentItem).variables!!, mVariableSelections!!)
+                mCategoryTabStrip!!.pagerAdapter!!.getCategoryOfIndex(mLeaderboardPager!!.currentItem).variables!!, mVariableSelections!!)
 
         dialog.show()
 

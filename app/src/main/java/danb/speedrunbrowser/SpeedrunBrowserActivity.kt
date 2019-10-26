@@ -126,13 +126,16 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
         if (id == android.R.id.home) {
-            val entry = supportFragmentManager.getBackStackEntryAt(
-                    0)
+            if(supportFragmentManager.backStackEntryCount >= 1) {
+                val entry = supportFragmentManager.getBackStackEntryAt(
+                        0)
 
-            // clear the backstack and return to app root
-            supportFragmentManager.popBackStack(entry.id,
-                    FragmentManager.POP_BACK_STACK_INCLUSIVE)
-            supportFragmentManager.executePendingTransactions()
+                // clear the backstack and return to app root
+                supportFragmentManager.popBackStack(entry.id,
+                        FragmentManager.POP_BACK_STACK_INCLUSIVE)
+                supportFragmentManager.executePendingTransactions()
+            }
+
             showFragment(GameListFragment(), null, false)
         }
         else if (id == R.id.menu_site_stats) {
@@ -288,11 +291,11 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
     }
 
     private fun openWebsite() {
-        Util.openInBrowser(this, intent.data!!)
+        startActivity(Util.openInBrowser(this, intent.data!!))
     }
 
     private fun showMainPage() {
-        val intent = Intent(this, GameListFragment::class.java)
+        val intent = Intent(this, SpeedrunBrowserActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(intent)
         finish()

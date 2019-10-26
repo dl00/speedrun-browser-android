@@ -114,7 +114,8 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
-        outState.putParcelable(SAVED_MAIN_PAGER, mViewPager!!.onSaveInstanceState())
+        if(mViewPager != null)
+            outState.putParcelable(SAVED_MAIN_PAGER, mViewPager!!.onSaveInstanceState())
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

@@ -28,6 +28,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.plugins.RxJavaPlugins
 import okhttp3.OkHttpClient
 import okhttp3.Response
+import java.util.*
 
 object Util {
 
@@ -200,7 +201,7 @@ object Util {
         if (resInfos.isNotEmpty()) {
             for (resInfo in resInfos) {
                 val packageName = resInfo.activityInfo.packageName
-                if (!packageName.toLowerCase().contains("danb.speedrunbrowser")) {
+                if (!packageName.toLowerCase(Locale.US).contains("danb.speedrunbrowser")) {
                     val browserIntent = Intent(Intent.ACTION_VIEW, uri)
                     browserIntent.component = ComponentName(packageName, resInfo.activityInfo.name)
                     browserIntent.setPackage(packageName)

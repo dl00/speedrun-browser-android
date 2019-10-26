@@ -11,7 +11,7 @@ android {
         applicationId "danb.speedrunbrowser"
         minSdkVersion 19
         targetSdkVersion 29
-        versionCode 20
+        versionCode 22
         versionName "1.11"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 

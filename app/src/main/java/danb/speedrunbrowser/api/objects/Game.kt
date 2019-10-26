@@ -11,7 +11,7 @@ import com.google.gson.*
 data class GameMaker(
         val id: String,
         val name: String
-) {
+) : Serializable {
     class JsonConverter : JsonDeserializer<GameMaker> {
 
         @Throws(JsonParseException::class)

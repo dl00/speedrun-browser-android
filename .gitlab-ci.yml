@@ -10,7 +10,7 @@ variables:
   DOCKER_HOST: tcp://localhost:2375
 
 services:
-  - dcr.buyme360.com/devops/docker:dind
+  - dcr.dbeal.dev/devops/docker:dind
   - mongo:4.0.9-xenial
   - redis:5.0-alpine
 
@@ -36,7 +36,7 @@ stages:
 
 middlewareDocker:
   stage: build
-  image: dcr.buyme360.com/devops/docker:latest
+  image: dcr.dbeal.dev/devops/docker:latest
   before_script:
     - cd middleware
   script:
