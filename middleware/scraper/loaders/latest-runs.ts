@@ -121,9 +121,11 @@ export async function pull_latest_runs(runid: string, options: any) {
             }
 
             // this should be a personal best. send notification to all attached players who are regular users
-            for (const p of record_run.run.players && record_run.run.status.status != 'verified') {
-                await push_notify.notify_player_record(nr, p as User,
-                    record_run.run.game, record_run.run.category, record_run.run.level);
+            if(record_run.run.status.status != 'verified') {
+                for (const p of record_run.run.players) {
+                    await push_notify.notify_player_record(nr, p as User,
+                        record_run.run.game, record_run.run.category, record_run.run.level);
+                }
             }
         }
 
