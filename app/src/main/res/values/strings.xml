@@ -56,11 +56,11 @@
     <string name="default_notification_channel_id">default</string>
     <string name="notification_channel_title">Subscribed Players/Games</string>
 
-    <string name="notify_title_player_record">New PB from %1s in %2s</string>
-    <string name="notify_msg_player_record">%1s &#x2022; %2s &#x2022; %3s\n%4s -> %5s</string>
+    <string name="notify_title_player_record">PB: %1s in %2s</string>
+    <string name="notify_msg_player_record">%1s &#x2022; %2s in %3s</string>
 
-    <string name="notify_title_game_record">New WR in %1s from %2s</string>
-    <string name="notify_msg_game_record">%1s &#x2022; %2s &#x2022; %3s\n%4s -> %5s</string>
+    <string name="notify_title_game_record">WR: %1s from %2s</string>
+    <string name="notify_msg_game_record">%1s &#x2022; %2s in %3s</string>
 
     <string name="button_got_it">Got it!</string>
 

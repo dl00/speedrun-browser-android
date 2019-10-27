@@ -85,9 +85,9 @@ class MessagingService : FirebaseMessagingService() {
         if (data.level != null)
             categoryAndLevelName += " - " + data.level.name
 
+
         val msg = getString(R.string.notify_msg_player_record, data.newRun.placeName + " place",
-                data.game.resolvedName, categoryAndLevelName,
-                if (data.oldRun != null) data.oldRun.run.times!!.time else "", data.newRun.run.times!!.time)
+                categoryAndLevelName, data.newRun.run.times!!.time)
 
         val intent = Intent(this, SpeedrunBrowserActivity::class.java)
         intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, PlayerDetailFragment::class.java.canonicalName)
@@ -136,8 +136,7 @@ class MessagingService : FirebaseMessagingService() {
             categoryAndLevelName += " - " + data.level.name
 
         val msg = getString(R.string.notify_msg_game_record, data.newRun.placeName + " place",
-                data.game.resolvedName, categoryAndLevelName,
-                if (data.oldRun != null) data.oldRun.run.times!!.time else "", data.newRun.run.times!!.time)
+                categoryAndLevelName, data.newRun.run.times!!.time)
 
         val intent = Intent(this, SpeedrunBrowserActivity::class.java)
         intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, GameDetailFragment::class.java.canonicalName)
