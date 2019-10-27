@@ -10,7 +10,7 @@ import * as scraper from '../index';
 
 import * as push_notify from '../push-notify';
 
-import { populate_run_sub_documents, LeaderboardRunEntry, Run, RunDao } from '../../lib/dao/runs';
+import { populate_run_sub_documents, LeaderboardRunEntry, Run, RunDao, NewRecord } from '../../lib/dao/runs';
 import { User, UserDao } from '../../lib/dao/users';
 
 import { BulkGame } from '../../lib/dao/games';
@@ -104,16 +104,18 @@ export async function pull_latest_runs(runid: string, options: any) {
 
         // send push notifications for new records
         const new_records = run_dao.collect_new_records();
-        for (const nr of new_records) {
 
-            const record_run = lbres.find((r) => r.run.id === nr.new_run.run.id);
-
-            // TODO: these conditions should not be needed yet somehow they are
+        for (const record_run of lbres) {
             if (!record_run || !record_run.run.game || !record_run.run.category) {
                 continue;
             }
 
-            nr.new_run = _.cloneDeep(record_run);
+            let onr = new_records.find((r) => r.new_run.run.id === record_run.run.id);
+
+            let nr: NewRecord = {
+                new_run: record_run,
+                old_run: onr ? onr.old_run : record_run
+            };
 
             if (record_run.place == 1 && options.verified) {
                 // new record on this category/level, send notification

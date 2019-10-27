@@ -25,13 +25,13 @@ class MessagingService : FirebaseMessagingService() {
     private val buildVariant: String
         get() = if (BuildConfig.DEBUG) "debug" else "release"
 
-    override fun onMessageReceived(remoteMessage: RemoteMessage?) {
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
-        Log.d(TAG, "From: " + remoteMessage!!.from!!)
+        Log.d(TAG, "From: " + remoteMessage.from!!)
 
         // Check if message contains a notification payload.
-        if (remoteMessage.data != null && remoteMessage.from != null) {
+        if (remoteMessage.from != null) {
             val rawData = remoteMessage.data
             Log.d(TAG, "Message Data Body: $rawData")
 
