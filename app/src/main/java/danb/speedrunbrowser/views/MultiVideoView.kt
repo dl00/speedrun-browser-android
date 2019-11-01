@@ -41,6 +41,7 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
         mWebView.settings.setAppCacheMaxSize((1 * 1024 * 1024).toLong())
         mWebView.settings.javaScriptEnabled = true
         mWebView.settings.mediaPlaybackRequiresUserGesture = false
+        mWebView.webChromeClient = CustomWebChromeClient(context)
     }
 
     var seekTime: Int = 0
