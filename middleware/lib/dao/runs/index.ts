@@ -356,6 +356,11 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             },
         }).then(_.noop, console.error);
 
+        // used to separate game groups
+        db.mongo.collection(this.collection).createIndex({
+            'gameGroups': 1,
+        }).then(_.noop, console.error);
+
         this.computed = {
             place: async (lbr: LeaderboardRunEntry) => {
 
@@ -450,12 +455,12 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         return await this.load_by_index(verified ? 'latest_verified_runs' : 'latest_new_runs', key);
     }
 
-    public async get_historical_run_count(): Promise<Chart> {
+    public async get_historical_run_count(filter: any): Promise<Chart> {
         const month_bounaries: string[] = generate_month_boundaries(2010, new Date().getUTCFullYear() + 1);
 
         const data = (await this.db.mongo.collection(this.collection).aggregate([
             {
-                $match: {'run.status.status': 'verified'},
+                $match: filter,
             },
             {
                 $facet: _.chain(month_bounaries)
@@ -490,7 +495,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         };
     }
 
-    public async get_site_submission_volume(): Promise<Chart> {
+    public async get_site_submission_volume(game_group: string): Promise<Chart> {
         return {
             item_id: 'site_volume',
             item_type: 'runs',
@@ -609,6 +614,14 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
 
         if(!run.obsolete)
             run.obsolete = old_obj ? old_obj.obsolete : false;
+        
+        run.gameGroups = _.chain([
+                ['platforms', 'genres', 'publishers', 'developers']
+            ])
+            .flatten()
+            .map('id')
+            .uniq()
+            .value();
 
         return run;
     }
