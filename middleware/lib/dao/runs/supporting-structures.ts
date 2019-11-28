@@ -98,10 +98,7 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
                 const filter: any = {
                     'run.game.id': run.run.game.id,
                     'run.category.id': run.run.category.id,
-                    "$or": [
-                        {'run.submitted': {$lt: run.run.submitted}},
-                        {'run.submitted': null},
-                    ],
+                    'run.times.primary_t': {$gt: run.run.times.primary_t}
                 };
 
                 if (run.run.level && run.run.level.id) {
