@@ -84,6 +84,7 @@ export interface Run extends BulkRun, BaseMiddleware {
 export interface LeaderboardRunEntry {
     obsolete?: boolean; // TODO: maybe a date later
     place?: number|null;
+    gameGroups?: string[];
     run: BulkRun;
 }
 
@@ -495,7 +496,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         };
     }
 
-    public async get_site_submission_volume(game_group: string): Promise<Chart> {
+    public async get_site_submission_volume(): Promise<Chart> {
         return {
             item_id: 'site_volume',
             item_type: 'runs',
@@ -614,7 +615,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
 
         if(!run.obsolete)
             run.obsolete = old_obj ? old_obj.obsolete : false;
-        
+
         run.gameGroups = _.chain([
                 ['platforms', 'genres', 'publishers', 'developers']
             ])

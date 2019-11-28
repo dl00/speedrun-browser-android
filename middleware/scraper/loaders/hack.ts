@@ -8,7 +8,7 @@ import * as scraper from '../index';
 
 export async function gen_site_total_runs(_runid: string, _options: any) {
     try {
-        const chart = await new RunDao(scraper.storedb!).get_historical_run_count();
+        const chart = await new RunDao(scraper.storedb!).get_historical_run_count({});
         await new ChartDao(scraper.storedb!).save(chart);
     } catch (err) {
         console.error('loader/hack: could not generate site total runs chart:', err.statusCode || err);
