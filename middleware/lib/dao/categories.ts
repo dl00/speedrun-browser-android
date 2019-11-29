@@ -25,7 +25,13 @@ export interface Category extends BulkCategory, BaseMiddleware {
     weblink: string;
     rules?: string;
     miscellaneous: boolean;
+
+    /// Non-standard field: the game this category is part of
     game?: string;
+
+    /// Non-standard field: corresponds to the sort order of this category against
+    /// other categories. Lower is first.
+    pos?: number;
 }
 
 export function category_to_bulk(category: Category): BulkCategory {
@@ -52,6 +58,9 @@ export function standard_sort_categories(categories: Category[]) {
     // first, sort by some predefined names that should always be in the front
     return _.sortBy(categories, (c) => {
         const name = c.name.toLowerCase();
+
+        if(!_.isNil(c.pos))
+            return c.pos;
 
         let score = 0;
 

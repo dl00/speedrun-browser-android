@@ -101,8 +101,9 @@ export async function pull_game_categories(runid: string, options: any) {
         const categories: Category[] = res.data.data;
 
         // write the categories to db
-        await new CategoryDao(scraper.storedb!).apply_for_game(options.id, categories.map((v) => {
+        await new CategoryDao(scraper.storedb!).apply_for_game(options.id, categories.map((v, i) => {
             v.game = options.id;
+            v.pos = i;
             return v;
         }));
 
