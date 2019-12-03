@@ -37,6 +37,8 @@ stages:
 middlewareDocker:
   stage: build
   image: dcr.dbeal.dev/devops/docker:latest
+  before_script:
+    - cd middleware
   script:
     - npm i -g typescript
     - npm i
