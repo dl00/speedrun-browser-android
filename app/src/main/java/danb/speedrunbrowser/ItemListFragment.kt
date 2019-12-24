@@ -38,6 +38,8 @@ open class ItemListFragment : Fragment() {
 
     private var mListener: OnFragmentInteractionListener? = null
 
+    private var mRootView: View? = null
+
     private var mAdapter: ItemListAdapter? = null
 
     private lateinit var mSearchItemsView: RecyclerView
@@ -58,13 +60,19 @@ open class ItemListFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
+
+        if(mRootView != null) {
+            (mRootView!!.parent as? ViewGroup?)?.removeView(mRootView)
+            return mRootView
+        }
+
         // Inflate the layout for this fragment
-        val v = inflater.inflate(itemType!!.layout, container, false)
+        mRootView = inflater.inflate(itemType!!.layout, container, false)
 
-        mSearchItemsView = v.findViewById(R.id.listSearchItems)
-        mEmptyView = v.findViewById(R.id.empty)
+        mSearchItemsView = mRootView!!.findViewById(R.id.listSearchItems)
+        mEmptyView = mRootView!!.findViewById(R.id.empty)
 
-        mAdapter = ItemListAdapter(context!!, mSearchItemsView!!, View.OnClickListener { v ->
+        mAdapter = ItemListAdapter(context!!, mSearchItemsView, View.OnClickListener { v ->
             if (mListener != null) {
                 var id = ""
                 when (itemType) {
@@ -81,7 +89,7 @@ open class ItemListFragment : Fragment() {
         if (mItemSource != null)
             mAdapter!!.loadListTop()
 
-        return v
+        return mRootView
     }
 
     override fun onAttach(context: Context) {

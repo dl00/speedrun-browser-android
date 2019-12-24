@@ -141,15 +141,7 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         else if (id == R.id.menu_site_stats) {
             showFragment(SiteStatisticsFragment(), null)
         }
-        else if (id == R.id.menu_about) {
-            showAbout()
-        }
         return super.onOptionsItemSelected(item)
-    }
-
-    private fun showAbout() {
-        val intent = Intent(this, AboutActivity::class.java)
-        startActivity(intent)
     }
 
     private fun showIntent(intent: Intent) {

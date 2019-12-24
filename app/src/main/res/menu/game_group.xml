@@ -5,4 +5,9 @@
         android:icon="@drawable/baseline_insert_chart_24"
         android:title="@string/menu_charts_and_statistics"
         app:showAsAction="ifRoom" />
+
+    <item android:id="@+id/menu_about"
+        android:icon="@drawable/baseline_info_24"
+        android:title="@string/menu_about"
+        app:showAsAction="ifRoom" />
 </menu>

@@ -125,10 +125,10 @@ class SimpleTabStrip(context: Context, attrs: AttributeSet) : FrameLayout(contex
         val x1 = getCenterScrollPosition(pos)
 
         var x2 = x1
-        if (mLayout.childCount > pos + 1 && (pos == -1 || pos + 1 >= mLayout.childCount))
-            x2 = getCenterScrollPosition(pos)
+        if (mLayout.childCount > pos + 1)
+            x2 = getCenterScrollPosition(pos + 1)
 
-        mHsv.scrollTo(x1 + floor(((x2 - x1).toFloat() * offset).toDouble()).toInt(), 0)
+        mHsv.scrollTo(x1 + floor((x2 - x1).toFloat() * offset).toInt(), 0)
     }
 
     override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {

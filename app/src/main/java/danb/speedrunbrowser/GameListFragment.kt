@@ -46,20 +46,22 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
 
     private var mDisposables: CompositeDisposable? = null
 
-    private lateinit var mMainView: View
+    private var mMainView: View? = null
 
     // The detail container view will be present only in the
     // large-screen layouts (res/values-w900dp).
     // If this view is present, then the
     // activity should be in two-pane mode.
     private val isTwoPane: Boolean
-        get() = mMainView.findViewById<View>(R.id.detail_container)?.visibility == View.VISIBLE
+        get() = mMainView?.findViewById<View>(R.id.detail_container)?.visibility == View.VISIBLE
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         if(arguments?.containsKey(ARG_GAME_GROUP) == true)
             mGameGroup = arguments!!.getSerializable(ARG_GAME_GROUP) as GameGroup
+
+        mDisposables = CompositeDisposable()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -67,9 +69,10 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
 
         setHasOptionsMenu(true)
 
-        mMainView = inflater.inflate(R.layout.fragment_game_list, container, false)
+        if(mMainView != null)
+            return mMainView
 
-        mDisposables = CompositeDisposable()
+        mMainView = inflater.inflate(R.layout.fragment_game_list, container, false)
 
         mDB = AppDatabase.make(context!!)
 
@@ -85,14 +88,17 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
             Log.w(TAG, "Could not install latest certificates using Google Play Services")
         }
 
-        mViewPager = mMainView.findViewById(R.id.pager)
+        mViewPager = mMainView!!.findViewById(R.id.pager)
 
         val pagerAdapter = PagerAdapter(childFragmentManager)
 
         mViewPager!!.adapter = pagerAdapter
 
-        mTabs = mMainView.findViewById(R.id.tabsType)
+        mTabs = mMainView!!.findViewById(R.id.tabsType)
         mTabs!!.setup(mViewPager!!)
+
+        if(savedInstanceState != null)
+            mViewPager!!.onRestoreInstanceState(savedInstanceState.getBundle(SAVED_MAIN_PAGER))
 
         return mMainView
     }
@@ -126,6 +132,10 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return if(item.itemId == R.id.menu_site_stats) {
             viewStats()
+            true
+        }
+        else if(item.itemId == R.id.menu_about) {
+            showAbout()
             true
         }
         else super.onOptionsItemSelected(item)
@@ -176,6 +186,11 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
         intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, RunDetailFragment::class.java.canonicalName)
         intent.putExtra(RunDetailFragment.ARG_RUN_ID, id)
 
+        startActivity(intent)
+    }
+
+    private fun showAbout() {
+        val intent = Intent(context, AboutActivity::class.java)
         startActivity(intent)
     }
 
@@ -298,7 +313,6 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
         }
 
         private fun initializePage(position: Int) {
-
             when (position) {
                 0 -> fragments[0].setItemsSource(object : ItemListFragment.ItemSource {
                     override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
