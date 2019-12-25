@@ -153,26 +153,27 @@ object Util {
     fun showNewFeaturesDialog(ctx: Context) {
         val prefs = ctx.getSharedPreferences(Constants.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
 
-        val lastVersion = prefs.getString(Constants.PREF_LAST_APP_VERSION, BuildConfig.VERSION_NAME)
+        val lastVersion = prefs.getString(Constants.PREF_LAST_APP_VERSION, null)
 
         if (lastVersion == BuildConfig.VERSION_NAME) {
             return
         }
 
-        val dialog = AlertDialog.Builder(ctx, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+        val db = AlertDialog.Builder(ctx, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
                 .setTitle(R.string.dialog_title_release_notes)
-                .setMessage(R.string.dialog_msg_release_notes)
+                .setMessage(when(lastVersion) {
+                    null -> R.string.dialog_msg_first_run
+                    else -> R.string.dialog_msg_release_notes
+                })
                 .setNeutralButton(R.string.button_got_it, null)
-                /*.setPositiveButton(R.string.dialog_button_rate_now) { _, _ ->
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + BuildConfig.APPLICATION_ID))
-                    ctx.startActivity(intent)
-                }*/
-                .setPositiveButton(R.string.dialog_button_share) { _, _ ->
-                    openShare(ctx)
-                }
-                .create()
 
-        dialog.show()
+        if(lastVersion != null) {
+            db.setPositiveButton(R.string.dialog_button_share) { _, _ ->
+                openShare(ctx)
+            }
+        }
+
+        db.create().show()
 
         val edit = prefs.edit()
                 .putString(Constants.PREF_LAST_APP_VERSION, BuildConfig.VERSION_NAME)

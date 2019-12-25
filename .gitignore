@@ -11,6 +11,8 @@
 /captures
 .externalNativeBuild
 
+keystore.properties
+
 # middleware
 middleware/dist
 node_modules

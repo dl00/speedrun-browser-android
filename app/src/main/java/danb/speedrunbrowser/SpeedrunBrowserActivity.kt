@@ -135,8 +135,9 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
                         FragmentManager.POP_BACK_STACK_INCLUSIVE)
                 supportFragmentManager.executePendingTransactions()
             }
-
-            showFragment(GameListFragment(), null, false)
+            else {
+                showFragment(GameListFragment(), null, false)
+            }
         }
         else if (id == R.id.menu_site_stats) {
             showFragment(SiteStatisticsFragment(), null)

@@ -66,6 +66,21 @@
 
     <!-- release notes: edit for each release for now -->
     <string name="dialog_title_release_notes">1.11</string>
+    <string name="dialog_msg_first_run">
+        Thanks for downloading the app and giving it a try!\n
+        \n
+        Here are some useful tips while using the app:\n
+        * If you select a Speedrun to watch, your progress is automatically recorded. Feel free
+        to leave and come back later!\n
+        * You can subscribe to categories and players to be notified of a new PB/WR.\n
+        * Charts are available for the site, games, categories/levels, and players.\n
+        \n
+        This project started in March 2019 out of my distaste for viewing the Speedrun.com website directly from
+        a phone. While the site is mobile friendly, it lacks some useful features normally found on
+        smarphones. I continue to supply bugfixes and new features for this app almost every month.\n
+        \n
+        If you like the app, please consider supporting my motivation by sharing or rating.
+    </string>
     <string name="dialog_msg_release_notes">
         Thanks for downloading the app and your support!\n
         \n
