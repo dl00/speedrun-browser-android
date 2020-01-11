@@ -1,5 +1,6 @@
 package danb.speedrunbrowser
 
+import android.animation.Animator
 import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.content.Intent
@@ -174,6 +175,7 @@ class GameDetailFragment : Fragment() {
 
                     mGame = gameAPIResponse.data[0]
                     loadSubscription()
+                    animateGameIn()
                     setViewData()
 
                     if(leaderboardId != null) {
@@ -237,6 +239,8 @@ class GameDetailFragment : Fragment() {
 
         if (mGame != null) {
             setupTabStrip()
+            mSpinner!!.visibility = View.GONE
+            mGameHeader!!.visibility = View.VISIBLE
         }
 
         mFiltersButton.setOnClickListener { openFiltersDialog() }
@@ -266,6 +270,37 @@ class GameDetailFragment : Fragment() {
 
         if (mStartPositionCategory != null)
             mCategoryTabStrip!!.selectLeaderboard(mStartPositionCategory, mStartPositionLevel)
+    }
+
+    private fun animateGameIn() {
+        val animTime = resources.getInteger(
+                android.R.integer.config_shortAnimTime)
+
+        if(mGameHeader != null) {
+            mSpinner!!.animate()
+                    .alpha(0.0f)
+                    .setDuration(animTime.toLong())
+                    .setListener(object : Animator.AnimatorListener {
+                        override fun onAnimationStart(animator: Animator) {}
+
+                        override fun onAnimationEnd(animator: Animator) {
+                            mSpinner!!.visibility = View.GONE
+                            mSpinner!!.stop()
+                        }
+
+                        override fun onAnimationCancel(animator: Animator) {}
+
+                        override fun onAnimationRepeat(animator: Animator) {}
+                    })
+
+            mGameHeader!!.visibility = View.VISIBLE
+            mGameHeader!!.alpha = 0.0f
+
+            mGameHeader!!.animate()
+                    .alpha(1.0f)
+                    .setDuration(animTime.toLong())
+                    .setListener(null)
+        }
     }
 
     private fun setViewData() {
@@ -302,10 +337,6 @@ class GameDetailFragment : Fragment() {
                     mDisposables.add(il.loadImage(mGame!!.assets.background!!.uri)
                             .subscribe(ImageViewPlacerConsumer(mBackground!!)))
             }
-
-            mSpinner!!.visibility = View.GONE
-            mGameHeader!!.visibility = View.VISIBLE
-
         }
     }
 

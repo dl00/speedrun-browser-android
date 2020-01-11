@@ -194,7 +194,9 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
     override fun onDestroy() {
         super.onDestroy()
         mDisposables.dispose()
-        mDB.close()
+        if (mDB.isOpen) {
+            mDB.close()
+        }
     }
 
     private fun onDataReady() {
