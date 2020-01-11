@@ -160,4 +160,8 @@ export class LeaderboardDao extends Dao<Leaderboard> {
         normalize_leaderboard(leaderboard);
         return leaderboard;
     }
+
+    public async get_leaderboard_count_for_game(game_id: string) {
+        return await this.db.mongo.collection(this.collection).count({game: game_id});
+    }
 }

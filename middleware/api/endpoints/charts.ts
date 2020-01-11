@@ -56,6 +56,10 @@ router.get('/site', async (_req, res) => {
 
     const chart_dao = new ChartDao(api.storedb!);
 
+    const game_dao = new GameDao(api.storedb!);
+    const leaderboard_dao = new LeaderboardDao(api.storedb!);
+    const run_dao = new RunDao(api.storedb!);
+
     // total run count over time
     const count_over_time_chart = (await chart_dao.load('runs_site_historical_runs'))[0];
 
@@ -71,6 +75,11 @@ router.get('/site', async (_req, res) => {
             count_over_time: count_over_time_chart,
             volume: volume_chart,
         },
+        metrics: {
+            ...await run_dao.get_basic_metrics(),
+            total_games: game_dao.count(),
+            total_leaderboards: leaderboard_dao.count()
+        }
     });
 });
 
@@ -79,6 +88,7 @@ router.get('/games/:id', async (req, res) => {
     const game_id = req.params.id;
 
     const game_dao = new GameDao(api.storedb!);
+    const leaderboard_dao = new LeaderboardDao(api.storedb!);
     const run_dao = new RunDao(api.storedb!);
 
     const game = (await game_dao.load(game_id))[0];
@@ -99,6 +109,10 @@ router.get('/games/:id', async (req, res) => {
         charts: {
             volume: volume_chart,
         },
+        metrics: {
+            ...await run_dao.get_basic_metrics(game_id),
+            total_leaderboards: await leaderboard_dao.get_leaderboard_count_for_game(game_id)
+        }
     });
 });
 
@@ -169,6 +183,9 @@ router.get('/leaderboards/:id', async (req, res) => {
             distribution: distrib_chart,
             volume: volume_chart,
         },
+        metrics: {
+            ...await run_dao.get_basic_metrics(game_id)
+        }
     });
 });
 
@@ -190,6 +207,9 @@ router.get('/users/:id', async (req, res) => {
             favorite_games: favorite_games_chart,
             volume: volume_chart,
         },
+        metrics: {
+            ...await run_dao.get_basic_metrics(null, player_id)
+        }
     });
 });
 
@@ -222,6 +242,9 @@ router.get('/games/:game_id/players/:player_id', async (req, res) => {
         charts: {
             pbs: pb_chart,
         },
+        metrics: {
+            ...await run_dao.get_basic_metrics(game_id, player_id)
+        }
     });
 });
 

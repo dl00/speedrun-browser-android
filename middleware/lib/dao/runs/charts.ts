@@ -4,6 +4,8 @@ import { DaoConfig, IndexDriver } from '../';
 
 import { Chart, ChartDao, LineChartData } from '../charts';
 
+import { MetricDao } from '../metrics';
+
 import { CategoryDao } from '../categories';
 
 import { Variable } from '../../../lib/speedrun-api';
@@ -161,6 +163,15 @@ export async function make_all_wr_charts(conf: DaoConfig<LeaderboardRunEntry>) {
             console.error(err);
         }
     }
+}
+
+export async function get_runs_total_time(conf: DaoConfig<LeaderboardRunEntry>) {
+    let metric_dao = new MetricDao(conf.db);
+
+    const total_run_time = (await conf.db.mongo.collection(conf.collection)
+        .aggregate([{$group: {_id: null, time: {$sum: 'run.times.primary_t'}}}]).toArray())[0].time;
+
+    await metric_dao.save({ id: 'runs_total_run_time', value: total_run_time});
 }
 
 export async function get_player_pb_chart(conf: DaoConfig<LeaderboardRunEntry>, player_id: string, game_id: string) {

@@ -191,6 +191,10 @@ export class Dao<T> implements DaoConfig<T> {
         return await require(`./backing/${this.backing}`).remove(this, ids);
     }
 
+    public async count(): Promise<number> {
+        return await require(`./backing/${this.backing}`).count();
+    }
+
     public async load_by_index(index: string, vals: string|string[], options: any = {}): Promise<Array<T|null>> {
         if (!_.isArray(vals)) {
             vals = [vals];

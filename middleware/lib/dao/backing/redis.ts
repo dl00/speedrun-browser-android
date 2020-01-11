@@ -23,6 +23,8 @@ export async function remove(conf: DaoConfig<any>, ids: string[]) {
     await conf.db.redis.hdel(conf.collection, ...ids);
 }
 
+
+
 export async function scan(conf: DaoConfig<any>, options: ScanOptions, func: Function): Promise<number> {
     let cur = 0;
     let count = 0;
@@ -43,6 +45,10 @@ export async function scan(conf: DaoConfig<any>, options: ScanOptions, func: Fun
     } while (cur != 0);
 
     return count;
+}
+
+export async function count(conf: DaoConfig<any>): Promise<number> {
+    return await conf.db.redis.hlen(conf.collection);
 }
 
 export class RedisMapIndex<T> implements IndexDriver<T> {

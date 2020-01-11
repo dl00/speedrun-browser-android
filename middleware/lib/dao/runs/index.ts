@@ -7,6 +7,7 @@ import { Dao, DaoConfig, IndexDriver } from '../';
 import { BulkGame, Game, game_to_bulk, GameDao } from '../games';
 
 import { Chart } from '../charts';
+import { Metric } from '../metrics';
 import { get_player_pb_chart, RecordChartIndex } from './charts';
 import { SupportingStructuresIndex } from './supporting-structures';
 
@@ -473,7 +474,8 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             },
         ]).toArray())[0];
 
-        const now = Date.now() / 1000;
+        const now = new Date();
+        const beginningOfMonth = (Date.UTC(now.getFullYear(), now.getDay()) - 86400000) / 1000;
 
         return {
             item_id: 'site_historical_runs',
@@ -489,7 +491,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
                         };
                     })
                     .values()
-                    .filter((p) => p.x < now)
+                    .filter((p) => p.x < beginningOfMonth)
                     .value(),
             },
             timestamp: new Date(),
@@ -603,6 +605,47 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
 
     public async get_player_pb_chart(player_id: string, game_id: string) {
         return await get_player_pb_chart(this, player_id, game_id);
+    }
+
+    public async get_basic_metrics(game_id?: string|null, player_id?: string|null): Promise<{[id: string]: Metric}> {
+
+        let filter: any = {};
+
+        if(game_id)
+            filter['run.game.id'] = game_id;
+
+        if(player_id)
+            filter['run.player.id'] = player_id;
+
+        let latest_run: LeaderboardRunEntry = (await this.db.mongo.collection(this.collection).find(filter)
+            .sort({'run.submitted': -1}).limit(1).toArray())[0];
+
+        let metrics: {[id: string]: Metric} = {
+            total_run_count: { value: <any>await this.db.mongo.collection(this.collection).countDocuments(filter) },
+            level_run_count: { value: <any>await this.db.mongo.collection(this.collection).countDocuments({ ...filter, 'run.category.type': 'per-level' }) },
+            full_game_run_count: { value: <any>await this.db.mongo.collection(this.collection).countDocuments({ ...filter, 'run.category.type': {$ne: 'per-game' }}) },
+            most_recent_run: {
+                value: latest_run.run.submitted,
+                item_type: 'runs',
+                item_id: latest_run.run.id
+            }
+        };
+
+        if(game_id || player_id) {
+            metrics.total_run_time = { value: (await this.db.mongo.collection(this.collection).aggregate([
+                    {$match: filter},
+                    {$group: { _id: null, time: {$sum: 'run.times.primary_t'}}}
+                ]).toArray())[0].time
+            }
+        }
+
+        if(!player_id) {
+            metrics.total_players = {
+                value: await this.db.mongo.collection(this.collection).distinct('run.players.id', filter)
+            };
+        }
+
+        return metrics;
     }
 
     public async massage_hook(runs: LeaderboardRunEntry[]) {

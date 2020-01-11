@@ -100,7 +100,7 @@ object SpeedrunMiddlewareAPI {
         val level: Level?,
         val game: Game?,
         val player: User?,
-        val metrics: Map<String, Double>,
+        val metrics: Map<String, Metric>,
         val charts: Map<String, Chart>
     )
 
