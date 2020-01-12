@@ -192,7 +192,7 @@ export class Dao<T> implements DaoConfig<T> {
     }
 
     public async count(): Promise<number> {
-        return await require(`./backing/${this.backing}`).count();
+        return await require(`./backing/${this.backing}`).count(this);
     }
 
     public async load_by_index(index: string, vals: string|string[], options: any = {}): Promise<Array<T|null>> {

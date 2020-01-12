@@ -641,7 +641,11 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
 
         if(!player_id) {
             metrics.total_players = {
-                value: await this.db.mongo.collection(this.collection).distinct('run.players.id', filter)
+                value: (await this.db.mongo.collection(this.collection).aggregate([
+                    {$match: {filter}},
+                    {$group: { _id: 'run.players.id'}},
+                    {$count: 'count'}
+                ]).toArray()).count
             };
         }
 
