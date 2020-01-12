@@ -645,7 +645,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
                     {$match: {filter}},
                     {$group: { _id: 'run.players.id'}},
                     {$count: 'count'}
-                ]).toArray()).count
+                ]).toArray())[0].count
             };
         }
 
