@@ -182,9 +182,6 @@ router.get('/leaderboards/:id', async (req, res) => {
             wrs: wr_chart,
             distribution: distrib_chart,
             volume: volume_chart,
-        },
-        metrics: {
-            ...await run_dao.get_basic_metrics(game_id)
         }
     });
 });
