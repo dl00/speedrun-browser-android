@@ -3,6 +3,7 @@ package danb.speedrunbrowser.api.objects
 import android.graphics.Rect
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.widget.ImageView
 import android.widget.TextView
 import danb.speedrunbrowser.R
@@ -77,7 +78,12 @@ data class User(
     /// creates a text view with name and appropriate formatting
     override fun applyTextView(tv: TextView) {
         tv.text = resolvedName
-        tv.typeface = Typeface.MONOSPACE
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            tv.typeface = tv.context.resources.getFont(R.font.saira_semi_condensed_semi_bold)
+        }
+        else {
+            tv.typeface = Typeface.MONOSPACE
+        }
 
         if (nameStyle != null) {
             val bounds = Rect()

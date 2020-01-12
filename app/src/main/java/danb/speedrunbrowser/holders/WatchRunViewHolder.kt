@@ -36,8 +36,12 @@ class WatchRunViewHolder(v: View) : RecyclerView.ViewHolder(v) {
 
         if (entry.run.game != null && entry.run.game.assets.coverLarge != null) {
             mGameImage.visibility = View.VISIBLE
+
+            val consumer = ImageViewPlacerConsumer(mGameImage)
+            consumer.roundedCorners = context.resources.getDimensionPixelSize(R.dimen.game_cover_rounded_corners).toFloat()
+
             disposables.add(ImageLoader(context).loadImage(entry.run.game.assets.coverLarge.uri)
-                    .subscribe(ImageViewPlacerConsumer(mGameImage)))
+                    .subscribe(consumer))
         } else
             mGameImage.visibility = View.GONE
     }

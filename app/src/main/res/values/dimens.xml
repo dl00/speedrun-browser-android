@@ -25,8 +25,12 @@
     <dimen name="tab_icon_height">30dp</dimen>
     <dimen name="min_progress_spinner_height">75dp</dimen>
 
+    <dimen name="game_cover_rounded_corners">15dp</dimen>
+
     <dimen name="bar_height">35dp</dimen>
     <dimen name="dialog_list_min_height">300dp</dimen>
     <dimen name="chart_height">300dp</dimen>
     <dimen name="text_size_chart_head">24sp</dimen>
+    <dimen name="text_size_metric">18sp</dimen>
+    <dimen name="text_size_small_kv">14sp</dimen>
 </resources>
