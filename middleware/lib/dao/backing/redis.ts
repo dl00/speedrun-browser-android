@@ -41,7 +41,7 @@ export async function scan(conf: DaoConfig<any>, options: ScanOptions, func: Fun
 
         await func(objs);
 
-        cur = scan[0];
+        cur = parseInt(scan[0]);
     } while (cur != 0);
 
     return count;
@@ -61,7 +61,7 @@ export class RedisMapIndex<T> implements IndexDriver<T> {
     }
 
     public async load(conf: DaoConfig<T>, keys: string[]): Promise<Array<T|null>> {
-        const mapIds: string[] = await conf.db.redis.hmget(`${conf.collection}:${this.name}`, ...keys);
+        const mapIds = <string[]>await conf.db.redis.hmget(`${conf.collection}:${this.name}`, ...keys);
         return await conf.load(mapIds);
     }
 

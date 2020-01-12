@@ -16,4 +16,4 @@ USER node
 
 ENTRYPOINT ["/sbin/tini", "--"]
 
-CMD [ "/usr/local/bin/node", "index.js"]
+CMD [ "/usr/local/bin/node",  "-r", "source-map-support/register", "index.js"]
