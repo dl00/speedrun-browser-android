@@ -11,7 +11,10 @@ def keystorePropertiesFile = rootProject.file("keystore.properties")
 def keystoreProperties = new Properties()
 
 // Load your keystore.properties file into the keystoreProperties object.
-keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+if(keystorePropertiesFile.exists())
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+else
+    logger.warn('Keystore file not loaded.')
 
 android {
     compileSdkVersion 29
