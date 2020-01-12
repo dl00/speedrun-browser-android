@@ -623,7 +623,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         let metrics: {[id: string]: Metric} = {
             total_run_count: { value: <any>await this.db.mongo.collection(this.collection).countDocuments(filter) },
             most_recent_run: {
-                value: latest_run.run.submitted,
+                value: new Date(latest_run.run.submitted).getTime(),
                 item_type: 'runs',
                 item_id: latest_run.run.id
             }
@@ -632,16 +632,18 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         if(game_id || player_id) {
             metrics.total_run_time = { value: (await this.db.mongo.collection(this.collection).aggregate([
                     {$match: filter},
-                    {$group: { _id: null, time: {$sum: 'run.times.primary_t'}}}
+                    {$group: { _id: null, time: {$sum: '$run.times.primary_t'}}}
                 ]).toArray())[0].time
             }
 
             metrics.level_run_count = {
-                value: <any>await this.db.mongo.collection(this.collection).countDocuments({ ...filter, 'run.category.type': 'per-level' })
+                value: <any>await this.db.mongo.collection(this.collection)
+                    .countDocuments({ ...filter, 'run.category.type': 'per-level' })
             };
 
             metrics.full_game_run_count = {
-                value: <any>await this.db.mongo.collection(this.collection).countDocuments({ ...filter, 'run.category.type': {$ne: 'per-game' }})
+                value: <any>await this.db.mongo.collection(this.collection)
+                    .countDocuments({ ...filter, 'run.category.type': {$ne: 'per-level' }})
             };
         }
 
@@ -653,7 +655,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
                 metrics.total_players = {
                     value: (await this.db.mongo.collection(this.collection).aggregate([
                         {$match: filter},
-                        {$group: { _id: 'run.players.id'}},
+                        {$group: { _id: '$run.players.id'}},
                         {$count: 'total_players'}
                     ]).toArray())[0].total_players
                 };
