@@ -243,7 +243,7 @@ async function wipe_running_tasks() {
 
         for (const t of running_tasks) {
             const spl = t.split(':');
-            const time = spl.shift();
+            const time = parseInt(spl.shift()!);
 
             if (time < Date.now() - config.scraper.runningTaskTimeout * 1000) {
                 console.log('[WIPET]', t);
