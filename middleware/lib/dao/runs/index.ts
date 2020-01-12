@@ -615,7 +615,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             filter['run.game.id'] = game_id;
 
         if(player_id)
-            filter['run.player.id'] = player_id;
+            filter['run.players.id'] = player_id;
 
         let latest_run: LeaderboardRunEntry = (await this.db.mongo.collection(this.collection).find(filter)
             .sort({'run.submitted': -1}).limit(1).toArray())[0];
