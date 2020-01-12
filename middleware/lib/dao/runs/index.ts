@@ -622,8 +622,6 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
 
         let metrics: {[id: string]: Metric} = {
             total_run_count: { value: <any>await this.db.mongo.collection(this.collection).countDocuments(filter) },
-            level_run_count: { value: <any>await this.db.mongo.collection(this.collection).countDocuments({ ...filter, 'run.category.type': 'per-level' }) },
-            full_game_run_count: { value: <any>await this.db.mongo.collection(this.collection).countDocuments({ ...filter, 'run.category.type': {$ne: 'per-game' }}) },
             most_recent_run: {
                 value: latest_run.run.submitted,
                 item_type: 'runs',
@@ -637,16 +635,29 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
                     {$group: { _id: null, time: {$sum: 'run.times.primary_t'}}}
                 ]).toArray())[0].time
             }
+
+            metrics.level_run_count = {
+                value: <any>await this.db.mongo.collection(this.collection).countDocuments({ ...filter, 'run.category.type': 'per-level' })
+            };
+
+            metrics.full_game_run_count = {
+                value: <any>await this.db.mongo.collection(this.collection).countDocuments({ ...filter, 'run.category.type': {$ne: 'per-game' }})
+            };
         }
 
         if(!player_id) {
-            metrics.total_players = {
-                value: (await this.db.mongo.collection(this.collection).aggregate([
-                    {$match: {filter}},
-                    {$group: { _id: 'run.players.id'}},
-                    {$count: 'count'}
-                ]).toArray())[0].count
-            };
+            if(!game_id) {
+                metrics.total_players = { value: await new UserDao(this.db).count() };
+            }
+            else {
+                metrics.total_players = {
+                    value: (await this.db.mongo.collection(this.collection).aggregate([
+                        {$match: filter},
+                        {$group: { _id: 'run.players.id'}},
+                        {$count: 'total_players'}
+                    ]).toArray())[0].total_players
+                };
+            }
         }
 
         return metrics;
