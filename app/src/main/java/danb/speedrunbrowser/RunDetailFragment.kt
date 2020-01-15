@@ -360,10 +360,15 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
             }
         }
 
-        if (mGame!!.assets.coverLarge != null)
+        if (mGame!!.assets.coverLarge != null) {
+
+            val coverConsumer = ImageViewPlacerConsumer(mCover)
+            coverConsumer.roundedCorners = resources.getDimensionPixelSize(R.dimen.game_cover_rounded_corners).toFloat()
+
             mDisposables.add(
                     ImageLoader(context!!).loadImage(mGame!!.assets.coverLarge!!.uri)
-                            .subscribe(ImageViewPlacerConsumer(mCover)))
+                            .subscribe(coverConsumer))
+        }
 
         mPlayerNames.removeAllViews()
         for (player in mRun!!.run.players!!) {

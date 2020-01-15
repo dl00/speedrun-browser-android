@@ -29,9 +29,6 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import androidx.fragment.app.FragmentManager
 import android.app.Activity
-import androidx.core.app.ComponentActivity.ExtraData
-import androidx.core.content.ContextCompat.getSystemService
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
 import android.view.inputmethod.InputMethodManager
 
 
@@ -147,6 +144,8 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
 
     private fun showIntent(intent: Intent) {
 
+
+
         val prevCp = this.intent.extras?.getString(EXTRA_FRAGMENT_CLASSPATH)
 
         setIntent(intent)
@@ -250,16 +249,8 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         if(entry == null) {
             Analytics.logNotFound(this, intent.data!!)
 
-            val containerView: FrameLayout = findViewById(R.id.detail_container)
-            containerView.getChildAt(0).visibility = View.VISIBLE
-
-            containerView.findViewById<Button>(R.id.buttonTryWebsite).setOnClickListener {
-                openWebsite()
-            }
-
-            containerView.findViewById<Button>(R.id.buttonMainPage).setOnClickListener {
-                showMainPage()
-            }
+            args.putParcelable(NotFoundFragment.ARG_URL, intent.data!!)
+            showFragment(NotFoundFragment(), args)
 
             return
         }
@@ -281,17 +272,6 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
 
         if (frag != null)
             showFragment(frag, args)
-    }
-
-    private fun openWebsite() {
-        startActivity(Util.openInBrowser(this, intent.data!!))
-    }
-
-    private fun showMainPage() {
-        val intent = Intent(this, SpeedrunBrowserActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-        startActivity(intent)
-        finish()
     }
 
     override fun beforeTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {

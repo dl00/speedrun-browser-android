@@ -77,8 +77,8 @@ router.get('/site', async (_req, res) => {
         },
         metrics: {
             ...await run_dao.get_basic_metrics(),
-            total_games: game_dao.count(),
-            total_leaderboards: leaderboard_dao.count()
+            total_games: { value: await game_dao.count() },
+            total_leaderboards: { value: await leaderboard_dao.count() }
         }
     });
 });
@@ -111,7 +111,7 @@ router.get('/games/:id', async (req, res) => {
         },
         metrics: {
             ...await run_dao.get_basic_metrics(game_id),
-            total_leaderboards: await leaderboard_dao.get_leaderboard_count_for_game(game_id)
+            total_leaderboards: { value: await leaderboard_dao.get_leaderboard_count_for_game(game_id) }
         }
     });
 });

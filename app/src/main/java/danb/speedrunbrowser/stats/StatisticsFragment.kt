@@ -1,7 +1,9 @@
 package danb.speedrunbrowser.stats
 
+import android.app.ActionBar
 import android.content.Context
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -102,7 +104,7 @@ abstract class StatisticsFragment : Fragment() {
                     layout.children.forEach { view ->
                         when(view) {
                             is ChartView -> view.chartData = it.charts[view.options.identifier]
-                            is MetricView -> {}
+                            is MetricView -> view.metricData = it.metrics[view.options.identifier]
                             else -> {}
                         }
                     }
@@ -112,7 +114,24 @@ abstract class StatisticsFragment : Fragment() {
                 }
     }
 
-    fun addMetric(options: ChartOptions) = layout.addView(MetricView(context!!, options))
+    fun addMetrics(options: Iterable<ChartOptions>) {
+        val ll = LinearLayout(context!!)
+        ll.orientation = LinearLayout.HORIZONTAL
+        ll.gravity = Gravity.CENTER
+
+        for(opts in options) {
+
+            val mv = MetricView(context!!, opts)
+            mv.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f)
+
+            ll.addView(mv)
+        }
+
+        layout.addView(ll)
+    }
+
+    fun addMetric(options: ChartOptions): Unit = addMetrics(listOf(options))
+
     fun addChart(options: ChartOptions) {
         val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
 

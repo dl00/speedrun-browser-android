@@ -175,7 +175,7 @@
     <string name="chart_desc_favorite_games">The number of PBs this player has submitted for each game, displayed as a Pie wheel.</string>
     <string name="chart_title_count_over_time">Total PB Records</string>
     <string name="chart_desc_count_over_time">The number of verified runs recorded on the site over time.</string>
-    <string name="prelude_rules">Rules:\n %s</string>
+    <string name="prelude_rules">**Rules:**\n\n %s</string>
     <string name="title_site_statistics">Speedrun.com Site Statistics</string>
     <string name="title_player_stats">Player Statistics</string>
     <string name="try_website">Load this on the website</string>
@@ -191,4 +191,18 @@
     <string name="dialog_button_share">Share App</string>
     <string name="msg_share_app">Check out klbyte\'s Unofficial Speedrun.com Browser for Android https://play.google.com/store/apps/details?id=danb.speedrunbrowser</string>
     <string name="label_about_share_this">Share this app!</string>
+    <string name="metric_title_total_runs">Total Runs Submitted</string>
+    <string name="metric_desc_total_runs">Number of PBs submitted over all time.</string>
+    <string name="metric_title_total_players">Total Speedrunners</string>
+    <string name="metric_desc_total_players">Number of unique Speedrun.com accounts which have submitted a speedrun.</string>
+    <string name="metric_title_total_games">Total Games</string>
+    <string name="metric_desc_total_games">Number of games with at least speedrun submitted.</string>
+    <string name="metric_title_total_leaderboards">Total Leaderboards</string>
+    <string name="metric_desc_total_leaderboards">Number of leaderboards, ignoring subcategories, including empty leaderboards.</string>
+    <string name="metric_title_total_run_time">Accumulated Run Time</string>
+    <string name="metric_desc_total_run_time">Number of PBs submitted over all time.</string>
+    <string name="metric_title_total_runs_full_game">Full Game Runs Submitted</string>
+    <string name="metric_desc_total_runs_full_game">Number of PBs submitted over all time for full game runs only.</string>
+    <string name="metric_title_total_runs_level">Level Runs Submitted</string>
+    <string name="metric_desc_total_runs_level">Number of PBs submitted over all time for individual level runs only.</string>
 </resources>

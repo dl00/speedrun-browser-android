@@ -330,9 +330,12 @@ class GameDetailFragment : Fragment() {
 
                 val il = ImageLoader(ctx)
 
+                val coverConsumer = ImageViewPlacerConsumer(mCover)
+                coverConsumer.roundedCorners = resources.getDimensionPixelSize(R.dimen.game_cover_rounded_corners).toFloat()
+
                 if (mGame!!.assets.coverLarge != null)
                     mDisposables.add(il.loadImage(mGame!!.assets.coverLarge!!.uri)
-                            .subscribe(ImageViewPlacerConsumer(mCover)))
+                            .subscribe(coverConsumer))
                 if (mGame!!.assets.background != null && mBackground != null)
                     mDisposables.add(il.loadImage(mGame!!.assets.background!!.uri)
                             .subscribe(ImageViewPlacerConsumer(mBackground!!)))

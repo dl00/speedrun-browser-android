@@ -1,25 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="horizontal" android:layout_width="match_parent"
+    android:orientation="vertical" android:layout_width="match_parent"
     android:gravity="center"
+    android:layout_margin="@dimen/metric_margin"
     android:layout_height="match_parent">
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Total Runs"
-        tools:ignore="HardcodedText"
-        android:textSize="@dimen/text_size_metric"
-        android:layout_marginEnd="@dimen/half_fab_margin" />
-
-    <TextView
+        android:id="@+id/txtValue"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="1,243,653"
-        android:textStyle="bold"
+        android:textAlignment="viewStart"
         tools:ignore="HardcodedText"
-        android:textSize="@dimen/text_size_metric"
-        android:layout_marginStart="@dimen/half_fab_margin" />
+        android:textSize="@dimen/text_size_metric" />
+
+    <TextView
+        android:id="@+id/txtLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Total Runs"
+        android:textAlignment="viewEnd"
+        tools:ignore="HardcodedText"
+        android:textStyle="bold"
+        android:textAllCaps="true"
+        android:textSize="12sp" />
 
 </LinearLayout>

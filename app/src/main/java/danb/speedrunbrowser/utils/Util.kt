@@ -24,6 +24,9 @@ import androidx.core.app.TaskStackBuilder
 import danb.speedrunbrowser.BuildConfig
 import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.objects.User
+import io.noties.markwon.Markwon
+import io.noties.markwon.image.ImagesPlugin
+import io.noties.markwon.linkify.LinkifyPlugin
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.plugins.RxJavaPlugins
 import okhttp3.OkHttpClient
@@ -233,6 +236,13 @@ object Util {
 
 
         ctx.startActivity(Intent.createChooser(intent, ctx.getString(R.string.msg_share_run_explain)))
+    }
+
+    fun createMarkwon(context: Context): Markwon {
+        return Markwon.builder(context)
+                .usePlugin(ImagesPlugin.create())
+                .usePlugin(LinkifyPlugin.create())
+                .build()
     }
 
     private var shownOodDialog = false

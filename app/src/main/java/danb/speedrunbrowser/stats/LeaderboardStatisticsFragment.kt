@@ -16,7 +16,9 @@ import danb.speedrunbrowser.api.objects.*
 import danb.speedrunbrowser.holders.RunViewHolder
 import danb.speedrunbrowser.utils.Analytics
 import danb.speedrunbrowser.utils.ItemType
+import danb.speedrunbrowser.utils.Util
 import danb.speedrunbrowser.utils.ViewHolderSource
+import io.noties.markwon.Markwon
 import io.reactivex.disposables.CompositeDisposable
 import java.lang.StringBuilder
 
@@ -144,8 +146,10 @@ class LeaderboardStatisticsFragment : StatisticsFragment() {
 
         val rulesText = category.getRulesText(Variable.VariableSelections())
 
+
         val rulesTv = TextView(context!!)
-        rulesTv.text = getString(R.string.prelude_rules, rulesText)
+        Util.createMarkwon(context!!)
+                .setMarkdown(rulesTv, getString(R.string.prelude_rules, rulesText))
 
         rulesTv.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT)
