@@ -67,8 +67,6 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
             onFragmentMove()
         }
 
-        // Show the Up button in the action bar.
-        val actionBar = supportActionBar
         onNewIntent(intent)
     }
 
@@ -144,10 +142,6 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
 
     private fun showIntent(intent: Intent) {
 
-
-
-        val prevCp = this.intent.extras?.getString(EXTRA_FRAGMENT_CLASSPATH)
-
         setIntent(intent)
 
         // Create the detail fragment and add it to the activity
@@ -164,12 +158,12 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
                 val segs = intent.data!!.pathSegments
 
                 if (segs.isNotEmpty()) {
-                    val id = segs[segs.size - 1]
 
-                    Log.d(TAG, "Decoded game or player ID: " + id + ", from URL: " + intent.data)
+                    Log.d(TAG, "Decoded possible ID segments: " + segs + ", from URL: " + intent.data)
 
                     // use the whatis api to resolve the type of object
-                    whatIsQuery = SpeedrunMiddlewareAPI.make(this).whatAreThese(id)
+                    whatIsQuery = SpeedrunMiddlewareAPI.make(this)
+                            .whatAreThese(segs.joinToString(","))
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(this, ConnectionErrorConsumer(this))
@@ -217,14 +211,12 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
             supportActionBar!!.hide()
             findViewById<View>(R.id.layoutRoot).background = ColorDrawable(resources.getColor(android.R.color.black))
             mGameFilter.visibility = View.GONE
-            //mAutoCompleteResults.visibility = View.GONE
         }
         else {
             window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
             supportActionBar!!.show()
             findViewById<View>(R.id.layoutRoot).background = ColorDrawable(resources.getColor(R.color.colorPrimary))
             mGameFilter.visibility = View.VISIBLE
-            //mAutoCompleteResults.visibility = View.VISIBLE
         }
     }
 
@@ -244,9 +236,9 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         val args = Bundle()
         var frag: Fragment? = null
 
-        val entry = whatIsEntryAPIResponse.data[0]
+        val entries = whatIsEntryAPIResponse.data.filterNotNull()
 
-        if(entry == null) {
+        if(entries.isEmpty()) {
             Analytics.logNotFound(this, intent.data!!)
 
             args.putParcelable(NotFoundFragment.ARG_URL, intent.data!!)
@@ -255,17 +247,19 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
             return
         }
 
-        when (entry.type) {
+        val lastEntry = entries.last()
+
+        when (lastEntry.type) {
             "game" -> {
-                args.putString(GameDetailFragment.ARG_GAME_ID, entry.id)
+                args.putString(GameDetailFragment.ARG_GAME_ID, lastEntry.id)
                 frag = GameDetailFragment()
             }
             "player" -> {
-                args.putString(PlayerDetailFragment.ARG_PLAYER_ID, entry.id)
+                args.putString(PlayerDetailFragment.ARG_PLAYER_ID, lastEntry.id)
                 frag = PlayerDetailFragment()
             }
             "run" -> {
-                args.putString(RunDetailFragment.ARG_RUN_ID, entry.id)
+                args.putString(RunDetailFragment.ARG_RUN_ID, lastEntry.id)
                 frag = RunDetailFragment()
             }
         }
@@ -288,13 +282,16 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
 
     override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
         mGameFilter.setText("")
-        val item = parent.adapter.getItem(position)
-        if (item is User) {
-            showPlayer(item.id)
-        } else if (item is Game) {
-            showGame(item.id)
-        } else if (item is GameGroup) {
-            showGameGroup(item)
+        when (val item = parent.adapter.getItem(position)) {
+            is User -> {
+                showPlayer(item.id)
+            }
+            is Game -> {
+                showGame(item.id)
+            }
+            is GameGroup -> {
+                showGameGroup(item)
+            }
         }
     }
 
@@ -322,7 +319,7 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         startActivity(intent)
     }
 
-    fun hideKeyboard() {
+    private fun hideKeyboard() {
         val imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
         //Find the currently focused view, so we can grab the correct window token from it.
         var view = currentFocus
