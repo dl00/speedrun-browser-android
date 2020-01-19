@@ -64,23 +64,20 @@ data class Variable(
         fun shouldShowRun(run: Run, activeVariables: List<Variable>): Boolean {
 
             if (run.values != null) {
-                for (selection in activeVariables) {
-                    if (!run.values.containsKey(selection.id)) {
-                        return false
-                    }
 
-                    if (!selections.containsKey(selection.id))
+                // platforms and regions can also be filtered if special keys are provided
+                if (selections.containsKey(FILTER_KEY_PLATFORM) && (run.system == null || !selections[FILTER_KEY_PLATFORM]!!.contains(run.system.platform)) ||
+                        selections.containsKey(FILTER_KEY_REGION) && (run.system == null || !selections[FILTER_KEY_REGION]!!.contains(run.system.region))) {
+                    return false
+                }
+
+                for (selection in activeVariables) {
+                    if (!run.values.containsKey(selection.id) || !selections.containsKey(selection.id)) {
                         continue
+                    }
 
                     if (!selections.getValue(selection.id).contains(run.values[selection.id]))
                         return false
-                }
-
-                // platforms and regions can also be filtered if special keys are provided
-                if (selections.containsKey(FILTER_KEY_PLATFORM) && (run.system == null || !selections[FILTER_KEY_PLATFORM]!!.contains(run.system.platform)) || selections.containsKey(FILTER_KEY_REGION) && (run.system == null || !selections[FILTER_KEY_REGION]!!.contains(run.system.region))) {
-                    println(run.system!!.platform)
-                    println(selections[FILTER_KEY_PLATFORM])
-                    return false
                 }
             }
 

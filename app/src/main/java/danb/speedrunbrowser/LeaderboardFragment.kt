@@ -317,14 +317,12 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
         updateSubcategorySelections()
 
         if (mLeaderboard != null) {
-            if (filter != null) {
+            mFilteredLeaderboardRuns = if (filter != null) {
+                Log.d(TAG, "Filtering runs: $leaderboardId")
 
-                // set the subcategory indicators
-                //mContentLayout.findViewWithTag(mVariableSelections.getSelection())
-
-                mFilteredLeaderboardRuns = filter!!.filterLeaderboardRuns(mLeaderboard!!, mCategory!!.variables!!)
+                filter!!.filterLeaderboardRuns(mLeaderboard!!, mCategory!!.variables!!)
             } else
-                mFilteredLeaderboardRuns = mLeaderboard!!.runs
+                mLeaderboard!!.runs
 
             if (mRunsListAdapter != null) {
                 mRunsListAdapter!!.notifyDataSetChanged()
@@ -340,7 +338,7 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
 
     inner class LeaderboardAdapter : RecyclerView.Adapter<RunViewHolder>() {
 
-        private val inflater: LayoutInflater
+        private val inflater = context!!.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
 
         private val mOnClickListener = View.OnClickListener { view ->
             val (run) = view.tag as LeaderboardRunEntry
@@ -349,10 +347,6 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
             intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, RunDetailFragment::class.java.canonicalName)
             intent.putExtra(RunDetailFragment.ARG_RUN_ID, run.id)
             startActivity(intent)
-        }
-
-        init {
-            inflater = Objects.requireNonNull<Context>(context).getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RunViewHolder {

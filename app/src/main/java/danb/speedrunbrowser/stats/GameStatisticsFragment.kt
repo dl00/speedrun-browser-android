@@ -18,36 +18,31 @@ class GameStatisticsFragment : StatisticsFragment() {
                 activity!!.title = it.game!!.resolvedName
             }
 
-            addMetric(ChartOptions(
+            addMetrics(listOf(
+                ChartOptions(
                     name = getString(R.string.metric_title_total_runs),
                     description = getString(R.string.metric_desc_total_runs),
                     identifier = "total_run_count",
                     xValueFormat = ::formatBigNumber,
                     setLabels = { "" }
-            ))
-
-            addMetric(ChartOptions(
+                ),
+                ChartOptions(
                     name = getString(R.string.metric_title_total_players),
                     description = getString(R.string.metric_desc_total_players),
                     identifier = "total_players",
                     xValueFormat = ::formatBigNumber,
                     setLabels = { "" }
+                )
             ))
 
-            addMetric(ChartOptions(
+            addMetrics(listOf(
+                ChartOptions(
                     name = getString(R.string.metric_title_total_leaderboards),
                     description = getString(R.string.metric_desc_total_leaderboards),
                     identifier = "total_leaderboards",
                     xValueFormat = ::formatBigNumber,
                     setLabels = { "" }
-            ))
-
-            addMetric(ChartOptions(
-                    name = getString(R.string.metric_title_total_run_time),
-                    description = getString(R.string.metric_desc_total_run_time),
-                    identifier = "total_run_time",
-                    xValueFormat = ::formatTime,
-                    setLabels = { "" }
+                )
             ))
 
             addChart(ChartOptions(
@@ -58,20 +53,21 @@ class GameStatisticsFragment : StatisticsFragment() {
                     xValueFormat = ::formatMonthYear
             ))
 
-            addMetric(ChartOptions(
+            addMetrics(listOf(
+                ChartOptions(
                     name = getString(R.string.metric_title_total_runs_full_game),
                     description = getString(R.string.metric_desc_total_runs),
                     identifier = "full_game_run_count",
                     xValueFormat = ::formatBigNumber,
                     setLabels = { "" }
-            ))
-
-            addMetric(ChartOptions(
+                ),
+                ChartOptions(
                     name = getString(R.string.metric_title_total_runs_level),
                     description = getString(R.string.metric_desc_total_runs),
                     identifier = "level_run_count",
                     xValueFormat = ::formatBigNumber,
                     setLabels = { "" }
+                )
             ))
 
             setDataSourceAPIResponse(

@@ -15,6 +15,7 @@ import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
+import danb.speedrunbrowser.api.objects.Metric
 import danb.speedrunbrowser.views.ProgressSpinnerView
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -104,7 +105,13 @@ abstract class StatisticsFragment : Fragment() {
                     layout.children.forEach { view ->
                         when(view) {
                             is ChartView -> view.chartData = it.charts[view.options.identifier]
-                            is MetricView -> view.metricData = it.metrics[view.options.identifier]
+                            is LinearLayout -> {
+                                view.children.forEach {innerView: View ->
+                                    when(innerView) {
+                                        is MetricView -> innerView.metricData = it.metrics[innerView.options.identifier]
+                                    }
+                                }
+                            }
                             else -> {}
                         }
                     }
