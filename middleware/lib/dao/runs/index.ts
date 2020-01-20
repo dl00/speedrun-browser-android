@@ -536,7 +536,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
 
         let filter: any = {};
 
-        if(opts.gg_id)
+        if(opts.gg_id && opts.gg_id != 'site')
             filter['gameGroups'] = opts.gg_id;
         if(opts.game_id)
             filter['run.game.id'] = opts.game_id;

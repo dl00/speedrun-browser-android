@@ -8,6 +8,8 @@ import { MetricDao } from '../metrics';
 
 import { CategoryDao } from '../categories';
 
+import { LeaderboardDao, Leaderboard } from '../leaderboards';
+
 import { Variable } from '../../../lib/speedrun-api';
 
 import { LeaderboardRunEntry, run_to_bulk } from './';
@@ -149,21 +151,24 @@ export class RecordChartIndex implements IndexDriver<LeaderboardRunEntry> {
 
 // debug/helper function
 export async function make_all_wr_charts(conf: DaoConfig<LeaderboardRunEntry>) {
-    const cursor = conf.db.mongo.collection(conf.collection).find({place: 1});
+    const leaderboard_dao = new LeaderboardDao(conf.db);
 
     const rci = new RecordChartIndex('');
 
-    while (await cursor.hasNext()) {
-        const lbr = await cursor.next() as LeaderboardRunEntry;
+    leaderboard_dao.scan({batchSize: 100}, async (lbs: Leaderboard[]) => {
+        for(let lb of lbs) {
+            console.log('CHART:', lb.game, lb.category, lb.level);
 
-        console.log('Make chart:', lbr.run.game.names.international, lbr.run.category.id, lbr.run.level ? lbr.run.level.id : null);
-        try {
-            await rci.make_chart(conf, lbr.run.category.id, lbr.run.level ? lbr.run.level.id : null);
-        } catch (err) {
-            // TODO: for right now just print and ignore
-            console.error(err);
+            if(lb.runs.length) {
+                try {
+                    await rci.make_chart(conf, lb.category, lb.level || null);
+                } catch (err) {
+                    // TODO: for right now just print and ignore
+                    console.error(err);
+                }
+            }
         }
-    }
+    });
 }
 
 export async function get_runs_total_time(conf: DaoConfig<LeaderboardRunEntry>) {

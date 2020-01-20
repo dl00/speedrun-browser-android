@@ -8,8 +8,6 @@ import { DB } from '../db';
 
 import { BaseMiddleware, normalize, Variable } from '../speedrun-api';
 
-import { Category } from './categories';
-import { Game } from './games';
 import { LeaderboardRunEntry, Run, run_to_bulk } from './runs';
 import { User } from './users';
 
@@ -17,8 +15,8 @@ import { Chart } from './charts';
 
 export interface Leaderboard extends BaseMiddleware {
     weblink: string;
-    game: Game|string;
-    category: Category|string;
+    game: string;
+    category: string;
     level?: string;
     platform?: string;
     region?: string;
