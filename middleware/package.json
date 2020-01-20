@@ -4,7 +4,7 @@
   "description": "Middleware for a Speedrun.com smartphone client to categorize and crawl data",
   "main": "index.js",
   "scripts": {
-    "test": "node_modules/.bin/mocha -r ts-node/register test/**/*.ts"
+    "test": "docker-compose run web /app/node_modules/.bin/mocha -r ts-node/register /app/test/**/*.ts"
   },
   "repository": {
     "type": "git",

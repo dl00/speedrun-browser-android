@@ -294,6 +294,7 @@ export class GameDao extends Dao<Game> {
 
         for (const game of games) {
             game.score = await this.calculate_score(game);
+            console.log(game.id, game.score);
         }
 
         await this.save(games);

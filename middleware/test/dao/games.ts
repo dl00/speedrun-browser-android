@@ -3,7 +3,7 @@ import * as moment from 'moment';
 
 import { load_config } from '../../lib/config';
 import { GameDao } from '../../lib/dao/games';
-import { Leaderboard, LeaderboardDao } from '../../lib/dao/leaderboards';
+import { LeaderboardRunEntry, RunDao } from '../../lib/dao/runs';
 import { close_db, DB, load_db } from '../../lib/db';
 
 import { expect } from 'chai';
@@ -32,85 +32,7 @@ describe('GameDao', () => {
             game_score_leaderboard_updated_cutoff: moment('2018-05-01'),
         });
 
-        const leaderboard_dao = new LeaderboardDao(db);
-
-        const changing_leaderboard: Leaderboard = {
-            weblink: 'https://speedrun.com/testing/test',
-            game: 'a_game',
-            category: 'dummy',
-            runs: [
-                {
-                    place: 3,
-                    run: {
-                        id: 'another_run',
-                        date: '2018-04-30',
-                        status: {'verify-date': '2018-04-30'},
-                        players: [{id: 'hello2'}],
-                        times: { primary: '100', primary_t: 100 },
-                        system: {},
-                        values: {},
-                        game: {id: 'a_game_with_genre'},
-                    },
-                },
-                {
-                    place: 1,
-                    run: {
-                        id: 'one_run',
-                        date: '2018-05-05',
-                        status: {'verify-date': '2018-05-05'},
-                        players: [{id: 'hello'}],
-                        times: { primary: '135', primary_t: 135 },
-                        system: {},
-                        values: {},
-                        game: {id: 'a_game'},
-                    },
-                },
-            ],
-            players: {},
-        };
-
-        await leaderboard_dao.save([
-            changing_leaderboard,
-            {
-                weblink: 'https://speedrun.com/testing/test',
-                game: 'a_game_with_genre',
-                category: 'dummy2',
-                runs: [
-                    {
-                        place: 3,
-                        run: {
-                            id: 'genre_another_run',
-                            date: '2018-05-03',
-                            status: {'verify-date': '2018-05-03'},
-                            players: [{id: 'hello'}],
-                            times: { primary: '100', primary_t: 100 },
-                            system: {},
-                            values: {},
-                            game: {id: 'a_game_with_genre'},
-                        },
-                    },
-                    {
-                        place: 1,
-                        run: {
-                            id: 'one_run',
-                            date: '2018-05-05',
-                            status: {'verify-date': '2018-05-05'},
-                            players: [{id: 'world'}],
-                            times: { primary: '135', primary_t: 135 },
-                            system: {},
-                            values: {},
-                            game: {id: 'a_game'},
-                        },
-                    },
-                ],
-                players: {},
-            },
-        ]);
-
-        await db.redis.hmset('categories',
-            'a_game', JSON.stringify([{id: 'dummy', name: 'test', weblink: '', miscellaneous: false, type: 'per-game'}]),
-            'a_game_with_genre', JSON.stringify([{id: 'dummy2', name: 'test', weblink: '', miscellaneous: false, type: 'per-game'}]),
-        );
+        const run_dao = new RunDao(db);
 
         await game_dao.save([
             {
@@ -147,6 +69,72 @@ describe('GameDao', () => {
             },
         ]);
 
+        const the_runs: LeaderboardRunEntry[] = [
+            {
+                place: 3,
+                run: {
+                    id: 'another_run',
+                    date: '2018-04-30',
+                    submitted: '2018-04-30',
+                    status: {'verify-date': '2018-04-30'},
+                    players: [{id: 'hello2'}],
+                    times: { primary: '100', primary_t: 100 },
+                    system: {},
+                    values: {},
+                    game: {id: 'a_game_with_genre'},
+                },
+            },
+            {
+                place: 1,
+                run: {
+                    id: 'one_run',
+                    date: '2018-05-05',
+                    submitted: '2018-05-05',
+                    status: {'verify-date': '2018-05-05'},
+                    players: [{id: 'hello'}],
+                    times: { primary: '135', primary_t: 135 },
+                    system: {},
+                    values: {},
+                    game: {id: 'a_game'},
+                },
+            },
+            {
+                place: 3,
+                run: {
+                    id: 'genre_another_run',
+                    date: '2018-05-03',
+                    submitted: '2018-05-03',
+                    status: {'verify-date': '2018-05-03'},
+                    players: [{id: 'hello'}],
+                    times: { primary: '100', primary_t: 100 },
+                    system: {},
+                    values: {},
+                    game: {id: 'a_game_with_genre'},
+                },
+            },
+            {
+                place: 1,
+                run: {
+                    id: 'one_run',
+                    date: '2018-05-05',
+                    submitted: '2018-05-05',
+                    status: {'verify-date': '2018-05-05'},
+                    players: [{id: 'world'}],
+                    times: { primary: '135', primary_t: 135 },
+                    system: {},
+                    values: {},
+                    game: {id: 'a_game'},
+                },
+            }
+        ];
+
+        await run_dao.save(the_runs);
+
+        await db.redis.hmset('categories',
+            'a_game', JSON.stringify([{id: 'dummy', name: 'test', weblink: '', miscellaneous: false, type: 'per-game'}]),
+            'a_game_with_genre', JSON.stringify([{id: 'dummy2', name: 'test', weblink: '', miscellaneous: false, type: 'per-game'}]),
+        );
+
         // make sure these two runs come back, and they are in the correct order
         let games = await game_dao.load_popular();
 
@@ -159,12 +147,13 @@ describe('GameDao', () => {
         expect(games[0]).to.have.property('id', 'a_game_with_genre');
 
         // add another run to one of the leaderboards after the fact, should still be in new order
-        changing_leaderboard.runs.push(
+        the_runs.push(
             {
                 place: 2,
                 run: {
                     id: 'yet_another_run',
                     date: '2018-05-02',
+                    submitted: '2018-05-02',
                     status: {'verify-date': '2018-05-02'},
                     players: [{id: 'special'}],
                     times: { primary: '135', primary_t: 135 },
@@ -178,6 +167,7 @@ describe('GameDao', () => {
                 run: {
                     id: 'yet_another_run',
                     date: '2018-05-08',
+                    submitted: '2018-05-08',
                     status: {'verify-date': '2018-05-08'},
                     players: [{id: 'special2'}, {id: 'special3'}, {id: 'special4'}],
                     times: { primary: '135', primary_t: 135 },
@@ -188,7 +178,7 @@ describe('GameDao', () => {
             },
         );
 
-        await leaderboard_dao.save(changing_leaderboard);
+        await run_dao.save(the_runs);
 
         await game_dao.rescore_games(['a_game', 'a_game_with_genre']);
 
