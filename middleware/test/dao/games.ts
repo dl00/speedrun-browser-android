@@ -28,7 +28,7 @@ describe('GameDao', () => {
 
         const game_dao = new GameDao(db, {
             game_score_time_now: moment('2018-05-10'),
-            game_score_leaderboard_edge_cutoff: moment('2018-05-10'),
+            game_score_leaderboard_edge_cutoff: moment('2018-05-01'),
             game_score_leaderboard_updated_cutoff: moment('2018-05-01'),
         });
 
@@ -45,7 +45,7 @@ describe('GameDao', () => {
                         id: 'another_run',
                         date: '2018-04-30',
                         status: {'verify-date': '2018-04-30'},
-                        players: [{id: 'hello'}],
+                        players: [{id: 'hello2'}],
                         times: { primary: '100', primary_t: 100 },
                         system: {},
                         values: {},
