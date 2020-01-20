@@ -122,7 +122,7 @@ export const DEFAULT_CONFIG: Config = {
 
         maxRetries: 3,
 
-        runningTaskTimeout: 300, // 5 minutes
+        runningTaskTimeout: 3600, // 1 hour
 
         redis: {
             db: 1,
