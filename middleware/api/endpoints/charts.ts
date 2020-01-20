@@ -20,6 +20,7 @@ export function get_wr_chart_longest_holders(wr_chart: Chart): Chart {
     const chart: Chart = {
         item_id: wr_chart.item_id + '_holders',
         item_type: 'users',
+        aggr: 'sum_over_time',
         chart_type: 'list',
         data: {},
         timestamp: new Date(),

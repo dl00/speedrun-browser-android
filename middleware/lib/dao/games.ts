@@ -8,7 +8,7 @@ import { DB } from '../db';
 import { RedisMapIndex } from './backing/redis';
 
 import { Category } from './categories';
-import { Leaderboard, LeaderboardDao } from './leaderboards';
+import { RunDao } from './runs';
 import { Level } from './levels';
 
 import { Asset,
@@ -122,15 +122,15 @@ export function normalize_game(d: Game) {
     }
 }
 
-const POPULAR_GAMES_KEY = 'game_rank';
-
 class PopularGamesIndex implements IndexDriver<Game> {
     public name: string;
     private max_return: number;
+    private score_func: (g: Game) => number;
 
-    constructor(name: string, max_return: number) {
+    constructor(name: string, max_return: number, score_func?: (g: Game) => number) {
         this.name = name;
         this.max_return = max_return;
+        this.score_func = score_func || (g => g.score || 0);
     }
 
     public async load(conf: DaoConfig<Game>, keys: string[]): Promise<Array<Game|null>> {
@@ -142,7 +142,7 @@ class PopularGamesIndex implements IndexDriver<Game> {
         const genre = spl[0];
         const offset = parseInt(spl[1]);
 
-        const popular_game_ids: string[] = await conf.db.redis.zrevrange(POPULAR_GAMES_KEY + (genre ? ':' + genre : ''),
+        const popular_game_ids: string[] = await conf.db.redis.zrevrange(this.name + (genre ? ':' + genre : ''),
             offset, offset + this.max_return - 1);
 
         if (!popular_game_ids.length) {
@@ -158,27 +158,27 @@ class PopularGamesIndex implements IndexDriver<Game> {
 
         for (const game of games) {
 
-            const game_score = game.score || 0;
+            const game_score = this.score_func(game);
 
             // install master rank list
-            m.zadd(POPULAR_GAMES_KEY, game_score.toString(), game.id);
+            m.zadd(this.name, game_score.toString(), game.id);
 
             // install on category lists
             // TODO: switch to `speedrun_api.Genre[] instead of any[]`
             for (const genre of game.genres as {id: string, name: string}[]) {
-                m.zadd(POPULAR_GAMES_KEY + ':' + (genre.id || genre), game_score.toString(), game.id);
+                m.zadd(this.name + ':' + (genre.id || genre), game_score.toString(), game.id);
             }
 
             for (const platform of game.platforms as Platform[]) {
-                m.zadd(POPULAR_GAMES_KEY + ':' + (platform.id || platform), game_score.toString(), game.id);
+                m.zadd(this.name + ':' + (platform.id || platform), game_score.toString(), game.id);
             }
 
             for (const developer of game.developers as Developer[]) {
-                m.zadd(POPULAR_GAMES_KEY + ':' + (developer.id || developer), game_score.toString(), game.id);
+                m.zadd(this.name + ':' + (developer.id || developer), game_score.toString(), game.id);
             }
 
             for (const publisher of game.publishers as Publisher[]) {
-                m.zadd(POPULAR_GAMES_KEY + ':' + (publisher.id || publisher), game_score.toString(), game.id);
+                m.zadd(this.name + ':' + (publisher.id || publisher), game_score.toString(), game.id);
             }
         }
 
@@ -188,7 +188,7 @@ class PopularGamesIndex implements IndexDriver<Game> {
     public async clear(conf: DaoConfig<Game>, objs: Game[]) {
         const keys = _.map(objs, conf.id_key);
 
-        await conf.db.redis.zrem(POPULAR_GAMES_KEY,
+        await conf.db.redis.zrem(this.name,
             ...keys);
     }
 
@@ -201,7 +201,7 @@ class PopularGamesIndex implements IndexDriver<Game> {
         const m = conf.db.redis.multi();
 
         for (const id of gg_ids) {
-            m.zcard(POPULAR_GAMES_KEY + ':' + id);
+            m.zcard(this.name + ':' + id);
         }
 
         const res: Array<[any, number]> = await m.exec();
@@ -252,15 +252,22 @@ export class GameDao extends Dao<Game> {
 
         this.id_key = _.property('id');
 
+        let max_items = (options && options.max_items) ? options.max_items : 100;
+
+        this.game_score_time_now = options && options.game_score_time_now ? options.game_score_time_now : moment(new Date());
+        this.game_score_leaderboard_updated_cutoff = moment(this.game_score_time_now).subtract(3, 'months');
+        this.game_score_leaderboard_edge_cutoff = moment(this.game_score_time_now).subtract(18, 'months');
+
         this.indexes = [
             new RedisMapIndex('abbr', 'abbreviation'),
             new IndexerIndex('games', get_game_search_indexes),
-            new PopularGamesIndex('popular_games', (options && options.max_items) ? options.max_items : 100),
+            new PopularGamesIndex('popular_games', max_items),
+            new PopularGamesIndex('popular_trending_games', max_items,
+                (g) => {
+                    return (g.score || 0) /
+                        Math.pow(this.game_score_time_now.diff(moment(g['release-date'])) / 86400000, 2)
+                })
         ];
-
-        this.game_score_time_now = options && options.game_score_time_now ? options.game_score_time_now : moment();
-        this.game_score_leaderboard_updated_cutoff = this.game_score_time_now.subtract(1, 'year');
-        this.game_score_leaderboard_edge_cutoff = this.game_score_time_now.subtract(3, 'months');
 
         _.assign(this, _.pick(options, 'game_score_leaderboard_edge_cutoff', 'game_score_leaderboard_updated_cutoff'));
     }
@@ -271,10 +278,10 @@ export class GameDao extends Dao<Game> {
         }
 
         for (const game of games) {
-            // make sure every game comes in with a score, otherwise its confusing
-            if (_.isNil(game.score)) {
-                await this.calculate_score(game);
-            }
+            // make sure every game comes in with a score
+            //console.log('Prescore', game.score);
+            game.score = await this.calculate_score(game);
+            //console.log('Postscore', game.score);
         }
 
         await super.save(games);
@@ -309,37 +316,15 @@ export class GameDao extends Dao<Game> {
         return game;
     }
 
-    // calculates the score for a single game by reading activity on its leaderboards
+    // calculates the score for a single game by count the number of distinct active players
     private async calculate_score(game: Game): Promise<number> {
-        // look at the game's leaderboards, for categories not levels. Find the number of records
-        let leaderboards = await new LeaderboardDao(this.db).load_by_index('game', game.id) as Leaderboard[];
-
-        leaderboards = leaderboards.filter((v) => _.isNil(v.level));
-
-        const div = 1 + Math.log(Math.max(1, leaderboards.length));
-
-        const game_score = Math.ceil(_.chain(leaderboards)
-            .reject(_.isNil)
-            .map(_.bind(this.generate_leaderboard_score, this))
-            .sum().value() / div);
-
-        return game_score;
-    }
-
-    private generate_leaderboard_score(leaderboard: Leaderboard) {
-        let score = 0;
-
-        for (const run of leaderboard.runs) {
-            const d = moment(run.run.date);
-
-            if (d.isAfter(this.game_score_leaderboard_edge_cutoff)) {
-                score += 4;
-            }
-            else if (d.isAfter(this.game_score_leaderboard_updated_cutoff)) {
-                score++;
- }
-        }
-
-        return score;
+        return await new RunDao(this.db).get_player_count({
+            'run.game.id': game.id,
+            'run.submitted': { $gt: this.game_score_leaderboard_updated_cutoff.toISOString() }
+        }) * 6 +
+        await new RunDao(this.db).get_player_count({
+            'run.game.id': game.id,
+            'run.submitted': { $gt: this.game_score_leaderboard_edge_cutoff.toISOString() }
+        });
     }
 }

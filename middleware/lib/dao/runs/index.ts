@@ -1,93 +1,28 @@
-import * as assert from 'assert';
 import * as _ from 'lodash';
-import * as moment from 'moment';
 
-import { Dao, DaoConfig, IndexDriver } from '../';
+import { Dao } from '../';
 
 import { BulkGame, Game, game_to_bulk, GameDao } from '../games';
 
-import { Chart } from '../charts';
+import { Chart, BarChartData } from '../charts';
 import { Metric } from '../metrics';
 import { get_player_pb_chart, RecordChartIndex } from './charts';
 import { SupportingStructuresIndex } from './supporting-structures';
+import { LeaderboardRunEntry, Run, BulkRun, NewRecord } from './structures';
+export { LeaderboardRunEntry, Run, BulkRun, NewRecord } from './structures';
+import { RecentRunsIndex } from './recent-runs'
 
 import { DB } from '../../db';
 
 import {
-    BaseMiddleware,
     normalize,
     Variable,
 } from '../../speedrun-api';
 
 import { BulkCategory, Category, category_to_bulk, CategoryDao } from '../categories';
-import { GameGroup } from '../game-groups';
 import { BulkLevel, Level, level_to_bulk, LevelDao } from '../levels';
 import { BulkUser, User, user_to_bulk } from '../users';
 import { UserDao } from '../users';
-
-/// information about a new PB from a player
-export interface NewRecord {
-    old_run: LeaderboardRunEntry;
-    new_run: LeaderboardRunEntry;
-}
-
-export interface RunTimes {
-    primary: string;
-    primary_t: number;
-    realtime?: string;
-    realtime_t?: number;
-    realtime_noloads?: string;
-    realtime_noloads_t?: number;
-    ingame?: string;
-    ingame_t?: number;
-}
-
-export interface RunSystem {
-    platform?: string;
-    emulated?: boolean;
-    region?: string;
-}
-
-export interface BulkRun {
-    id: string;
-    date: string;
-    players: BulkUser[];
-    times: RunTimes;
-    system: RunSystem;
-    values: {[key: string]: string};
-
-    [key: string]: any;
-}
-
-export interface Run extends BulkRun, BaseMiddleware {
-    weblink: string;
-    game: BulkGame|string;
-    level?: BulkLevel|string|null;
-    category: BulkCategory|string;
-    submitted: string;
-    videos: {
-        text: string
-        links: Array<{
-            uri: string,
-        }>,
-    };
-
-    comment: string;
-    status: {
-        status: 'new'|'verified'|'rejected'
-        examiner?: User|string
-        'verify-date': string,
-    };
-
-    values: {[key: string]: string};
-}
-
-export interface LeaderboardRunEntry {
-    obsolete?: boolean; // TODO: maybe a date later
-    place?: number|null;
-    gameGroups?: string[];
-    run: BulkRun;
-}
 
 export function normalize_run(d: Run) {
     normalize(d);
@@ -209,89 +144,6 @@ export async function populate_run_sub_documents(db: DB, runs: Run[]): Promise<P
 export const LATEST_VERIFIED_RUNS_KEY = 'verified_runs';
 export const LATEST_NEW_RUNS_KEY = 'latest_new_runs';
 
-export class RecentRunsIndex implements IndexDriver<LeaderboardRunEntry> {
-    public name: string;
-    private date_property: string;
-    private redis_key: string;
-    private keep_count: number;
-    private max_return: number;
-
-    constructor(name: string, date_property: string, redis_key: string, keep_count: number, max_return: number) {
-        this.name = name;
-        this.date_property = date_property;
-        this.redis_key = redis_key;
-        this.keep_count = keep_count;
-        this.max_return = max_return;
-    }
-
-    public async load(conf: DaoConfig<LeaderboardRunEntry>, keys: string[]): Promise<Array<LeaderboardRunEntry|null>> {
-
-        assert.equal(keys.length, 1, 'RecentRunsIndex only supports reading from a single key at a time');
-
-        // we only read the first
-        const spl = keys[0].split(':');
-
-        const genre = spl[0];
-        const offset = parseInt(spl[1]);
-
-        const latest_run_ids: string[] = await conf.db.redis.zrevrange(this.redis_key + (genre ? ':' + genre : ''),
-            offset, offset + this.max_return - 1);
-
-        return await conf.load(latest_run_ids);
-    }
-
-    public async apply(conf: DaoConfig<LeaderboardRunEntry>, objs: LeaderboardRunEntry[]) {
-        // have to get games to deal with genre data
-        const game_ids = _.map(objs, 'run.game.id');
-        const games = _.zipObject(game_ids, await new GameDao(conf.db).load(game_ids));
-
-        const m = conf.db.redis.multi();
-
-        for (const lbr of objs) {
-
-            if (lbr.run.times.primary_t <= 0.01) {
-                // ensure these "dummy" runs are never added
-                m.zrem(this.redis_key, lbr.run.id);
-                continue;
-            }
-
-            const date_score = moment(_.get(lbr.run as Run, this.date_property) || 0).unix().toString();
-
-            m
-                .zadd(this.redis_key, date_score, lbr.run.id)
-                .zremrangebyrank(this.redis_key, 0, -this.keep_count - 1);
-
-            const game = games[((lbr.run as Run).game as BulkGame).id as string] as Game;
-
-            if (!game) {
-                throw new Error(`Missing game for run: ${lbr.run.id}, game id: ${((lbr.run as Run).game as BulkGame).id}`);
-            }
-
-            for(let grouping of ['platforms', 'genres', 'publishers', 'developers']) {
-                let ggg: GameGroup[] = (game as {[key: string]: any})[grouping];
-                for (const group of ggg) {
-                    const gg_runs = this.redis_key + ':' + group.id;
-                    m.zadd(gg_runs, date_score, lbr.run.id)
-                        .zremrangebyrank(gg_runs, 0, -this.keep_count - 1);
-                }
-            }
-        }
-
-        await m.exec();
-    }
-
-    public async clear(conf: DaoConfig<LeaderboardRunEntry>, objs: LeaderboardRunEntry[]) {
-        const keys = _.map(objs, conf.id_key);
-
-        await conf.db.redis.zrem(this.redis_key,
-            ...keys);
-    }
-
-    public has_changed(old_obj: LeaderboardRunEntry, new_obj: LeaderboardRunEntry): boolean {
-        return _.get(old_obj.run as Run, this.date_property) != _.get(new_obj.run as Run, this.date_property);
-    }
-}
-
 export interface RunDaoOptions {
     latest_runs_history_length?: number;
     max_items?: number;
@@ -361,6 +213,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         // used to separate game groups
         db.mongo.collection(this.collection).createIndex({
             'gameGroups': 1,
+            'run.date': 1
         }).then(_.noop, console.error);
 
         this.computed = {
@@ -457,7 +310,18 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         return await this.load_by_index(verified ? 'latest_verified_runs' : 'latest_new_runs', key);
     }
 
-    public async get_historical_run_count(filter: any): Promise<Chart> {
+    public async get_player_count(filter: any) {
+
+        let res = await this.db.mongo.collection(this.collection).aggregate([
+            {$match: filter},
+            {$group: { _id: '$run.players.id'}},
+            {$count: 'total_players'}
+        ]).toArray();
+
+        return res.length ? res[0].total_players : 0;
+    }
+
+    public async get_historical_run_count(filter: any): Promise<BarChartData[]> {
         const month_bounaries: string[] = generate_month_boundaries(2010, new Date().getUTCFullYear() + 1);
 
         const data = (await this.db.mongo.collection(this.collection).aggregate([
@@ -477,35 +341,33 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         const now = new Date();
         const beginningOfMonth = (Date.UTC(now.getFullYear(), now.getDay()) - 86400000) / 1000;
 
-        return {
-            item_id: 'site_historical_runs',
-            item_type: 'runs',
-            parent_type: 'runs',
-            chart_type: 'line',
-            data: {
-                main: _.chain(data)
-                    .mapValues((v, k) => {
-                        return {
-                            x: new Date(k).getTime() / 1000,
-                            y: v[0].y,
-                        };
-                    })
-                    .values()
-                    .filter((p) => p.x < beginningOfMonth)
-                    .value(),
-            },
-            timestamp: new Date(),
-        };
+        return _.chain(data)
+            .mapValues((v, k) => {
+                return {
+                    x: new Date(k).getTime() / 1000,
+                    y: v[0].y,
+                };
+            })
+            .values()
+            .filter((p) => p.x < beginningOfMonth)
+            .value();
     }
 
-    public async get_site_submission_volume(): Promise<Chart> {
+    public async get_group_submission_volume(gg_id?: string|null): Promise<Chart> {
+
+        let filter: any = { 'run.status.status': 'verified' };
+
+        if(gg_id)
+            filter.gameGroups = gg_id;
+
         return {
-            item_id: 'site_volume',
+            item_id: gg_id || 'site',
             item_type: 'runs',
             parent_type: 'runs',
+            aggr: 'volume',
             chart_type: 'bar',
             data: {
-                main: await this.get_submission_volume({ 'run.status.status': 'verified' }),
+                main: await this.get_submission_volume(filter),
             },
             timestamp: new Date(),
         };
@@ -524,6 +386,8 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         return {
             item_id: category_id + (level_id ? '_' + level_id : ''),
             item_type: 'runs',
+            parent_type: 'leaderboards',
+            aggr: 'volume',
             chart_type: 'bar',
             data: {
                 main: await this.get_submission_volume(filter),
@@ -536,6 +400,8 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         return {
             item_id: game_id,
             item_type: 'runs',
+            parent_type: 'games',
+            aggr: 'volume',
             chart_type: 'bar',
             data: {
                 main: await this.get_submission_volume({
@@ -551,6 +417,8 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         return {
             item_id: player_id,
             item_type: 'runs',
+            parent_type: 'users',
+            aggr: 'volume',
             chart_type: 'bar',
             data: {
                 main: await this.get_submission_volume({
@@ -560,6 +428,62 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             },
             timestamp: new Date(),
         };
+    }
+
+    private async get_submission_volume(filter: any) {
+        const month_bounaries: string[] = generate_month_boundaries(2010, new Date().getUTCFullYear() + 1);
+
+        const d = (await this.db.mongo.collection(this.collection).aggregate([
+            {
+                $match: filter,
+            },
+            {
+                $bucket: {
+                    groupBy: '$run.date',
+                    boundaries: month_bounaries,
+                    default: '1970-01',
+                    output: {
+                        count: {$sum: 1},
+                    },
+                },
+            },
+        ]).toArray()).map((v) => {
+            return {
+                x: new Date(v._id).getTime() / 1000,
+                y: v.count,
+            };
+        });
+
+        // remove unknown entries
+        if (d.length && d[0].x === 0) {
+            d.splice(0, 1);
+        }
+
+        if (!d.length) {
+            return d;
+        }
+
+        // fill in skipped boundaries
+        let bound_cur = _.findIndex(month_bounaries, (v) => d[0].x == new Date(v + '-01').getTime() / 1000);
+        for (let i = 1; i < d.length; i++) {
+            const to_add = [];
+            while (d[i].x != new Date(month_bounaries[++bound_cur] + '-01').getTime() / 1000) {
+                to_add.push({ x: new Date(month_bounaries[bound_cur] + '-01').getTime() / 1000, y: 0});
+            }
+
+            if (to_add.length) {
+                d.splice(i, 0, ...to_add);
+                i += to_add.length;
+            }
+        }
+
+        // remove current month, if any
+        if (new Date(d[d.length - 1].x).getUTCMonth() == new Date().getUTCMonth() &&
+            new Date(d[d.length - 1].x).getUTCFullYear() == new Date().getUTCFullYear()) {
+            d.splice(d.length - 1, 1);
+        }
+
+        return d;
     }
 
     public async get_player_favorite_runs(player_id: string): Promise<Chart> {
@@ -585,8 +509,9 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
 
         return {
             item_id: player_id,
-            item_type: 'games',
-            parent_type: 'runs',
+            item_type: 'runs',
+            parent_type: 'users',
+            aggr: 'sum_over_games',
             chart_type: 'pie',
             data: {
                 main: _.chain(chart_data)
@@ -653,11 +578,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             }
             else {
                 metrics.total_players = {
-                    value: (await this.db.mongo.collection(this.collection).aggregate([
-                        {$match: filter},
-                        {$group: { _id: '$run.players.id'}},
-                        {$count: 'total_players'}
-                    ]).toArray())[0].total_players
+                    value: await this.get_player_count(filter)
                 };
             }
         }
@@ -676,70 +597,14 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         if(!run.obsolete)
             run.obsolete = old_obj ? old_obj.obsolete : false;
 
-        run.gameGroups = _.chain([
-                ['platforms', 'genres', 'publishers', 'developers']
-            ])
+        run.gameGroups = _.chain(
+            ['platforms', 'genres', 'publishers', 'developers'].map(v => run.run.game[v])
+        )
             .flatten()
             .map('id')
             .uniq()
             .value();
 
         return run;
-    }
-
-    private async get_submission_volume(filter: any) {
-        const month_bounaries: string[] = generate_month_boundaries(2010, new Date().getUTCFullYear() + 1);
-
-        const d = (await this.db.mongo.collection(this.collection).aggregate([
-            {
-                $match: filter,
-            },
-            {
-                $bucket: {
-                    groupBy: '$run.date',
-                    boundaries: month_bounaries,
-                    default: '1970-01',
-                    output: {
-                        count: {$sum: 1},
-                    },
-                },
-            },
-        ]).toArray()).map((v) => {
-            return {
-                x: new Date(v._id).getTime() / 1000,
-                y: v.count,
-            };
-        });
-
-        // remove unknown entries
-        if (d.length && d[0].x === 0) {
-            d.splice(0, 1);
-        }
-
-        if (!d.length) {
-            return d;
-        }
-
-        // fill in skipped boundaries
-        let bound_cur = _.findIndex(month_bounaries, (v) => d[0].x == new Date(v + '-01').getTime() / 1000);
-        for (let i = 1; i < d.length; i++) {
-            const to_add = [];
-            while (d[i].x != new Date(month_bounaries[++bound_cur] + '-01').getTime() / 1000) {
-                to_add.push({ x: new Date(month_bounaries[bound_cur] + '-01').getTime() / 1000, y: 0});
-            }
-
-            if (to_add.length) {
-                d.splice(i, 0, ...to_add);
-                i += to_add.length;
-            }
-        }
-
-        // remove current month, if any
-        if (new Date(d[d.length - 1].x).getUTCMonth() == new Date().getUTCMonth() &&
-            new Date(d[d.length - 1].x).getUTCFullYear() == new Date().getUTCFullYear()) {
-            d.splice(d.length - 1, 1);
-        }
-
-        return d;
     }
 }

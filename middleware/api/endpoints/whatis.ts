@@ -13,7 +13,7 @@ const router = Router();
 
 // retrieve what type of item a set of ids is
 router.get('/:ids', async (req, res) => {
-    const ids = req.params.ids.split(',').map(String.toLowerCase);
+    const ids = req.params.ids.split(',').map(_.lowerCase);
 
     if (ids.length > api.config!.api.maxItems) {
         return api_response.error(res, api_response.err.TOO_MANY_ITEMS());

@@ -191,6 +191,10 @@ export class Dao<T> implements DaoConfig<T> {
         return await require(`./backing/${this.backing}`).remove(this, ids);
     }
 
+    public async scan(options: ScanOptions, func: Function): Promise<number> {
+        return await require(`./backing/${this.backing}`).scan(this, options, func);
+    }
+
     public async count(): Promise<number> {
         return await require(`./backing/${this.backing}`).count(this);
     }

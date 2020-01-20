@@ -29,6 +29,7 @@ export interface Chart {
     item_id: string;
     parent_type?: string;
     item_type: string;
+    aggr: string;
     chart_type: 'line'|'bar'|'pie'|'list';
     data: {[dataset: string]: Array<LineChartData|BarChartData|PieChartData|ListData>};
     timestamp: Date;
@@ -38,6 +39,6 @@ export class ChartDao extends Dao<Chart> {
     constructor(db: DB) {
         super(db, 'charts', 'mongo');
 
-        this.id_key = (v) => v.parent_type + '_' + v.item_id;
+        this.id_key = (v) => v.parent_type + '_' + v.aggr + '_' + v.item_id;
     }
 }

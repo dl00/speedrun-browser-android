@@ -31,6 +31,10 @@ export async function massage_all_runs(skip = 0) {
     return await new RunDao(scraper.storedb!).massage({}, skip);
 }
 
+export async function massage_all_games(skip = 0) {
+    return await new GameDao(scraper.storedb!).massage({}, skip);
+}
+
 export async function restore_single_run(id: string) {
     const run_dao = new RunDao(scraper.storedb!);
     const run = await run_dao.load(id);
@@ -45,6 +49,8 @@ export async function restore_single_run(id: string) {
 export async function regenerate_autocomplete() {
     const game_dao = new GameDao(scraper.storedb!);
     game_dao.indexes.find((ind) => ind.name == 'autocomplete')!.forceIndex = true;
+    game_dao.indexes.find((ind) => ind.name == 'popular_games')!.forceIndex = true;
+    game_dao.indexes.find((ind) => ind.name == 'popular_trending_games')!.forceIndex = true;
 
     await game_dao.massage();
 

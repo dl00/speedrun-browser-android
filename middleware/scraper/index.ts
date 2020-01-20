@@ -19,6 +19,7 @@ interface Task {
     name: string;
     module: string;
     exec: string;
+    timeout: number;
     repeat?: moment.Duration;
     options?: any;
 }
@@ -37,18 +38,21 @@ const BASE_TASKS: Task[] = [
         name: 'load_gamelist',
         module: 'gamelist',
         exec: 'list_all_games',
+        timeout: 300,
         repeat: moment.duration(7, 'days'),
     },
     {
         name: 'pull_latest_new_runs',
         module: 'latest-runs',
         exec: 'pull_latest_runs',
+        timeout: 300,
         repeat: moment.duration(1, 'minutes'),
     },
     {
         name: 'pull_latest_verified_runs',
         module: 'latest-runs',
         exec: 'pull_latest_runs',
+        timeout: 300,
         repeat: moment.duration(1, 'minutes'),
         options: {
             verified: true,
@@ -58,18 +62,21 @@ const BASE_TASKS: Task[] = [
         name: 'pull_all_runs',
         module: 'all-runs',
         exec: 'list_all_runs',
+        timeout: 300,
         repeat: moment.duration(2, 'weeks'),
     },
     {
-        name: 'hack_chart_site_total_runs',
+        name: 'hack_chart_total_runs',
         module: 'hack',
-        exec: 'gen_site_total_runs',
+        exec: 'gen_total_runs',
+        timeout: 14400,
         repeat: moment.duration(1, 'days'),
     },
     {
-        name: 'hack_chart_site_volume',
+        name: 'hack_chart_volume',
         module: 'hack',
-        exec: 'gen_site_volume',
+        exec: 'gen_volume',
+        timeout: 14400,
         repeat: moment.duration(1, 'days'),
     },
 ];

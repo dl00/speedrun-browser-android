@@ -39,6 +39,7 @@ export class RecordChartIndex implements IndexDriver<LeaderboardRunEntry> {
             parent_type: 'leaderboards',
             item_type: 'runs',
             chart_type: 'line',
+            aggr: 'min',
             data: {},
             timestamp: new Date(),
         };
@@ -180,6 +181,7 @@ export async function get_player_pb_chart(conf: DaoConfig<LeaderboardRunEntry>, 
         item_id: `${player_id}_${game_id}`,
         item_type: 'runs',
         chart_type: 'line',
+        aggr: 'min',
         data: {},
         timestamp: new Date(),
     };

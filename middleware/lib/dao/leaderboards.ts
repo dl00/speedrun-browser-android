@@ -82,6 +82,7 @@ export function make_distribution_chart(lb: Leaderboard, vars: Variable[]): Char
         item_id: `leaderboards_distribution`,
         item_type: 'runs',
         chart_type: 'line',
+        aggr: 'time',
         data: {},
         timestamp: new Date(),
     };

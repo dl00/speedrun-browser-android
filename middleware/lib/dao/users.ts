@@ -60,6 +60,7 @@ export interface User extends BulkUser, BaseMiddleware {
     weblink?: string;
     role?: 'banned'|'user'|'trusted'|'moderator'|'admin'|'programmer';
     signup?: string;
+    score?: number;
 
     bests: {[id: string]: GamePersonalBests};
 }
@@ -249,6 +250,15 @@ export class UserDao extends Dao<User> {
 
     protected async pre_store_transform(user: User): Promise<User> {
         normalize_user(user);
+
+        user.score = await this.calculate_score(user);
+
         return user;
+    }
+
+    private async calculate_score(player: User): Promise<number> {
+        // look at personal bests for each game.
+        // we want to find the score of the game and multiply it by a standing score
+        return _.keys(player.bests).length;
     }
 }
