@@ -143,8 +143,6 @@ function get_user_search_indexes(user: User) {
 
     let score = Math.floor((user.score || 1) * 100);
 
-    console.log('Putting score', score);
-
     if (user.name) {
         indexes.push({ text: user.name.toLowerCase(), score: score });
     } else {
