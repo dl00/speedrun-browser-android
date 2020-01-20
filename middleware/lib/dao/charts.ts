@@ -39,6 +39,6 @@ export class ChartDao extends Dao<Chart> {
     constructor(db: DB) {
         super(db, 'charts', 'mongo');
 
-        this.id_key = (v) => v.parent_type + '_' + v.aggr + '_' + v.item_id;
+        this.id_key = (v) => v.item_type + '_' + v.aggr + '_' + v.item_id;
     }
 }

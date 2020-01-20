@@ -345,7 +345,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             .mapValues((v, k) => {
                 return {
                     x: new Date(k).getTime() / 1000,
-                    y: v[0].y,
+                    y: v.length ? v[0].y : 0,
                 };
             })
             .values()
@@ -363,7 +363,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         return {
             item_id: gg_id || 'site',
             item_type: 'runs',
-            parent_type: 'runs',
+            parent_type: 'game-groups',
             aggr: 'volume',
             chart_type: 'bar',
             data: {
@@ -532,15 +532,17 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         return await get_player_pb_chart(this, player_id, game_id);
     }
 
-    public async get_basic_metrics(game_id?: string|null, player_id?: string|null): Promise<{[id: string]: Metric}> {
+    public async get_basic_metrics(opts: {game_id?: string|null, player_id?: string|null, gg_id?: string|null}): Promise<{[id: string]: Metric}> {
 
         let filter: any = {};
 
-        if(game_id)
-            filter['run.game.id'] = game_id;
+        if(opts.gg_id)
+            filter['gameGroups'] = opts.gg_id;
+        if(opts.game_id)
+            filter['run.game.id'] = opts.game_id;
 
-        if(player_id)
-            filter['run.players.id'] = player_id;
+        if(opts.player_id)
+            filter['run.players.id'] = opts.player_id;
 
         let latest_run: LeaderboardRunEntry = (await this.db.mongo.collection(this.collection).find(filter)
             .sort({'run.submitted': -1}).limit(1).toArray())[0];
@@ -554,7 +556,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             }
         };
 
-        if(game_id || player_id) {
+        if(opts.game_id || opts.player_id) {
             metrics.total_run_time = { value: (await this.db.mongo.collection(this.collection).aggregate([
                     {$match: filter},
                     {$group: { _id: null, time: {$sum: '$run.times.primary_t'}}}
@@ -572,8 +574,8 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             };
         }
 
-        if(!player_id) {
-            if(!game_id) {
+        if(!opts.player_id) {
+            if(!opts.game_id) {
                 metrics.total_players = { value: await new UserDao(this.db).count() };
             }
             else {

@@ -328,7 +328,7 @@ describe('RecordChartIndex', () => {
         await run_dao.save(saved_runs);
 
         // check the generated chart
-        const chart = (await chart_dao.load('leaderboards_min_mysubcategory'))[0];
+        const chart = (await chart_dao.load('runs_min_mysubcategory'))[0];
 
         expect(chart).to.exist;
         expect(chart!.data.main).to.have.lengthOf(2);
@@ -435,7 +435,7 @@ describe('RecordChartIndex', () => {
         await run_dao.save(saved_runs);
 
         // check the generated chart
-        const chart = (await chart_dao.load('leaderboards_min_variabledSubcategory'))[0];
+        const chart = (await chart_dao.load('runs_min_variabledSubcategory'))[0];
 
         expect(chart).to.exist;
         expect(chart!.data.var_1_var_1_b_var_2_var_2_a).to.have.lengthOf(2);

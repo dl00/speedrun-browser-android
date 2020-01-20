@@ -7,6 +7,7 @@ import * as api_response from '../response';
 
 import { Category, CategoryDao, standard_sort_categories } from '../../lib/dao/categories';
 import { Chart, ChartDao, LineChartData } from '../../lib/dao/charts';
+import { Metric } from '../../lib/dao/metrics';
 import { GameDao } from '../../lib/dao/games';
 import { LeaderboardDao, make_distribution_chart } from '../../lib/dao/leaderboards';
 import { Level, LevelDao } from '../../lib/dao/levels';
@@ -53,7 +54,9 @@ export function get_wr_chart_longest_holders(wr_chart: Chart): Chart {
     return chart;
 }
 
-router.get('/site', async (_req, res) => {
+router.get('/game-groups/:id', async (req, res) => {
+
+    const gg_id = req.params.id;
 
     const chart_dao = new ChartDao(api.storedb!);
 
@@ -62,25 +65,28 @@ router.get('/site', async (_req, res) => {
     const run_dao = new RunDao(api.storedb!);
 
     // total run count over time
-    const count_over_time_chart = (await chart_dao.load('runs_site_historical_runs'))[0];
+    const count_over_time_chart = (await chart_dao.load(`runs_count_${gg_id}`))[0];
 
     // submitted run volume
-    const volume_chart = (await chart_dao.load('runs_site_volume'))[0];
+    const volume_chart = (await chart_dao.load(`runs_volume_${gg_id}`))[0];
 
     // metric: hours recorded in PBs by speedrunners
 
     // metric: game with the most speedruns this month
+
+    let metrics: {[key: string]: Metric} = await run_dao.get_basic_metrics({ gg_id: gg_id });
+
+    if(gg_id === 'site') {
+        metrics.total_games = { value: await game_dao.count() };
+        metrics.total_leaderboards = { value: await leaderboard_dao.count() };
+    }
 
     api_response.complete_single(res, {
         charts: {
             count_over_time: count_over_time_chart,
             volume: volume_chart,
         },
-        metrics: {
-            ...await run_dao.get_basic_metrics(),
-            total_games: { value: await game_dao.count() },
-            total_leaderboards: { value: await leaderboard_dao.count() }
-        }
+        metrics: metrics
     });
 });
 
@@ -111,7 +117,7 @@ router.get('/games/:id', async (req, res) => {
             volume: volume_chart,
         },
         metrics: {
-            ...await run_dao.get_basic_metrics(game_id),
+            ...await run_dao.get_basic_metrics({ game_id: game_id }),
             total_leaderboards: { value: await leaderboard_dao.get_leaderboard_count_for_game(game_id) }
         }
     });
@@ -163,7 +169,7 @@ router.get('/leaderboards/:id', async (req, res) => {
     }
 
     // word records chartify
-    const wr_chart = (await chart_dao.load(`leaderboards_${leaderboard_id}`))[0];
+    const wr_chart = (await chart_dao.load(`runs_min_${leaderboard_id}`))[0];
 
     // show the run time distributions
     const distrib_chart = make_distribution_chart(leaderboard, category.variables as Variable[]);
@@ -206,7 +212,7 @@ router.get('/users/:id', async (req, res) => {
             volume: volume_chart,
         },
         metrics: {
-            ...await run_dao.get_basic_metrics(null, player_id)
+            ...await run_dao.get_basic_metrics({player_id: player_id})
         }
     });
 });
@@ -241,7 +247,7 @@ router.get('/games/:game_id/players/:player_id', async (req, res) => {
             pbs: pb_chart,
         },
         metrics: {
-            ...await run_dao.get_basic_metrics(game_id, player_id)
+            ...await run_dao.get_basic_metrics({ game_id: game_id, player_id: player_id })
         }
     });
 });

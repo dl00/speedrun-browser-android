@@ -279,9 +279,7 @@ export class GameDao extends Dao<Game> {
 
         for (const game of games) {
             // make sure every game comes in with a score
-            //console.log('Prescore', game.score);
             game.score = await this.calculate_score(game);
-            //console.log('Postscore', game.score);
         }
 
         await super.save(games);
@@ -294,7 +292,6 @@ export class GameDao extends Dao<Game> {
 
         for (const game of games) {
             game.score = await this.calculate_score(game);
-            console.log(game.id, game.score);
         }
 
         await this.save(games);
