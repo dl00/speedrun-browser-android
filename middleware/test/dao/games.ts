@@ -179,7 +179,7 @@ describe('GameDao', () => {
                     id: 'yet_another_run',
                     date: '2018-05-08',
                     status: {'verify-date': '2018-05-08'},
-                    players: [{id: 'special2'}],
+                    players: [{id: 'special2'}, {id: 'special3'}, {id: 'special4'}],
                     times: { primary: '135', primary_t: 135 },
                     system: {},
                     values: {},
