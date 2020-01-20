@@ -12,6 +12,7 @@ export async function gen_total_runs(_runid: string, _options: any) {
     let chart_dao = new ChartDao(scraper.storedb!);
 
     try {
+        console.log('[CHART] total site');
         const chart: Chart = {
             item_id: 'site',
             parent_type: 'game-groups',
@@ -31,6 +32,7 @@ export async function gen_total_runs(_runid: string, _options: any) {
     try {
         await new GameGroupDao(scraper.storedb!).scan({batchSize: 100}, async (ggs: GameGroup[]) => {
             for(let gg of ggs) {
+                console.log('[CHART] total', gg.id);
                 const chart: Chart = {
                     item_id: gg.id,
                     parent_type: 'game-groups',
@@ -50,6 +52,8 @@ export async function gen_total_runs(_runid: string, _options: any) {
         console.error('loader/hack: could not generate total runs chart for a game group:', err.statusCode || err);
         throw new Error('permanent');
     }
+
+    console.log('[CHART] total Done')
 }
 
 export async function gen_volume(_runid: string, _options: any) {
@@ -58,6 +62,8 @@ export async function gen_volume(_runid: string, _options: any) {
     let chart_dao = new ChartDao(scraper.storedb!);
 
     try {
+        console.log('[CHART] volume site');
+
         const chart = await run_dao.get_group_submission_volume();
         await chart_dao.save(chart);
     } catch (err) {
@@ -68,8 +74,9 @@ export async function gen_volume(_runid: string, _options: any) {
     try {
         await new GameGroupDao(scraper.storedb!).scan({batchSize: 100}, async (ggs: GameGroup[]) => {
             for(let gg of ggs) {
-                const chart = await run_dao.get_group_submission_volume(gg.id);
+                console.log('[CHART] volume', gg.id);
 
+                const chart = await run_dao.get_group_submission_volume(gg.id);
                 await chart_dao.save(chart);
             }
         });
@@ -77,4 +84,6 @@ export async function gen_volume(_runid: string, _options: any) {
         console.error('loader/hack: could not generate volume chart for game group:', err.statusCode || err);
         throw new Error('permanent');
     }
+
+    console.log('[CHART] volume Done');
 }

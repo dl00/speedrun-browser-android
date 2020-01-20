@@ -13,7 +13,7 @@ import { RedisMapIndex } from './backing/redis';
 import { game_assets_to_bulk } from './games';
 import { NewRecord } from './runs';
 
-import { BulkGameAssets } from './games';
+import { BulkGameAssets, GameDao } from './games';
 import { LeaderboardRunEntry, Run, run_to_bulk, RunDao } from './runs';
 
 import { Dao, IndexerIndex } from './';
@@ -141,15 +141,19 @@ export function apply_personal_best(player: User, run: LeaderboardRunEntry): New
 function get_user_search_indexes(user: User) {
     const indexes: Array<{ text: string, score: number, namespace?: string }> = [];
 
+    let score = Math.floor((user.score || 1) * 100);
+
+    console.log('Putting score', score);
+
     if (user.name) {
-        indexes.push({ text: user.name.toLowerCase(), score: 1 });
+        indexes.push({ text: user.name.toLowerCase(), score: score });
     } else {
         for (const name in user.names) {
             if (!user.names[name]) {
                 continue;
             }
 
-            const idx: any = { text: user.names[name].toLowerCase(), score: 1 };
+            const idx: any = { text: user.names[name].toLowerCase(), score: score };
             if (name != 'international') {
                 idx.namespace = name;
             }
@@ -259,6 +263,35 @@ export class UserDao extends Dao<User> {
     private async calculate_score(player: User): Promise<number> {
         // look at personal bests for each game.
         // we want to find the score of the game and multiply it by a standing score
-        return _.keys(player.bests).length;
+
+        if(!_.keys(player.bests).length)
+            return 0;
+
+        let score = 0;
+
+        let games = await new GameDao(this.db).load(_.keys(player.bests));
+
+        for(let game of games) {
+            if(!game)
+                continue;
+
+            let game_score = Math.max(1, game.score || 1);
+
+            let pbg = player.bests[game.id];
+            for(let category_id in pbg.categories) {
+                let pbc = pbg.categories[category_id];
+
+                if(pbc.run) {
+                    score += game_score / (pbc.run.place || 100);
+                }
+                else if(pbc.levels) {
+                    for(let level_id in pbc.levels)
+                        score += game_score / _.keys(pbc.levels).length /
+                            (pbc.levels[level_id].run.place || 100);
+                }
+            }
+        }
+
+        return score;
     }
 }
