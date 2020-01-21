@@ -562,11 +562,13 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         }
 
         if(opts.game_id || opts.player_id) {
-            metrics.total_run_time = { value: (await this.db.mongo.collection(this.collection).aggregate([
+            let totalRunTimeAggr = (await this.db.mongo.collection(this.collection).aggregate([
                     {$match: filter},
                     {$group: { _id: null, time: {$sum: '$run.times.primary_t'}}}
-                ]).toArray())[0].time
-            }
+                ]).toArray())[0];
+
+            if(totalRunTimeAggr)
+                metrics.total_run_time = { value: totalRunTimeAggr.time }
 
             metrics.level_run_count = {
                 value: <any>await this.db.mongo.collection(this.collection)
