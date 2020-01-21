@@ -37,7 +37,7 @@ class GameGroupStatisticsFragment : StatisticsFragment() {
             )
         ))
 
-        if (gameGroupId != "site") {
+        if (gameGroupId == "site") {
             addMetrics(listOf(
                     ChartOptions(
                             name = getString(R.string.metric_title_total_games),

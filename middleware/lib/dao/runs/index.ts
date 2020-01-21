@@ -580,7 +580,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         }
 
         if(!opts.player_id) {
-            if(!opts.game_id) {
+            if(!opts.game_id && !opts.gg_id) {
                 metrics.total_players = { value: await new UserDao(this.db).count() };
             }
             else {

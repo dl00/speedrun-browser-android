@@ -49,7 +49,7 @@ data class Chart(
             val obj = json.asJsonObject
 
             val chartType = obj.getNotNull("chart_type")!!.asString
-            val itemType = obj.getNotNull("item_type")!!.asString
+            val itemType = obj.getNotNull("parent_type")?.asString ?: obj.getNotNull("item_type")!!.asString
 
             var dataMap = mutableMapOf<String, List<ChartData>>()
 
