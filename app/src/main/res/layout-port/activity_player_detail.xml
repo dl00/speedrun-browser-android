@@ -97,6 +97,8 @@
             android:visibility="gone"
             android:layout_width="match_parent"
             android:background="@color/colorPrimary"
+            android:layout_marginStart="@dimen/half_fab_margin"
+            android:layout_marginEnd="@dimen/half_fab_margin"
             android:layout_height="wrap_content">
 
             <LinearLayout

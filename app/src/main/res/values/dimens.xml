@@ -27,6 +27,7 @@
     <dimen name="min_progress_spinner_height">75dp</dimen>
 
     <dimen name="game_cover_rounded_corners">15dp</dimen>
+    <dimen name="player_rounded_corners">8dp</dimen>
 
     <dimen name="bar_height">35dp</dimen>
     <dimen name="dialog_list_min_height">300dp</dimen>

@@ -253,9 +253,12 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
 
             if (!mPlayer!!.isGuest) {
                 try {
+                    val placer = ImageViewPlacerConsumer(mPlayerIcon)
+                    placer.roundedCorners = resources.getDimensionPixelSize(R.dimen.player_rounded_corners).toFloat()
+
                     mBestsFrame.visibility = View.VISIBLE
                     mDisposables.add(il.loadImage(URL(String.format(Constants.AVATAR_IMG_LOCATION, mPlayer!!.names!!["international"])))
-                            .subscribe(ImageViewPlacerConsumer(mPlayerIcon)))
+                            .subscribe(placer))
                 } catch (e: MalformedURLException) {
                     Log.w(TAG, "Chould not show player logo:", e)
                     mBestsFrame.visibility = View.GONE
@@ -286,15 +289,19 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
         for (gameBests in playerGameBests) {
             val gameLayout = layoutInflater.inflate(R.layout.content_game_personal_bests, null)
 
-            (gameLayout.findViewById<View>(R.id.txtGameName) as TextView).setText(gameBests.names!!.get("international"))
+            (gameLayout.findViewById<View>(R.id.txtGameName) as TextView).text = gameBests.names!!["international"]
 
             if (gameBests.assets!!.coverLarge != null) {
                 val imgView = gameLayout.findViewById<ImageView>(R.id.imgGameCover)
+
+                val placer = ImageViewPlacerConsumer(imgView)
+                placer.roundedCorners = resources.getDimensionPixelSize(R.dimen.game_cover_rounded_corners).toFloat()
+
                 mDisposables.add(il.loadImage(gameBests.assets.coverLarge!!.uri)
-                        .subscribe(ImageViewPlacerConsumer(imgView)))
+                        .subscribe(placer))
             }
 
-            var runsToAdd: MutableList<PersonalBestRunRow> = mutableListOf()
+            val runsToAdd: MutableList<PersonalBestRunRow> = mutableListOf()
 
             for (categoryBest in gameBests.categories!!.values) {
 

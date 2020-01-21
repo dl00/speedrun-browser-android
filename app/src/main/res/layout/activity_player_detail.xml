@@ -97,6 +97,8 @@
         android:visibility="gone"
         android:layout_width="0dp"
         android:layout_weight="1"
+        android:layout_marginStart="@dimen/half_fab_margin"
+        android:layout_marginEnd="@dimen/half_fab_margin"
         android:background="@color/colorPrimary"
         android:layout_height="match_parent">
 

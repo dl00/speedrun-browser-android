@@ -552,11 +552,13 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             let latest_run: LeaderboardRunEntry = (await this.db.mongo.collection(this.collection).find(filter)
                 .sort({'run.submitted': -1}).limit(1).toArray())[0];
 
-            metrics.most_recent_run = {
-                value: new Date(latest_run.run.submitted).getTime(),
-                item_type: 'runs',
-                item_id: latest_run.run.id
-            };
+            if(latest_run) {
+                metrics.most_recent_run = {
+                    value: new Date(latest_run.run.submitted).getTime(),
+                    item_type: 'runs',
+                    item_id: latest_run.run.id
+                };
+            }
         }
 
         if(opts.game_id || opts.player_id) {
