@@ -510,7 +510,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         return {
             item_id: player_id,
             item_type: 'runs',
-            parent_type: 'users',
+            parent_type: 'games',
             aggr: 'sum_over_games',
             chart_type: 'pie',
             data: {
@@ -544,17 +544,20 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         if(opts.player_id)
             filter['run.players.id'] = opts.player_id;
 
-        let latest_run: LeaderboardRunEntry = (await this.db.mongo.collection(this.collection).find(filter)
-            .sort({'run.submitted': -1}).limit(1).toArray())[0];
-
         let metrics: {[id: string]: Metric} = {
-            total_run_count: { value: <any>await this.db.mongo.collection(this.collection).countDocuments(filter) },
-            most_recent_run: {
+            total_run_count: { value: <any>await this.db.mongo.collection(this.collection).countDocuments(filter) }
+        };
+
+        if(opts.game_id || opts.player_id || opts.gg_id) {
+            let latest_run: LeaderboardRunEntry = (await this.db.mongo.collection(this.collection).find(filter)
+                .sort({'run.submitted': -1}).limit(1).toArray())[0];
+
+            metrics.most_recent_run = {
                 value: new Date(latest_run.run.submitted).getTime(),
                 item_type: 'runs',
                 item_id: latest_run.run.id
-            }
-        };
+            };
+        }
 
         if(opts.game_id || opts.player_id) {
             metrics.total_run_time = { value: (await this.db.mongo.collection(this.collection).aggregate([

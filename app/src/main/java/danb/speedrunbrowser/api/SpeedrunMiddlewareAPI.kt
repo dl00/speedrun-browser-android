@@ -5,8 +5,6 @@ import com.google.gson.FieldNamingPolicy
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 
-import java.io.Serializable
-import java.util.ArrayList
 import java.util.Objects
 
 import danb.speedrunbrowser.BuildConfig
@@ -156,8 +154,8 @@ object SpeedrunMiddlewareAPI {
         fun whatAreThese(@Path("ids") thingIds: String): Observable<APIResponse<WhatIsEntry>>
 
         // Charts
-        @GET("charts/site")
-        fun getSiteMetrics(): Observable<APIChartResponse>
+        @GET("charts/game-groups/{id}")
+        fun getGameGroupMetrics(@Path("id") ggId: String): Observable<APIChartResponse>
 
         @GET("charts/games/{id}")
         fun getGameMetrics(@Path("id") gameId: String): Observable<APIChartResponse>

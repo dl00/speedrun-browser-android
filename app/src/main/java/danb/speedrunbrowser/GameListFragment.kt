@@ -1,7 +1,6 @@
 package danb.speedrunbrowser
 
 import android.app.ActivityOptions
-import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -15,7 +14,7 @@ import com.google.android.gms.security.ProviderInstaller
 import com.google.firebase.crash.FirebaseCrash
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.GameGroup
-import danb.speedrunbrowser.stats.SiteStatisticsFragment
+import danb.speedrunbrowser.stats.GameGroupStatisticsFragment
 import danb.speedrunbrowser.utils.Analytics
 import danb.speedrunbrowser.utils.AppDatabase
 import danb.speedrunbrowser.utils.ItemType
@@ -205,7 +204,12 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
 
     private fun viewStats() {
         val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
-        intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, SiteStatisticsFragment::class.java.canonicalName)
+        intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, GameGroupStatisticsFragment::class.java.canonicalName)
+
+        if (mGameGroup != null) {
+            intent.putExtra(GameGroupStatisticsFragment.EXTRA_GAME_GROUP_ID, mGameGroup!!.id)
+        }
+
         startActivity(intent)
     }
 
@@ -399,12 +403,6 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                         })
                     }
                 })
-            }
-        }
-
-        fun reloadSearchResults() {
-            for (f in fragments) {
-                f.reload()
             }
         }
     }

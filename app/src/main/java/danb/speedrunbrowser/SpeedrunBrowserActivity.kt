@@ -19,7 +19,7 @@ import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.api.objects.GameGroup
 import danb.speedrunbrowser.api.objects.User
 import danb.speedrunbrowser.api.objects.WhatIsEntry
-import danb.speedrunbrowser.stats.SiteStatisticsFragment
+import danb.speedrunbrowser.stats.GameGroupStatisticsFragment
 import danb.speedrunbrowser.utils.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -135,7 +135,7 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
             }
         }
         else if (id == R.id.menu_site_stats) {
-            showFragment(SiteStatisticsFragment(), null)
+            showFragment(GameGroupStatisticsFragment(), null)
         }
         return super.onOptionsItemSelected(item)
     }
@@ -156,6 +156,14 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
             cp != null -> frag = (Class.forName(cp) as Class<Fragment>).getConstructor().newInstance()
             intent.data != null -> {
                 val segs = intent.data!!.pathSegments
+
+                if (segs.intersect(BLACKLIST_URL_SEGS).isNotEmpty()) {
+                    val notFoundArgs = Bundle()
+                    notFoundArgs.putParcelable(NotFoundFragment.ARG_URL, intent.data!!)
+                    showFragment(NotFoundFragment(), notFoundArgs)
+                    return
+                }
+
 
                 if (segs.isNotEmpty()) {
 
@@ -334,5 +342,7 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         private val TAG = SpeedrunBrowserActivity::class.java.simpleName
 
         const val EXTRA_FRAGMENT_CLASSPATH = "fragment_classpath"
+
+        private val BLACKLIST_URL_SEGS = listOf("forum", "thread")
     }
 }

@@ -4,11 +4,13 @@ import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.utils.Analytics
 
-class SiteStatisticsFragment : StatisticsFragment() {
+class GameGroupStatisticsFragment : StatisticsFragment() {
     override fun onStart() {
         super.onStart()
 
-        Analytics.logItemView(context!!, "chart", "site")
+        val gameGroupId = arguments?.getString(EXTRA_GAME_GROUP_ID) ?: "site"
+
+        Analytics.logItemView(context!!, "game_group_chart", gameGroupId)
 
         addChart(ChartOptions(
                 name = getString(R.string.chart_title_count_over_time),
@@ -35,22 +37,24 @@ class SiteStatisticsFragment : StatisticsFragment() {
             )
         ))
 
-        addMetrics(listOf(
-            ChartOptions(
-                    name = getString(R.string.metric_title_total_games),
-                    description = getString(R.string.metric_desc_total_games),
-                    identifier = "total_players",
-                    xValueFormat = ::formatBigNumber,
-                    setLabels = { "" }
-            ),
-            ChartOptions(
-                    name = getString(R.string.metric_title_total_leaderboards),
-                    description = getString(R.string.metric_desc_total_leaderboards),
-                    identifier = "total_players",
-                    xValueFormat = ::formatBigNumber,
-                    setLabels = { "" }
-            )
-        ))
+        if (gameGroupId != "site") {
+            addMetrics(listOf(
+                    ChartOptions(
+                            name = getString(R.string.metric_title_total_games),
+                            description = getString(R.string.metric_desc_total_games),
+                            identifier = "total_players",
+                            xValueFormat = ::formatBigNumber,
+                            setLabels = { "" }
+                    ),
+                    ChartOptions(
+                            name = getString(R.string.metric_title_total_leaderboards),
+                            description = getString(R.string.metric_desc_total_leaderboards),
+                            identifier = "total_players",
+                            xValueFormat = ::formatBigNumber,
+                            setLabels = { "" }
+                    )
+            ))
+        }
 
         addChart(ChartOptions(
                 name = getString(R.string.chart_title_volume),
@@ -61,7 +65,11 @@ class SiteStatisticsFragment : StatisticsFragment() {
         ))
 
         setDataSourceAPIResponse(
-                SpeedrunMiddlewareAPI.make(context!!).getSiteMetrics()
+                SpeedrunMiddlewareAPI.make(context!!).getGameGroupMetrics(gameGroupId)
         )
+    }
+
+    companion object {
+        const val EXTRA_GAME_GROUP_ID = "gg_id"
     }
 }
