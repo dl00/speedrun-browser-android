@@ -89,7 +89,7 @@ export async function scan(conf: DaoConfig<any>, options: ScanOptions, func: Fun
 }
 
 export async function count(conf: DaoConfig<any>): Promise<number> {
-    return await conf.db.mongo.collection(conf.collection).count();
+    return await conf.db.mongo.collection(conf.collection).estimatedDocumentCount();
 }
 
 export class MongoMapIndex<T> implements IndexDriver<T> {
