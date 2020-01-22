@@ -42,14 +42,14 @@ class GameGroupStatisticsFragment : StatisticsFragment() {
                     ChartOptions(
                             name = getString(R.string.metric_title_total_games),
                             description = getString(R.string.metric_desc_total_games),
-                            identifier = "total_players",
+                            identifier = "total_games",
                             xValueFormat = ::formatBigNumber,
                             setLabels = { "" }
                     ),
                     ChartOptions(
                             name = getString(R.string.metric_title_total_leaderboards),
                             description = getString(R.string.metric_desc_total_leaderboards),
-                            identifier = "total_players",
+                            identifier = "total_leaderboards",
                             xValueFormat = ::formatBigNumber,
                             setLabels = { "" }
                     )

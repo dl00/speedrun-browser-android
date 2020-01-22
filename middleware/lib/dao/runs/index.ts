@@ -548,7 +548,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             total_run_count: { value: <any>await this.db.mongo.collection(this.collection).countDocuments(filter) }
         };
 
-        if(opts.game_id || opts.player_id || opts.gg_id) {
+        if(_.keys(filter).length) {
             let latest_run: LeaderboardRunEntry = (await this.db.mongo.collection(this.collection).find(filter)
                 .sort({'run.submitted': -1}).limit(1).toArray())[0];
 
