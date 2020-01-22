@@ -141,7 +141,7 @@ describe('GameDao', () => {
         expect(games[0]).to.have.property('id', 'a_game_with_genre');
         expect(games[1]).to.have.property('id', 'a_game');
 
-        games = await game_dao.load_popular(0, 'my_genre');
+        games = await game_dao.load_popular('popular', 0, 'my_genre');
 
         expect(games.length).to.eql(1);
         expect(games[0]).to.have.property('id', 'a_game_with_genre');
@@ -183,7 +183,7 @@ describe('GameDao', () => {
         await game_dao.rescore_games(['a_game', 'a_game_with_genre']);
 
         // order of the leaderboards should be switched now
-        games = await game_dao.load_popular(1);
+        games = await game_dao.load_popular('popular', 1);
 
         expect(games[0]).to.have.property('id', 'a_game_with_genre');
     });

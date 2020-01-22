@@ -568,7 +568,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
                 ]).toArray())[0];
 
             if(totalRunTimeAggr)
-                metrics.total_run_time = { value: totalRunTimeAggr.time }
+                metrics.total_run_time = { value: totalRunTimeAggr.time };
 
             metrics.level_run_count = {
                 value: <any>await this.db.mongo.collection(this.collection)

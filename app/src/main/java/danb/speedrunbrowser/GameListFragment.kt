@@ -217,7 +217,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
 
         private val fragments: Array<ItemListFragment> = arrayOf(
             ItemListFragment(),
-            RunItemListFragment(),
+            ItemListFragment(),
             ItemListFragment(),
             ItemListFragment(),
             ItemListFragment()
@@ -318,30 +318,48 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
 
         private fun initializePage(position: Int) {
             when (position) {
-                0 -> fragments[0].setItemsSource(object : ItemListFragment.ItemSource {
-                    override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
-                        return if (mGameGroup != null)
-                            SpeedrunMiddlewareAPI.make(context!!).listGamesByGenre(mGameGroup!!.id, offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
-                        else
-                            SpeedrunMiddlewareAPI.make(context!!).listGames(offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
-                    }
-                })
-                1 -> fragments[1].setItemsSource(object : ItemListFragment.ItemSource {
-                    override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
+                0 -> {
+                    fragments[0].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
+                        override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
+                            return if (mGameGroup != null)
+                                SpeedrunMiddlewareAPI.make(context!!).listGamesByGenre("popular", mGameGroup!!.id, offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
+                            else
+                                SpeedrunMiddlewareAPI.make(context!!).listGames("popular", offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
+                        }
+                    }, "popular", getString(R.string.label_list_mode_popular)))
 
-                        val shouldShowBleedingEdge = (fragments[1] as RunItemListFragment).shouldShowBleedingEdgeRun
+                    fragments[0].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
+                        override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
+                            return if (mGameGroup != null)
+                                SpeedrunMiddlewareAPI.make(context!!).listGamesByGenre("trending", mGameGroup!!.id, offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
+                            else
+                                SpeedrunMiddlewareAPI.make(context!!).listGames("trending", offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
+                        }
+                    }, "trending", getString(R.string.label_list_mode_trending)))
+                }
+                1 -> {
+                    fragments[1].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
+                        override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
+                            return (if (mGameGroup != null)
+                                SpeedrunMiddlewareAPI.make(context!!).listLatestRunsByGenre(mGameGroup!!.id, offset, true)
+                            else
+                                SpeedrunMiddlewareAPI.make(context!!).listLatestRuns(offset, true)
+                                    ).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
+                        }
+                    }, "verified", getString(R.string.label_list_mode_verified)))
 
-                        return (if (mGameGroup != null)
-                            SpeedrunMiddlewareAPI.make(context!!).listLatestRunsByGenre(
-                                    mGameGroup!!.id,
-                                    offset, shouldShowBleedingEdge)
-                        else
-                            SpeedrunMiddlewareAPI.make(context!!).listLatestRuns(
-                                    offset, shouldShowBleedingEdge)
-                        ).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
-                    }
-                })
-                2 -> fragments[2].setItemsSource(object : ItemListFragment.ItemSource {
+                    fragments[1].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
+                        override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
+                            return (if (mGameGroup != null)
+                                SpeedrunMiddlewareAPI.make(context!!).listLatestRunsByGenre(
+                                        mGameGroup!!.id, offset, false)
+                            else
+                                SpeedrunMiddlewareAPI.make(context!!).listLatestRuns(offset, false)
+                                    ).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
+                        }
+                    }, "unverified", getString(R.string.label_list_mode_unverified)))
+                }
+                2 -> fragments[2].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
                     override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
                         val entries = mDB!!.watchHistoryDao()
                                 .getMany(offset)
@@ -361,8 +379,8 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                             SpeedrunMiddlewareAPI.make(context!!).listRuns(builder.toString()).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                         })
                     }
-                })
-                3 -> fragments[3].setItemsSource(object : ItemListFragment.ItemSource {
+                }))
+                3 -> fragments[3].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
                     override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
 
                         val subs = mDB!!.subscriptionDao()
@@ -382,8 +400,8 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                             SpeedrunMiddlewareAPI.make(context!!).listGames(builder.toString()).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                         })
                     }
-                })
-                4 -> fragments[4].setItemsSource(object : ItemListFragment.ItemSource {
+                }))
+                4 -> fragments[4].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
                     override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
                         val subs = mDB!!.subscriptionDao()
                                 .listOfType("player", offset)
@@ -402,7 +420,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                             SpeedrunMiddlewareAPI.make(context!!).listPlayers(builder.toString()).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                         })
                     }
-                })
+                }))
             }
         }
     }

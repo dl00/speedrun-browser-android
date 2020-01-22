@@ -7,6 +7,15 @@
     android:orientation="vertical"
     tools:context=".ItemListFragment">
 
+    <HorizontalScrollView
+        android:id="@+id/hsvListModes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/half_fab_margin"
+        android:paddingEnd="@dimen/half_fab_margin"
+        android:layout_marginTop="@dimen/half_fab_margin"
+        android:layout_marginBottom="@dimen/half_fab_margin" />
+
     <danb.speedrunbrowser.views.ProgressSpinnerView
         android:id="@+id/spinner"
         android:visibility="gone"

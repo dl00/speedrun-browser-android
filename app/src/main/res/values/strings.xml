@@ -205,4 +205,8 @@
     <string name="metric_desc_total_runs_full_game">Number of PBs submitted over all time for full game runs only.</string>
     <string name="metric_title_total_runs_level">Level Runs Submitted</string>
     <string name="metric_desc_total_runs_level">Number of PBs submitted over all time for individual level runs only.</string>
+    <string name="label_list_mode_popular">Popular</string>
+    <string name="label_list_mode_trending"><![CDATA[New & Trending]]></string>
+    <string name="label_list_mode_verified">Verified</string>
+    <string name="label_list_mode_unverified">Unverified</string>
 </resources>

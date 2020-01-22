@@ -24,6 +24,10 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.HorizontalScrollView
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
+import danb.speedrunbrowser.api.objects.GameGroup
 import danb.speedrunbrowser.utils.ItemType
 
 import java.util.ArrayList
@@ -40,13 +44,19 @@ open class ItemListFragment : Fragment() {
 
     private var mRootView: View? = null
 
+    private var mModeHsv: HorizontalScrollView? = null
+
     private var mAdapter: ItemListAdapter? = null
 
     private lateinit var mSearchItemsView: RecyclerView
 
     private lateinit var mEmptyView: View
 
-    private var mItemSource: ItemSource? = null
+    private var mItemModes = mutableListOf<ItemListMode>()
+    private var mSelectedMode: String? = null
+
+    private val currentItemSource
+    get() = mItemModes.find { it.id == mSelectedMode }?.itemSource
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,6 +82,8 @@ open class ItemListFragment : Fragment() {
         mSearchItemsView = mRootView!!.findViewById(R.id.listSearchItems)
         mEmptyView = mRootView!!.findViewById(R.id.empty)
 
+        mModeHsv = mRootView!!.findViewById(R.id.hsvListModes)
+
         mAdapter = ItemListAdapter(context!!, mSearchItemsView, View.OnClickListener { v ->
             if (mListener != null) {
                 var id = ""
@@ -79,6 +91,7 @@ open class ItemListFragment : Fragment() {
                     ItemType.GAMES -> id = (v.tag as Game).id
                     ItemType.PLAYERS -> id = (v.tag as User).id
                     ItemType.RUNS -> id = (v.tag as LeaderboardRunEntry).run.id
+                    ItemType.GAME_GROUPS -> id = (v.tag as GameGroup).id
                 }
 
                 mListener!!.onItemSelected(itemType, id, this@ItemListFragment,
@@ -86,8 +99,7 @@ open class ItemListFragment : Fragment() {
             }
         })
         mSearchItemsView.adapter = mAdapter
-        if (mItemSource != null)
-            mAdapter!!.loadListTop()
+        reload()
 
         return mRootView
     }
@@ -113,17 +125,63 @@ open class ItemListFragment : Fragment() {
         mDisposables.dispose()
     }
 
-    fun setItemsSource(source: ItemSource) {
-        mItemSource = source
-        reload()
+    fun addListMode(mode: ItemListMode) {
+        mItemModes.add(mode)
+        if (mItemModes.size == 1)
+            mSelectedMode = mode.id
+    }
+
+    private fun addModeChips() {
+
+        val hsv = mModeHsv ?: return
+
+        val cg = if (hsv.childCount == 0) {
+            val ncg = ChipGroup(context)
+            ncg.tag = id
+            ncg.isSingleSelection = true
+
+            hsv.addView(ncg)
+
+            ncg
+        }
+        else hsv.getChildAt(0) as ChipGroup
+
+        for (mode in mItemModes.subList(cg.childCount, mItemModes.size)) {
+            val cv = Chip(context!!, null, R.style.Widget_MaterialComponents_Chip_Choice)
+            cv.text = mode.label
+            cv.chipBackgroundColor = context!!.resources.getColorStateList(R.color.filter)
+            cv.isCheckedIconVisible = false
+            cv.tag = mode
+
+            cv.isClickable = true
+            cv.isCheckable = true
+
+            cv.setOnClickListener {
+                if (!cv.isChecked)
+                    cv.isChecked = true
+                else {
+                    mSelectedMode = mode.id
+                    reload()
+                }
+            }
+
+            cg.addView(cv)
+
+            if(cg.childCount == 1)
+                cv.isChecked = true
+        }
+
+        hsv.visibility = if (cg.childCount > 1) View.VISIBLE else View.GONE
     }
 
     fun reload() {
-        if (mAdapter != null)
+        addModeChips()
+
+        if (mAdapter != null && mItemModes.isNotEmpty())
             mAdapter!!.loadListTop()
     }
 
-    inner class ItemListAdapter(private val ctx: Context, rv: RecyclerView, private val onClickListener: View.OnClickListener) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    inner class ItemListAdapter(ctx: Context, rv: RecyclerView, private val onClickListener: View.OnClickListener) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
         private val inflater: LayoutInflater
 
@@ -188,7 +246,7 @@ open class ItemListFragment : Fragment() {
             if (currentLoading != null)
                 currentLoading!!.dispose()
 
-            currentLoading = mItemSource!!.list(0)
+            currentLoading = currentItemSource!!.list(0)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe({ (data, _, more) ->
@@ -222,7 +280,7 @@ open class ItemListFragment : Fragment() {
             if (isAtEndOfList || currentLoading != null)
                 return
 
-            currentLoading = mItemSource!!.list(items!!.size)
+            currentLoading = currentItemSource!!.list(items!!.size)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe({ (data, _, more) ->
@@ -283,5 +341,11 @@ open class ItemListFragment : Fragment() {
         const val ARG_ITEM_TYPE = "item_type"
 
         val TAG = ItemListFragment::javaClass.name
+
+        data class ItemListMode(
+                val itemSource: ItemSource,
+                val id: String = "",
+                val label: String = ""
+        )
     }
 }

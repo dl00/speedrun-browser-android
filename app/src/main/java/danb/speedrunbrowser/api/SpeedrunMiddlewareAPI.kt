@@ -119,10 +119,10 @@ object SpeedrunMiddlewareAPI {
 
         // Games
         @GET("games")
-        fun listGames(@Query("start") offset: Int): Observable<APIResponse<Game>>
+        fun listGames(@Query("mode") mode: String, @Query("start") offset: Int): Observable<APIResponse<Game>>
 
         @GET("games/genre/{id}")
-        fun listGamesByGenre(@Path("id") genreId: String, @Query("start") offset: Int): Observable<APIResponse<Game>>
+        fun listGamesByGenre(@Query("mode") mode: String, @Path("id") genreId: String, @Query("start") offset: Int): Observable<APIResponse<Game>>
 
         @GET("games/{ids}")
         fun listGames(@Path("ids") ids: String): Observable<APIResponse<Game>>

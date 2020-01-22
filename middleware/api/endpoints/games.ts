@@ -23,6 +23,11 @@ async function get_popular_games(req: Request, res: Response) {
         end = start + parseInt(req.query.count) - 1;
     }
 
+    let mode = 'popular';
+    if (req.query.mode) {
+        mode = req.query.mode;
+    }
+
     if (isNaN(start) || start < 0) {
         return api_response.error(res, api_response.err.INVALID_PARAMS(['start']));
     }
@@ -33,7 +38,7 @@ async function get_popular_games(req: Request, res: Response) {
 
     try {
         const games = await new GameDao(api.storedb!,
-            {max_items: api.config!.api.maxItems}).load_popular(start, req.params.id);
+            {max_items: api.config!.api.maxItems}).load_popular(mode, start, req.params.id);
 
         return api_response.complete(res, games, {
             code: (end + 1).toString(),

@@ -299,9 +299,16 @@ export class GameDao extends Dao<Game> {
         return games;
     }
 
-    public async load_popular(offset?: number, gg_id?: string) {
+    public async load_popular(mode?: string, offset?: number, gg_id?: string) {
         const key = `${gg_id || ''}:${offset || 0}`;
-        return await this.load_by_index('popular_games', key);
+
+        let idx = 'popular_games';
+        switch (mode) {
+            case 'trending':
+                idx = 'popular_trending_games';
+        }
+
+        return await this.load_by_index(idx, key);
     }
 
     public async get_game_group_count(gg_id: string[]): Promise<number[]> {
