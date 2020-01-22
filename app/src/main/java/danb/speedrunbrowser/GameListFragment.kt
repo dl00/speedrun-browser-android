@@ -322,7 +322,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                     fragments[0].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
                         override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
                             return if (mGameGroup != null)
-                                SpeedrunMiddlewareAPI.make(context!!).listGamesByGenre("popular", mGameGroup!!.id, offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
+                                SpeedrunMiddlewareAPI.make(context!!).listGamesByGenre(mGameGroup!!.id, "popular", offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                             else
                                 SpeedrunMiddlewareAPI.make(context!!).listGames("popular", offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                         }
@@ -331,7 +331,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                     fragments[0].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
                         override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
                             return if (mGameGroup != null)
-                                SpeedrunMiddlewareAPI.make(context!!).listGamesByGenre("trending", mGameGroup!!.id, offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
+                                SpeedrunMiddlewareAPI.make(context!!).listGamesByGenre(mGameGroup!!.id, "trending", offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                             else
                                 SpeedrunMiddlewareAPI.make(context!!).listGames("trending", offset).map<SpeedrunMiddlewareAPI.APIResponse<Any?>>(ItemListFragment.GenericMapper())
                         }

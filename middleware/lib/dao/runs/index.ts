@@ -548,19 +548,6 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             total_run_count: { value: <any>await this.db.mongo.collection(this.collection).countDocuments(filter) }
         };
 
-        if(_.keys(filter).length) {
-            let latest_run: LeaderboardRunEntry = (await this.db.mongo.collection(this.collection).find(filter)
-                .sort({'run.submitted': -1}).limit(1).toArray())[0];
-
-            if(latest_run) {
-                metrics.most_recent_run = {
-                    value: new Date(latest_run.run.submitted).getTime(),
-                    item_type: 'runs',
-                    item_id: latest_run.run.id
-                };
-            }
-        }
-
         if(opts.game_id || opts.player_id) {
             let totalRunTimeAggr = (await this.db.mongo.collection(this.collection).aggregate([
                     {$match: filter},
@@ -582,7 +569,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         }
 
         if(!opts.player_id) {
-            if(!opts.game_id && !opts.gg_id) {
+            if(!_.keys(filter).length) {
                 metrics.total_players = { value: await new UserDao(this.db).count() };
             }
             else {
