@@ -265,7 +265,7 @@ export class GameDao extends Dao<Game> {
             new PopularGamesIndex('popular_trending_games', max_items,
                 (g) => {
                     return (g.score || 0) /
-                        Math.pow(this.game_score_time_now.diff(moment(g['release-date'])) / 86400000, 2)
+                        Math.max(49, Math.pow(this.game_score_time_now.diff(moment(g['release-date'])) / 86400000, 2))
                 })
         ];
 

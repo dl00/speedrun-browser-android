@@ -134,9 +134,6 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
                 showFragment(GameListFragment(), null, false)
             }
         }
-        else if (id == R.id.menu_site_stats) {
-            showFragment(GameGroupStatisticsFragment(), null)
-        }
         return super.onOptionsItemSelected(item)
     }
 

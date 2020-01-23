@@ -246,6 +246,9 @@ open class ItemListFragment : Fragment() {
             if (currentLoading != null)
                 currentLoading!!.dispose()
 
+            items = ArrayList(0)
+            notifyDataSetChanged()
+
             currentLoading = currentItemSource!!.list(0)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
