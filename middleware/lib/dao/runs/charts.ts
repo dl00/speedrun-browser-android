@@ -128,7 +128,7 @@ export class RecordChartIndex implements IndexDriver<LeaderboardRunEntry> {
             }
 
             const count: number = await conf.db.mongo.collection(conf.collection)
-                .estimatedDocumentCount(filter);
+                .countDocuments(filter);
 
             if (!count && !chart_ids_genned.has(leaderboard_id)) {
                 chart_gens.push(this.make_chart(conf, lbr.run.category.id, lbr.run.level ? lbr.run.level.id : null));

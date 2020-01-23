@@ -545,7 +545,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             filter['run.players.id'] = opts.player_id;
 
         let metrics: {[id: string]: Metric} = {
-            total_run_count: { value: <any>await this.db.mongo.collection(this.collection).estimatedDocumentCount(filter) }
+            total_run_count: { value: <any>await this.db.mongo.collection(this.collection).count(filter) }
         };
 
         if(opts.game_id || opts.player_id) {
