@@ -544,9 +544,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         if(opts.player_id)
             filter['run.players.id'] = opts.player_id;
 
-        let metrics: {[id: string]: Metric} = {
-            total_run_count: { value: <any>await this.db.mongo.collection(this.collection).count(filter) }
-        };
+        let metrics: {[id: string]: Metric} = {};
 
         if(opts.game_id || opts.player_id) {
             let totalRunTimeAggr = (await this.db.mongo.collection(this.collection).aggregate([
@@ -565,6 +563,15 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             metrics.full_game_run_count = {
                 value: <any>await this.db.mongo.collection(this.collection)
                     .countDocuments({ ...filter, 'run.category.type': {$ne: 'per-level' }})
+            };
+
+            metrics.total_run_count = {
+                value: metrics.level_run_count.value + metrics.full_game_run_count.value
+            };
+        }
+        else if(!_.keys(filter).length) {
+            metrics.total_run_count = {
+                value: <any>await this.db.mongo.collection(this.collection).estimatedDocumentCount()
             };
         }
 
