@@ -29,7 +29,9 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import androidx.fragment.app.FragmentManager
 import android.app.Activity
+import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import danb.speedrunbrowser.views.MultiVideoView
 
 
 class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.OnItemClickListener, Consumer<SpeedrunMiddlewareAPI.APIResponse<WhatIsEntry>> {
@@ -41,6 +43,8 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
     private lateinit var mGameFilter: EditText
 
     private lateinit var mAutoCompleteResults: ListView
+
+    private lateinit var mVideoView: MultiVideoView
 
     private val mDisposables = CompositeDisposable()
 
@@ -58,6 +62,8 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         autoCompleteAdapter.setPublishSubject(mGameFilterSearchSubject)
         mAutoCompleteResults.adapter = autoCompleteAdapter
         mAutoCompleteResults.onItemClickListener = this
+
+        mVideoView = MultiVideoView(this, null)
 
         supportFragmentManager.removeOnBackStackChangedListener {
             onFragmentMove()
@@ -185,6 +191,13 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
     }
 
     private fun showFragment(frag: Fragment, args: Bundle?, backstack: Boolean = true) {
+
+        mVideoView.stopVideo()
+        if(mVideoView.parent is ViewGroup)
+            (mVideoView.parent as ViewGroup).removeView(mVideoView)
+
+        if (frag is RunDetailFragment)
+            frag.supplyVideoView(mVideoView)
 
         if (args != null)
             frag.arguments = args

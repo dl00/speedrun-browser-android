@@ -64,6 +64,11 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
         return true
     }
 
+    fun stopVideo() {
+        mWebView.loadUrl("about:blank")
+        mShownLink = null
+    }
+
     private fun setVideoFrameYT(m: MediaLink) {
 
         val videoId = m.youtubeVideoID
@@ -212,6 +217,7 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
 
     fun disable() {
         mPeriodicUpdate?.dispose()
+        mWebView.pauseTimers()
     }
 
     fun setListener(listener: Listener) {

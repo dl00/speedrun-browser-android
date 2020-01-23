@@ -5,11 +5,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:gravity="center"
     tools:context=".ItemListFragment">
 
     <HorizontalScrollView
         android:id="@+id/hsvListModes"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingStart="@dimen/half_fab_margin"
         android:paddingEnd="@dimen/half_fab_margin"

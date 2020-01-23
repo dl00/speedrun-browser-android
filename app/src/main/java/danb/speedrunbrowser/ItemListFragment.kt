@@ -2,6 +2,7 @@ package danb.speedrunbrowser
 
 import android.app.ActivityOptions
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,6 +22,7 @@ import io.reactivex.schedulers.Schedulers
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -147,7 +149,8 @@ open class ItemListFragment : Fragment() {
         else hsv.getChildAt(0) as ChipGroup
 
         for (mode in mItemModes.subList(cg.childCount, mItemModes.size)) {
-            val cv = Chip(context!!, null, R.style.Widget_MaterialComponents_Chip_Choice)
+            val cv = Chip(context!!, null, R.style.AppTheme_Chip_Choice)
+            cv.setTextAppearanceResource(R.style.AppTheme_TextAppearance)
             cv.text = mode.label
             cv.chipBackgroundColor = context!!.resources.getColorStateList(R.color.filter)
             cv.isCheckedIconVisible = false

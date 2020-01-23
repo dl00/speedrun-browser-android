@@ -423,6 +423,7 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
         override fun getItemCount(): Int = chartData.size
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+
             val d = chartData[reversePosition(position)]
 
             if(d.obj != null)

@@ -51,7 +51,7 @@ data class Chart(
             val chartType = obj.getNotNull("chart_type")!!.asString
             val itemType = obj.getNotNull("parent_type")?.asString ?: obj.getNotNull("item_type")!!.asString
 
-            var dataMap = mutableMapOf<String, List<ChartData>>()
+            val dataMap = mutableMapOf<String, List<ChartData>>()
 
             val chartData = obj.getNotNull("data")!!.asJsonObject
 
@@ -85,6 +85,7 @@ data class ChartData(
                 "games" -> Game::class.java
                 "users" -> User::class.java
                 "runs" -> Run::class.java
+                "leaderboards" -> Run::class.java
                 else -> null
             }
 

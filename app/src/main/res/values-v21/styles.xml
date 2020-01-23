@@ -63,18 +63,34 @@
     </style>
 
     <style name="AppTheme.TextView" parent="Widget.AppCompat.TextView">
+        <item name="fontFamily">@font/saira_condensed</item>
         <item name="android:fontFamily">@font/saira_condensed</item>
     </style>
 
     <style name="AppTheme.Button" parent="Widget.AppCompat.Button">
+        <item name="fontFamily">@font/saira_condensed</item>
         <item name="android:fontFamily">@font/saira_condensed</item>
     </style>
 
     <style name="AppTheme.EditText" parent="Widget.AppCompat.EditText">
+        <item name="fontFamily">@font/saira_condensed</item>
         <item name="android:fontFamily">@font/saira_condensed</item>
     </style>
 
     <style name="AppTheme.Checkbox" parent="Widget.AppCompat.CompoundButton.CheckBox">
+        <item name="fontFamily">@font/saira_condensed</item>
         <item name="android:fontFamily">@font/saira_condensed</item>
+    </style>
+
+    <style name="AppTheme.TextAppearance" parent="TextAppearance.MaterialComponents.Chip">
+        <item name="fontFamily">@font/saira_condensed</item>
+        <item name="android:fontFamily">@font/saira_condensed</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/all_white</item>
+    </style>
+
+    <style name="AppTheme.Chip.Choice" parent="Widget.MaterialComponents.Chip.Choice">
+        <item name="android:textAppearance">@style/AppTheme.TextAppearance</item>
     </style>
 </resources>

@@ -33,6 +33,7 @@ import io.reactivex.functions.Action
 import io.reactivex.functions.Consumer
 import io.reactivex.internal.operators.flowable.FlowableInterval
 import io.reactivex.schedulers.Schedulers
+import java.lang.UnsupportedOperationException
 
 class RunDetailFragment : Fragment(), MultiVideoView.Listener {
 
@@ -73,7 +74,9 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
     /**
      * Video views
      */
-    private lateinit var mVideoFrame: MultiVideoView
+    private lateinit var mVideoFrame: FrameLayout
+
+    private var mVideoView: MultiVideoView? = null
 
     private lateinit var mDB: AppDatabase
 
@@ -109,6 +112,11 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
 
         mRunSplits = v.findViewById(R.id.runSplitsList)
         mRunEmptySplits = v.findViewById(R.id.emptySplits)
+
+        if(mVideoView != null)
+            mVideoFrame.addView(mVideoView)
+        else
+            throw UnsupportedOperationException("Cannot initialize fragment: video frame not supplied")
 
         if(arguments == null) {
             Log.w(TAG, "Cannot initialize fragment: no arguments")
@@ -173,10 +181,14 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
         onConfigurationChanged(resources.configuration)
     }
 
+    override fun onPause() {
+        super.onPause()
+
+        mDisposableBackgroundSaveInterval!!.dispose()
+    }
+
     override fun onStart() {
         super.onStart()
-
-        mVideoFrame.enable()
 
         // set an interval to record the watch time
         mDisposableBackgroundSaveInterval = FlowableInterval(BACKGROUND_SEEK_SAVE_START.toLong(), BACKGROUND_SEEK_SAVE_PERIOD.toLong(), TimeUnit.SECONDS, Schedulers.io())
@@ -186,9 +198,6 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
 
     override fun onStop() {
         super.onStop()
-
-        mVideoFrame.disable()
-        mDisposableBackgroundSaveInterval!!.dispose()
     }
 
     override fun onDestroy() {
@@ -214,7 +223,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(Consumer { (_, seekPos) ->
                     Log.d(TAG, "Got seek record for run: " + mRun!!.run.id + ", " + seekPos)
-                    mVideoFrame.seekTime = seekPos.toInt()
+                    mVideoView!!.seekTime = seekPos.toInt()
                     onVideoReady()
                 }, NoopConsumer(), Action {
                     onVideoReady()
@@ -223,10 +232,10 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
 
     private fun onVideoReady() {
 
-        mVideoFrame.setListener(this)
+        mVideoView!!.setListener(this)
 
         if (mRun!!.run.videos == null || mRun!!.run.videos!!.links == null || mRun!!.run.videos!!.links!!.isEmpty()) {
-            mVideoFrame.setVideoNotAvailable()
+            mVideoView!!.setVideoNotAvailable()
             mViewOnOfficial.visibility = View.GONE
 
             return
@@ -234,14 +243,14 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
 
         // find the first available video recognized
         for (ml in mRun!!.run.videos!!.links!!) {
-            if (mVideoFrame.loadVideo(ml))
+            if (mVideoView!!.loadVideo(ml))
                 break
         }
 
-        if (!mVideoFrame.hasLoadedVideo()) {
+        if (!mVideoView!!.hasLoadedVideo()) {
             Log.w(TAG, "Could not play a video for this run")
             // just record the fact that the video page was accessed
-            mVideoFrame.setVideoFrameOther(mRun!!.run.videos!!.links!![0])
+            mVideoView!!.setVideoFrameOther(mRun!!.run.videos!!.links!![0])
             mViewOnOfficial.visibility = View.GONE
             writeWatchToDb(0)
         }
@@ -286,9 +295,13 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
         }
     }
 
+    fun supplyVideoView(videoView: MultiVideoView) {
+        mVideoView = videoView
+    }
+
     private fun recordStartPlaybackTime() {
-        if (mVideoFrame.hasLoadedVideo())
-            writeWatchToDb(mVideoFrame.seekTime.toLong())
+        if (mVideoView!!.hasLoadedVideo())
+            writeWatchToDb(mVideoView!!.seekTime.toLong())
     }
 
     private fun writeWatchToDb(seekTime: Long) {

@@ -10,7 +10,7 @@
         android:id="@+id/txtValue"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="1,243,653"
+        android:text="N/A"
         android:textAlignment="viewStart"
         tools:ignore="HardcodedText"
         android:textSize="@dimen/text_size_metric" />

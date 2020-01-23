@@ -65,7 +65,7 @@
     <string name="button_got_it">Got it!</string>
 
     <!-- release notes: edit for each release for now -->
-    <string name="dialog_title_release_notes">1.11</string>
+    <string name="dialog_title_release_notes">1.12</string>
     <string name="dialog_msg_first_run">
         Thanks for downloading the app and giving it a try!\n
         \n
@@ -82,23 +82,17 @@
         If you like the app, please consider supporting my motivation by sharing or rating.
     </string>
     <string name="dialog_msg_release_notes">
-        Thanks for downloading the app and your support!\n
+        Thanks for downloading the app!\n
         \n
-        This is one of the largest updates to date!
-        Major improvements to the interface and more search functionality were added for this release.
-        Some bugfixes and minor performance tune-ups all around were also completed.\n
+        Here are the changes for this month:\n
+        * Major changes were made to improve the look and feel of the app.\n
+        * New list modes have been added.\n
+        * New set of charts for platform/genre/publisher searches.\n
+        * Metrics for basically everything: number of leaderboards, number of players, number of runs, etc.\n
         \n
-        Features to look for:\n
-        * Search for any platform, genre, developer, publisher, or the usual game and developer
-        all from the search box. Platforms, genres, developers, publishers show a list of relevant
-        games and latest runs. Statistics section is coming, but it got shoved off so I could get
-        this release completed!\n
-        * Search using the search bar from anywhere in the app.\n
-        * Can now show "unverified" runs in latest run section.\n
-        * Zooming of charts and graphs.\n
-        * Filtering of shown datasets in charts/graphs.\n
+        Some bugfixes and performance tune-ups all around were also completed.\n
         \n
-        If you are enjoying the app, please consider sharing!
+        If you are enjoying the app (and have read this far), please consider rating or sharing!
     </string>
 
     <string name="dialog_button_rate_now">Rate now!</string>

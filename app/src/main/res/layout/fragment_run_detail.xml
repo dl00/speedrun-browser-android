@@ -228,18 +228,12 @@
     </LinearLayout>
 
     <danb.speedrunbrowser.utils.FixedAspectRatioFrameLayout
+        android:id="@+id/videoFrame"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:aspectRatioWidth="16"
         android:layout_gravity="center"
-        app:aspectRatioHeight="9">
-
-        <danb.speedrunbrowser.views.MultiVideoView
-            android:id="@+id/videoFrame"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-    </danb.speedrunbrowser.utils.FixedAspectRatioFrameLayout>
+        app:aspectRatioHeight="9" />
 
     <LinearLayout
         android:id="@+id/runFooter"

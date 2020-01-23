@@ -72,7 +72,7 @@ abstract class StatisticsFragment : Fragment() {
 
         rootLayout = FrameLayout(context)
 
-        spinner = ProgressSpinnerView(context, null)
+        spinner  = ProgressSpinnerView(context, null)
         spinner.layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT)
         rootLayout.addView(spinner, 0)
