@@ -62,6 +62,8 @@ export interface User extends BulkUser, BaseMiddleware {
     signup?: string;
     score?: number;
 
+    twitch?: string;
+
     bests: {[id: string]: GamePersonalBests};
 }
 
@@ -203,7 +205,7 @@ export class UserDao extends Dao<User> {
         this.indexes = [
             new RedisMapIndex('abbr', (v: User) => {
                 if (v.names && v.names.international) {
-                    return v.names.international;
+                    return v.names.international.toLowerCase();
                 }
 
                 // TODO: this is kind of dumb
