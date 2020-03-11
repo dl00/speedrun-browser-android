@@ -56,6 +56,7 @@ export async function regenerate_autocomplete() {
 
     const user_dao = new UserDao(scraper.storedb!);
     user_dao.indexes.find((ind) => ind.name == 'autocomplete')!.forceIndex = true;
+    user_dao.indexes.find((ind) => ind.name == 'abbr')!.forceIndex = true;
 
     await user_dao.massage();
 }
