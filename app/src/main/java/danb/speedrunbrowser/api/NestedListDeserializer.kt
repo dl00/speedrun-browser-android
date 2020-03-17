@@ -10,16 +10,16 @@ import java.util.ArrayList
 
 class NestedListDeserializer : JsonDeserializer<List<*>> {
     override fun deserialize(json: JsonElement, typeOfT: Type, ctx: JsonDeserializationContext): List<*> {
-        var json = json
+        var mutableJson = json
         val valueType = (typeOfT as ParameterizedType).actualTypeArguments[0]
 
         val list = ArrayList<Any>()
 
-        if (json.isJsonObject) {
-            json = json.asJsonObject.get("data")
+        if (mutableJson.isJsonObject) {
+            mutableJson = mutableJson.asJsonObject.get("data")
         }
 
-        for (item in json.asJsonArray) {
+        for (item in mutableJson.asJsonArray) {
             list.add(ctx.deserialize(item, valueType))
         }
 

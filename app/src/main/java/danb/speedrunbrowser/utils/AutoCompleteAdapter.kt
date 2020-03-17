@@ -87,15 +87,15 @@ class AutoCompleteAdapter(private val ctx: Context, private val disposables: Com
     }
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-        var convertView = convertView
-        if (convertView == null)
-            convertView = (ctx.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater).inflate(R.layout.content_named_autocomplete_item, parent, false)
+        var cv = convertView
+        if (cv == null)
+            cv = (ctx.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater).inflate(R.layout.content_named_autocomplete_item, parent, false)
 
         val item = searchResults!![position]
 
-        val viewIcon = convertView!!.findViewById<ImageView>(R.id.imgItemIcon)
-        val viewName = convertView.findViewById<LinearLayout>(R.id.txtItemName)
-        val viewType = convertView.findViewById<TextView>(R.id.txtItemType)
+        val viewIcon = cv!!.findViewById<ImageView>(R.id.imgItemIcon)
+        val viewName = cv.findViewById<LinearLayout>(R.id.txtItemName)
+        val viewType = cv.findViewById<TextView>(R.id.txtItemType)
 
         val iconUrl = item.iconUrl
         if (iconUrl != null) {
@@ -113,7 +113,7 @@ class AutoCompleteAdapter(private val ctx: Context, private val disposables: Com
 
         viewType.text = item.type
 
-        return convertView
+        return cv
     }
 
     fun setPublishSubject(subj: Subject<String>) {

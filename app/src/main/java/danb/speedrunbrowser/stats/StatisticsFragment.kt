@@ -89,7 +89,7 @@ abstract class StatisticsFragment : Fragment() {
         rootLayout.addView(layout)
     }
 
-    fun setDataSource(d: Observable<SpeedrunMiddlewareAPI.APIChartData>) {
+    private fun setDataSource(d: Observable<SpeedrunMiddlewareAPI.APIChartData>) {
         spinner.visibility = View.VISIBLE
         layout.visibility = View.GONE
 
@@ -148,15 +148,11 @@ abstract class StatisticsFragment : Fragment() {
         layout.addView(v)
     }
 
-    fun addTabbedSwitcher(options: TabbedSwitcherOptions) {
-
-    }
-
-    fun clearCharts() {
+    private fun clearCharts() {
         layout.removeAllViews()
     }
 
-    fun animateChartsIn() {
+    private fun animateChartsIn() {
 
 
         val animTime = resources.getInteger(

@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package danb.speedrunbrowser.utils
 
 import android.app.AlertDialog
@@ -35,7 +37,7 @@ import java.util.*
 
 object Util {
 
-    private val NOTIFICATION_GROUP = "records"
+    private const val NOTIFICATION_GROUP = "records"
     private var httpClient: OkHttpClient? = null
 
     fun showErrorToast(ctx: Context, msg: CharSequence) {
@@ -78,7 +80,8 @@ object Util {
                                 shownOodDialog = true
                                 // open an upgrade warning dialog
                                 AndroidSchedulers.mainThread().scheduleDirect {
-                                    AlertDialog.Builder(context, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+                                    AlertDialog.Builder(context, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) android.R.style.Theme_DeviceDefault_Dialog_Alert
+                                        else AlertDialog.THEME_DEVICE_DEFAULT_DARK)
                                             .setIcon(R.drawable.baseline_info_white_24)
                                             .setTitle(R.string.dialog_title_old_version)
                                             .setMessage(R.string.dialog_msg_old_version)
@@ -162,7 +165,8 @@ object Util {
             return
         }
 
-        val db = AlertDialog.Builder(ctx, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+        val db = AlertDialog.Builder(ctx, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) android.R.style.Theme_DeviceDefault_Dialog_Alert
+            else AlertDialog.THEME_DEVICE_DEFAULT_DARK)
                 .setTitle(R.string.dialog_title_release_notes)
                 .setMessage(when(lastVersion) {
                     null -> R.string.dialog_msg_first_run
@@ -188,7 +192,8 @@ object Util {
     }
 
     fun showInfoDialog(context: Context, text: String) {
-        AlertDialog.Builder(context, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+        AlertDialog.Builder(context, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) android.R.style.Theme_DeviceDefault_Dialog_Alert
+            else AlertDialog.THEME_DEVICE_DEFAULT_DARK)
                 .setIcon(R.drawable.baseline_info_white_24)
                 .setMessage(text)
                 .setNeutralButton(android.R.string.ok, null)
@@ -217,7 +222,7 @@ object Util {
         throw ClassNotFoundException("Could not find the browser!")
     }
 
-    fun openPlayStorePage(context: Context, packageName: String? = null) {
+    private fun openPlayStorePage(context: Context, packageName: String? = null) {
         val pn = packageName ?: context.packageName
 
         try {

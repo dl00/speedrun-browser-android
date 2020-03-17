@@ -1,9 +1,12 @@
+@file:Suppress("DEPRECATION")
+
 package danb.speedrunbrowser
 
 import android.app.AlertDialog
 import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -69,7 +72,8 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
             return
         }
 
-        val dialog = AlertDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+        val dialog = AlertDialog.Builder(this, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) android.R.style.Theme_DeviceDefault_Dialog_Alert
+            else AlertDialog.THEME_DEVICE_DEFAULT_DARK)
                 .setMessage(licenseText)
                 .setNeutralButton(android.R.string.ok, null)
                 .create()
@@ -81,7 +85,8 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
         if (v === mLinkSpeedrunComTrophy || v === mLinkSpeedrunComLogo)
             openLink(SPEEDRUN_COM_ABOUT)
         else if (v === mLinkComplain) {
-            val dialog = AlertDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+            val dialog = AlertDialog.Builder(this, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) android.R.style.Theme_DeviceDefault_Dialog_Alert
+                else AlertDialog.THEME_DEVICE_DEFAULT_DARK)
                     .setTitle(R.string.dialog_title_send_email)
                     .setMessage(R.string.dialog_msg_send_email)
                     .setPositiveButton(R.string.dialog_button_send_email) { _, _ ->

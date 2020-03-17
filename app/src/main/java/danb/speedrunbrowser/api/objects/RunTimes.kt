@@ -13,7 +13,7 @@ data class RunTimes(
         val ingame: String? = null
 ) : Serializable {
 
-    fun readTime(ts: String?): Float? {
+    private fun readTime(ts: String?): Float? {
 
         if(ts == null)
             return null

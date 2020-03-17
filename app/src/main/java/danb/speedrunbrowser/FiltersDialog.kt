@@ -1,7 +1,10 @@
+@file:Suppress("DEPRECATION")
+
 package danb.speedrunbrowser
 
 import android.app.AlertDialog
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
@@ -10,6 +13,7 @@ import android.widget.CompoundButton
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
@@ -22,7 +26,8 @@ class FiltersDialog(
         private val mGame: Game,
         private val mVariables: List<Variable>,
         private val mVariableSelections: Variable.VariableSelections
-) : AlertDialog(ctx, THEME_DEVICE_DEFAULT_DARK), CompoundButton.OnCheckedChangeListener, View.OnClickListener {
+) : AlertDialog(ctx, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) android.R.style.Theme_DeviceDefault_Dialog_Alert
+    else THEME_DEVICE_DEFAULT_DARK), CompoundButton.OnCheckedChangeListener, View.OnClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -123,7 +128,7 @@ class FiltersDialog(
 
     private fun makeChip(filterKey: String, filterValue: String): Chip {
         val cv = Chip(context, null, R.style.Widget_MaterialComponents_Chip_Filter)
-        cv.chipBackgroundColor = context.resources.getColorStateList(R.color.filter)
+        cv.chipBackgroundColor = ContextCompat.getColorStateList(context, R.color.filter)
         cv.isCheckedIconVisible = true
 
         cv.isClickable = true

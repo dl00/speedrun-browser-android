@@ -1,10 +1,8 @@
 package danb.speedrunbrowser.utils
 
-import android.app.Activity
 import android.app.ActivityOptions
 import android.content.Context
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import danb.speedrunbrowser.R
@@ -47,10 +45,6 @@ enum class ItemType constructor(val layout: Int) : Serializable, ViewHolderSourc
                 (holder as WatchRunViewHolder).apply(ctx!!, disposables!!, lbr.run.game!!, lbr)
             }
         }
-    }
-
-    fun makeSceneTransition(activity: Activity?, v: View): ActivityOptions? {
-        return null
     }
 
     override fun toString(): String {

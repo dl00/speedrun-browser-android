@@ -14,6 +14,7 @@ import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 
 import java.io.IOException
 import java.util.Locale
@@ -141,7 +142,7 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
         val ll = LinearLayout(context)
         ll.orientation = LinearLayout.VERTICAL
         ll.gravity = Gravity.CENTER
-        ll.background = ColorDrawable(resources.getColor(R.color.colorPrimaryDark))
+        ll.background = ColorDrawable(ContextCompat.getColor(context, R.color.colorPrimaryDark))
 
         val lp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         lp.gravity = Gravity.CENTER
@@ -156,7 +157,7 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
         val btn = Button(context)
         btn.layoutParams = lp
         btn.setText(R.string.btn_open_browser)
-        btn.background = ColorDrawable(resources.getColor(R.color.colorPrimary))
+        btn.background = ColorDrawable(ContextCompat.getColor(context, R.color.colorPrimary))
         btn.setPadding(resources.getDimensionPixelSize(R.dimen.half_fab_margin), 0, resources.getDimensionPixelSize(R.dimen.half_fab_margin), 0)
         btn.setOnClickListener {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(m.uri.toString()))
@@ -173,7 +174,7 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
         val ll = LinearLayout(context)
         ll.orientation = LinearLayout.VERTICAL
         ll.gravity = Gravity.CENTER
-        ll.background = ColorDrawable(resources.getColor(R.color.colorPrimaryDark))
+        ll.background = ColorDrawable(ContextCompat.getColor(context, R.color.colorPrimaryDark))
 
         val lp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         lp.gravity = Gravity.CENTER
@@ -191,7 +192,7 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
         val ll = LinearLayout(context)
         ll.orientation = LinearLayout.VERTICAL
         ll.gravity = Gravity.CENTER
-        ll.background = ColorDrawable(resources.getColor(R.color.colorBackgroundError))
+        ll.background = ColorDrawable(ContextCompat.getColor(context, R.color.colorBackgroundError))
 
         val lp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         lp.gravity = Gravity.CENTER

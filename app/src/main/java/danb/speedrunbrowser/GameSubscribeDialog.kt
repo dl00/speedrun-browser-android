@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package danb.speedrunbrowser
 
 import android.app.AlertDialog
@@ -10,23 +12,20 @@ import android.widget.Button
 import android.widget.CheckBox
 import android.widget.CompoundButton
 import android.widget.LinearLayout
+import androidx.core.content.ContextCompat
 
 import danb.speedrunbrowser.api.objects.Game
 
-class GameSubscribeDialog(ctx: Context, val subscriptions: GameDetailFragment.GameSubscription) : AlertDialog(ctx, THEME_DEVICE_DEFAULT_DARK), CompoundButton.OnCheckedChangeListener, View.OnClickListener {
+class GameSubscribeDialog(ctx: Context, val subscriptions: GameDetailFragment.GameSubscription) : AlertDialog(ctx, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) android.R.style.Theme_DeviceDefault_Dialog_Alert
+    else THEME_DEVICE_DEFAULT_DARK), CompoundButton.OnCheckedChangeListener, View.OnClickListener {
 
-    private val mGame: Game?
+    private val mGame: Game? = subscriptions.game
 
     private var mSelectAllButton: Button? = null
     private var mDeselectAllButton: Button? = null
     private var mCategoryCheckboxDisplay: LinearLayout? = null
     private var mCancelButton: Button? = null
     private var mApplyButton: Button? = null
-
-    init {
-
-        mGame = subscriptions.game
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,10 +76,10 @@ class GameSubscribeDialog(ctx: Context, val subscriptions: GameDetailFragment.Ga
     private fun makeStyledCheckbox(): CheckBox {
         val checkbox = CheckBox(context)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            checkbox.buttonTintList = context.resources.getColorStateList(R.color.all_white)
+            checkbox.buttonTintList = ContextCompat.getColorStateList(context, R.color.all_white)
         }
 
-        checkbox.setTextColor(context.resources.getColor(android.R.color.white))
+        checkbox.setTextColor(ContextCompat.getColor(context, android.R.color.white))
         checkbox.setOnCheckedChangeListener(this)
 
         return checkbox

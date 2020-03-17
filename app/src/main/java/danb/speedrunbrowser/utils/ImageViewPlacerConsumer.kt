@@ -5,6 +5,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.view.View
 import android.widget.ImageView
+import androidx.core.graphics.drawable.toDrawable
 
 import io.reactivex.functions.Consumer
 
@@ -48,7 +49,7 @@ class ImageViewPlacerConsumer(private val view: ImageView) : Consumer<Bitmap> {
             finalBitmap = getRoundedCornerBitmap(finalBitmap, roundedCorners)
 
         if (view.tag === this) {
-            view.setImageDrawable(BitmapDrawable(finalBitmap))
+            view.setImageDrawable(finalBitmap.toDrawable(view.resources))
 
             // fade in gracefully
             val animTime = view.resources.getInteger(

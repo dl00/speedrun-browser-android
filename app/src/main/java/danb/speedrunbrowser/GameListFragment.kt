@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package danb.speedrunbrowser
 
 import android.app.ActivityOptions
@@ -6,6 +8,7 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
@@ -75,6 +78,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
 
         mDB = AppDatabase.make(context!!)
 
+        @Suppress("DEPRECATION")
         FirebaseCrash.setCrashCollectionEnabled(!BuildConfig.DEBUG)
 
         Util.showNewFeaturesDialog(context!!)
@@ -140,7 +144,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
         else super.onOptionsItemSelected(item)
     }
 
-    private fun showGame(id: String, fragment: Fragment?, transitionOptions: ActivityOptions?) {
+    private fun showGame(id: String) {
         if (isTwoPane) {
             val arguments = Bundle()
             arguments.putString(GameDetailFragment.ARG_GAME_ID, id)
@@ -160,7 +164,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
         }
     }
 
-    private fun showPlayer(id: String, fragment: Fragment?, transitionOptions: ActivityOptions?) {
+    private fun showPlayer(id: String) {
         if (isTwoPane) {
             val arguments = Bundle()
             arguments.putString(PlayerDetailFragment.ARG_PLAYER_ID, id)
@@ -180,7 +184,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
         }
     }
 
-    private fun showRun(id: String, fragment: Fragment?, transitionOptions: ActivityOptions?) {
+    private fun showRun(id: String) {
         val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
         intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, RunDetailFragment::class.java.canonicalName)
         intent.putExtra(RunDetailFragment.ARG_RUN_ID, id)
@@ -195,10 +199,10 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
 
     override fun onItemSelected(itemType: ItemType?, itemId: String, fragment: Fragment, options: ActivityOptions?) {
         when (itemType) {
-            ItemType.GAMES -> showGame(itemId, fragment, options)
+            ItemType.GAMES -> showGame(itemId)
             ItemType.GAME_GROUPS -> {}
-            ItemType.PLAYERS -> showPlayer(itemId, fragment, options)
-            ItemType.RUNS -> showRun(itemId, fragment, options)
+            ItemType.PLAYERS -> showPlayer(itemId)
+            ItemType.RUNS -> showRun(itemId)
         }
     }
 
@@ -213,7 +217,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
         startActivity(intent)
     }
 
-    private inner class PagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm), SimpleTabStrip.IconPagerAdapter {
+    private inner class PagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT), SimpleTabStrip.IconPagerAdapter {
 
         private val fragments: Array<ItemListFragment> = arrayOf(
             ItemListFragment(),
@@ -307,11 +311,11 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
 
         override fun getPageIcon(position: Int): Drawable? {
             return when (position) {
-                0 -> resources.getDrawable(R.drawable.baseline_videogame_asset_24)
-                1 -> resources.getDrawable(R.drawable.baseline_play_circle_filled_24)
-                2 -> resources.getDrawable(R.drawable.baseline_list_24)
-                3 -> resources.getDrawable(R.drawable.baseline_videogame_asset_24)
-                4 -> resources.getDrawable(R.drawable.baseline_person_24)
+                0 -> ContextCompat.getDrawable(context!!, R.drawable.baseline_videogame_asset_24)
+                1 -> ContextCompat.getDrawable(context!!, R.drawable.baseline_play_circle_filled_24)
+                2 -> ContextCompat.getDrawable(context!!, R.drawable.baseline_list_24)
+                3 -> ContextCompat.getDrawable(context!!, R.drawable.baseline_videogame_asset_24)
+                4 -> ContextCompat.getDrawable(context!!, R.drawable.baseline_person_24)
                 else -> null
             }
         }
@@ -365,12 +369,12 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                                 .getMany(offset)
                                 .subscribeOn(Schedulers.io())
 
-                        return entries.flatMapObservable<SpeedrunMiddlewareAPI.APIResponse<Any?>>(Function<List<AppDatabase.WatchHistoryEntry>, ObservableSource<SpeedrunMiddlewareAPI.APIResponse<Any?>>> { entries ->
-                            if (entries.isEmpty())
+                        return entries.flatMapObservable<SpeedrunMiddlewareAPI.APIResponse<Any?>>(Function<List<AppDatabase.WatchHistoryEntry>, ObservableSource<SpeedrunMiddlewareAPI.APIResponse<Any?>>> { ents ->
+                            if (ents.isEmpty())
                                 return@Function Observable.just(SpeedrunMiddlewareAPI.APIResponse())
 
-                            val builder = StringBuilder(entries.size)
-                            for ((runId) in entries) {
+                            val builder = StringBuilder(ents.size)
+                            for ((runId) in ents) {
                                 if (builder.isNotEmpty())
                                     builder.append(",")
                                 builder.append(runId)

@@ -13,6 +13,7 @@ import android.widget.Button
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 
 import java.util.Objects
 import androidx.fragment.app.Fragment
@@ -172,7 +173,7 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
             for (vv in values.keys) {
                 val cv = Chip(context!!, null, R.style.Widget_MaterialComponents_Chip_Choice)
                 cv.text = values.getValue(vv).label
-                cv.chipBackgroundColor = context!!.resources.getColorStateList(R.color.filter)
+                cv.chipBackgroundColor = ContextCompat.getColorStateList(context!!, R.color.filter)
                 cv.isCheckedIconVisible = false
                 cv.tag = vv
 

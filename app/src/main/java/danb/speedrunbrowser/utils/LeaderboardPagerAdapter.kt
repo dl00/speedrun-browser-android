@@ -15,7 +15,7 @@ import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.api.objects.Level
 import danb.speedrunbrowser.api.objects.Variable
 
-class LeaderboardPagerAdapter(fm: FragmentManager, private val game: Game, private val filterSelections: Variable.VariableSelections?, vp: ViewPager) : FragmentPagerAdapter(fm), ViewPager.OnPageChangeListener {
+class LeaderboardPagerAdapter(fm: FragmentManager, private val game: Game, private val filterSelections: Variable.VariableSelections?, vp: ViewPager) : FragmentPagerAdapter(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT), ViewPager.OnPageChangeListener {
 
     private val perGameCategories: MutableList<Category>
     private val perLevelCategories: MutableList<Category>

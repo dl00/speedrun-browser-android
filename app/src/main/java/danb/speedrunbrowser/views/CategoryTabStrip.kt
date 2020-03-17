@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 
 import androidx.fragment.app.FragmentManager
 import androidx.viewpager.widget.ViewPager
@@ -19,6 +20,7 @@ import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.api.objects.Level
 import danb.speedrunbrowser.api.objects.Variable
 import danb.speedrunbrowser.utils.LeaderboardPagerAdapter
+import kotlin.math.floor
 
 class CategoryTabStrip(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs), ViewPager.OnPageChangeListener {
 
@@ -83,7 +85,7 @@ class CategoryTabStrip(context: Context, attrs: AttributeSet) : LinearLayout(con
 
         tv.setPadding(resources.getDimensionPixelSize(R.dimen.half_fab_margin), 0, resources.getDimensionPixelSize(R.dimen.half_fab_margin), 0)
 
-        val lp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        val lp = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         lp.leftMargin = resources.getDimensionPixelSize(R.dimen.half_fab_margin)
         lp.rightMargin = resources.getDimensionPixelSize(R.dimen.half_fab_margin)
         tv.layoutParams = lp
@@ -102,7 +104,7 @@ class CategoryTabStrip(context: Context, attrs: AttributeSet) : LinearLayout(con
             tv.setOnClickListener {
                 val l = pagerAdapter!!.getLevelOfIndex(mPager!!.currentItem)
 
-                selectLeaderboard(category, if (l == null && mGame!!.levels != null && !mGame!!.levels!!.isEmpty()) mGame!!.levels!![0] else l)
+                selectLeaderboard(category, if (l == null && mGame!!.levels != null && mGame!!.levels!!.isNotEmpty()) mGame!!.levels!![0] else l)
             }
 
             mLayoutCategory.addView(tv)
@@ -135,7 +137,7 @@ class CategoryTabStrip(context: Context, attrs: AttributeSet) : LinearLayout(con
         if (mLayoutCategory.childCount > categoryPos + 1 && (levelPos == -1 || levelPos + 1 >= mLayoutLevel.childCount))
             categoryX2 = getCenterScrollPosition(mHsvCategory, mLayoutCategory.getChildAt(categoryPos + 1))
 
-        mHsvCategory.scrollTo(categoryX1 + Math.floor(((categoryX2 - categoryX1).toFloat() * offset).toDouble()).toInt(), 0)
+        mHsvCategory.scrollTo(categoryX1 + floor(((categoryX2 - categoryX1).toFloat() * offset).toDouble()).toInt(), 0)
 
         if (levelPos != -1 && mLayoutLevel.getChildAt(levelPos) != null) {
             val levelChild = mLayoutLevel.getChildAt(levelPos)
@@ -143,7 +145,7 @@ class CategoryTabStrip(context: Context, attrs: AttributeSet) : LinearLayout(con
 
             val levelX2 = getCenterScrollPosition(mHsvLevel, mLayoutLevel.getChildAt((levelPos + 1) % mLayoutLevel.childCount))
 
-            mHsvLevel.scrollTo(levelX1 + Math.floor(((levelX2 - levelX1).toFloat() * offset).toDouble()).toInt(), 0)
+            mHsvLevel.scrollTo(levelX1 + floor(((levelX2 - levelX1).toFloat() * offset).toDouble()).toInt(), 0)
         }
 
     }
@@ -167,17 +169,17 @@ class CategoryTabStrip(context: Context, attrs: AttributeSet) : LinearLayout(con
 
     override fun onPageSelected(position: Int) {
         if (position < pagerAdapter!!.perGameCategorySize) {
-            mLayoutCategory.getChildAt(mHighlightCategory).background = ColorDrawable(resources.getColor(android.R.color.transparent))
+            mLayoutCategory.getChildAt(mHighlightCategory).background = ColorDrawable(ContextCompat.getColor(context, android.R.color.transparent))
             mHighlightCategory = position
-            mLayoutCategory.getChildAt(mHighlightCategory).background = ColorDrawable(resources.getColor(R.color.colorAccent))
+            mLayoutCategory.getChildAt(mHighlightCategory).background = ColorDrawable(ContextCompat.getColor(context, R.color.colorAccent))
             hideLevelsStrip()
         } else {
-            mLayoutCategory.getChildAt(mHighlightCategory).background = ColorDrawable(resources.getColor(android.R.color.transparent))
-            mLayoutLevel.getChildAt(mHighlightLevel).background = ColorDrawable(resources.getColor(android.R.color.transparent))
+            mLayoutCategory.getChildAt(mHighlightCategory).background = ColorDrawable(ContextCompat.getColor(context, android.R.color.transparent))
+            mLayoutLevel.getChildAt(mHighlightLevel).background = ColorDrawable(ContextCompat.getColor(context, android.R.color.transparent))
             mHighlightCategory = pagerAdapter!!.perGameCategorySize + (position - pagerAdapter!!.perGameCategorySize) / mGame!!.levels!!.size
             mHighlightLevel = (position - pagerAdapter!!.perGameCategorySize) % mGame!!.levels!!.size
-            mLayoutCategory.getChildAt(mHighlightCategory).background = ColorDrawable(resources.getColor(R.color.colorAccent))
-            mLayoutLevel.getChildAt(mHighlightLevel).background = ColorDrawable(resources.getColor(R.color.colorAccent))
+            mLayoutCategory.getChildAt(mHighlightCategory).background = ColorDrawable(ContextCompat.getColor(context, R.color.colorAccent))
+            mLayoutLevel.getChildAt(mHighlightLevel).background = ColorDrawable(ContextCompat.getColor(context, R.color.colorAccent))
             showLevelsStrip()
         }
     }

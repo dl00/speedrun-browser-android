@@ -38,8 +38,8 @@ abstract class AppDatabase : RoomDatabase() {
             } else
                 "release_" + type + "_" + resourceId
 
-        override fun equals(obj: Any?): Boolean {
-            return obj is Subscription && obj.resourceId == resourceId
+        override fun equals(other: Any?): Boolean {
+            return other is Subscription && other.resourceId == resourceId
         }
 
         override fun hashCode(): Int {

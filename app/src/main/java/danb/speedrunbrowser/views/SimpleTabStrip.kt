@@ -12,6 +12,7 @@ import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 
 import androidx.viewpager.widget.ViewPager
 import danb.speedrunbrowser.R
@@ -136,9 +137,9 @@ class SimpleTabStrip(context: Context, attrs: AttributeSet) : FrameLayout(contex
     }
 
     override fun onPageSelected(position: Int) {
-        mLayout.getChildAt(mHighlightTab).background = ColorDrawable(resources.getColor(android.R.color.transparent))
+        mLayout.getChildAt(mHighlightTab).background = ColorDrawable(ContextCompat.getColor(context, android.R.color.transparent))
         mHighlightTab = position
-        mLayout.getChildAt(mHighlightTab).background = ColorDrawable(resources.getColor(R.color.colorAccent))
+        mLayout.getChildAt(mHighlightTab).background = ColorDrawable(ContextCompat.getColor(context, R.color.colorAccent))
     }
 
     override fun onPageScrollStateChanged(state: Int) {}

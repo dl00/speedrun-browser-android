@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable
 import android.os.Build
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import danb.speedrunbrowser.R
 
 import java.io.Serializable
@@ -66,7 +67,7 @@ data class User(
         if(location?.country != null) {
             try {
                 val f = R.drawable::class.java.getDeclaredField("flag_" + location.country.code)
-                iv.setImageDrawable(iv.context.resources.getDrawable(f.getInt(null)))
+                iv.setImageDrawable(ContextCompat.getDrawable(iv.context, f.getInt(null)))
             }
             catch(e: Exception) {}
         }

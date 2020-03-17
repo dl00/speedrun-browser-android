@@ -1,15 +1,14 @@
 package danb.speedrunbrowser.stats
 
 import android.content.Context
-import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
@@ -31,11 +30,9 @@ import danb.speedrunbrowser.utils.Util
 import danb.speedrunbrowser.views.SimpleTabStrip
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.content_chart_view.view.*
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserFactory
 
 fun Chart.generateMpLineSetData(context: Context, labels: (v: String) -> String): LineData {
-    val mpdata = LineData()
+    val mpData = LineData()
 
     val ds = datasets.map {
         it to data.getValue(it).map { vv ->
@@ -46,28 +43,28 @@ fun Chart.generateMpLineSetData(context: Context, labels: (v: String) -> String)
     var curColor = 0
     ds.forEach {
 
-        val dataset = LineDataSet(it.second, labels(it.first))
+        val dataSet = LineDataSet(it.second, labels(it.first))
 
         val color = ColorTemplate.VORDIPLOM_COLORS[curColor++ % ColorTemplate.VORDIPLOM_COLORS.size]
 
-        dataset.color = color
-        dataset.setCircleColor(color)
-        dataset.circleHoleColor = context.resources.getColor(R.color.colorPrimary)
-        dataset.circleRadius = 5f
-        dataset.circleHoleRadius = 3f
+        dataSet.color = color
+        dataSet.setCircleColor(color)
+        dataSet.circleHoleColor = context.resources.getColor(R.color.colorPrimary)
+        dataSet.circleRadius = 5f
+        dataSet.circleHoleRadius = 3f
 
-        mpdata.addDataSet(dataset)
+        mpData.addDataSet(dataSet)
     }
 
-    mpdata.setDrawValues(false)
+    mpData.setDrawValues(false)
 
-    return mpdata
+    return mpData
 }
 
 fun Chart.generateMpBarSetData(context: Context, labels: (v: String) -> String): BarData {
-    val mpdata = BarData()
+    val mpData = BarData()
 
-    val datasets = datasets.map {
+    val dataSets = datasets.map {
         var i = 0
         it to data.getValue(it).map { vv ->
             BarEntry(i++.toFloat(), vv.y, vv.x)
@@ -75,21 +72,21 @@ fun Chart.generateMpBarSetData(context: Context, labels: (v: String) -> String):
     }
 
 
-    datasets.forEach {
+    dataSets.forEach {
         val dataSet = BarDataSet(it.second, labels(it.first))
 
-        dataSet.color = context.resources.getColor(R.color.colorSelected)
+        dataSet.color = ContextCompat.getColor(context, R.color.colorSelected)
 
-        mpdata.addDataSet(dataSet)
+        mpData.addDataSet(dataSet)
     }
 
-    mpdata.setDrawValues(false)
+    mpData.setDrawValues(false)
 
-    return mpdata
+    return mpData
 }
 
 fun Chart.generateMpPieSetData(context: Context, labels: ((v: Any) -> String)?): PieData {
-    val mpdata = PieDataSet(data.getValue("main").map {
+    val mpData = PieDataSet(data.getValue("main").map {
         if(labels != null)
             PieEntry(
                     it.y,
@@ -103,12 +100,12 @@ fun Chart.generateMpPieSetData(context: Context, labels: ((v: Any) -> String)?):
             )
     }, "")
 
-    mpdata.colors = ColorTemplate.MATERIAL_COLORS.asList()
-    mpdata.setDrawValues(false)
-    mpdata.setDrawIcons(false)
+    mpData.colors = ColorTemplate.MATERIAL_COLORS.asList()
+    mpData.setDrawValues(false)
+    mpData.setDrawIcons(false)
 
     val d = PieData()
-    d.addDataSet(mpdata)
+    d.addDataSet(mpData)
 
     return d
 }
@@ -264,7 +261,7 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
             cb.setTextColor(Color.WHITE)
 
             if (Build.VERSION.SDK_INT >= 21){
-                cb.buttonTintList = resources.getColorStateList(R.color.all_white)
+                cb.buttonTintList = ContextCompat.getColorStateList(context, R.color.all_white)
             }
 
 

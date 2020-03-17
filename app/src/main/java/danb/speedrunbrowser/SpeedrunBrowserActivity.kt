@@ -31,6 +31,7 @@ import androidx.fragment.app.FragmentManager
 import android.app.Activity
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import androidx.core.content.ContextCompat
 import danb.speedrunbrowser.views.MultiVideoView
 
 
@@ -227,13 +228,13 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         if (enabled) {
             window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
             supportActionBar!!.hide()
-            findViewById<View>(R.id.layoutRoot).background = ColorDrawable(resources.getColor(android.R.color.black))
+            findViewById<View>(R.id.layoutRoot).background = ColorDrawable(ContextCompat.getColor(this, android.R.color.black))
             mGameFilter.visibility = View.GONE
         }
         else {
             window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
             supportActionBar!!.show()
-            findViewById<View>(R.id.layoutRoot).background = ColorDrawable(resources.getColor(R.color.colorPrimary))
+            findViewById<View>(R.id.layoutRoot).background = ColorDrawable(ContextCompat.getColor(this, R.color.colorPrimary))
             mGameFilter.visibility = View.VISIBLE
         }
     }
