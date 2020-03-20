@@ -13,8 +13,9 @@
 
         <item name="android:itemBackground">@color/colorPrimary</item>
 
-        <item name="actionBarStyle">@style/AppTheme.ActionBar</item>
+        <item name="buttonStyle">@style/AppTheme.Button</item>
 
+        <item name="actionBarStyle">@style/AppTheme.ActionBar</item>
 
         <item name="android:windowBackground">@color/colorPrimary</item>
 

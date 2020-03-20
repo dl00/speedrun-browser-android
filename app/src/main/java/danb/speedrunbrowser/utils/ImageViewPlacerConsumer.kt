@@ -6,6 +6,7 @@ import android.graphics.drawable.ColorDrawable
 import android.view.View
 import android.widget.ImageView
 import androidx.core.graphics.drawable.toDrawable
+import com.yayandroid.parallaxrecyclerview.ParallaxImageView
 
 import io.reactivex.functions.Consumer
 
@@ -62,6 +63,9 @@ class ImageViewPlacerConsumer(private val view: ImageView) : Consumer<Bitmap> {
                     .alpha(1.0f)
                     .setDuration(animTime.toLong())
                     .setListener(null)
+
+            if (view is ParallaxImageView)
+                view.reuse()
         }
     }
 }

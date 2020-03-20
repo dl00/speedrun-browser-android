@@ -143,6 +143,15 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
 
         viewRulesButton.setOnClickListener { viewInfo() }
 
+        if (mLeaderboard != null) {
+            mProgressSpinner!!.visibility = View.GONE
+            mContentLayout!!.visibility = View.VISIBLE
+
+            if (mFilteredLeaderboardRuns != null && mFilteredLeaderboardRuns!!.isEmpty()) {
+                mEmptyRuns!!.visibility = View.VISIBLE
+            }
+        }
+
         notifyFilterChanged()
 
         return rootView

@@ -1,132 +1,216 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:id="@+id/contentLayout"
     tools:context=".RunDetailFragment">
 
-    <danb.speedrunbrowser.views.ProgressSpinnerView
-        android:id="@+id/spinner"
+    <LinearLayout
+        android:orientation="vertical"
+        android:id="@+id/contentLayout"
         android:layout_width="match_parent"
-        android:layout_height="200dp" />
+        android:layout_height="wrap_content">
 
-    <LinearLayout android:id="@+id/gameInfoHead"
-        android:visibility="gone"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        <danb.speedrunbrowser.views.ProgressSpinnerView
+            android:id="@+id/spinner"
+            android:layout_width="match_parent"
+            android:layout_height="200dp" />
 
-        <LinearLayout android:layout_width="match_parent"
-            android:orientation="horizontal"
-            android:layout_height="wrap_content">
+        <LinearLayout android:id="@+id/gameInfoHead"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            <ImageView
-                android:layout_width="@dimen/game_cover_width"
-                android:layout_height="@dimen/game_cover_height"
-                android:layout_marginEnd="@dimen/half_fab_margin"
-                android:contentDescription="@string/desc_game_cover"
-                android:id="@+id/imgCover" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:orientation="vertical"
-                android:layout_weight="1"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:id="@+id/txtGameName"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="The Legend of Zelda: Breath of the Wild"
-                    android:textAlignment="center"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    tools:ignore="HardcodedText" />
-
-                <TableLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <TableRow
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" >
-
-                        <TextView
-                            android:id="@+id/textView3"
-                            android:textSize="@dimen/text_size_small_kv"
-                            android:textStyle="bold"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="0"
-                            android:text="@string/label_key_platforms"
-                            android:textAlignment="viewEnd" />
-
-                        <View
-                            android:id="@+id/divider"
-                            android:layout_width="10dp"
-                            android:layout_height="match_parent"
-                            android:background="@android:color/transparent" />
-
-                        <TextView
-                            android:id="@+id/txtPlatforms"
-                            android:textSize="@dimen/text_size_small_kv"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:scrollHorizontally="true"
-                            android:scrollbarAlwaysDrawHorizontalTrack="true"
-                            android:text="WiiU, Switch"
-                            tools:ignore="HardcodedText" />
-                    </TableRow>
-
-                    <TableRow
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" >
-
-                        <TextView
-                            android:id="@+id/textView5"
-                            android:textSize="@dimen/text_size_small_kv"
-                            android:textStyle="bold"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="0"
-                            android:text="Release Date"
-                            android:textAlignment="viewEnd"
-                            tools:ignore="HardcodedText" />
-
-                        <View
-                            android:id="@+id/divider2"
-                            android:layout_width="1dp"
-                            android:layout_height="match_parent"
-                            android:background="@android:color/transparent" />
-
-                        <TextView
-                            android:id="@+id/txtReleaseDate"
-                            android:textSize="@dimen/text_size_small_kv"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="2017-03-03"
-                            tools:ignore="HardcodedText" />
-                    </TableRow>
-
-                </TableLayout>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
+            <LinearLayout android:layout_width="match_parent"
+                android:orientation="horizontal"
                 android:layout_height="wrap_content">
 
                 <ImageView
-                    android:id="@+id/imgShare"
+                    android:layout_width="@dimen/game_cover_width"
+                    android:layout_height="@dimen/game_cover_height"
+                    android:layout_marginEnd="@dimen/half_fab_margin"
+                    android:contentDescription="@string/desc_game_cover"
+                    android:id="@+id/imgCover" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:orientation="vertical"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/txtGameName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="The Legend of Zelda: Breath of the Wild"
+                        android:textAlignment="center"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        tools:ignore="HardcodedText" />
+
+                    <TableLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TableRow
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" >
+
+                            <TextView
+                                android:id="@+id/textView3"
+                                android:textSize="@dimen/text_size_small_kv"
+                                android:textStyle="bold"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="0"
+                                android:text="@string/label_key_platforms"
+                                android:textAlignment="viewEnd" />
+
+                            <View
+                                android:id="@+id/divider"
+                                android:layout_width="10dp"
+                                android:layout_height="match_parent"
+                                android:background="@android:color/transparent" />
+
+                            <TextView
+                                android:id="@+id/txtPlatforms"
+                                android:textSize="@dimen/text_size_small_kv"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:scrollHorizontally="true"
+                                android:scrollbarAlwaysDrawHorizontalTrack="true"
+                                android:text="WiiU, Switch"
+                                tools:ignore="HardcodedText" />
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" >
+
+                            <TextView
+                                android:id="@+id/textView5"
+                                android:textSize="@dimen/text_size_small_kv"
+                                android:textStyle="bold"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="0"
+                                android:text="Release Date"
+                                android:textAlignment="viewEnd"
+                                tools:ignore="HardcodedText" />
+
+                            <View
+                                android:id="@+id/divider2"
+                                android:layout_width="1dp"
+                                android:layout_height="match_parent"
+                                android:background="@android:color/transparent" />
+
+                            <TextView
+                                android:id="@+id/txtReleaseDate"
+                                android:textSize="@dimen/text_size_small_kv"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="2017-03-03"
+                                tools:ignore="HardcodedText" />
+                        </TableRow>
+
+                    </TableLayout>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <ImageView
+                        android:id="@+id/imgShare"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="@dimen/half_fab_margin"
+                        android:src="@drawable/baseline_share_24" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginTop="@dimen/fab_margin"
+                    android:layout_marginBottom="@dimen/fab_margin"
+                    android:textStyle="bold"
+                    android:textAlignment="center"
+                    android:id="@+id/txtCategoryName" />
+
+                <Button
+                    android:id="@+id/buttonViewRules"
+                    android:backgroundTint="@color/colorAccent"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:padding="@dimen/half_fab_margin"
-                    android:src="@drawable/baseline_share_24" />
+                    android:text="@string/button_view_rules" />
+
+            </LinearLayout>
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chipsVariables"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/half_fab_margin"
+                    android:layout_marginEnd="@dimen/half_fab_margin" />
+
+            </HorizontalScrollView>
+
+            <com.google.android.flexbox.FlexboxLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:justifyContent="center"
+                app:flexWrap="wrap"
+                app:alignItems="center"
+                app:alignContent="center"
+                android:id="@+id/txtPlayerNames" />
+
+
+            <LinearLayout
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/imgRunPlace"
+                    android:visibility="gone"
+                    android:layout_marginEnd="@dimen/half_fab_margin"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp" />
+
+                <TextView
+                    android:id="@+id/txtRunPlace"
+                    android:visibility="gone"
+                    android:textStyle="bold"
+                    android:layout_marginEnd="@dimen/half_fab_margin"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="center"
+                    android:id="@+id/txtRunTime" />
 
             </LinearLayout>
 
@@ -135,140 +219,74 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
+            android:id="@+id/headerLayout"
             android:orientation="horizontal">
 
             <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginTop="@dimen/fab_margin"
-                android:layout_marginBottom="@dimen/fab_margin"
-                android:textStyle="bold"
-                android:textAlignment="center"
-                android:id="@+id/txtCategoryName" />
-
-            <Button
-                android:id="@+id/buttonViewRules"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/button_view_rules" />
-
-        </LinearLayout>
-
-        <HorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chipsVariables"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/half_fab_margin"
-                android:layout_marginEnd="@dimen/half_fab_margin" />
-
-        </HorizontalScrollView>
-
-        <com.google.android.flexbox.FlexboxLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:justifyContent="center"
-            app:flexWrap="wrap"
-            app:alignItems="center"
-            app:alignContent="center"
-            android:id="@+id/txtPlayerNames" />
-
-
-        <LinearLayout
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <ImageView
-                android:id="@+id/imgRunPlace"
-                android:visibility="gone"
-                android:layout_marginEnd="@dimen/half_fab_margin"
-                android:layout_width="20dp"
-                android:layout_height="20dp" />
+                android:id="@+id/categoryNameTxt" />
 
             <TextView
-                android:id="@+id/txtRunPlace"
-                android:visibility="gone"
-                android:textStyle="bold"
-                android:layout_marginEnd="@dimen/half_fab_margin"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAlignment="center"
-                android:id="@+id/txtRunTime" />
-
         </LinearLayout>
 
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/headerLayout"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/categoryNameTxt" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-    </LinearLayout>
-
-    <danb.speedrunbrowser.utils.FixedAspectRatioFrameLayout
-        android:id="@+id/videoFrame"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:aspectRatioWidth="16"
-        android:layout_gravity="center"
-        app:aspectRatioHeight="9" />
-
-    <LinearLayout
-        android:id="@+id/runFooter"
-        android:visibility="gone"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginTop="@dimen/fab_margin"
-        android:orientation="vertical">
-
-        <Button
-            android:id="@+id/buttonViewOnOfficial"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/button_view_on_official" />
+            android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/txtRunComment"
-            android:layout_marginBottom="@dimen/half_fab_margin"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAlignment="center" />
+            <FrameLayout
+                android:id="@+id/videoFrame"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginEnd="0dp"
+                android:layout_marginStart="0dp"
+                android:layout_marginTop="0dp"
+                android:background="@android:color/black"
+                app:layout_constraintDimensionRatio="H,16:9"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-        <ListView
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <LinearLayout
+            android:id="@+id/runFooter"
             android:visibility="gone"
-            android:id="@+id/runSplitsList"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="@dimen/fab_margin"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/emptySplits"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAlignment="center"
-            android:text="@string/empty_no_splits" />
+            <Button
+                android:id="@+id/buttonViewOnOfficial"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/button_view_on_official" />
 
+            <TextView
+                android:id="@+id/txtRunComment"
+                android:layout_marginBottom="@dimen/half_fab_margin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="center" />
+
+            <ListView
+                android:visibility="gone"
+                android:id="@+id/runSplitsList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/emptySplits"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="center"
+                android:text="@string/empty_no_splits" />
+
+        </LinearLayout>
     </LinearLayout>
-</LinearLayout>
+</ScrollView>

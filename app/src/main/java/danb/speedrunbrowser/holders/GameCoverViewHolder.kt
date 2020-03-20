@@ -6,23 +6,20 @@ import android.widget.ImageView
 import android.widget.TextView
 
 import androidx.recyclerview.widget.RecyclerView
+import com.yayandroid.parallaxrecyclerview.ParallaxViewHolder
 import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.utils.ImageLoader
 import danb.speedrunbrowser.utils.ImageViewPlacerConsumer
 import io.reactivex.disposables.CompositeDisposable
 
-class GameCoverViewHolder(v: View) : RecyclerView.ViewHolder(v) {
+class GameCoverViewHolder(v: View) : ParallaxViewHolder(v) {
     private val mName: TextView = v.findViewById(R.id.txtGameName)
-    private val mDate: TextView = v.findViewById(R.id.txtReleaseDate)
-    private val mRunnersCount: TextView = v.findViewById(R.id.txtPlayerCount)
 
     private val mCover: ImageView = v.findViewById(R.id.imgGameCover)
 
     fun apply(ctx: Context, disposables: CompositeDisposable, game: Game) {
         mName.text = game.resolvedName
-        mDate.text = game.releaseDate
-        mRunnersCount.text = ""
 
         if (game.assets.coverLarge != null)
             disposables.add(ImageLoader(ctx).loadImage(game.assets.coverLarge.uri)
@@ -30,5 +27,9 @@ class GameCoverViewHolder(v: View) : RecyclerView.ViewHolder(v) {
         else {
         }
         // TODO: In the extremely unlikely case there is no cover, might have to replace with dummy image
+    }
+
+    override fun getParallaxImageId(): Int {
+        return R.id.imgGameCover
     }
 }

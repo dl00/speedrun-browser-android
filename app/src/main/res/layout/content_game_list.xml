@@ -34,14 +34,15 @@
         android:textAlignment="center"
         android:text="@string/empty_no_games" />
 
-    <androidx.recyclerview.widget.RecyclerView
+    <com.yayandroid.parallaxrecyclerview.ParallaxRecyclerView
         android:id="@+id/listSearchItems"
         android:name="danb.speedrunbrowser.ItemListFragment"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        app:layoutManager="danb.speedrunbrowser.utils.PreCachingGridLayoutManager"
-        app:spanCount="3"
+        android:layout_gravity="center"
+        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+        app:spanCount="2"
         tools:context=".GameListFragment"
         tools:listitem="@layout/content_game_cover" />
 
