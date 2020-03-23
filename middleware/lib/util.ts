@@ -1,5 +1,7 @@
 import * as _ from 'lodash';
 
+import * as util from 'util';
+
 export function generate_unique_id(length: number) {
 
     // base58 character set. From bitcoin.
@@ -10,4 +12,8 @@ export function generate_unique_id(length: number) {
         code += CHARSET.charAt(_.random(CHARSET.length - 1));
     }
     return code;
+}
+
+export async function sleep(time: number) {
+    await util.promisify(setTimeout)(time)
 }

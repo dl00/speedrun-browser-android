@@ -166,8 +166,14 @@ object SpeedrunMiddlewareAPI {
         @GET("charts/users/{id}")
         fun getUserMetrics(@Path("id") gameId: String): Observable<APIChartResponse>
 
-        @GET("charts/games/:gameId/players/:playerId")
+        @GET("charts/games/:gameId/players/{playerId}")
         fun getUserGameMetrics(@Path("gameId") gameId: String,
                                @Path("playerId") playerId: String): Observable<APIChartResponse>
+
+        @GET("streams/game-groups/{ggId}")
+        fun listStreamsByGameGroup(@Path("ggId") ggId: String): Observable<APIResponse<Stream>>
+
+        @GET("streams/games/{gameId}")
+        fun listStreamsByGame(@Path("gameId") gameId: String): Observable<APIResponse<Stream>>
     }
 }

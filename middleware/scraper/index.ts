@@ -66,6 +66,20 @@ const BASE_TASKS: Task[] = [
         repeat: moment.duration(2, 'weeks'),
     },
     {
+        name: 'twitch_all_players',
+        module: 'twitch',
+        exec: 'pull_all_players',
+        timeout: 600,
+        repeat: moment.duration(10, 'minutes')
+    },
+    {
+        name: 'twitch_active_players',
+        module: 'twitch',
+        exec: 'pull_all_active_streams',
+        timeout: 60,
+        repeat: moment.duration(1, 'minutes')
+    },
+    {
         name: 'hack_chart_total_runs',
         module: 'hack',
         exec: 'gen_total_runs',
@@ -78,7 +92,7 @@ const BASE_TASKS: Task[] = [
         exec: 'gen_volume',
         timeout: 14400,
         repeat: moment.duration(1, 'days'),
-    },
+    }
 ];
 
 export function join_runid(parts: string[]) {

@@ -77,6 +77,15 @@ export interface Config {
             /// The number of gnere-specific runs to keep marked as "latest"
             latestGenreRunsLength: number,
         },
+
+        /// API Token needed to access the twitch API
+        twitch: {
+            /// api token from creating a new app on twitch developer page
+            token: string,
+            
+            /// server secret, as given from the developer api page after you create the token
+            secret: string
+        }
     };
 
     /// Settings for the indexing engine--used for autocomplete and any title search
@@ -139,6 +148,11 @@ export const DEFAULT_CONFIG: Config = {
             latestRunsLength: 10000,
             latestGenreRunsLength: 1000,
         },
+
+        twitch: {
+            token: '',
+            secret: ''
+        }
     },
 
     indexer: {

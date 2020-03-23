@@ -203,4 +203,6 @@
     <string name="label_list_mode_trending"><![CDATA[New & Trending]]></string>
     <string name="label_list_mode_verified">Verified</string>
     <string name="label_list_mode_unverified">Unverified</string>
+    <string name="title_tab_streams">Streams</string>
+    <string name="empty_no_streams">No streams found.</string>
 </resources>

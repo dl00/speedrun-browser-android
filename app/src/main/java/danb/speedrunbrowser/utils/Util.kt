@@ -2,10 +2,7 @@
 
 package danb.speedrunbrowser.utils
 
-import android.app.AlertDialog
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
+import android.app.*
 import android.content.*
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -23,6 +20,9 @@ import java.util.concurrent.TimeUnit
 
 import androidx.core.app.NotificationCompat
 import androidx.core.app.TaskStackBuilder
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.UpdateAvailability
 import danb.speedrunbrowser.BuildConfig
 import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.objects.User
@@ -80,16 +80,35 @@ object Util {
                                 shownOodDialog = true
                                 // open an upgrade warning dialog
                                 AndroidSchedulers.mainThread().scheduleDirect {
-                                    AlertDialog.Builder(context, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) android.R.style.Theme_DeviceDefault_Dialog_Alert
-                                        else AlertDialog.THEME_DEVICE_DEFAULT_DARK)
-                                            .setIcon(R.drawable.baseline_info_white_24)
-                                            .setTitle(R.string.dialog_title_old_version)
-                                            .setMessage(R.string.dialog_msg_old_version)
-                                            .setPositiveButton(R.string.dialog_button_play_store) { _, _ ->
-                                                openPlayStorePage(context)
-                                            }
-                                            .setNeutralButton(R.string.ignore, null)
-                                            .show()
+
+                                    val appUpdateManager = AppUpdateManagerFactory.create(context)
+
+
+                                    val appUpdateInfoTask = appUpdateManager.appUpdateInfo
+
+                                    appUpdateInfoTask.addOnSuccessListener { appUpdateInfo ->
+                                        if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+                                                && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
+                                            // Request an immediate update.
+                                            appUpdateManager.startUpdateFlowForResult(
+                                                    appUpdateInfo,
+                                                    AppUpdateType.IMMEDIATE,
+                                                    context as Activity,
+                                                    1)
+                                        } else {
+                                            // cannot update the usual method for some reason
+                                            AlertDialog.Builder(context, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) android.R.style.Theme_DeviceDefault_Dialog_Alert
+                                                    else AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+                                                    .setIcon(R.drawable.baseline_info_white_24)
+                                                    .setTitle(R.string.dialog_title_old_version)
+                                                    .setMessage(R.string.dialog_msg_old_version)
+                                                    .setPositiveButton(R.string.dialog_button_play_store) { _, _ ->
+                                                        openPlayStorePage(context)
+                                                    }
+                                                    .setNeutralButton(R.string.ignore, null)
+                                                    .show()
+                                        }
+                                    }
                                 }
                             }
                         } catch (e: java.lang.Exception) {}

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/imgVideoThumbnail"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginEnd="0dp"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="0dp"
+        android:background="@android:color/black"
+        app:layout_constraintDimensionRatio="H,16:9"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/txtPlayerName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="gymnast86"
+        android:textAlignment="center"
+        android:textSize="@dimen/text_size_player"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imgVideoThumbnail" />
+
+    <TextView
+        android:id="@+id/txtGameName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Legend of Zelda: Wind Waker HD"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/txtPlayerName" />
+
+    <TextView
+        android:id="@+id/txtViewerCount"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="1,569"
+        android:textAlignment="textEnd"
+        app:layout_constraintTop_toBottomOf="@+id/txtPlayerName"
+        app:layout_constraintStart_toEndOf="@+id/txtGameName"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

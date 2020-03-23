@@ -174,6 +174,11 @@ export class Dao<T> implements DaoConfig<T> {
     }
 
     public async remove(ids: string|string[]): Promise<Array<T|null>> {
+
+        if(!ids || !ids.length) {
+            throw new Error('Dao remove() called with no objs to remove')
+        }
+
         if (!_.isArray(ids)) {
             ids = [ids];
         }

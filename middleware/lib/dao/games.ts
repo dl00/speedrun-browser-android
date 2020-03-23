@@ -62,6 +62,8 @@ export function game_assets_to_bulk(game_assets: GameAssets): BulkGameAssets {
 }
 
 export interface Game extends BulkGame, BaseMiddleware {
+    twitch_id: string;
+
     released: number;
     romhack?: boolean;
     created: string;
@@ -122,6 +124,28 @@ export function normalize_game(d: Game) {
     }
 }
 
+export function extract_game_group_ids(d: Game): string[] {
+    // TODO: switch to `speedrun_api.Genre[] instead of any[]`
+    const groups: string[] = []
+    for (const genre of d.genres as {id: string, name: string}[]) {
+        groups.push(genre.id || <any>genre);
+    }
+
+    for (const platform of d.platforms as Platform[]) {
+        groups.push(platform.id || <any>platform)
+    }
+
+    for (const developer of d.developers as Developer[]) {
+        groups.push(developer.id || <any>developer)
+    }
+
+    for (const publisher of d.publishers as Publisher[]) {
+        groups.push(publisher.id || <any>publisher);
+    }
+
+    return groups
+}
+
 class PopularGamesIndex implements IndexDriver<Game> {
     public name: string;
     private max_return: number;
@@ -163,22 +187,9 @@ class PopularGamesIndex implements IndexDriver<Game> {
             // install master rank list
             m.zadd(this.name, game_score.toString(), game.id);
 
-            // install on category lists
-            // TODO: switch to `speedrun_api.Genre[] instead of any[]`
-            for (const genre of game.genres as {id: string, name: string}[]) {
-                m.zadd(this.name + ':' + (genre.id || genre), game_score.toString(), game.id);
-            }
-
-            for (const platform of game.platforms as Platform[]) {
-                m.zadd(this.name + ':' + (platform.id || platform), game_score.toString(), game.id);
-            }
-
-            for (const developer of game.developers as Developer[]) {
-                m.zadd(this.name + ':' + (developer.id || developer), game_score.toString(), game.id);
-            }
-
-            for (const publisher of game.publishers as Publisher[]) {
-                m.zadd(this.name + ':' + (publisher.id || publisher), game_score.toString(), game.id);
+            // install on game group lists
+            for(const gg of extract_game_group_ids(game)) {
+                m.zadd(this.name + ':' + gg, game_score.toString(), game.id)
             }
         }
 
@@ -260,6 +271,7 @@ export class GameDao extends Dao<Game> {
 
         this.indexes = [
             new RedisMapIndex('abbr', 'abbreviation'),
+            new RedisMapIndex('twitch_id', 'twitch_id'),
             new IndexerIndex('games', get_game_search_indexes),
             new PopularGamesIndex('popular_games', max_items),
             new PopularGamesIndex('popular_trending_games', max_items,

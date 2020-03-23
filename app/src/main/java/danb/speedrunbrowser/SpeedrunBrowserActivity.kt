@@ -7,9 +7,6 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
 import android.widget.*
 
 import androidx.appcompat.app.AppCompatActivity
@@ -29,7 +26,7 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import androidx.fragment.app.FragmentManager
 import android.app.Activity
-import android.view.ViewGroup
+import android.view.*
 import android.view.inputmethod.InputMethodManager
 import androidx.core.content.ContextCompat
 import danb.speedrunbrowser.views.MultiVideoView
@@ -75,6 +72,12 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         }
 
         onNewIntent(intent)
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        hideKeyboard()
     }
 
     private fun onFragmentMove() {
@@ -347,6 +350,7 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
             view = View(this)
         }
         imm.hideSoftInputFromWindow(view.windowToken, 0)
+        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
     }
 
     companion object {

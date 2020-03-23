@@ -62,7 +62,7 @@ export interface User extends BulkUser, BaseMiddleware {
     signup?: string;
     score?: number;
 
-    twitch?: string;
+    twitch?: { uri: string };
 
     bests: {[id: string]: GamePersonalBests};
 }
