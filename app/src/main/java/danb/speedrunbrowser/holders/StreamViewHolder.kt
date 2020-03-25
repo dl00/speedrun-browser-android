@@ -29,9 +29,6 @@ class StreamViewHolder(v: View) : RecyclerView.ViewHolder(v) {
         mStreamTitle.text = strm.title
         mViewerCount.text = context.resources.getString(R.string.label_stream_viewers, strm.viewer_count.toString())
 
-        println(strm.thumbnail_url)
-        println(strm.viewer_count)
-
         val finalThumbnailUrl = URL(strm.thumbnail_url
                 .replace("{width}", mThumbnailImage.width.toString())
                 .replace("{height}", mThumbnailImage.height.toString()))

@@ -47,7 +47,7 @@ import io.reactivex.schedulers.Schedulers
  * Mandatory empty constructor for the fragment manager to instantiate the
  * fragment (e.g. upon screen orientation changes).
  */
-class GameDetailFragment : Fragment() {
+class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter {
 
     private lateinit var mDB: AppDatabase
 
@@ -81,6 +81,8 @@ class GameDetailFragment : Fragment() {
 
     private val mStartPositionCategory: Category? = null
     private val mStartPositionLevel: Level? = null
+
+    private val subscribedLeaderbards = mutableSetOf<LeaderboardFragment>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -140,6 +142,10 @@ class GameDetailFragment : Fragment() {
         }
 
         return false
+    }
+
+    override fun addLeaderboard(frag: LeaderboardFragment) {
+        subscribedLeaderbards.add(frag)
     }
 
     private fun setMenu() {
@@ -349,7 +355,10 @@ class GameDetailFragment : Fragment() {
 
         dialog.show()
 
-        dialog.setOnDismissListener { (mLeaderboardPager!!.adapter as LeaderboardPagerAdapter).notifyFilterChanged() }
+        dialog.setOnDismissListener {
+            for (lbf in subscribedLeaderbards)
+                lbf.notifyFilterChanged(mVariableSelections!!)
+        }
     }
 
     private fun openSubscriptionDialog() {

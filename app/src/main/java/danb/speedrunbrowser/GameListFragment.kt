@@ -399,7 +399,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                         override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
                             return SpeedrunMiddlewareAPI.make(context!!).listStreamsByGameGroup(if (mGameGroup != null) mGameGroup!!.id else "site", Locale.ENGLISH.language, offset).map(ItemListFragment.GenericMapper())
                         }
-                    }, "english", "English"))
+                    }, "english", Locale.ENGLISH.displayLanguage))
                 }
                 3 -> fragments[3].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
                     override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {

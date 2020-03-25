@@ -91,6 +91,14 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
 
         mDisposables = CompositeDisposable()
 
+        var p = parentFragment
+        while(p != null) {
+            if (p is LeaderboardInteracter)
+                p.addLeaderboard(this)
+
+            p = p.parentFragment
+        }
+
         val args = Objects.requireNonNull<Bundle>(arguments)
 
         game = args.getSerializable(ARG_GAME) as Game
@@ -321,7 +329,14 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
                 .setListener(null)
     }
 
-    fun notifyFilterChanged() {
+    fun notifyFilterChanged(selections: Variable.VariableSelections? = null) {
+        println("FILTER NOTIFY CHANGED")
+        if (selections != null && selections != filter) {
+            filter = selections
+            println("RETURNING")
+            return
+        }
+
         updateSubcategorySelections()
 
         if (mLeaderboard != null) {
@@ -342,6 +357,10 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
                 }
             }
         }
+    }
+
+    interface LeaderboardInteracter {
+        fun addLeaderboard(frag: LeaderboardFragment)
     }
 
     inner class LeaderboardAdapter : RecyclerView.Adapter<RunViewHolder>() {

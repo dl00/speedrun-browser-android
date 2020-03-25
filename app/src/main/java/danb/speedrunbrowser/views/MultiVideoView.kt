@@ -52,6 +52,9 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
     private var mPeriodicUpdate: Disposable? = null
 
     fun loadVideo(ml: MediaLink): Boolean {
+        if (mShownLink == ml)
+            return true
+
         Log.d(TAG, "Trying to find YT/Twitch video: " + ml.uri)
 
         when {

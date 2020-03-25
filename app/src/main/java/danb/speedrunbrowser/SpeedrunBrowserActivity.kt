@@ -108,12 +108,16 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
+        // video view must be detached
+        if(mVideoView.parent is ViewGroup)
+            (mVideoView.parent as ViewGroup).removeView(mVideoView)
+
         // reattach current fragment
         val frag = supportFragmentManager.fragments[0]
 
         // TODO: clean this up
-        if (frag is RunDetailFragment)
-            return
+        //if (frag is RunDetailFragment)
+        //    return
 
         supportFragmentManager.beginTransaction()
                 .detach(frag)
