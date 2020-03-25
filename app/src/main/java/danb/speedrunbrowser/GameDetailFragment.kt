@@ -238,7 +238,7 @@ class GameDetailFragment : Fragment() {
         mCategoryTabStrip = rootView.findViewById(R.id.tabCategories)
 
         if (mGame != null) {
-            setupTabStrip()
+            //setupTabStrip()
             mSpinner!!.visibility = View.GONE
             mGameHeader!!.visibility = View.VISIBLE
         }
@@ -349,7 +349,7 @@ class GameDetailFragment : Fragment() {
 
         dialog.show()
 
-        dialog.setOnDismissListener { mCategoryTabStrip!!.pagerAdapter!!.notifyFilterChanged() }
+        dialog.setOnDismissListener { (mLeaderboardPager!!.adapter as LeaderboardPagerAdapter).notifyFilterChanged() }
     }
 
     private fun openSubscriptionDialog() {

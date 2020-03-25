@@ -5,6 +5,7 @@ package danb.speedrunbrowser
 import android.app.ActivityOptions
 import android.content.Intent
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.*
@@ -28,6 +29,8 @@ import io.reactivex.ObservableSource
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.Function
 import io.reactivex.schedulers.Schedulers
+import java.net.URL
+import java.util.*
 
 /**
  * An activity representing a list of Games. This activity
@@ -192,6 +195,12 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
         startActivity(intent)
     }
 
+    private fun showStream(twitchUrl: String) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(twitchUrl))
+
+        startActivity(intent)
+    }
+
     private fun showAbout() {
         val intent = Intent(context, AboutActivity::class.java)
         startActivity(intent)
@@ -203,6 +212,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
             ItemType.GAME_GROUPS -> {}
             ItemType.PLAYERS -> showPlayer(itemId)
             ItemType.RUNS -> showRun(itemId)
+            ItemType.STREAMS -> showStream(itemId)
         }
     }
 
@@ -300,7 +310,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
         }
 
         override fun getCount(): Int {
-            return if (mGameGroup != null) 2 else fragments.size
+            return if (mGameGroup != null) 3 else fragments.size
         }
 
         override fun getPageTitle(position: Int): CharSequence? {
@@ -370,11 +380,27 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                         }
                     }, "unverified", getString(R.string.label_list_mode_unverified)))
                 }
-                2 -> fragments[2].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
-                    override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
-                        return SpeedrunMiddlewareAPI.make(context!!).listStreamsByGameGroup(if (mGameGroup != null) mGameGroup!!.id else "site").map(ItemListFragment.GenericMapper())
+                2 -> {
+                    fragments[2].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
+                        override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
+                            return SpeedrunMiddlewareAPI.make(context!!).listStreamsByGameGroup(if (mGameGroup != null) mGameGroup!!.id else "site", offset).map(ItemListFragment.GenericMapper())
+                        }
+                    }, "all", getString(R.string.label_list_mode_all)))
+
+                    if (Locale.getDefault().language != Locale.ENGLISH.language) {
+                        fragments[2].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
+                            override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
+                                return SpeedrunMiddlewareAPI.make(context!!).listStreamsByGameGroup(if (mGameGroup != null) mGameGroup!!.id else "site", Locale.getDefault().language, offset).map(ItemListFragment.GenericMapper())
+                            }
+                        }, "locale", Locale.getDefault().displayLanguage))
                     }
-                }))
+
+                    fragments[2].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
+                        override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
+                            return SpeedrunMiddlewareAPI.make(context!!).listStreamsByGameGroup(if (mGameGroup != null) mGameGroup!!.id else "site", Locale.ENGLISH.language, offset).map(ItemListFragment.GenericMapper())
+                        }
+                    }, "english", "English"))
+                }
                 3 -> fragments[3].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
                     override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
                         val entries = mDB!!.watchHistoryDao()

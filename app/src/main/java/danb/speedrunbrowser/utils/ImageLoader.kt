@@ -62,7 +62,7 @@ class ImageLoader(ctx: Context) {
     }
 
     @Throws(IOException::class)
-    private fun downloadImage(url: URL): InputStream? {
+    private fun downloadImage(url: URL, saveToCache: Boolean): InputStream? {
         Log.v(TAG, "Download Image Asset: $url")
 
         var bais: ByteArrayInputStream? = null
@@ -84,15 +84,17 @@ class ImageLoader(ctx: Context) {
 
             val data = res.body()!!.bytes()
 
-            val fo = FileOutputStream(getCacheFile(url))
+            if (saveToCache) {
+                val fo = FileOutputStream(getCacheFile(url))
 
-            try {
-                fo.write(data)
-                fo.close()
-            } catch (e: Exception) {
-                // if something happens, try to delete the cache file. otherwise it could load invalid next time
-                Log.w(TAG, "Could not save cache file for downloaded image", e)
-                getCacheFile(url).delete()
+                try {
+                    fo.write(data)
+                    fo.close()
+                } catch (e: Exception) {
+                    // if something happens, try to delete the cache file. otherwise it could load invalid next time
+                    Log.w(TAG, "Could not save cache file for downloaded image", e)
+                    getCacheFile(url).delete()
+                }
             }
 
             bais = ByteArrayInputStream(data)
@@ -102,14 +104,14 @@ class ImageLoader(ctx: Context) {
         return bais
     }
 
-    fun loadImage(url: URL): Single<Bitmap> {
+    fun loadImage(url: URL, useCache: Boolean = true): Single<Bitmap> {
         return Single.create(SingleOnSubscribe<Bitmap> { emitter ->
             try {
                 // try to load from cache first
-                var strm: InputStream? = loadFromCache(url)
+                var strm: InputStream? = if (!useCache) null else loadFromCache(url)
 
                 if (strm == null) {
-                    strm = downloadImage(url)
+                    strm = downloadImage(url, useCache)
                 }
 
                 val b = BitmapFactory.decodeStream(strm) // will trigger an IOException to log the message otherwise

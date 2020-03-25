@@ -110,7 +110,7 @@ export class StreamDao extends Dao<Stream> {
         this.indexes = [
             new RedisMultiIndex('game', 'game_id'),
             new RedisMultiIndex('game-group', 'gg_ids'),
-            new PopularStreamsIndex('popular_streams_game_groups', options?.max_items || 100)
+            new PopularStreamsIndex('popular_streams_game_groups', options ? options.max_items || 100 : 100)
         ];
     }
 

@@ -7,9 +7,6 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
-import danb.speedrunbrowser.api.objects.Game
-import danb.speedrunbrowser.api.objects.LeaderboardRunEntry
-import danb.speedrunbrowser.api.objects.User
 import danb.speedrunbrowser.holders.ProgressSpinnerViewHolder
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -28,7 +25,7 @@ import android.widget.HorizontalScrollView
 import androidx.core.content.ContextCompat
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
-import danb.speedrunbrowser.api.objects.GameGroup
+import danb.speedrunbrowser.api.objects.*
 import danb.speedrunbrowser.utils.ItemType
 
 import java.util.ArrayList
@@ -93,6 +90,7 @@ open class ItemListFragment : Fragment() {
                     ItemType.PLAYERS -> id = (v.tag as User).id
                     ItemType.RUNS -> id = (v.tag as LeaderboardRunEntry).run.id
                     ItemType.GAME_GROUPS -> id = (v.tag as GameGroup).id
+                    ItemType.STREAMS -> id = "https://twitch.tv/${(v.tag as Stream).user_name}"
                 }
 
                 mListener!!.onItemSelected(itemType, id, this@ItemListFragment,

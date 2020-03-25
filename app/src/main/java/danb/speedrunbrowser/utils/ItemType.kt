@@ -25,7 +25,7 @@ enum class ItemType constructor(val layout: Int) : Serializable, ViewHolderSourc
             GAMES -> GameCoverViewHolder((ctx!!.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater).inflate(R.layout.content_game_cover, parent, false))
             GAME_GROUPS -> GameCoverViewHolder((ctx!!.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater).inflate(R.layout.content_game_cover, parent, false))
             PLAYERS -> PlayerViewHolder((ctx!!.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater).inflate(R.layout.content_player_list, parent, false))
-            STREAMS -> StreamViewHolder((ctx!!.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater).inflate(R.layout.fragment_stream_list, parent, false))
+            STREAMS -> StreamViewHolder((ctx!!.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater).inflate(R.layout.content_stream_info, parent, false))
             RUNS -> WatchRunViewHolder((ctx!!.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater).inflate(R.layout.content_watch_list, parent, false))
         }
     }

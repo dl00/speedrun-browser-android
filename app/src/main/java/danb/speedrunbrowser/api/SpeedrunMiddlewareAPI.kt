@@ -171,9 +171,15 @@ object SpeedrunMiddlewareAPI {
                                @Path("playerId") playerId: String): Observable<APIChartResponse>
 
         @GET("streams/game-groups/{ggId}")
-        fun listStreamsByGameGroup(@Path("ggId") ggId: String): Observable<APIResponse<Stream>>
+        fun listStreamsByGameGroup(@Path("ggId") ggId: String, @Query("start") offset: Int): Observable<APIResponse<Stream>>
+
+        @GET("streams/game-groups/{ggId}/{lang}")
+        fun listStreamsByGameGroup(@Path("ggId") ggId: String, @Path("lang") lang: String, @Query("start") offset: Int): Observable<APIResponse<Stream>>
 
         @GET("streams/games/{gameId}")
-        fun listStreamsByGame(@Path("gameId") gameId: String): Observable<APIResponse<Stream>>
+        fun listStreamsByGame(@Path("gameId") gameId: String, @Query("start") offset: Int): Observable<APIResponse<Stream>>
+
+        @GET("streams/games/{gameId}/{lang}")
+        fun listStreamsByGame(@Path("gameId") gameId: String, @Path("lang") lang: String, @Query("start") offset: Int): Observable<APIResponse<Stream>>
     }
 }

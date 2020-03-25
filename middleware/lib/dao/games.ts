@@ -62,7 +62,7 @@ export function game_assets_to_bulk(game_assets: GameAssets): BulkGameAssets {
 }
 
 export interface Game extends BulkGame, BaseMiddleware {
-    twitch_id: string;
+    twitch_id?: string;
 
     released: number;
     romhack?: boolean;

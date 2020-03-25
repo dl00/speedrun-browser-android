@@ -104,8 +104,10 @@ async function poll_stream_statuses(game_dao: GameDao, user_dao: UserDao, user_l
 export async function pull_all_games() {
     await refresh_token()
 
-    let game_dao = await new GameDao(scraper.storedb!)
-    let nextPage: string = ''
+    let game_dao = await new GameDao(scraper.storedb!);
+    let nextPage: string = '';
+    let doneCount = 0;
+    let maxDone = await game_dao.count()
 
     try {
         let twitch_games: any[] = []
@@ -119,6 +121,7 @@ export async function pull_all_games() {
             })
 
             twitch_games = twitch_response.data
+            doneCount += twitch_games.length
             nextPage = twitch_response.pagination.cursor
 
             const save_games: Game[] = []
@@ -139,7 +142,7 @@ export async function pull_all_games() {
 
             if(save_games.length)
                 await game_dao.save(save_games)
-        } while (nextPage)
+        } while (nextPage && doneCount < maxDone)
     } catch (err) {
         console.error('loader/twitch: could not load game mapping for streams:', err);
         throw new Error('permanent');
@@ -162,7 +165,7 @@ export async function pull_all_players() {
             let user_logins: { user_id: string, user_login: string}[] = []
 
             for(let user of users) {
-                const user_login = extract_user_twitch_login(user.twitch?.uri)
+                const user_login = extract_user_twitch_login(user.twitch ? user.twitch!.uri : undefined)
                 if(!user_login)
                     continue;
                 
