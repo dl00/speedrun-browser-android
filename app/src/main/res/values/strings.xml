@@ -65,7 +65,7 @@
     <string name="button_got_it">Got it!</string>
 
     <!-- release notes: edit for each release for now -->
-    <string name="dialog_title_release_notes">1.12</string>
+    <string name="dialog_title_release_notes">1.13</string>
     <string name="dialog_msg_first_run">
         Thanks for downloading the app and giving it a try!\n
         \n
@@ -84,13 +84,16 @@
     <string name="dialog_msg_release_notes">
         Thanks for downloading the app!\n
         \n
-        Here are the changes for this month:\n
-        * Major changes were made to improve the look and feel of the app.\n
-        * New list modes have been added.\n
-        * New set of charts for platform/genre/publisher searches.\n
-        * Metrics for basically everything: number of leaderboards, number of players, number of runs, etc.\n
+        This update is overdue, but it contains some features which have been requested for awhile.
+        Here is what is new:\n
+        * Front page games look much better (I think)\n
+        * Streams are here! They can be viewed on the front page, or in any game group (genres, platforms, publishers, developers, etc.)\n
+        * Fix scrolling on runs page\n
+        * Fix filters on screen rotate will stop working\n
         \n
-        Some bugfixes and performance tune-ups all around were also completed.\n
+        Some other bugfixes and performance tune-ups all around were also completed.\n
+        \n
+        Statistics for streams, streamers, and list of streams for game are planned for next release.\n
         \n
         If you are enjoying the app (and have read this far), please consider rating or sharing!
     </string>
