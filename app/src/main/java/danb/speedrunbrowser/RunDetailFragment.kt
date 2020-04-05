@@ -45,31 +45,31 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
      * Game detail views
      */
 
-    private var mRootView: LinearLayout? = null
+    private lateinit var mRootView: LinearLayout
 
     private lateinit var mSpinner: ProgressSpinnerView
-    private var mGameInfoPane: LinearLayout? = null
-    private var mInfoHeader: LinearLayout? = null
-    private var mRunFooterPane: LinearLayout? = null
-    private var mGameName: TextView? = null
-    private var mReleaseDate: TextView? = null
-    private var mPlatformList: TextView? = null
+    private lateinit var mGameInfoPane: LinearLayout
+    private lateinit var mInfoHeader: LinearLayout
+    private lateinit var mRunFooterPane: LinearLayout
+    private lateinit var mGameName: TextView
+    private lateinit var mReleaseDate: TextView
+    private lateinit var mPlatformList: TextView
 
-    private var mCover: ImageView? = null
+    private lateinit var mCover: ImageView
 
-    private var mCategoryName: TextView? = null
-    private var mVariableChips: ChipGroup? = null
-    private var mPlayerNames: FlexboxLayout? = null
-    private var mRunPlaceImg: ImageView? = null
-    private var mRunPlaceTxt: TextView? = null
-    private var mRunTime: TextView? = null
+    private lateinit var mCategoryName: TextView
+    private lateinit var mVariableChips: ChipGroup
+    private lateinit var mPlayerNames: FlexboxLayout
+    private lateinit var mRunPlaceImg: ImageView
+    private lateinit var mRunPlaceTxt: TextView
+    private lateinit var mRunTime: TextView
 
-    private var mRunComment: TextView? = null
+    private lateinit var mRunComment: TextView
 
-    private var mRunSplits: ListView? = null
-    private var mRunEmptySplits: TextView? = null
+    private lateinit var mRunSplits: ListView
+    private lateinit var mRunEmptySplits: TextView
 
-    private var mViewOnOfficial: Button? = null
+    private lateinit var mViewOnOfficial: Button
 
     /**
      * Video views
@@ -91,7 +91,6 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
         mDB = AppDatabase.make(context!!)
 
         mRootView = v.findViewById(R.id.contentLayout)
-
         mSpinner = v.findViewById(R.id.spinner)
         mGameInfoPane = v.findViewById(R.id.gameInfoHead)
         mInfoHeader = v.findViewById(R.id.headerLayout)
@@ -146,11 +145,11 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
             onDataReady()
         }
 
-        v.findViewById<Button>(R.id.buttonViewRules)?.setOnClickListener { viewRules() }
-        v.findViewById<ImageView>(R.id.imgShare)?.setOnClickListener { doShare() }
+        v.findViewById<Button>(R.id.buttonViewRules).setOnClickListener { viewRules() }
+        v.findViewById<ImageView>(R.id.imgShare).setOnClickListener { doShare() }
 
-        mGameInfoPane?.getChildAt(0)?.setOnClickListener { viewGame() }
-        mViewOnOfficial?.setOnClickListener { viewOnOfficial() }
+        mGameInfoPane.getChildAt(0).setOnClickListener { viewGame() }
+        mViewOnOfficial.setOnClickListener { viewOnOfficial() }
 
         return v
     }
@@ -227,6 +226,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
                     mVideoView!!.seekTime = seekPos.toInt()
                     onVideoReady()
                 }, NoopConsumer(), Action {
+                    mVideoView!!.seekTime = 0
                     onVideoReady()
                 }))
     }
@@ -237,7 +237,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
 
         if (mRun!!.run.videos == null || mRun!!.run.videos!!.links == null || mRun!!.run.videos!!.links!!.isEmpty()) {
             mVideoView!!.setVideoNotAvailable()
-            mViewOnOfficial?.visibility = View.GONE
+            mViewOnOfficial.visibility = View.GONE
 
             return
         }
@@ -252,7 +252,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
             Log.w(TAG, "Could not play a video for this run")
             // just record the fact that the video page was accessed
             mVideoView!!.setVideoFrameOther(mRun!!.run.videos!!.links!![0])
-            mViewOnOfficial?.visibility = View.GONE
+            mViewOnOfficial.visibility = View.GONE
             writeWatchToDb(0)
         }
     }
@@ -266,12 +266,35 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
         val act = activity!!
 
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+
             if(act is SpeedrunBrowserActivity)
                 act.applyFullscreenMode(true)
+
+            // if the screen's aspect ratio is < 16:9, re-orient the text view so it still centers properly
+            val displ = activity!!.windowManager.defaultDisplay
+            val size = Point()
+            displ.getSize(size)
+
+            // (size.x.toFloat() / size.y < 16.0f / 9)
+                mRootView.orientation = LinearLayout.HORIZONTAL
+
+            // hide things
+            mGameInfoPane.visibility = View.GONE
+            mInfoHeader.visibility = View.GONE
+            mRunFooterPane.visibility = View.GONE
+            mViewOnOfficial.visibility = View.GONE
 
         } else {
             if(act is SpeedrunBrowserActivity)
                 act.applyFullscreenMode(false)
+
+            // layout should always be vertical in this case
+            mRootView.orientation = LinearLayout.VERTICAL
+
+            // show things
+            mGameInfoPane.visibility = View.VISIBLE
+            mRunFooterPane.visibility = View.VISIBLE
+            mViewOnOfficial.visibility = View.VISIBLE
         }
     }
 
@@ -294,128 +317,129 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
     }
 
     private fun setViewData() {
-        if(mRootView != null) {
-            mGameName!!.text = mGame!!.resolvedName
-            mReleaseDate!!.text = mGame!!.releaseDate
 
-            // we have to join the string manually because it is java 7
-            if (mGame!!.platforms != null) {
-                val sb = StringBuilder()
-                for (i in mGame!!.platforms!!.indices) {
-                    sb.append(mGame!!.platforms!![i].name)
-                    if (i < mGame!!.platforms!!.size - 1)
-                        sb.append(", ")
-                }
+        mVideoView?.requestFocus()
 
-                mPlatformList!!.text = sb.toString()
-            } else {
-                mPlatformList!!.text = ""
+        mGameName.text = mGame!!.resolvedName
+        mReleaseDate.text = mGame!!.releaseDate
+
+        // we have to join the string manually because it is java 7
+        if (mGame!!.platforms != null) {
+            val sb = StringBuilder()
+            for (i in mGame!!.platforms!!.indices) {
+                sb.append(mGame!!.platforms!![i].name)
+                if (i < mGame!!.platforms!!.size - 1)
+                    sb.append(", ")
             }
 
-            mVariableChips!!.removeAllViews()
-
-            val fullCategoryName = StringBuilder(mCategory!!.name)
-            if (mLevel != null && mLevel!!.name != null)
-                fullCategoryName.append(" \u2022 ").append(mLevel!!.name)
-
-            if (mGame!!.shouldShowPlatformFilter() && mRun!!.run.system != null) {
-                val chip = Chip(context!!)
-
-                for ((id, name) in mGame!!.platforms!!) {
-                    if (id == mRun!!.run.system!!.platform) {
-                        chip.text = name
-                        mVariableChips!!.addView(chip)
-                        break
-                    }
-                }
-            }
-
-            if (mGame!!.shouldShowRegionFilter() && mRun!!.run.system != null) {
-                val chip = Chip(context!!)
-
-                for ((id, name) in mGame!!.regions!!) {
-                    if (id == mRun!!.run.system!!.region) {
-                        chip.text = name
-                        mVariableChips!!.addView(chip)
-                        break
-                    }
-                }
-            }
-
-            if (mCategory!!.variables != null) {
-                for ((id, name, _, _, _, _, isSubcategory, values) in mCategory!!.variables!!) {
-                    if (mRun!!.run.values!!.containsKey(id) && !isSubcategory && values.containsKey(mRun!!.run.values!![id])) {
-                        val chip = Chip(context!!)
-                        chip.text = StringBuilder(name).append(": ").append(values[mRun!!.run.values!![id]]!!.label)
-                        mVariableChips!!.addView(chip)
-                    } else if (isSubcategory && values.containsKey(mRun!!.run.values!![id])) {
-                        fullCategoryName.append(" \u2022 ").append(values[mRun!!.run.values!![id]]!!.label)
-                    }
-                }
-            }
-
-            if (mGame!!.assets.coverLarge != null) {
-
-                val coverConsumer = ImageViewPlacerConsumer(mCover!!)
-                coverConsumer.roundedCorners = resources.getDimensionPixelSize(R.dimen.game_cover_rounded_corners).toFloat()
-
-                mDisposables.add(
-                        ImageLoader(context!!).loadImage(mGame!!.assets.coverLarge!!.uri)
-                                .subscribe(coverConsumer))
-            }
-
-            mPlayerNames!!.removeAllViews()
-            for (player in mRun!!.run.players!!) {
-
-                val iv = ImageView(context!!)
-                player.applyCountryImage(iv)
-                mPlayerNames!!.addView(iv)
-
-                val tv = TextView(context!!)
-                tv.textSize = 16f
-                player.applyTextView(tv)
-
-                val padding = resources.getDimensionPixelSize(R.dimen.half_fab_margin)
-                tv.setPadding(padding, padding, padding, padding)
-                tv.setOnClickListener { viewPlayer(player) }
-
-                mPlayerNames!!.addView(tv)
-            }
-
-            mCategoryName!!.text = fullCategoryName
-
-            if(mRun?.place != null) {
-                mRunPlaceImg!!.visibility = View.VISIBLE
-
-                val loadImage = when(mRun!!.place) {
-                    1 -> mGame!!.assets.trophy1st?.uri
-                    2 -> mGame!!.assets.trophy2nd?.uri
-                    3 -> mGame!!.assets.trophy3rd?.uri
-                    4 -> mGame!!.assets.trophy4th?.uri
-                    else -> null
-                }
-
-                if(loadImage != null) {
-                    mDisposables.add(
-                            ImageLoader(context!!).loadImage(loadImage)
-                                    .subscribe(ImageViewPlacerConsumer(mRunPlaceImg!!)))
-                }
-
-                mRunPlaceTxt!!.visibility = View.VISIBLE
-                mRunPlaceTxt!!.text = mRun!!.placeName
-            }
-            else {
-                mRunPlaceImg!!.visibility = View.GONE
-                mRunPlaceTxt!!.visibility = View.GONE
-            }
-            mRunTime!!.text = mRun!!.run.times!!.time
-
-            mRunComment!!.text = mRun!!.run.comment
-
-            val emptyTv = TextView(context!!)
-
-            emptyTv.setText(R.string.empty_no_splits)
+            mPlatformList.text = sb.toString()
+        } else {
+            mPlatformList.text = ""
         }
+
+        mVariableChips.removeAllViews()
+
+        val fullCategoryName = StringBuilder(mCategory!!.name)
+        if (mLevel != null && mLevel!!.name != null)
+            fullCategoryName.append(" \u2022 ").append(mLevel!!.name)
+
+        if (mGame!!.shouldShowPlatformFilter() && mRun!!.run.system != null) {
+            val chip = Chip(context!!)
+
+            for ((id, name) in mGame!!.platforms!!) {
+                if (id == mRun!!.run.system!!.platform) {
+                    chip.text = name
+                    mVariableChips.addView(chip)
+                    break
+                }
+            }
+        }
+
+        if (mGame!!.shouldShowRegionFilter() && mRun!!.run.system != null) {
+            val chip = Chip(context!!)
+
+            for ((id, name) in mGame!!.regions!!) {
+                if (id == mRun!!.run.system!!.region) {
+                    chip.text = name
+                    mVariableChips.addView(chip)
+                    break
+                }
+            }
+        }
+
+        if (mCategory!!.variables != null) {
+            for ((id, name, _, _, _, _, isSubcategory, values) in mCategory!!.variables!!) {
+                if (mRun!!.run.values!!.containsKey(id) && !isSubcategory && values.containsKey(mRun!!.run.values!![id])) {
+                    val chip = Chip(context!!)
+                    chip.text = StringBuilder(name).append(": ").append(values[mRun!!.run.values!![id]]!!.label)
+                    mVariableChips.addView(chip)
+                } else if (isSubcategory && values.containsKey(mRun!!.run.values!![id])) {
+                    fullCategoryName.append(" \u2022 ").append(values[mRun!!.run.values!![id]]!!.label)
+                }
+            }
+        }
+
+        if (mGame!!.assets.coverLarge != null) {
+
+            val coverConsumer = ImageViewPlacerConsumer(mCover)
+            coverConsumer.roundedCorners = resources.getDimensionPixelSize(R.dimen.game_cover_rounded_corners).toFloat()
+
+            mDisposables.add(
+                    ImageLoader(context!!).loadImage(mGame!!.assets.coverLarge!!.uri)
+                            .subscribe(coverConsumer))
+        }
+
+        mPlayerNames.removeAllViews()
+        for (player in mRun!!.run.players!!) {
+
+            val iv = ImageView(context!!)
+            player.applyCountryImage(iv)
+            mPlayerNames.addView(iv)
+
+            val tv = TextView(context!!)
+            tv.textSize = 16f
+            player.applyTextView(tv)
+
+            val padding = resources.getDimensionPixelSize(R.dimen.half_fab_margin)
+            tv.setPadding(padding, padding, padding, padding)
+            tv.setOnClickListener { viewPlayer(player) }
+
+            mPlayerNames.addView(tv)
+        }
+
+        mCategoryName.text = fullCategoryName
+
+        if(mRun?.place != null) {
+            mRunPlaceImg.visibility = View.VISIBLE
+
+            val loadImage = when(mRun!!.place) {
+                1 -> mGame!!.assets.trophy1st?.uri
+                2 -> mGame!!.assets.trophy2nd?.uri
+                3 -> mGame!!.assets.trophy3rd?.uri
+                4 -> mGame!!.assets.trophy4th?.uri
+                else -> null
+            }
+
+            if(loadImage != null) {
+                mDisposables.add(
+                        ImageLoader(context!!).loadImage(loadImage)
+                                .subscribe(ImageViewPlacerConsumer(mRunPlaceImg)))
+            }
+
+            mRunPlaceTxt.visibility = View.VISIBLE
+            mRunPlaceTxt.text = mRun!!.placeName
+        }
+        else {
+            mRunPlaceImg.visibility = View.GONE
+            mRunPlaceTxt.visibility = View.GONE
+        }
+        mRunTime.text = mRun!!.run.times!!.time
+
+        mRunComment.text = mRun!!.run.comment
+
+        val emptyTv = TextView(context!!)
+
+        emptyTv.setText(R.string.empty_no_splits)
     }
 
     private fun viewPlayer(player: User) {

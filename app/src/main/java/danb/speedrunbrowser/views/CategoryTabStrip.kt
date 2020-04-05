@@ -26,10 +26,10 @@ class CategoryTabStrip(context: Context, attrs: AttributeSet) : LinearLayout(con
 
     private var mGame: Game? = null
 
-    private val mHsvCategory = HorizontalScrollView(context)
+    private val mHsvCategory = IgnorantHorizontalScrollView(context)
     private val mLayoutCategory = LinearLayout(context)
 
-    private val mHsvLevel = HorizontalScrollView(context)
+    private val mHsvLevel = IgnorantHorizontalScrollView(context)
     private val mLayoutLevel = LinearLayout(context)
 
     private var mPager: ViewPager? = null
@@ -101,6 +101,8 @@ class CategoryTabStrip(context: Context, attrs: AttributeSet) : LinearLayout(con
             tv.text = category.name
             styleTab(tv)
 
+            tv.foreground = resources.getDrawable(R.drawable.clickable_item)
+
             tv.setOnClickListener {
                 val l = pagerAdapter!!.getLevelOfIndex(mPager!!.currentItem)
 
@@ -116,6 +118,8 @@ class CategoryTabStrip(context: Context, attrs: AttributeSet) : LinearLayout(con
 
                 tv.text = level.name
                 styleTab(tv)
+
+                tv.foreground = resources.getDrawable(R.drawable.clickable_item)
 
                 tv.setOnClickListener { selectLeaderboard(pagerAdapter!!.getCategoryOfIndex(mPager!!.currentItem), level) }
 

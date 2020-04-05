@@ -79,6 +79,9 @@ class ProgressSpinnerView(context: Context, attrs: AttributeSet?) : View(context
         mDrawPaint.style = Paint.Style.FILL
 
         recalculateDrawRect()
+
+        // set a null click listener for android tv
+        //setOnClickListener {  }
     }
 
     fun start() {

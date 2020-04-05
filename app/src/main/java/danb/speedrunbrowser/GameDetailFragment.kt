@@ -47,7 +47,7 @@ import io.reactivex.schedulers.Schedulers
  * Mandatory empty constructor for the fragment manager to instantiate the
  * fragment (e.g. upon screen orientation changes).
  */
-class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter {
+class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter, ViewPager.OnPageChangeListener {
 
     private lateinit var mDB: AppDatabase
 
@@ -240,6 +240,8 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
         mBackground = rootView.findViewById(R.id.imgBackground)
 
         mLeaderboardPager = rootView.findViewById(R.id.pageLeaderboard)
+
+        mLeaderboardPager!!.addOnPageChangeListener(this)
 
         mCategoryTabStrip = rootView.findViewById(R.id.tabCategories)
 
@@ -461,5 +463,13 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
         private const val SAVED_GAME = "game"
         private const val SAVED_PAGER = "pager"
         private const val SAVED_FILTERS = "variable_selections"
+    }
+
+    override fun onPageScrollStateChanged(state: Int) {}
+
+    override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
+
+    override fun onPageSelected(position: Int) {
+        mLeaderboardPager!!.requestFocus()
     }
 }

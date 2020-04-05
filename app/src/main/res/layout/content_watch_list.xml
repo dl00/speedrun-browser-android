@@ -3,10 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="horizontal" android:layout_width="match_parent"
     android:gravity="center"
+    android:foreground="@drawable/clickable_item"
     android:layout_marginTop="@dimen/half_fab_margin"
     android:layout_marginBottom="@dimen/half_fab_margin"
     android:layout_marginStart="@dimen/half_fab_margin"
     android:layout_marginEnd="@dimen/half_fab_margin"
+    android:padding="@dimen/half_fab_margin"
     android:layout_height="@dimen/game_cover_height">
 
     <ImageView

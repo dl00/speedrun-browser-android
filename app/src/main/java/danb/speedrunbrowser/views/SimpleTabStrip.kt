@@ -4,8 +4,10 @@ import android.content.Context
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.util.AttributeSet
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
@@ -45,6 +47,10 @@ class SimpleTabStrip(context: Context, attrs: AttributeSet) : FrameLayout(contex
         mHsv.addView(mLayout)
 
         addView(mHsv)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            mHsv.focusable = View.NOT_FOCUSABLE
+        }
     }
 
     fun setup(vp: ViewPager) {
@@ -105,6 +111,10 @@ class SimpleTabStrip(context: Context, attrs: AttributeSet) : FrameLayout(contex
                 verticalLayout.addView(tv)
 
                 verticalLayout.setOnClickListener { mPager!!.currentItem = i }
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    verticalLayout.focusable = View.NOT_FOCUSABLE
+                }
 
                 mLayout.addView(verticalLayout)
             } else {

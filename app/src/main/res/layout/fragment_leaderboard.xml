@@ -7,8 +7,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <HorizontalScrollView
+    <danb.speedrunbrowser.views.IgnorantHorizontalScrollView
         android:id="@+id/hsvSubcategories"
+        android:focusable="false"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/half_fab_margin"
@@ -47,9 +48,12 @@
                 android:layout_weight="1"
                 android:layout_marginLeft="16dp"
                 android:layout_marginRight="16dp"
+                android:focusable="false"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:context=".GameListFragment"
                 tools:listitem="@layout/content_leaderboard_list">
+
+                <requestFocus />
 
             </androidx.recyclerview.widget.RecyclerView>
 
@@ -65,6 +69,7 @@
         android:layout_marginEnd="@dimen/half_fab_margin"
         android:background="@color/colorAccent"
         android:backgroundTint="@color/colorAccent"
+        android:foreground="@drawable/clickable_item"
         android:text="@string/button_view_leaderboard_info" />
 
 </LinearLayout>

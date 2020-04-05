@@ -46,7 +46,7 @@ open class ItemListFragment : Fragment() {
 
     private var mAdapter: ItemListAdapter? = null
 
-    private lateinit var mSearchItemsView: RecyclerView
+    private var mSearchItemsView: RecyclerView? = null
 
     private lateinit var mEmptyView: View
 
@@ -55,6 +55,14 @@ open class ItemListFragment : Fragment() {
 
     private val currentItemSource
     get() = mItemModes.find { it.id == mSelectedMode }?.itemSource
+
+    var doFocus = false
+    set(value) {
+        field = value
+
+        if (value && mSearchItemsView != null)
+            mSearchItemsView!!.requestFocus()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,7 +90,7 @@ open class ItemListFragment : Fragment() {
 
         mModeHsv = mRootView!!.findViewById(R.id.hsvListModes)
 
-        mAdapter = ItemListAdapter(context!!, mSearchItemsView, View.OnClickListener { v ->
+        mAdapter = ItemListAdapter(context!!, mSearchItemsView!!, View.OnClickListener { v ->
             if (mListener != null) {
                 var id = ""
                 when (itemType) {
@@ -97,7 +105,13 @@ open class ItemListFragment : Fragment() {
                         null)
             }
         })
-        mSearchItemsView.adapter = mAdapter
+        mSearchItemsView!!.adapter = mAdapter
+
+        mSearchItemsView!!.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+            if (doFocus)
+                mSearchItemsView!!.requestFocus()
+        }
+
         reload()
 
         return mRootView
@@ -177,8 +191,9 @@ open class ItemListFragment : Fragment() {
     fun reload() {
         addModeChips()
 
-        if (mAdapter != null && mItemModes.isNotEmpty())
+        if (mAdapter != null && mItemModes.isNotEmpty()) {
             mAdapter!!.loadListTop()
+        }
     }
 
     inner class ItemListAdapter(ctx: Context, rv: RecyclerView, private val onClickListener: View.OnClickListener) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {

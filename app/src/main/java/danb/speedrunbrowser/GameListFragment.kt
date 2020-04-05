@@ -48,6 +48,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
 
     private var mTabs: SimpleTabStrip? = null
     private var mViewPager: ViewPager? = null
+    private var mPagerAdapter: PagerAdapter? = null
 
     private var mDisposables: CompositeDisposable? = null
 
@@ -96,9 +97,9 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
 
         mViewPager = mMainView!!.findViewById(R.id.pager)
 
-        val pagerAdapter = PagerAdapter(childFragmentManager)
+        mPagerAdapter = PagerAdapter(childFragmentManager)
 
-        mViewPager!!.adapter = pagerAdapter
+        mViewPager!!.adapter = mPagerAdapter
 
         mTabs = mMainView!!.findViewById(R.id.tabsType)
         mTabs!!.setup(mViewPager!!)
@@ -227,6 +228,12 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
         startActivity(intent)
     }
 
+    fun requestFocus() {
+        if (mViewPager != null) {
+            (mPagerAdapter!!.getItem(mViewPager!!.currentItem) as ItemListFragment).doFocus = true
+        }
+    }
+
     private inner class PagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT), SimpleTabStrip.IconPagerAdapter {
 
         private val fragments: Array<ItemListFragment> = arrayOf(
@@ -305,6 +312,8 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                 fragments[position] = `object` as ItemListFragment
                 initializePage(position)
             }
+
+            `object`.doFocus = true
 
             super.setPrimaryItem(container, position, `object`)
         }

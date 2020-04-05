@@ -16,6 +16,12 @@
                 onReady: function() {
                     player.loadVideoById("%2$s", %3$d);
 
+                    player.pause = player.pauseVideo;
+                    player.play = player.playVideo;
+
+                    player.skip = function(by) {
+                        player.seekTo(player.getCurrentTime() + by)
+                    }
                 }
             },
 

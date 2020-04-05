@@ -8,6 +8,8 @@ import android.net.Uri
 import android.util.AttributeSet
 import android.util.Log
 import android.view.Gravity
+import android.view.KeyEvent
+import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
 import android.widget.Button
@@ -43,18 +45,19 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
         mWebView.settings.javaScriptEnabled = true
         mWebView.settings.mediaPlaybackRequiresUserGesture = false
         mWebView.webChromeClient = CustomWebChromeClient(context)
+
+        focusable = View.FOCUSABLE
     }
 
     var seekTime: Int = 0
+
+    private var isPlaying = false
 
     private var mListener: Listener? = null
 
     private var mPeriodicUpdate: Disposable? = null
 
     fun loadVideo(ml: MediaLink): Boolean {
-        if (ml == mShownLink && ml.youtubeVideoID == null)
-            return true
-
         Log.d(TAG, "Trying to find YT/Twitch video: " + ml.uri)
 
         when {
@@ -62,6 +65,8 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
             ml.twitchVideoID != null -> setVideoFrameTwitch(ml)
             else -> return false
         }
+
+        isPlaying = true
 
         mShownLink = ml
 
@@ -230,6 +235,49 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
 
     fun hasLoadedVideo(): Boolean {
         return mShownLink != null
+    }
+
+    // media controls
+
+    fun toggle() {
+        if (isPlaying)
+            pause()
+        else
+            play()
+    }
+
+    fun play() {
+        println("DO PLAY")
+        mWebView.evaluateJavascript("player.play()") {}
+        isPlaying = true
+    }
+
+    fun pause() {
+        println("DO PAUSE")
+        mWebView.evaluateJavascript("player.pause()") {}
+        isPlaying = false
+    }
+
+    fun skip(time: Number) {
+        mWebView.evaluateJavascript("player.skip(${ time})") {}
+    }
+
+    // special control bindings for android tv
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        var ret = true
+        when (keyCode) {
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> toggle()
+            KeyEvent.KEYCODE_DPAD_CENTER -> toggle()
+            KeyEvent.KEYCODE_MEDIA_PLAY -> play()
+            KeyEvent.KEYCODE_MEDIA_PAUSE -> pause()
+            KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> skip(30)
+            KeyEvent.KEYCODE_DPAD_RIGHT -> skip(30)
+            KeyEvent.KEYCODE_MEDIA_REWIND -> skip(-30)
+            KeyEvent.KEYCODE_DPAD_LEFT -> skip(-30)
+            else -> ret = super.onKeyDown(keyCode, event)
+        }
+
+        return ret
     }
 
     interface Listener {

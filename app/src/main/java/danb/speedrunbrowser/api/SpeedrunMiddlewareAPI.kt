@@ -24,7 +24,7 @@ object SpeedrunMiddlewareAPI {
 
     private val baseUrl: String
         get() = if (BuildConfig.DEBUG) {
-            "https://sr-browser-develop.dbeal.dev/api/v1/"
+            "https://sr-browser.dbeal.dev/api/v1/"
         } else {
             "https://sr-browser.dbeal.dev/api/v1/"
         }

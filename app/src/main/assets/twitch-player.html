@@ -21,6 +21,10 @@
             player.seek(%3$d);
             doSeek = false;
         }
+
+        player.skip = function(by) {
+            player.seek(player.getCurrentTime() + by)
+        }
     });
 
     window.onresize = function(event) {

@@ -26,9 +26,11 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import androidx.fragment.app.FragmentManager
 import android.app.Activity
+import android.os.PersistableBundle
 import android.view.*
 import android.view.inputmethod.InputMethodManager
 import androidx.core.content.ContextCompat
+import androidx.viewpager.widget.ViewPager
 import danb.speedrunbrowser.views.MultiVideoView
 
 
@@ -71,13 +73,28 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
             onFragmentMove()
         }
 
-        onNewIntent(intent)
+        if (savedInstanceState?.getBundle(SAVED_INTENT_EXTRAS) != null && intent.getStringExtra(EXTRA_FRAGMENT_CLASSPATH) == null) {
+            val intent = Intent(this, SpeedrunBrowserActivity::class.java)
+            val e = savedInstanceState.getBundle(SAVED_INTENT_EXTRAS)!!
+
+            intent.putExtras(e)
+
+            startActivity(intent)
+        }
+        else
+            onNewIntent(intent)
     }
 
     override fun onResume() {
         super.onResume()
 
         hideKeyboard()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
+        super.onSaveInstanceState(outState, outPersistentState)
+
+        outState.putBundle(SAVED_INTENT_EXTRAS, intent.extras)
     }
 
     private fun onFragmentMove() {
@@ -108,16 +125,12 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
-        // video view must be detached
-        if(mVideoView.parent is ViewGroup)
-            (mVideoView.parent as ViewGroup).removeView(mVideoView)
-
         // reattach current fragment
         val frag = supportFragmentManager.fragments[0]
 
         // TODO: clean this up
-        //if (frag is RunDetailFragment)
-        //    return
+        if (frag is RunDetailFragment)
+            return
 
         supportFragmentManager.beginTransaction()
                 .detach(frag)
@@ -196,6 +209,21 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         }
 
         showFragment(frag, args, true)
+    }
+
+    override fun onBackPressed() {
+
+        if (mGameFilter.text.isNotEmpty()) {
+            mGameFilter.text.clear()
+            return
+        }
+
+        if (supportFragmentManager.fragments[0] is GameListFragment) {
+            (supportFragmentManager.fragments[0] as GameListFragment).requestFocus()
+            return
+        }
+
+        super.onBackPressed()
     }
 
     private fun showFragment(frag: Fragment, args: Bundle?, backstack: Boolean = true) {
@@ -357,10 +385,47 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
     }
 
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+
+        println("DPAD ON KEY DOWN ACT" + keyCode)
+
+        when (keyCode) {
+            KeyEvent.KEYCODE_SEARCH -> {
+                mGameFilter.requestFocus()
+                return true
+            }
+        }
+
+        var cur: Any? = currentFocus
+        println("CURRENT FOCUS " + cur)
+        // if its inside a view pager, we want to override the functionality
+        while(cur != null && cur !is ViewPager) {
+            if (cur is View)
+                cur = cur.parent
+            else
+                cur = null
+        }
+
+        if (cur is ViewPager) {
+            if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+                cur.currentItem = cur.currentItem + 1
+                return true
+            }
+            else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+                cur.currentItem = cur.currentItem - 1
+                return true
+            }
+        }
+
+        return super.onKeyDown(keyCode, event)
+    }
+
     companion object {
         private val TAG = SpeedrunBrowserActivity::class.java.simpleName
 
         const val EXTRA_FRAGMENT_CLASSPATH = "fragment_classpath"
+
+        const val SAVED_INTENT_EXTRAS = "intent_extras"
 
         private val BLACKLIST_URL_SEGS = listOf("forum", "thread")
     }

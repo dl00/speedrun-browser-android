@@ -9,16 +9,14 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.HorizontalScrollView
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.widget.*
 import androidx.core.content.ContextCompat
+import androidx.core.view.get
 
 import java.util.Objects
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.RecyclerView
-
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 
@@ -39,6 +37,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Consumer
+import kotlinx.android.synthetic.main.fragment_run_detail.*
 
 /**
  * A fragment representing a single leaderboard, containing a list a records.
@@ -71,9 +70,19 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
 
     private var mHsvSubcategories: HorizontalScrollView? = null
 
+    private var mLeaderboardList: RecyclerView? = null
+
     private var mEmptyRuns: TextView? = null
 
     private var mRunsListAdapter: LeaderboardAdapter? = null
+
+    var doFocus = false
+    set(value) {
+        field = value
+
+        if (value)
+            mLeaderboardList?.requestFocus()
+    }
 
     val leaderboardId
         get() = if(mLevel != null) mCategory!!.id + "_" + mLevel!!.id else mCategory?.id
@@ -141,11 +150,16 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
 
         mProgressSpinner = rootView.findViewById(R.id.progress)
 
-        val leaderboardList = rootView.findViewById<RecyclerView>(R.id.leaderboardList)
+        mLeaderboardList = rootView.findViewById<RecyclerView>(R.id.leaderboardList)
         mEmptyRuns = rootView.findViewById(R.id.emptyRuns)
 
         mRunsListAdapter = LeaderboardAdapter()
-        leaderboardList.adapter = mRunsListAdapter
+        mLeaderboardList!!.adapter = mRunsListAdapter
+
+        mLeaderboardList!!.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+            if (doFocus)
+                mLeaderboardList!!.requestFocus()
+        }
 
         val viewRulesButton = rootView.findViewById<Button>(R.id.viewLeaderboardInfoButton)
 
@@ -172,6 +186,7 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
         val layout = LinearLayout(context)
         layout.orientation = LinearLayout.HORIZONTAL
         layout.gravity = Gravity.CENTER_VERTICAL
+        //layout.focusable = View.NOT_FOCUSABLE
 
         for ((id, _, _, _, scope, _, isSubcategory, values) in mCategory!!.variables!!) {
             if (!isSubcategory || scope!!.type == "single-level" && (mLevel == null || scope.level != mLevel!!.id))
@@ -179,8 +194,7 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
 
             val cg = ChipGroup(Objects.requireNonNull<Context>(context))
             cg.tag = id
-
-            cg.isSingleSelection = true
+            cg.focusable = View.NOT_FOCUSABLE
 
             val lp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             lp.leftMargin = resources.getDimensionPixelSize(R.dimen.half_fab_margin)
@@ -191,14 +205,17 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
                 val cv = Chip(context!!, null, R.style.Widget_MaterialComponents_Chip_Choice)
                 cv.text = values.getValue(vv).label
                 cv.chipBackgroundColor = ContextCompat.getColorStateList(context!!, R.color.filter)
+                cv.foreground = resources.getDrawable(R.drawable.clickable_item)
                 cv.isCheckedIconVisible = false
                 cv.tag = vv
 
                 cv.isClickable = true
+                //cv.focusable = View.NOT_FOCUSABLE
                 cv.isCheckable = true
 
                 cv.setOnClickListener {
                     filter!!.selectOnly(id, vv)
+                    updateSubcategorySelections()
                     notifyFilterChanged()
                 }
 
@@ -235,6 +252,7 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
                 val v = cg.getChildAt(j)
 
                 if (filter!!.isSelected(cg.tag as String, v.tag as String)) {
+                    cg.clearCheck()
                     cg.check(v.id)
                     break
                 }
@@ -330,10 +348,8 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
     }
 
     fun notifyFilterChanged(selections: Variable.VariableSelections? = null) {
-        println("FILTER NOTIFY CHANGED")
         if (selections != null && selections != filter) {
             filter = selections
-            println("RETURNING")
             return
         }
 

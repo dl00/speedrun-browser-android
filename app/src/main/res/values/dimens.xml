@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="half_fab_margin">8dp</dimen>
+    <dimen name="half_fab_margin">4dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="metric_margin">10dp</dimen>
     <dimen name="app_bar_height">200dp</dimen>
@@ -35,4 +35,5 @@
     <dimen name="text_size_chart_head">24sp</dimen>
     <dimen name="text_size_metric">30sp</dimen>
     <dimen name="text_size_small_kv">14sp</dimen>
+    <dimen name="select_border">2dp</dimen>
 </resources>

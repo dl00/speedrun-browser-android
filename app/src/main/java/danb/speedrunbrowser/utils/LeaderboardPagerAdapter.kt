@@ -118,9 +118,18 @@ class LeaderboardPagerAdapter(fm: FragmentManager, private val game: Game, priva
     }
 
     override fun setPrimaryItem(container: ViewGroup, position: Int, `object`: Any) {
-        if (`object` is LeaderboardFragment && `object`.filter == null) {
-            `object`.filter = filterSelections
-            super.setPrimaryItem(container, position, `object`)
+        println("SET PRIMARY ITEM TO ${position}")
+
+        if (`object` is LeaderboardFragment) {
+
+            //if (!`object`.doFocus) {
+                `object`.doFocus = true
+            //}
+
+            if (`object`.filter == null) {
+                `object`.filter = filterSelections
+                super.setPrimaryItem(container, position, `object`)
+            }
         }
     }
 
