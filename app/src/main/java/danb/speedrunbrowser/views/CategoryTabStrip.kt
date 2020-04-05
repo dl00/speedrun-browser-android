@@ -3,6 +3,7 @@ package danb.speedrunbrowser.views
 import android.content.Context
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
+import android.os.Build
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
@@ -101,7 +102,10 @@ class CategoryTabStrip(context: Context, attrs: AttributeSet) : LinearLayout(con
             tv.text = category.name
             styleTab(tv)
 
-            tv.foreground = resources.getDrawable(R.drawable.clickable_item)
+            tv.isFocusable = true
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                tv.foreground = resources.getDrawable(R.drawable.clickable_item)
 
             tv.setOnClickListener {
                 val l = pagerAdapter!!.getLevelOfIndex(mPager!!.currentItem)
@@ -119,7 +123,10 @@ class CategoryTabStrip(context: Context, attrs: AttributeSet) : LinearLayout(con
                 tv.text = level.name
                 styleTab(tv)
 
-                tv.foreground = resources.getDrawable(R.drawable.clickable_item)
+                tv.isFocusable = true
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                    tv.foreground = resources.getDrawable(R.drawable.clickable_item)
 
                 tv.setOnClickListener { selectLeaderboard(pagerAdapter!!.getCategoryOfIndex(mPager!!.currentItem), level) }
 

@@ -7,10 +7,7 @@ import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.util.AttributeSet
 import android.util.Log
-import android.view.Gravity
-import android.view.KeyEvent
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.webkit.WebView
 import android.widget.Button
 import android.widget.FrameLayout
@@ -46,12 +43,14 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
         mWebView.settings.mediaPlaybackRequiresUserGesture = false
         mWebView.webChromeClient = CustomWebChromeClient(context)
 
-        focusable = View.FOCUSABLE
+        isFocusable = true
     }
 
     var seekTime: Int = 0
 
     private var isPlaying = false
+
+    private var mayHaveContentWarning = false
 
     private var mListener: Listener? = null
 
@@ -127,8 +126,10 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
         mWebView.settings.useWideViewPort = true
         mWebView.settings.loadWithOverviewMode = true
 
-        mWebView.loadDataWithBaseURL("https://twitch.tv", pageContent,
+        mWebView.loadDataWithBaseURL("https://player.twitch.tv", pageContent,
                 "text/html", null, null)
+
+        mayHaveContentWarning = true
 
         enable()
 
@@ -247,13 +248,11 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
     }
 
     fun play() {
-        println("DO PLAY")
         mWebView.evaluateJavascript("player.play()") {}
         isPlaying = true
     }
 
     fun pause() {
-        println("DO PAUSE")
         mWebView.evaluateJavascript("player.pause()") {}
         isPlaying = false
     }
@@ -267,7 +266,14 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
         var ret = true
         when (keyCode) {
             KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> toggle()
-            KeyEvent.KEYCODE_DPAD_CENTER -> toggle()
+            KeyEvent.KEYCODE_DPAD_CENTER -> {
+                if (mayHaveContentWarning) {
+                    mWebView.evaluateJavascript("confirmInteract()") {}
+                    mayHaveContentWarning = false
+                }
+                else
+                    toggle()
+            }
             KeyEvent.KEYCODE_MEDIA_PLAY -> play()
             KeyEvent.KEYCODE_MEDIA_PAUSE -> pause()
             KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> skip(30)

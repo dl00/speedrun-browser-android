@@ -9,7 +9,7 @@ import android.view.View
 
 class IgnorantHorizontalScrollView(context: Context, attrs: AttributeSet? = null) : HorizontalScrollView(context, attrs) {
     init {
-        focusable = View.NOT_FOCUSABLE
+        isFocusable = false
     }
 
     override fun executeKeyEvent(event: KeyEvent): Boolean {

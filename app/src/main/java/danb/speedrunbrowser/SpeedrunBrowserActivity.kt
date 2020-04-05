@@ -387,17 +387,31 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
 
-        println("DPAD ON KEY DOWN ACT" + keyCode)
+        val frag = supportFragmentManager.fragments[0]
 
         when (keyCode) {
             KeyEvent.KEYCODE_SEARCH -> {
                 mGameFilter.requestFocus()
                 return true
             }
+            KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
+                // open filters menu
+                (frag as? MediaControlListener)?.onFastForwardPressed()
+                return true
+            }
+            KeyEvent.KEYCODE_MEDIA_REWIND -> {
+                // open statistics for whatever we are looking at
+                (frag as? MediaControlListener)?.onRewindPressed()
+                return true
+            }
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
+                // open statistics for whatever we are looking at
+                (frag as? MediaControlListener)?.onPlayPausePressed()
+                return true
+            }
         }
 
         var cur: Any? = currentFocus
-        println("CURRENT FOCUS " + cur)
         // if its inside a view pager, we want to override the functionality
         while(cur != null && cur !is ViewPager) {
             if (cur is View)
@@ -418,6 +432,12 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         }
 
         return super.onKeyDown(keyCode, event)
+    }
+
+    interface MediaControlListener {
+        fun onRewindPressed()
+        fun onFastForwardPressed()
+        fun onPlayPausePressed()
     }
 
     companion object {

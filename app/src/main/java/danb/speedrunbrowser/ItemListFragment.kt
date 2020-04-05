@@ -2,6 +2,7 @@ package danb.speedrunbrowser
 
 import android.app.ActivityOptions
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -60,8 +61,10 @@ open class ItemListFragment : Fragment() {
     set(value) {
         field = value
 
-        if (value && mSearchItemsView != null)
+        if (value && mSearchItemsView != null) {
             mSearchItemsView!!.requestFocus()
+            field = false
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -98,7 +101,7 @@ open class ItemListFragment : Fragment() {
                     ItemType.PLAYERS -> id = (v.tag as User).id
                     ItemType.RUNS -> id = (v.tag as LeaderboardRunEntry).run.id
                     ItemType.GAME_GROUPS -> id = (v.tag as GameGroup).id
-                    ItemType.STREAMS -> id = "https://twitch.tv/${(v.tag as Stream).user_name}"
+                    ItemType.STREAMS -> id = "twitch://stream/${(v.tag as Stream).user_name}"
                 }
 
                 mListener!!.onItemSelected(itemType, id, this@ItemListFragment,
@@ -108,8 +111,10 @@ open class ItemListFragment : Fragment() {
         mSearchItemsView!!.adapter = mAdapter
 
         mSearchItemsView!!.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
-            if (doFocus)
+            if (doFocus) {
                 mSearchItemsView!!.requestFocus()
+                doFocus = false
+            }
         }
 
         reload()
@@ -166,6 +171,11 @@ open class ItemListFragment : Fragment() {
             cv.chipBackgroundColor = ContextCompat.getColorStateList(context!!, R.color.filter)
             cv.isCheckedIconVisible = false
             cv.tag = mode
+
+
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                cv.foreground = resources.getDrawable(R.drawable.clickable_item)
 
             cv.isClickable = true
             cv.isCheckable = true

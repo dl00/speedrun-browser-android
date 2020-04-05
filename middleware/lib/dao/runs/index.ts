@@ -598,7 +598,7 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         delete run.place;
 
         if(!run.obsolete)
-            run.obsolete = old_obj ? old_obj.obsolete : false;
+            run.obsolete = old_obj && old_obj.obsolete ? old_obj.obsolete : false;
 
         run.gameGroups = _.chain(
             ['platforms', 'genres', 'publishers', 'developers'].map(v => run.run.game[v])

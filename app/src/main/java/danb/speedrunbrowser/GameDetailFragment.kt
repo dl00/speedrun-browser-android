@@ -47,7 +47,7 @@ import io.reactivex.schedulers.Schedulers
  * Mandatory empty constructor for the fragment manager to instantiate the
  * fragment (e.g. upon screen orientation changes).
  */
-class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter, ViewPager.OnPageChangeListener {
+class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter, ViewPager.OnPageChangeListener, SpeedrunBrowserActivity.MediaControlListener {
 
     private lateinit var mDB: AppDatabase
 
@@ -360,6 +360,8 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
         dialog.setOnDismissListener {
             for (lbf in subscribedLeaderbards)
                 lbf.notifyFilterChanged(mVariableSelections!!)
+
+            mLeaderboardPager!!.requestFocus()
         }
     }
 
@@ -420,6 +422,17 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
             startActivity(intent)
         }
     }
+
+    override fun onRewindPressed() {
+        val lb = (mLeaderboardPager!!.adapter as LeaderboardPagerAdapter).getItem(mLeaderboardPager!!.currentItem) as LeaderboardFragment
+        lb.viewInfo()
+    }
+
+    override fun onFastForwardPressed() {
+        openFiltersDialog()
+    }
+
+    override fun onPlayPausePressed() {}
 
     class GameSubscription(game: Game, subs: Collection<AppDatabase.Subscription>) : HashSet<String>() {
         var game: Game? = game

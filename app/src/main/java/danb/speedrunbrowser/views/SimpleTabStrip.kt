@@ -49,7 +49,7 @@ class SimpleTabStrip(context: Context, attrs: AttributeSet) : FrameLayout(contex
         addView(mHsv)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            mHsv.focusable = View.NOT_FOCUSABLE
+            mHsv.isFocusable = false
         }
     }
 
@@ -113,7 +113,7 @@ class SimpleTabStrip(context: Context, attrs: AttributeSet) : FrameLayout(contex
                 verticalLayout.setOnClickListener { mPager!!.currentItem = i }
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    verticalLayout.focusable = View.NOT_FOCUSABLE
+                    verticalLayout.isFocusable = false
                 }
 
                 mLayout.addView(verticalLayout)

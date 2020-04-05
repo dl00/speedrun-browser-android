@@ -8,6 +8,7 @@
     android:layout_marginBottom="@dimen/half_fab_margin"
     android:layout_marginStart="@dimen/half_fab_margin"
     android:layout_marginEnd="@dimen/half_fab_margin"
+    android:focusable="true"
     android:padding="@dimen/half_fab_margin"
     android:layout_height="@dimen/game_cover_height">
 

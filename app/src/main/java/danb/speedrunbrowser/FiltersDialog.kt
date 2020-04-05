@@ -4,6 +4,7 @@ package danb.speedrunbrowser
 
 import android.app.AlertDialog
 import android.content.Context
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -34,6 +35,7 @@ class FiltersDialog(
 
         val layout = LinearLayout(context)
         layout.orientation = LinearLayout.VERTICAL
+        layout.background = ColorDrawable(context.getColor(R.color.colorPrimary))
 
         val scrollView = ScrollView(context)
 
@@ -133,6 +135,8 @@ class FiltersDialog(
 
         cv.isClickable = true
         cv.isCheckable = true
+        cv.isFocusable = true
+        cv.foreground = context.resources.getDrawable(R.drawable.clickable_item)
 
         cv.setOnCheckedChangeListener(this)
 

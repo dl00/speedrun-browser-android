@@ -41,7 +41,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:layout_gravity="center"
-        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+        app:layoutManager=".utils.PreCachingGridLayoutManager"
         app:spanCount="2"
         tools:context=".GameListFragment"
         tools:listitem="@layout/content_game_cover" />

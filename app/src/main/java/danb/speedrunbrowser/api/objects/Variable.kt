@@ -72,12 +72,15 @@ data class Variable(
                 }
 
                 for (selection in activeVariables) {
-                    if (!run.values.containsKey(selection.id)|| !selections.containsKey(selection.id)) {
+                    if (!selections.containsKey(selection.id))
                         continue
-                    }
 
-                    if (!selections.getValue(selection.id).contains(run.values[selection.id]))
+                    if (!run.values.containsKey(selection.id))
                         return false
+
+                    if (!selections.getValue(selection.id).contains(run.values[selection.id])) {
+                        return false
+                    }
                 }
             }
 

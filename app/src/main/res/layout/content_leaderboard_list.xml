@@ -6,6 +6,7 @@
     android:foreground="@drawable/clickable_item"
     android:gravity="center_vertical"
     android:orientation="horizontal"
+    android:focusable="true"
     android:padding="@dimen/half_fab_margin">
 
     <LinearLayout

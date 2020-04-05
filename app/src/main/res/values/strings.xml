@@ -34,6 +34,7 @@
     <string name="menu_about">About</string>
     <string name="error_could_not_connect">Connection error with server! Check your internet connection and try again later.</string>
     <string name="error_twitch">Could not load twitch player! Please try again later.</string>
+    <string name="error_twitch_app">Could not load twitch app! Is it installed?</string>
     <string name="button_filters">Filters</string>
     <string name="dialog_title_choose_filters">Filter runs by:</string>
     <string name="dialog_title_choose_genres">Show games/runs by genre:</string>
@@ -65,7 +66,7 @@
     <string name="button_got_it">Got it!</string>
 
     <!-- release notes: edit for each release for now -->
-    <string name="dialog_title_release_notes">1.13</string>
+    <string name="dialog_title_release_notes">Support for Android TV/Fire TV</string>
     <string name="dialog_msg_first_run">
         Thanks for downloading the app and giving it a try!\n
         \n
@@ -74,6 +75,7 @@
         to leave and come back later!\n
         * You can subscribe to categories and players to be notified of a new PB/WR.\n
         * Charts are available for the site, games, categories/levels, and players.\n
+        * Want to watch speedruns on your TV? This app is available for Android TV or Amazon Fire TV (currently in beta).\n
         \n
         This project started in March 2019 out of my distaste for viewing the Speedrun.com website directly from
         a phone. While the site is mobile friendly, it lacks some useful features normally found on
@@ -84,14 +86,10 @@
     <string name="dialog_msg_release_notes">
         Thanks for downloading the app!\n
         \n
-        This update is overdue, but it contains some features which have been requested for awhile.
-        Here is what is new:\n
-        * Front page games look much better (I think)\n
-        * Streams are here! They can be viewed on the front page, or in any game group (genres, platforms, publishers, developers, etc.)\n
-        * Fix scrolling on runs page\n
-        * Fix filters on screen rotate will stop working\n
+        This app is now available for Android TV/Fire TV (somewhat beta still). Now you can binge watch speedruns from the comfort of your couch!
+        If you have a compatible device, please consider giving it a try!\n
         \n
-        Some other bugfixes and performance tune-ups all around were also completed.\n
+        Some other bugfixes and performance tune-ups all around were also completed, including some major issues with video playback and leaderboard correctness.\n
         \n
         Statistics for streams, streamers, and list of streams for game are planned for next release.\n
         \n
@@ -210,4 +208,6 @@
     <string name="empty_no_streams">No streams found.</string>
     <string name="label_stream_viewers">%s watching</string>
     <string name="label_list_mode_all">All</string>
+    <string name="label_welcome">Welcome to Speedrun.com Browser (Unofficial)!</string>
+    <string name="label_welcome_help">Choose an option from the left to get started!</string>
 </resources>

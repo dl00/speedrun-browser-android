@@ -25,6 +25,9 @@ class LeaderboardPagerAdapter(fm: FragmentManager, private val game: Game, priva
 
     private var selectedFragment = 0
 
+    // used for detecting when the page has actually changed (not for what the target fragment is)
+    private var curItem = -1
+
     val perGameCategorySize: Int
         get() = perGameCategories.size
 
@@ -99,6 +102,9 @@ class LeaderboardPagerAdapter(fm: FragmentManager, private val game: Game, priva
     }
 
     override fun getItem(position: Int): Fragment {
+        if (existingFragments[position] != null)
+            return existingFragments[position]!!
+
         val frag = LeaderboardFragment()
         val args = Bundle()
 
@@ -118,13 +124,13 @@ class LeaderboardPagerAdapter(fm: FragmentManager, private val game: Game, priva
     }
 
     override fun setPrimaryItem(container: ViewGroup, position: Int, `object`: Any) {
-        println("SET PRIMARY ITEM TO ${position}")
-
         if (`object` is LeaderboardFragment) {
 
-            //if (!`object`.doFocus) {
+            if (curItem != position) {
                 `object`.doFocus = true
-            //}
+            }
+
+            curItem = position
 
             if (`object`.filter == null) {
                 `object`.filter = filterSelections

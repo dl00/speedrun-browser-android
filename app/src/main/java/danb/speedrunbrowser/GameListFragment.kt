@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import android.widget.FrameLayout
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -40,7 +41,7 @@ import java.util.*
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListener {
+class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListener, SpeedrunBrowserActivity.MediaControlListener {
 
     private var mDB: AppDatabase? = null
 
@@ -53,6 +54,10 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
     private var mDisposables: CompositeDisposable? = null
 
     private var mMainView: View? = null
+
+    private var mDetailPane: FrameLayout? = null
+
+    private var mDetailFragment: GameDetailFragment? = null
 
     // The detail container view will be present only in the
     // large-screen layouts (res/values-w900dp).
@@ -96,6 +101,8 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
         }
 
         mViewPager = mMainView!!.findViewById(R.id.pager)
+
+        mDetailPane = mMainView!!.findViewById(R.id.detail_container)
 
         mPagerAdapter = PagerAdapter(childFragmentManager)
 
@@ -153,11 +160,13 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
             val arguments = Bundle()
             arguments.putString(GameDetailFragment.ARG_GAME_ID, id)
 
-            val newFrag = GameDetailFragment()
-            newFrag.arguments = arguments
+            mDetailFragment = GameDetailFragment()
+            mDetailFragment!!.arguments = arguments
+
+            mDetailPane!!.removeAllViews()
 
             childFragmentManager.beginTransaction()
-                    .replace(R.id.detail_container, newFrag)
+                    .replace(R.id.detail_container, mDetailFragment!!)
                     .commit()
         } else {
             val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
@@ -199,7 +208,11 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
     private fun showStream(twitchUrl: String) {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(twitchUrl))
 
-        startActivity(intent)
+        try {
+            startActivity(intent)
+        } catch (e: java.lang.Exception) {
+            Util.showErrorToast(context!!, getString(R.string.error_twitch_app))
+        }
     }
 
     private fun showAbout() {
@@ -234,7 +247,21 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
         }
     }
 
+    override fun onRewindPressed() {
+        if (isTwoPane)
+            mDetailFragment?.onRewindPressed()
+    }
+
+    override fun onFastForwardPressed() {
+        if (isTwoPane)
+            mDetailFragment?.onFastForwardPressed()
+    }
+
+    override fun onPlayPausePressed() {}
+
     private inner class PagerAdapter(fm: FragmentManager) : FragmentPagerAdapter(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT), SimpleTabStrip.IconPagerAdapter {
+
+        private var curPage = -1
 
         private val fragments: Array<ItemListFragment> = arrayOf(
             ItemListFragment(),
@@ -313,7 +340,10 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                 initializePage(position)
             }
 
-            `object`.doFocus = true
+            if (curPage != position)
+                `object`.doFocus = true
+
+            curPage = position
 
             super.setPrimaryItem(container, position, `object`)
         }

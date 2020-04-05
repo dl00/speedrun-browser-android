@@ -113,8 +113,12 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
         mRunSplits = v.findViewById(R.id.runSplitsList)
         mRunEmptySplits = v.findViewById(R.id.emptySplits)
 
-        if(mVideoView != null)
+        if(mVideoView != null) {
+            if(mVideoView!!.parent != null)
+                (mVideoView!!.parent as ViewGroup).removeView(mVideoView)
+
             mVideoFrame.addView(mVideoView)
+        }
         else
             throw UnsupportedOperationException("Cannot initialize fragment: video frame not supplied")
 
@@ -183,6 +187,8 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
 
     override fun onPause() {
         super.onPause()
+
+        mVideoView?.pause()
 
         mDisposableBackgroundSaveInterval!!.dispose()
     }

@@ -15,6 +15,8 @@
     player.setVolume(0.5);
     player.setMuted(false);
 
+    document.domain = 'twitch.tv';
+
     var doSeek = true;
     player.addEventListener(Twitch.Player.PLAYING, function() {
         if(doSeek) {
@@ -31,6 +33,18 @@
         var iframe = document.getElementsByTagName("iframe")[0];
         iframe.width = window.innerWidth;
         iframe.height = window.innerHeight;
+    }
+
+    window.confirmInteract = function() {
+        var iframe = document.getElementsByTagName("iframe")[0];
+        var elem = iframe.contentWindow.document.getElementById('mature-link')
+
+        if(elem) {
+            console.log('accepting content warning')
+            elem.click()
+        }
+        else
+            console.log('content warning not detected')
     }
 
     window.player = player;

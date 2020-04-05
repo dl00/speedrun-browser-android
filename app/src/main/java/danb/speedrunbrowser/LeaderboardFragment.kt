@@ -3,6 +3,7 @@ package danb.speedrunbrowser
 import android.animation.Animator
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
@@ -80,8 +81,10 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
     set(value) {
         field = value
 
-        if (value)
+        if (value && mLeaderboardList != null) {
             mLeaderboardList?.requestFocus()
+            //field = false
+        }
     }
 
     val leaderboardId
@@ -157,8 +160,10 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
         mLeaderboardList!!.adapter = mRunsListAdapter
 
         mLeaderboardList!!.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
-            if (doFocus)
+            if (doFocus) {
                 mLeaderboardList!!.requestFocus()
+                doFocus = false
+            }
         }
 
         val viewRulesButton = rootView.findViewById<Button>(R.id.viewLeaderboardInfoButton)
@@ -194,7 +199,9 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
 
             val cg = ChipGroup(Objects.requireNonNull<Context>(context))
             cg.tag = id
-            cg.focusable = View.NOT_FOCUSABLE
+            cg.isFocusable = false
+
+            //cg.add
 
             val lp = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             lp.leftMargin = resources.getDimensionPixelSize(R.dimen.half_fab_margin)
@@ -205,7 +212,10 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
                 val cv = Chip(context!!, null, R.style.Widget_MaterialComponents_Chip_Choice)
                 cv.text = values.getValue(vv).label
                 cv.chipBackgroundColor = ContextCompat.getColorStateList(context!!, R.color.filter)
-                cv.foreground = resources.getDrawable(R.drawable.clickable_item)
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                    cv.foreground = resources.getDrawable(R.drawable.clickable_item)
+
                 cv.isCheckedIconVisible = false
                 cv.tag = vv
 
@@ -217,6 +227,10 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
                     filter!!.selectOnly(id, vv)
                     updateSubcategorySelections()
                     notifyFilterChanged()
+                }
+
+                cv.setOnFocusChangeListener { v, hasFocus ->
+
                 }
 
                 cg.addView(cv)
@@ -274,7 +288,8 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
     }
 
     // show game rules as a Alert Dialog
-    private fun viewInfo() {
+    fun viewInfo() {
+
         val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
         intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, LeaderboardStatisticsFragment::class.java.canonicalName)
         intent.putExtra(LeaderboardStatisticsFragment.EXTRA_LEADERBOARD_ID, leaderboardId)

@@ -93,14 +93,16 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
             $or: runs.filter((v) => v.run.status.status === 'verified' &&
                 v.run.category &&
                 v.run.category.id &&
-                v.run.submitted).map((run) => {
+                v.run.submitted &&
+                v.run.date).map((run) => {
 
                 const filter: any = {
                     'run.game.id': run.run.game.id,
                     'run.category.id': run.run.category.id,
                     "$or": [
-                        {'run.submitted': {$lt: run.run.submitted}},
-                        {'run.submitted': null},
+                        {'run.date': {$lt: run.run.date}},
+                        {'run.date': run.run.date, 'run.times.primary_t': {$gt: run.run.times.primary_t} },
+                        {'run.date': null},
                     ],
                 };
 
