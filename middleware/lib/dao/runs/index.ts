@@ -268,6 +268,13 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         ];
     }
 
+    // used to delete runs which were not seen on SRC after a full scan
+    public async remove_not_updated(before: number): Promise<number> {
+        return (await this.db.mongo.collection(this.collection).deleteMany({
+            updatedAt: {$lt: before}
+        })).deletedCount || 0
+    }
+
     // not used in prod: see leaderboards instaed.
     public async calculate_leaderboard_runs(game_id: string, category_id: string, level_id?: string): Promise<LeaderboardRunEntry[]> {
 
@@ -607,6 +614,8 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
             .map('id')
             .uniq()
             .value();
+        
+        run.updatedAt = Date.now();
 
         return run;
     }

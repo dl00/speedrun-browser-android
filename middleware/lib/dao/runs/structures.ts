@@ -68,5 +68,6 @@ export interface LeaderboardRunEntry {
     obsolete?: boolean; // TODO: maybe a date later
     place?: number|null;
     gameGroups?: string[];
+    updatedAt?: number;
     run: BulkRun;
 }
