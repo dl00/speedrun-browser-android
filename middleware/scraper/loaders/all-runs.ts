@@ -79,8 +79,9 @@ export async function list_all_runs(runid: string, options: any) {
 
 export async function delete_unseen_runs(_runid: string, options: any) {
     try {
-        await new RunDao(scraper.storedb!).remove_not_updated(parseInt(options.before_time))
+        await new RunDao(scraper.storedb!).remove_not_updated(parseInt(options.before_time));
     } catch (err) {
-        console.error('loader/all-runs: could not delete unseen runs:', options, err)
+        console.error('loader/all-runs: could not delete unseen runs:', options, err);
+        throw new Error('permanent');
     }
 }
