@@ -16,7 +16,6 @@ import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.api.objects.GameGroup
 import danb.speedrunbrowser.api.objects.User
 import danb.speedrunbrowser.api.objects.WhatIsEntry
-import danb.speedrunbrowser.stats.GameGroupStatisticsFragment
 import danb.speedrunbrowser.utils.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -34,7 +33,7 @@ import androidx.viewpager.widget.ViewPager
 import danb.speedrunbrowser.views.MultiVideoView
 
 
-class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.OnItemClickListener, Consumer<SpeedrunMiddlewareAPI.APIResponse<WhatIsEntry>> {
+class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.OnItemClickListener, Consumer<SpeedrunMiddlewareAPI.APIResponse<WhatIsEntry>>, RunDetailFragment.VideoSupplier {
 
     private var whatIsQuery: Disposable? = null
 
@@ -227,13 +226,7 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
     }
 
     private fun showFragment(frag: Fragment, args: Bundle?, backstack: Boolean = true) {
-
         mVideoView.stopVideo()
-        if(mVideoView.parent is ViewGroup)
-            (mVideoView.parent as ViewGroup).removeView(mVideoView)
-
-        if (frag is RunDetailFragment)
-            frag.supplyVideoView(mVideoView)
 
         if (args != null)
             frag.arguments = args
@@ -432,6 +425,13 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         }
 
         return super.onKeyDown(keyCode, event)
+    }
+
+    override fun requestVideoView(): MultiVideoView {
+        if(mVideoView.parent is ViewGroup)
+            (mVideoView.parent as ViewGroup).removeView(mVideoView)
+
+        return mVideoView
     }
 
     interface MediaControlListener {

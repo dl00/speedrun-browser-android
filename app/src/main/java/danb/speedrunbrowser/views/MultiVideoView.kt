@@ -48,6 +48,8 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
 
     var seekTime: Int = 0
 
+    var lengthTime: Int = 0
+
     private var isPlaying = false
 
     private var mayHaveContentWarning = false
@@ -141,6 +143,14 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
         mWebView.evaluateJavascript("player.getCurrentTime()") { value ->
             try {
                 seekTime = Math.floor(java.lang.Float.parseFloat(value).toDouble()).toInt()
+            } catch (e: NumberFormatException) {
+                // ignored
+            }
+        }
+
+        mWebView.evaluateJavascript("player.getDuration()") { value ->
+            try {
+                lengthTime = Math.floor(java.lang.Float.parseFloat(value).toDouble()).toInt()
             } catch (e: NumberFormatException) {
                 // ignored
             }

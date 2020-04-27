@@ -1,13 +1,19 @@
-z<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- the padding and margin is a hack to make the view erally long for horizontal scroll on tv -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginLeft="-2000dp"
+    android:layout_marginRight="-2000dp"
+    android:paddingLeft="2000dp"
+    android:paddingRight="2000dp"
+    android:paddingBottom="4dp"
+    android:paddingTop="4dp"
     android:foreground="@drawable/clickable_item"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:focusable="true"
-    android:padding="@dimen/half_fab_margin">
+    android:focusable="true">
 
     <LinearLayout
         android:layout_width="75dp"

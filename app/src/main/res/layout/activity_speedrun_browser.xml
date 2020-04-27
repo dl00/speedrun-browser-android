@@ -15,7 +15,8 @@
         android:ems="10"
         android:hint="@string/enter_game_name"
         android:textColor="@android:color/white"
-        android:inputType="textPersonName" />
+        android:imeOptions="actionDone"
+        android:inputType="none" />
 
     <ListView
         android:id="@+id/listAutoCompleteResults"

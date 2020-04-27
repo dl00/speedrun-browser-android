@@ -283,7 +283,7 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
             return
 
         val playerGameBests: List<User.UserGameBests> =
-                ArrayList<User.UserGameBests>(mPlayer!!.bests!!.values)
+                ArrayList(mPlayer!!.bests!!.values)
                         .sortedBy { it.newestRun?.run?.date ?: "00000000000" }.reversed()
 
         for (gameBests in playerGameBests) {
@@ -351,6 +351,8 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
                 (rowPersonalBest.findViewById<View>(R.id.txtRunDate) as TextView).text = row.re.run.date
 
                 rowPersonalBest.setOnClickListener { viewRun(row.re.run.id) }
+                rowPersonalBest.isFocusable = true
+                rowPersonalBest.background = resources.getDrawable(R.drawable.clickable_item)
 
                 bestTable.addView(rowPersonalBest)
             }

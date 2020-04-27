@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.graphics.Point
+import android.media.tv.TvContract
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -14,6 +15,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
+import androidx.tvprovider.media.tv.TvContractCompat
+import androidx.tvprovider.media.tv.WatchNextProgram
 
 import com.google.android.flexbox.FlexboxLayout
 import com.google.android.material.chip.Chip
@@ -33,6 +36,7 @@ import io.reactivex.functions.Action
 import io.reactivex.functions.Consumer
 import io.reactivex.internal.operators.flowable.FlowableInterval
 import io.reactivex.schedulers.Schedulers
+import java.lang.IllegalArgumentException
 import java.lang.UnsupportedOperationException
 
 class RunDetailFragment : Fragment(), MultiVideoView.Listener {
@@ -112,6 +116,14 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
 
         mRunSplits = v.findViewById(R.id.runSplitsList)
         mRunEmptySplits = v.findViewById(R.id.emptySplits)
+
+
+        if(activity is VideoSupplier)
+            mVideoView = (activity as VideoSupplier).requestVideoView()
+        else if(context is VideoSupplier)
+            mVideoView = (context as VideoSupplier).requestVideoView()
+
+        mVideoFrame.addView(mVideoView)
 
         if(mVideoView != null) {
             if(mVideoView!!.parent != null)
@@ -204,6 +216,32 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
 
     override fun onStop() {
         super.onStop()
+
+        // save the video to more watching if not close to done
+        if (mVideoView != null && context != null && mVideoView!!.seekTime < mVideoView!!.lengthTime * 0.9) {
+            val builder = WatchNextProgram.Builder()
+                    .setType(TvContractCompat.WatchNextPrograms.TYPE_CLIP)
+                    .setWatchNextType(TvContractCompat.WatchNextPrograms.WATCH_NEXT_TYPE_CONTINUE)
+                    .setTitle(getString(R.string.msg_share_run, User.printPlayerNames(mRun!!.run.players!!),
+                            mRun!!.run.game!!.resolvedName,
+                            mRun!!.run.times?.time ?: "", mRun!!.run.weblink))
+                    .setAuthor(mRun!!.run.players!![0].name)
+                    .setReleaseDate(mRun!!.run.date)
+                    .setLastEngagementTimeUtcMillis(System.currentTimeMillis())
+                    .setThumbnailAspectRatio(TvContractCompat.PreviewPrograms.ASPECT_RATIO_MOVIE_POSTER)
+                    .setThumbnailUri(Uri.parse(mRun!!.run.game!!.assets.coverLarge!!.uri.toString()))
+                    .setPosterArtAspectRatio(TvContractCompat.PreviewPrograms.ASPECT_RATIO_MOVIE_POSTER)
+                    .setPosterArtUri(Uri.parse(mRun!!.run.game!!.assets.coverLarge!!.uri.toString()))
+                    .setIntentUri(Uri.parse(mRun!!.run.weblink!!))
+                    .setInternalProviderId(mRun!!.run.id)
+                    .setId(mRun!!.run.id.hashCode().toLong())
+
+            try {
+                context!!.contentResolver
+                        .insert(TvContractCompat.WatchNextPrograms.CONTENT_URI,
+                                builder.build().toContentValues())
+            } catch (err: IllegalArgumentException) {}
+        }
     }
 
     override fun onDestroy() {
@@ -302,10 +340,6 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
             mRunFooterPane.visibility = View.VISIBLE
             mViewOnOfficial.visibility = View.VISIBLE
         }
-    }
-
-    fun supplyVideoView(videoView: MultiVideoView) {
-        mVideoView = videoView
     }
 
     private fun recordStartPlaybackTime() {
@@ -515,6 +549,10 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
         mDisposables.add(Observable.timer(SCREEN_LOCK_ROTATE_PERIOD.toLong(), TimeUnit.SECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { activity!!.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED })
+    }
+
+    interface VideoSupplier {
+        fun requestVideoView(): MultiVideoView
     }
 
     companion object {
