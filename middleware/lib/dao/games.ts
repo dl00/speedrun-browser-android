@@ -325,7 +325,7 @@ export class GameDao extends Dao<Game> {
 
     public async get_game_group_count(gg_id: string[]): Promise<number[]> {
         // TODO: this is kind of loose
-        return await (this.indexes[2] as PopularGamesIndex).get_game_group_count(this, gg_id);
+        return await (this.indexes[3] as PopularGamesIndex).get_game_group_count(this, gg_id);
     }
 
     protected async pre_store_transform(game: Game): Promise<Game> {

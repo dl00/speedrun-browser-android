@@ -13,7 +13,7 @@ describe('GameGroupDao', () => {
     let db: DB;
 
     before(async () => {
-        db = await load_db(load_config());
+        db = await load_db(load_config().db);
         await db.mongo.dropDatabase();
         await db.mongo.setProfilingLevel('all');
         await db.redis.flushall();

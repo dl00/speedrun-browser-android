@@ -1,0 +1,192 @@
+// Maintains an updated list of streams from twitch by polling
+
+import * as _ from 'lodash'
+
+import * as request from 'request-promise-native';
+
+import { StreamDao, Stream } from '../lib/dao/streams';
+import { UserDao, User, user_to_bulk } from '../lib/dao/users';
+
+import * as scraper from '../sched/index';
+import { GameDao, Game, extract_game_group_ids, game_to_bulk } from '../lib/dao/games';
+import { CursorData, Sched } from '../sched/index';
+
+const TWITCH_STREAMS_URL = 'https://api.twitch.tv/helix/streams'
+const TWITCH_GAMES_URL = 'https://api.twitch.tv/helix/games/top'
+const TWITCH_ID_TOKEN_URL = 'https://id.twitch.tv/oauth2/token'
+
+let TWITCH_BEARER_TOKEN = ''
+
+interface TwitchRawGame {
+    id: string;
+    name: string;
+}
+
+export function extract_user_twitch_login(twitch_url: string|undefined) {
+    if(!twitch_url)
+        return null
+
+    const m = twitch_url.match(/twitch.(tv|com)\/([^?/]*)/)
+    if(!m)
+        return null
+
+    if(!m[2].match(/^[a-zA-Z0-9_]{4,25}$/) || m[2][0] === '_')
+        return null
+
+    return m[2]
+}
+
+async function refresh_token() {
+    const twitch_response = await request.post(TWITCH_ID_TOKEN_URL, {
+        qs: {
+            client_id: scraper.config.scraper.twitchApiToken,
+            client_secret: scraper.config.scraper.twitchApiSecret,
+            grant_type: 'client_credentials'
+        },
+        json: true
+    })
+
+    TWITCH_BEARER_TOKEN = twitch_response.access_token
+}
+
+async function poll_stream_statuses(game_dao: GameDao, user_dao: UserDao, user_logins: { user_id: string, user_login: string}[]): Promise<Stream[]> {
+    //const qs = user_logins.map(ul => 'user_login=' + encodeURIComponent(ul.user_login)).join('&') + '&first=100'
+
+    const keyed_logins = _.keyBy(user_logins, v => v.user_login.toLowerCase())
+
+    const raw_streams = (await request.get(TWITCH_STREAMS_URL, {
+        json: true,
+        qs: {
+            first: 100,
+            user_login: _.map(user_logins, 'user_login')
+        },
+        auth: {
+            bearer: TWITCH_BEARER_TOKEN
+        }
+    })).data
+
+    if(!raw_streams.length)
+        return []
+
+    // get the games corresponding to all these streams
+    const mapped_games = await game_dao.load_by_index('twitch_id', _.map(raw_streams, 'game_id'))
+    const mapped_users = await user_dao.load(_.map(raw_streams, (rs) => {
+        const kl = keyed_logins[(<string>rs.user_name).toLowerCase()]
+        if(!kl)
+            // this can cometimes happen
+            return 'bogus';
+        
+        return kl.user_id;
+    }))
+
+    return _.filter(_.zipWith(raw_streams, mapped_games, mapped_users, (rs: Stream, game: Game|null, user: User|null) => {
+        if(!user)
+            return null;
+
+        return {
+            user: user ? user_to_bulk(user) : null,
+            user_name: rs.user_name,
+            game: game ? game_to_bulk(game) : null,
+            gg_ids: game ? extract_game_group_ids(game) : [],
+            title: rs.title,
+            viewer_count: rs.viewer_count,
+            language: rs.language,
+            thumbnail_url: rs.thumbnail_url,
+            started_at: rs.started_at
+        }
+    }), _.isObject) as Stream[]
+}
+
+export async function generate_twitch_games(sched: Sched, cur: CursorData<TwitchRawGame>|null): Promise<CursorData<Stream>|null> {
+    await refresh_token();
+
+    const twitchResponse = await request.get(TWITCH_GAMES_URL, {
+        qs: { after: cur?.pos || undefined, first: 100 },
+        json: true,
+        auth: {
+            bearer: TWITCH_BEARER_TOKEN
+        }
+    });
+
+    return {
+        items: twitchResponse.data,
+        desc: `twitch games ${twitchResponse.pagination.cursor}`,
+        pos: twitchResponse.pagination.cursor.toString()
+    };
+}
+
+export async function apply_twitch_games(sched: Sched, cur: CursorData<TwitchRawGame>) {
+    const game_dao = new GameDao(sched.storedb);
+
+    const save_games: Game[] = [];
+
+    for(const game of cur.items) {
+        // find the game in our db by name
+        const best_game = (await game_dao.load_by_index('autocomplete', game.name.toLowerCase()))[0];
+
+        if(!best_game) {
+            console.log('[TWITCH] cannot map twitch game:', game.name, game.id);
+            continue;
+        }
+
+        //console.log(`[TWITCH] ${best_game.id} is ${game.id} (${game.name})`)
+        best_game.twitch_id = game.id;
+        save_games.push(best_game);
+    }
+
+    if(save_games.length)
+        await game_dao.save(save_games);
+}
+
+export async function generate_all_twitch_streams(sched: Sched, cur: CursorData<TwitchRawStream>|null): Promise<CursorData<TwitchRawStream>|null> {
+    await refresh_token();
+
+    const game_dao = await new GameDao(sched.storedb!);
+    const user_dao = await new UserDao(sched.storedb!);
+
+    const [users, pos] = await user_dao.scanOnce({batchSize: 1000});
+
+    let user_logins: { user_id: string, user_login: string}[] = []
+
+    for(let user of users) {
+        const user_login = extract_user_twitch_login(user.twitch ? user.twitch!.uri : undefined)
+        if(!user_login)
+            continue;
+        
+        user_logins.push({ user_login, user_id: user.id })
+    }
+
+    return {
+        items: await poll_stream_statuses(game_dao, user_dao, user_logins),
+        desc: 'scan twitch streams',
+        pos: pos
+    };
+}
+
+export async function generate_running_twitch_streams(sched: Sched, cur: CursorData<Stream>|null): Promise<CursorData<Stream>|null> {
+    await refresh_token();
+
+    const game_dao = await new GameDao(sched.storedb!);
+    const user_dao = await new UserDao(sched.storedb!);
+    const stream_dao = await new StreamDao(sched.storedb!);
+
+    const [streams, pos] = await stream_dao.scanOnce({batchSize: 1000});
+
+    const newStreams = await poll_stream_statuses(game_dao, user_dao, _.filter(_.map(streams, s => {
+        return {
+            user_login: s.user_name,
+            user_id: s.user.id
+        }
+    })))
+
+    return {
+        items: newStreams,
+        desc: 'scan twitch streams',
+        pos: pos
+    };
+}
+
+export async function apply_twitch_streams(sched: Sched, cur: CursorData<Stream>) {
+    // TODO: handle deletion
+    await new StreamDao(sched.storedb!).save(cur.items);
+}

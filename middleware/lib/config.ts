@@ -4,7 +4,8 @@ import * as path from 'path';
 import * as _ from 'lodash';
 
 import * as ioredis from 'ioredis';
-import { MongoClientOptions } from 'mongodb';
+import { SchedConfig } from '../sched';
+import { DBConfig } from './db';
 
 export interface Config {
 
@@ -27,22 +28,9 @@ export interface Config {
     };
 
     /// Configure the DB connection
-    db: {
-        /// MongoDB database connection options
-        mongo: {
-            /// MongoDB connection string, see https://docs.mongodb.com/manual/reference/connection-string/
-            uri: string,
+    db: DBConfig;
 
-            /// The database to use on the server
-            dbName: string,
-
-            /// Extra options for mongodb
-            options?: MongoClientOptions,
-        }
-
-        /// Redis database connection options
-        redis: ioredis.RedisOptions,
-    };
+    sched: SchedConfig;
 
     scraper: {
         /// How fast should the API scan for changes?
@@ -87,20 +75,6 @@ export interface Config {
             secret: string
         }
     };
-
-    /// Settings for the indexing engine--used for autocomplete and any title search
-    indexer: {
-
-        /// Options for the indexer
-        config: {
-            depth: number, // how many letters to match sequences
-            spread: number, // extra sequences to generate to account for misspellings/errornous letters
-            scoreLength: number, // determines the maximum score understood by the indexer
-        }
-
-        /// Override configuration options for this redis connection
-        redis: ioredis.RedisOptions,
-    };
 }
 
 export const DEFAULT_CONFIG: Config = {
@@ -123,6 +97,74 @@ export const DEFAULT_CONFIG: Config = {
             uri: 'mongodb://localhost:27017',
             dbName: 'srbrowser',
         },
+        indexers: {
+            games: {
+                config: {
+                    depth: 3,
+                    spread: 0,
+                    scoreLength: 6,
+                },
+        
+                redis: {
+                    db: 2,
+                }
+            },
+            players: {
+                config: {
+                    depth: 3,
+                    spread: 0,
+                    scoreLength: 6,
+                },
+        
+                redis: {
+                    db: 2,
+                }
+            },
+            game_groups: {
+                config: {
+                    depth: 3,
+                    spread: 0,
+                    scoreLength: 6,
+                },
+        
+                redis: {
+                    db: 2,
+                }
+            }
+        }
+    },
+
+    sched: {
+        db: {
+            redis: {},
+            mongo: {
+                uri: 'mongodb://localhost:27017',
+                dbName: 'srbrowser',
+            },
+            indexers: {}
+        },
+
+        resources: {
+            src: {
+                name: 'src',
+                rateLimit: 1000
+            },
+            twitch: {
+                name: 'twitch',
+                rateLimit: 75
+            },
+            local: {
+                name: 'local',
+                rateLimit: 0
+            }
+        },
+
+        generators: {},
+        tasks: {},
+
+        jobs: {
+            
+        }
     },
 
     scraper: {
@@ -153,19 +195,7 @@ export const DEFAULT_CONFIG: Config = {
             token: '',
             secret: ''
         }
-    },
-
-    indexer: {
-        config: {
-            depth: 3,
-            spread: 0,
-            scoreLength: 6,
-        },
-
-        redis: {
-            db: 2,
-        },
-    },
+    }
 };
 
 /// A list of places to look for configuration files. Later configurations override prior configs.

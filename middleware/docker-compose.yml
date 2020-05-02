@@ -7,12 +7,15 @@ services:
     - "3500:3500"
     volumes:
     - .:/app
+    environment:
+      DEBUG: sched
     network_mode: host
+    working_dir: /app
     depends_on:
     - redis
     - mongo
   redis:
-    image: "redis:latest"
+    image: "redislabs/redisjson2:0.9.1"
     volumes:
     - /var/lib/sr-browser/redis:/data
     network_mode: host

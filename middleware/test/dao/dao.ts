@@ -14,7 +14,7 @@ describe('Dao', () => {
     let db: DB;
 
     before(async () => {
-        db = await load_db(load_config());
+        db = await load_db(load_config().db);
         await db.mongo.dropDatabase();
         await db.mongo.setProfilingLevel('all');
         await db.redis.flushall();
@@ -134,7 +134,7 @@ describe('IndexerIndex', () => {
     let ao: dao.Dao<{id: string, test: string, score: number}>;
 
     before(async () => {
-        db = await load_db(load_config());
+        db = await load_db(load_config().db);
         await db.mongo.dropDatabase();
         await db.mongo.setProfilingLevel('all');
         await db.redis.flushall();

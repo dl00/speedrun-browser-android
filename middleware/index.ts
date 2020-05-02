@@ -1,12 +1,16 @@
+import Promise from 'bluebird';
+global.Promise = Promise
+
 import { load_config } from './lib/config';
 
 import * as api from './api';
-import * as scraper from './scraper';
+import { Sched } from './sched';
 
 import * as cluster from 'cluster';
 
-export async function start_scraper(config: any) {
-    await scraper.run(config);
+export async function start_sched(config: any) {
+    const sched = new Sched(config);
+    await sched.exec();
 }
 
 export async function start_server(config: any) {
@@ -20,7 +24,7 @@ export async function run() {
         cluster.fork({ROLE: 'scraper'});
         cluster.fork({ROLE: 'web'});
     } else if (process.env.ROLE == 'scraper') {
-        await start_scraper(config);
+        await start_sched(config);
     } else if (process.env.ROLE == 'web') {
         await start_server(config);
     }

@@ -34,6 +34,7 @@ class SimpleTabStrip(context: Context, attrs: AttributeSet) : FrameLayout(contex
         foregroundGravity = Gravity.CENTER
 
         mHsv.isHorizontalScrollBarEnabled = false
+        mHsv.isFocusable = false
 
         val lp = LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,

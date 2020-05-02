@@ -3,10 +3,6 @@ import * as _ from 'lodash';
 import * as ioredis from 'ioredis';
 import * as mongodb from 'mongodb';
 
-import { Config } from './config';
-
-const CURRENT_INDEXERS = ['games', 'players', 'game_groups'];
-
 const Indexer = require('@13013/indexer');
 
 export interface DB {
@@ -22,6 +18,38 @@ export interface DB {
     };
 
     mongo_client: mongodb.MongoClient;
+}
+
+export interface DBConfig {
+    /// MongoDB database connection options
+    mongo: {
+        /// MongoDB connection string, see https://docs.mongodb.com/manual/reference/connection-string/
+        uri: string,
+
+        /// The database to use on the server
+        dbName: string,
+
+        /// Extra options for mongodb
+        options?: mongodb.MongoClientOptions,
+    }
+
+    /// Redis database connection options
+    redis: ioredis.RedisOptions,
+
+    indexers: {[id: string]: IndexerConfig}
+}
+
+export interface IndexerConfig {
+
+    /// Options for the indexer
+    config: {
+        depth: number, // how many letters to match sequences
+        spread: number, // extra sequences to generate to account for misspellings/errornous letters
+        scoreLength: number, // determines the maximum score understood by the indexer
+    }
+
+    /// Override configuration options for this redis connection
+    redis: ioredis.RedisOptions,
 }
 
 export async function start_transaction(db: DB) {
@@ -46,26 +74,24 @@ export async function exec_transaction(db: DB) {
     delete db.batch;
 }
 
-export function load_indexer(config: Config, name: string) {
-    return new Indexer(name, config.indexer.config, _.defaults(config.indexer.redis, config.db.redis));
+export function load_indexer(config: IndexerConfig, name: string) {
+    return new Indexer(name, config.config, config.redis);
 }
 
-export async function load_db(conf: Config): Promise<DB> {
+export async function load_db(conf: DBConfig): Promise<DB> {
 
     const db: any = {
-        redis: new ioredis(_.merge(conf.db.redis, { lazyConnect: true })),
+        redis: new ioredis(_.merge(conf.redis, { lazyConnect: true })),
         mongo: null,
-        mongo_client: (await mongodb.connect(conf.db.mongo.uri, _.merge(conf.db.mongo.options, {useNewUrlParser: true }))),
+        mongo_client: (await mongodb.connect(conf.mongo.uri, _.merge(conf.mongo.options, {useNewUrlParser: true }))),
         indexers: {},
     };
 
-    db.mongo = db.mongo_client.db(conf.db.mongo.dbName);
+    db.mongo = db.mongo_client.db(conf.mongo.dbName);
 
     await db.redis.connect();
 
-    for (const ind of CURRENT_INDEXERS) {
-        db.indexers[ind] = load_indexer(conf, ind);
-    }
+    db.indexers = _.mapValues(conf.indexers, load_indexer);
 
     return db;
 }
