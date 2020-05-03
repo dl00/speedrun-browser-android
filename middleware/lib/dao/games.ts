@@ -233,7 +233,7 @@ function get_game_search_indexes(game: Game) {
             continue;
         }
 
-        const idx: any = { text: game.names[name].toLowerCase(), score: game.score || 1 };
+        const idx: any = { text: game.names[name]!.toLowerCase(), score: game.score || 1 };
         if (name != 'international') {
             idx.namespace = name;
         }

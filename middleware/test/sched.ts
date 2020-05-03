@@ -28,7 +28,7 @@ function test_timeout(_cur: CursorData<any> | null) {
   return new Promise<CursorData<any>>(function() {})
 }
 
-const SCHED_TEST_CONFIG: SchedConfig = {
+export const SCHED_TEST_CONFIG: SchedConfig = {
   db: load_config().db,
 
   resources: {

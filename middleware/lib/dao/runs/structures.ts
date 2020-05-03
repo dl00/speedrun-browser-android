@@ -16,11 +16,11 @@ export interface NewRecord {
 export interface RunTimes {
     primary: string;
     primary_t: number;
-    realtime?: string;
+    realtime?: string | null;
     realtime_t?: number;
-    realtime_noloads?: string;
+    realtime_noloads?: string | null;
     realtime_noloads_t?: number;
-    ingame?: string;
+    ingame?: string | null;
     ingame_t?: number;
 }
 
@@ -48,7 +48,7 @@ export interface Run extends BulkRun, BaseMiddleware {
     category: BulkCategory|string;
     submitted: string;
     videos: {
-        text: string
+        text?: string
         links: Array<{
             uri: string,
         }>,

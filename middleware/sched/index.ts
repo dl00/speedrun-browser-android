@@ -7,12 +7,10 @@ const debug = require('debug')('sched:verbose');
 const debugInfo = require('debug')('sched')
 
 import { load_scraper_redis, load_config } from '../lib/config';
-import { load_db, DB, DBConfig, close_db } from '../lib/db';
+import { DB, DBConfig, close_db, load_db } from '../lib/db';
 
 export const config: any = load_config();
 export const rdb: ioredis.Redis = load_scraper_redis(config);
-
-export const storedb = load_db(config)
 
 const RDB_JOBS = 'jobs';
 const RDB_RESOURCES = 'resources';
@@ -226,7 +224,7 @@ export interface ScheduledJob {
 
 export interface CursorData<T> {
   /** string for the generator to identify the next position in the cursor */
-  pos: string|null;
+  pos: any|null;
 
   /** date that the data in this cursor was generated */
   asOf: number;
@@ -273,8 +271,9 @@ export class Sched {
     return this.db!
   }
 
-  constructor(config: SchedConfig) {
+  constructor(config: SchedConfig, db: DB | null = null) {
     this.config = config;
+    this.db = db;
   }
   
   private async mark_job_exec_start(name: string, now: number): Promise<boolean> {
@@ -564,6 +563,8 @@ export class Sched {
 }
 
 if(module === require.main) {
-  const sched = new Sched(load_config().sched);
-  sched.exec();
+  load_db(load_config().db).then((db) => {
+    const sched = new Sched(load_config().sched, db);
+    sched.exec();
+  });
 }

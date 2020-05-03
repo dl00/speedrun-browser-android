@@ -9,7 +9,11 @@ export interface ScanOptions {
     filter?: any;
     sort?: any;
     skip?: number;
+
     batchSize: number;
+
+    // used to resume a previously paused cursor, between calls to scanOnce
+    cur?: any;
 }
 
 export interface DaoConfig<T> {
@@ -198,6 +202,10 @@ export class Dao<T> implements DaoConfig<T> {
 
     public async scan(options: ScanOptions, func: Function): Promise<number> {
         return await require(`./backing/${this.backing}`).scan(this, options, func);
+    }
+
+    public async scanOnce(options: ScanOptions): Promise<[any, Array<T>]> {
+        return await require(`./backing/${this.backing}`).scanOnce(this, options);
     }
 
     public async count(): Promise<number> {

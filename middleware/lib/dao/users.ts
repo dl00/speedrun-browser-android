@@ -48,8 +48,16 @@ export interface BulkUser {
     names?: Names;
     name?: string;
     'name-style'?: {
-        style: 'solid'|''
-        color: {
+        style: 'solid'|'gradient'|''
+        color?: {
+            light: string
+            dark: string,
+        },
+        'color-from'?: {
+            light: string
+            dark: string,
+        },
+        'color-to'?: {
             light: string
             dark: string,
         },
@@ -62,7 +70,12 @@ export interface User extends BulkUser, BaseMiddleware {
     signup?: string;
     score?: number;
 
-    twitch?: { uri: string };
+    twitch?: { uri: string } | null;
+    youtube?: { uri: string } | null;
+    twitter?: { uri: string } | null;
+    speedrunslive?: { uri: string } | null;
+    location?: any | null;
+    hitbox?: any | null;
 
     bests: {[id: string]: GamePersonalBests};
 }
@@ -153,7 +166,7 @@ function get_user_search_indexes(user: User) {
                 continue;
             }
 
-            const idx: any = { text: user.names[name].toLowerCase(), score: score };
+            const idx: any = { text: user.names[name]!.toLowerCase(), score: score };
             if (name != 'international') {
                 idx.namespace = name;
             }

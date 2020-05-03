@@ -22,6 +22,12 @@ interface TwitchRawGame {
     name: string;
 }
 
+interface TwitchRawStream {
+    id: string;
+    online: boolean;
+    data: Stream|null;
+}
+
 export function extract_user_twitch_login(twitch_url: string|undefined) {
     if(!twitch_url)
         return null
@@ -97,7 +103,7 @@ async function poll_stream_statuses(game_dao: GameDao, user_dao: UserDao, user_l
     }), _.isObject) as Stream[]
 }
 
-export async function generate_twitch_games(sched: Sched, cur: CursorData<TwitchRawGame>|null): Promise<CursorData<Stream>|null> {
+export async function generate_twitch_games(_sched: Sched, cur: CursorData<TwitchRawGame>|null): Promise<CursorData<Stream>|null> {
     await refresh_token();
 
     const twitchResponse = await request.get(TWITCH_GAMES_URL, {
@@ -110,6 +116,7 @@ export async function generate_twitch_games(sched: Sched, cur: CursorData<Twitch
 
     return {
         items: twitchResponse.data,
+        asOf: Date.now(),
         desc: `twitch games ${twitchResponse.pagination.cursor}`,
         pos: twitchResponse.pagination.cursor.toString()
     };
@@ -144,7 +151,7 @@ export async function generate_all_twitch_streams(sched: Sched, cur: CursorData<
     const game_dao = await new GameDao(sched.storedb!);
     const user_dao = await new UserDao(sched.storedb!);
 
-    const [users, pos] = await user_dao.scanOnce({batchSize: 1000});
+    const [pos, users] = await user_dao.scanOnce({batchSize: 1000, cur: cur?.pos });
 
     let user_logins: { user_id: string, user_login: string}[] = []
 
@@ -157,36 +164,59 @@ export async function generate_all_twitch_streams(sched: Sched, cur: CursorData<
     }
 
     return {
-        items: await poll_stream_statuses(game_dao, user_dao, user_logins),
+        items: (await poll_stream_statuses(game_dao, user_dao, user_logins)).map((ss: Stream) => {
+            return {
+                id: ss.user.id,
+                online: true,
+                data: ss
+            }
+        }),
+        asOf: Date.now(),
         desc: 'scan twitch streams',
         pos: pos
     };
 }
 
-export async function generate_running_twitch_streams(sched: Sched, cur: CursorData<Stream>|null): Promise<CursorData<Stream>|null> {
+export async function generate_running_twitch_streams(sched: Sched, cur: CursorData<TwitchRawStream>|null): Promise<CursorData<TwitchRawStream>|null> {
     await refresh_token();
 
     const game_dao = await new GameDao(sched.storedb!);
     const user_dao = await new UserDao(sched.storedb!);
     const stream_dao = await new StreamDao(sched.storedb!);
 
-    const [streams, pos] = await stream_dao.scanOnce({batchSize: 1000});
+    const [pos, streams] = await stream_dao.scanOnce({batchSize: 1000, cur: cur?.pos });
 
-    const newStreams = await poll_stream_statuses(game_dao, user_dao, _.filter(_.map(streams, s => {
+    const newStreams = _.keyBy(await poll_stream_statuses(game_dao, user_dao, _.filter(_.map(streams, s => {
         return {
             user_login: s.user_name,
             user_id: s.user.id
         }
-    })))
+    }))), 'user.id');
+
+
+    const streamStatuses: TwitchRawStream[] = streams.map((s: Stream) => {
+        return {
+            id: s.user.id,
+            online: !!newStreams[s.user.id],
+            data: newStreams[s.user.id]
+        }
+    });
 
     return {
-        items: newStreams,
+        items: streamStatuses,
+        asOf: Date.now(),
         desc: 'scan twitch streams',
         pos: pos
     };
 }
 
-export async function apply_twitch_streams(sched: Sched, cur: CursorData<Stream>) {
-    // TODO: handle deletion
-    await new StreamDao(sched.storedb!).save(cur.items);
+export async function apply_twitch_streams(sched: Sched, cur: CursorData<TwitchRawStream>) {
+    
+    const [setStreams, delStreams] = _.partition(cur.items, 'online');
+    
+    if (delStreams.length)
+        await new StreamDao(sched.storedb!).remove(_.map(delStreams, 'id'));
+
+    if (setStreams.length)
+        await new StreamDao(sched.storedb!).save(<Stream[]>_.map(setStreams, 'data'));
 }

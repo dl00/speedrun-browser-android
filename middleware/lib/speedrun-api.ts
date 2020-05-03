@@ -24,13 +24,14 @@ export interface BaseMiddleware extends BaseUpstream {
 
 export interface Names {
     international: string;
-    [index: string]: string;
+    [index: string]: string|null;
 }
 
 export interface Asset {
     uri: string;
-    width: number;
-    height: number;
+    rel?: string;
+    width?: number;
+    height?: number;
 }
 
 export interface Variable extends BaseMiddleware {

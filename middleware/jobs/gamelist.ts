@@ -15,7 +15,7 @@ import { CursorData, Sched } from '../sched/index';
 
 const GAME_BATCH_COUNT = 50;
 
-interface SRCGame extends BulkGame {
+export interface SRCGame extends BulkGame {
     categories: { data: Category[] },
     levels: { data: Level[] },
 
@@ -31,6 +31,7 @@ export async function generate_games(sched: Sched, cur: CursorData<SRCGame>|null
 
     return {
         items: res.data.data,
+        asOf: Date.now(),
         desc: `games ${nextPos}..${nextPos + GAME_BATCH_COUNT}`,
         pos: res.data.pagination.max == res.data.pagination.size ? nextPos.toString() : null
     }

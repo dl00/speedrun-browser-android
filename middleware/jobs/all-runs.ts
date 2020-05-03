@@ -1,16 +1,33 @@
 import * as _ from 'lodash';
 
-import { populate_run_sub_documents, Run, RunDao, LeaderboardRunEntry } from '../lib/dao/runs';
+import { populate_run_sub_documents, Run, RunDao } from '../lib/dao/runs';
+import { RunTimes, RunSystem } from '../lib/dao/runs/structures';
 import { UserDao, User } from '../lib/dao/users';
 
 import * as puller from '../lib/puller';
 
-import { CursorData, storedb, Sched } from '../sched/index';
+import { CursorData, Sched } from '../sched/index';
 
 const RUN_BATCH_COUNT = 200;
 
-interface SRCRun extends Run {
+export interface SRCRun {
 
+    id: string;
+
+    weblink: string;
+
+    game: string;
+    category: string;
+    level?: string|null;
+
+    date: string;
+    times: RunTimes;
+    system: RunSystem;
+    values: {[key: string]: string};
+
+    players: { data: User[] }
+
+    [key: string]: any;
 }
 
 export async function generate_all_runs(sched: Sched, cur: CursorData<SRCRun>|null): Promise<CursorData<SRCRun>|null> {
@@ -20,6 +37,7 @@ export async function generate_all_runs(sched: Sched, cur: CursorData<SRCRun>|nu
 
     return {
         items: res.data.data,
+        asOf: Date.now(),
         desc: `runs ${nextPos}..${nextPos + RUN_BATCH_COUNT}`,
         pos: res.data.pagination.max == res.data.pagination.size ? nextPos.toString() : null
     }
@@ -34,6 +52,7 @@ export async function generate_latest_runs(sched: Sched, cur: CursorData<SRCRun>
 
     return {
         items: res.data.data,
+        asOf: Date.now(),
         desc: `runs ${nextPos}..${nextPos + RUN_BATCH_COUNT}`,
         pos: res.data.pagination.max == res.data.pagination.size ? nextPos.toString() : null
     }
@@ -41,7 +60,7 @@ export async function generate_latest_runs(sched: Sched, cur: CursorData<SRCRun>
 
 export async function apply_runs(sched: Sched, cur: CursorData<SRCRun>) {
 
-    const runs: LeaderboardRunEntry[] = cur.items.map((run: any) => {
+    const runs: Run[] = cur.items.map((run: any) => {
         run.game = {id: run.game};
         run.category = {id: run.category};
 
@@ -77,12 +96,3 @@ export async function apply_runs(sched: Sched, cur: CursorData<SRCRun>) {
         }));
     }
 }
-
-/*export async function delete_unseen_runs(_runid: string, options: any) {
-    try {
-        await new RunDao(sched.storedb!).remove_not_updated(parseInt(options.before_time));
-    } catch (err) {
-        console.error('loader/all-runs: could not delete unseen runs:', options, err);
-        throw new Error('permanent');
-    }
-}*/

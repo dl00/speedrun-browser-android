@@ -2,6 +2,7 @@
 import * as _ from 'lodash';
 
 import { DaoConfig, IndexDriver, ScanOptions } from '../';
+import { Cursor } from 'mongodb';
 
 // given an ordered array, makes the set of objects in the last parameter match the order
 // of the arr based on matching the predicate.
@@ -60,9 +61,26 @@ export async function remove(conf: DaoConfig<any>, ids: string[]) {
     await conf.db.mongo.collection(conf.collection).deleteMany({ _id: { $in: ids }});
 }
 
-export async function scan(conf: DaoConfig<any>, options: ScanOptions, func: Function): Promise<number> {
-    console.log(options);
+export async function scanOnce(conf: DaoConfig<any>, options: ScanOptions): Promise<Array<any>> {
 
+    const cursor = options.cur as Cursor || await conf.db.mongo.collection(conf.collection)
+        .find(options.filter || {})
+        .sort(options.sort || {})
+        .skip(options.skip || 0);
+    
+    const objs = new Array(options.batchSize);
+
+    let cur;
+    for (cur = 0; cur < options.batchSize && await cursor.hasNext(); cur++) {
+        objs[cur] = await cursor.next();
+    }
+
+    objs.splice(cur, options.batchSize);
+
+    return [cursor.hasNext() ? cursor : null, objs];
+}
+
+export async function scan(conf: DaoConfig<any>, options: ScanOptions, func: Function): Promise<number> {
     const cursor = await conf.db.mongo.collection(conf.collection)
         .find(options.filter || {})
         .sort(options.sort || {})

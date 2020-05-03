@@ -23,26 +23,28 @@ export async function remove(conf: DaoConfig<any>, ids: string[]) {
     await conf.db.redis.hdel(conf.collection, ...ids);
 }
 
+export async function scanOnce(conf: DaoConfig<any>, options: ScanOptions): Promise<[any, Array<any>]> {
+    const scan = await conf.db.redis.hscan(conf.collection, options.cur || 0, 'COUNT', options.batchSize);
 
+    const objs = _.chain(scan[1])
+            .filter((_v: any, i: number) => i % 2 === 1)
+            .map(JSON.parse)
+            .value();
+
+    return [parseInt(scan[0]) != 0 ? parseInt(scan[0]) : null, objs];
+}
 
 export async function scan(conf: DaoConfig<any>, options: ScanOptions, func: Function): Promise<number> {
     let cur = 0;
     let count = 0;
 
     do {
-        const scan = await conf.db.redis.hscan(conf.collection, cur, 'COUNT', options.batchSize);
+        const [newCur, objs] = await scanOnce(conf, _.defaults({ cur }, options));
 
-        count += scan[1].length;
-
-        const objs = _.chain(scan[1])
-            .filter((_v: any, i: number) => i % 2 === 1)
-            .map(JSON.parse)
-            .value();
-
+        cur = newCur;
+        count += objs.length;
         await func(objs);
-
-        cur = parseInt(scan[0]);
-    } while (cur != 0);
+    } while (cur);
 
     return count;
 }
