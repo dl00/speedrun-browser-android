@@ -7,13 +7,18 @@ import * as request from 'request-promise-native';
 import { StreamDao, Stream } from '../lib/dao/streams';
 import { UserDao, User, user_to_bulk } from '../lib/dao/users';
 
-import * as scraper from '../sched/index';
 import { GameDao, Game, extract_game_group_ids, game_to_bulk } from '../lib/dao/games';
 import { CursorData, Sched } from '../sched/index';
+
+import { load_config } from '../lib/config';
+
+const config = load_config();
 
 const TWITCH_STREAMS_URL = 'https://api.twitch.tv/helix/streams'
 const TWITCH_GAMES_URL = 'https://api.twitch.tv/helix/games/top'
 const TWITCH_ID_TOKEN_URL = 'https://id.twitch.tv/oauth2/token'
+
+const TWITCH_STREAMS_BATCH_SIZE = 80;
 
 let TWITCH_BEARER_TOKEN = ''
 
@@ -45,8 +50,8 @@ export function extract_user_twitch_login(twitch_url: string|undefined) {
 async function refresh_token() {
     const twitch_response = await request.post(TWITCH_ID_TOKEN_URL, {
         qs: {
-            client_id: scraper.config.scraper.twitchApiToken,
-            client_secret: scraper.config.scraper.twitchApiSecret,
+            client_id: config.twitch!!.token,
+            client_secret: config.twitch!!.secret,
             grant_type: 'client_credentials'
         },
         json: true
@@ -118,7 +123,9 @@ export async function generate_twitch_games(_sched: Sched, cur: CursorData<Twitc
         items: twitchResponse.data,
         asOf: Date.now(),
         desc: `twitch games ${twitchResponse.pagination.cursor}`,
-        pos: twitchResponse.pagination.cursor.toString()
+        done: (cur?.done || 0) + twitchResponse.data.length,
+        total: 0,
+        pos: twitchResponse.pagination.cursor ? twitchResponse.pagination.cursor.toString() : null
     };
 }
 
@@ -132,7 +139,7 @@ export async function apply_twitch_games(sched: Sched, cur: CursorData<TwitchRaw
         const best_game = (await game_dao.load_by_index('autocomplete', game.name.toLowerCase()))[0];
 
         if(!best_game) {
-            console.log('[TWITCH] cannot map twitch game:', game.name, game.id);
+            //console.log('[TWITCH] cannot map twitch game:', game.name, game.id);
             continue;
         }
 
@@ -151,7 +158,7 @@ export async function generate_all_twitch_streams(sched: Sched, cur: CursorData<
     const game_dao = await new GameDao(sched.storedb!);
     const user_dao = await new UserDao(sched.storedb!);
 
-    const [pos, users] = await user_dao.scanOnce({batchSize: 1000, cur: cur?.pos });
+    const [pos, users] = await user_dao.scanOnce({batchSize: TWITCH_STREAMS_BATCH_SIZE, cur: cur?.pos });
 
     let user_logins: { user_id: string, user_login: string}[] = []
 
@@ -163,15 +170,19 @@ export async function generate_all_twitch_streams(sched: Sched, cur: CursorData<
         user_logins.push({ user_login, user_id: user.id })
     }
 
+    const items = (await poll_stream_statuses(game_dao, user_dao, user_logins)).map((ss: Stream) => {
+        return {
+            id: ss.user.id,
+            online: true,
+            data: ss
+        }
+    });
+
     return {
-        items: (await poll_stream_statuses(game_dao, user_dao, user_logins)).map((ss: Stream) => {
-            return {
-                id: ss.user.id,
-                online: true,
-                data: ss
-            }
-        }),
+        items: items,
         asOf: Date.now(),
+        done: (cur?.done || 0) + items.length,
+        total: 0,
         desc: 'scan twitch streams',
         pos: pos
     };
@@ -184,7 +195,7 @@ export async function generate_running_twitch_streams(sched: Sched, cur: CursorD
     const user_dao = await new UserDao(sched.storedb!);
     const stream_dao = await new StreamDao(sched.storedb!);
 
-    const [pos, streams] = await stream_dao.scanOnce({batchSize: 1000, cur: cur?.pos });
+    const [pos, streams] = await stream_dao.scanOnce({batchSize: TWITCH_STREAMS_BATCH_SIZE, cur: cur?.pos });
 
     const newStreams = _.keyBy(await poll_stream_statuses(game_dao, user_dao, _.filter(_.map(streams, s => {
         return {
@@ -206,6 +217,8 @@ export async function generate_running_twitch_streams(sched: Sched, cur: CursorD
         items: streamStatuses,
         asOf: Date.now(),
         desc: 'scan twitch streams',
+        done: (cur?.done || 0) + streamStatuses.length,
+        total: await stream_dao.count(),
         pos: pos
     };
 }

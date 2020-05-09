@@ -3,7 +3,6 @@ import * as path from 'path';
 
 import * as _ from 'lodash';
 
-import * as ioredis from 'ioredis';
 import { SchedConfig } from '../sched';
 import { DBConfig } from './db';
 
@@ -27,54 +26,19 @@ export interface Config {
         maxSearchLength: number,
     };
 
+    /// credentails used for connecting to the twitch api
+    twitch?: {
+        /// token of the credentials used for connecting to the twitch api
+        token: string;
+
+        /// secret of the credentials used for connecting to the twitch api
+        secret: string;
+    }
+
     /// Configure the DB connection
     db: DBConfig;
 
     sched: SchedConfig;
-
-    scraper: {
-        /// How fast should the API scan for changes?
-        rate: number
-
-        /// The maximum number of times to repeat the same task before giving up
-        maxRetries: number
-
-        /// Override configuration options for the redis connection (for example, different DB index)
-        redis: ioredis.RedisOptions
-
-        /// Number of seconds before a running task is considered stalled/lost
-        runningTaskTimeout: number
-
-        /// Settings for dispatching push notification
-        pushNotify: {
-            /// Whether or not to send out push notifications
-            enabled: boolean
-
-            /// Authentication JSON file as provided by firebase
-            credentialFile: string,
-        }
-
-        /// list of database update tasks which should be used by the downloader. empty means run all tasks
-        baseTasks: string[]
-
-        /// Settings for storing data in the database
-        db: {
-            /// The number of runs to keep as marked "latest"
-            latestRunsLength: number
-
-            /// The number of gnere-specific runs to keep marked as "latest"
-            latestGenreRunsLength: number,
-        },
-
-        /// API Token needed to access the twitch API
-        twitch: {
-            /// api token from creating a new app on twitch developer page
-            token: string,
-            
-            /// server secret, as given from the developer api page after you create the token
-            secret: string
-        }
-    };
 }
 
 export const DEFAULT_CONFIG: Config = {
@@ -136,7 +100,9 @@ export const DEFAULT_CONFIG: Config = {
 
     sched: {
         db: {
-            redis: {},
+            redis: {
+                db: 1
+            },
             mongo: {
                 uri: 'mongodb://localhost:27017',
                 dbName: 'srbrowser',
@@ -163,39 +129,104 @@ export const DEFAULT_CONFIG: Config = {
         tasks: {},
 
         jobs: {
-            
+            'games': {
+                interval: 7 * 24 * 60 * 60 * 1000,
+                job: {
+                    name: 'games',
+                    resources: ['src', 'local'],
+                    generator: 'generate_games',
+                    task: 'apply_games',
+                    args: [],
+                    blockedBy: ['init_games'],
+                    timeout: 20000
+                }
+            },
+            'runs': {
+                interval: 14 * 7 * 60 * 60 * 1000,
+                job: {
+                    name: 'runs',
+                    resources: ['src', 'local'],
+                    generator: 'generate_all_runs',
+                    task: 'apply_runs',
+                    args: ['deletes'],
+                    blockedBy: ['init_games'],
+                    timeout: 20000
+                }
+            },
+            'latest_runs': {
+                interval: 60 * 1000,
+                job: {
+                    name: 'latest_runs',
+                    resources: ['src', 'local'],
+                    generator: 'generate_latest_runs',
+                    task: 'apply_runs',
+                    args: [],
+                    blockedBy: ['init_games'],
+                    timeout: 20000
+                }
+            },
+            'verified_runs': {
+                interval: 60 * 1000,
+                job: {
+                    name: 'verified_runs',
+                    resources: ['src', 'local'],
+                    generator: 'generate_latest_runs',
+                    task: 'apply_runs',
+                    args: ['verified'],
+                    blockedBy: ['init_games'],
+                    timeout: 20000
+                }
+            },
+            'charts_game_groups': {
+                interval: 24 * 60 * 60 * 1000,
+                job: {
+                    name: 'charts_game_groups',
+                    resources: ['local'],
+                    generator: 'generate_game_group_charts',
+                    task: 'apply_game_group_charts',
+                    args: [],
+                    blockedBy: ['init_games'],
+                    timeout: 2 * 60 * 60 * 1000 // charts can sometimes take a very long time to generate
+                }
+            },
+            'twitch_games': {
+                interval: 24 * 60 * 60 * 1000,
+                job: {
+                    name: 'twitch_games',
+                    resources: ['twitch', 'local'],
+                    generator: 'generate_twitch_games',
+                    task: 'apply_twitch_games',
+                    args: [],
+                    blockedBy: ['init_games'],
+                    timeout: 20000
+                }
+            },
+            'twitch_streams': {
+                interval: 10 * 60 * 1000,
+                job: {
+                    name: 'twitch_streams',
+                    resources: ['twitch', 'local'],
+                    generator: 'generate_all_twitch_streams',
+                    task: 'apply_twitch_streams',
+                    args: [],
+                    blockedBy: ['init_games'],
+                    timeout: 20000
+                }
+            },
+            'twitch_active_streams': {
+                interval: 60 * 1000,
+                job: {
+                    name: 'twitch_active_streams',
+                    resources: ['twitch', 'local'],
+                    generator: 'generate_running_twitch_streams',
+                    task: 'apply_twitch_streams',
+                    args: [],
+                    blockedBy: ['init_games'],
+                    timeout: 20000
+                }
+            }
         }
     },
-
-    scraper: {
-        // number of calls / second
-        rate: 1,
-
-        maxRetries: 3,
-
-        runningTaskTimeout: 3600, // 1 hour
-
-        redis: {
-            db: 1,
-        },
-
-        baseTasks: [],
-
-        pushNotify: {
-            enabled: false,
-            credentialFile: '/speedrunbrowser-middleware/secrets/firebase-service-account.json',
-        },
-
-        db: {
-            latestRunsLength: 10000,
-            latestGenreRunsLength: 1000,
-        },
-
-        twitch: {
-            token: '',
-            secret: ''
-        }
-    }
 };
 
 /// A list of places to look for configuration files. Later configurations override prior configs.
@@ -229,7 +260,3 @@ export let load_config = _.memoize(() => {
 
     return config;
 });
-
-export function load_scraper_redis(config: Config) {
-    return new ioredis(_.defaults(config.scraper.redis, config.db.redis));
-}

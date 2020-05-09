@@ -11,7 +11,7 @@ import { sleep } from '../lib/util';
 let taskCalled = 0;
 
 // test spy functions for the sched
-async function generate_test(cur: CursorData<any> | null) {
+async function generate_test(_sched: Sched, cur: CursorData<any> | null) {
   return { items: [], asOf: Date.now(), pos: cur?.pos != '1' ? '1' : null, desc: 'test' }
 }
 
@@ -23,7 +23,7 @@ function reset() {
   taskCalled = 0;
 }
 
-function test_timeout(_cur: CursorData<any> | null) {
+function test_timeout(_sched: Sched, _cur: CursorData<any> | null) {
   // returns a promise that never resolves
   return new Promise<CursorData<any>>(function() {})
 }
@@ -77,6 +77,7 @@ describe('Sched', () => {
       resources: ['fast'],
       generator: 'test',
       task: 'test',
+      args: [],
       timeout: 10
     };
 
@@ -151,6 +152,7 @@ describe('Sched', () => {
       resources: ['fast'],
       generator: 'test',
       task: 'test',
+      args: [],
       timeout: 10
     };
 
@@ -159,6 +161,7 @@ describe('Sched', () => {
       resources: ['fast'],
       generator: 'test',
       task: 'test',
+      args: [],
       timeout: 10
     };
 
@@ -198,6 +201,7 @@ describe('Sched', () => {
       resources: ['fast'],
       generator: 'timeout',
       task: 'test',
+      args: [],
       timeout: 1
     };
 
@@ -217,6 +221,7 @@ describe('Sched', () => {
       resources: ['fast'],
       generator: 'test',
       task: 'timeout',
+      args: [],
       timeout: 4
     };
 

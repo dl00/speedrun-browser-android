@@ -1,5 +1,7 @@
-import Promise from 'bluebird';
-global.Promise = Promise
+import * as _ from 'lodash';
+
+import * as bluebird from 'bluebird'
+global.Promise = bluebird
 
 import { load_config } from './lib/config';
 
@@ -7,9 +9,52 @@ import * as api from './api';
 import { Sched } from './sched';
 
 import * as cluster from 'cluster';
+import { make_generators, make_tasks } from './jobs';
+import { load_db } from './lib/db';
+
+const OVERRIDE_SCHED_CONFIG = {
+    resources: {
+        src: {
+            name: 'src',
+            rateLimit: 1000
+        },
+
+        twitch: {
+            name: 'twitch',
+            rateLimit: 100
+        },
+
+        local: {
+            name: 'local',
+            rateLimit: 10
+        }
+    },
+
+    generators: make_generators(),
+
+    tasks: make_tasks()
+}
 
 export async function start_sched(config: any) {
-    const sched = new Sched(config);
+    const sched = new Sched(_.merge(OVERRIDE_SCHED_CONFIG, config.sched), await load_db(config.db));
+
+    await sched.init();
+
+    if (!await sched.has_job('init_games')) {
+        console.log('has job push job')
+        // add required initialization job (will block other jobs)
+        await sched.push_job({
+            name: 'init_games',
+            resources: ['src', 'local'],
+            generator: 'generate_games',
+            task: 'apply_games',
+            args: [],
+            blockedBy: [],
+            timeout: 20000
+        });
+    }
+
+    console.log('execute scheduler');
     await sched.exec();
 }
 

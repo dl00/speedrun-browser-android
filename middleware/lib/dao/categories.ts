@@ -125,6 +125,10 @@ export class CategoryDao extends Dao<Category> {
 
     protected async pre_store_transform(obj: Category): Promise<Category> {
         normalize_category(obj);
+
+        if(!obj.game)
+            throw new Error('category is missing a game id');
+
         return obj;
     }
 }

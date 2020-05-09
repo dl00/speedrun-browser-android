@@ -26,7 +26,7 @@ export async function run(conf: Config) {
     config = conf;
 
     // load storedb
-    storedb = await load_db(config);
+    storedb = await load_db(config.db);
 
     // create an express server
     const app = create_express_server();

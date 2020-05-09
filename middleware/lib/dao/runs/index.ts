@@ -268,13 +268,6 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         ];
     }
 
-    // used to delete runs which were not seen on SRC after a full scan
-    public async remove_not_updated(before: number): Promise<number> {
-        return (await this.db.mongo.collection(this.collection).deleteMany({
-            updatedAt: {$lt: before}
-        })).deletedCount || 0
-    }
-
     // not used in prod: see leaderboards instaed.
     public async calculate_leaderboard_runs(game_id: string, category_id: string, level_id?: string): Promise<LeaderboardRunEntry[]> {
 
@@ -315,6 +308,16 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
     public async load_latest_runs(offset?: number, ggId?: string, verified: boolean = true) {
         const key = `${ggId || ''}:${offset || 0}`;
         return await this.load_by_index(verified ? 'latest_verified_runs' : 'latest_new_runs', key);
+    }
+
+    // used to compare elements seen on local vs. src to delete extra runs
+    public async load_submitted_segment_ids(start: string, end: string): Promise<string[]> {
+        return _.map(await this.db.mongo.collection(this.collection).find({
+            'run.submitted': {
+                $gt: start,
+                $lt: end
+            }
+        }, { projection: {_id: true}}).toArray(), '_id')
     }
 
     public async get_player_count(filter: any) {

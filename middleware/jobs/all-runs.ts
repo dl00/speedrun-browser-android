@@ -9,6 +9,7 @@ import * as puller from '../lib/puller';
 import { CursorData, Sched } from '../sched/index';
 
 const RUN_BATCH_COUNT = 200;
+const RUN_LATEST_COUNT = 25;
 
 export interface SRCRun {
 
@@ -31,7 +32,7 @@ export interface SRCRun {
 }
 
 export async function generate_all_runs(sched: Sched, cur: CursorData<SRCRun>|null): Promise<CursorData<SRCRun>|null> {
-    const res = await puller.do_pull(sched.storedb, `/runs?max=200&orderby=submitted&direction=desc&offset=${cur?.pos || 0}`);
+    const res = await puller.do_pull(sched.storedb, `/runs?embed=players&max=200&orderby=submitted&direction=desc&offset=${cur?.pos || 0}`);
 
     const nextPos = cur ? parseInt(cur.pos!) : RUN_BATCH_COUNT;
 
@@ -39,26 +40,74 @@ export async function generate_all_runs(sched: Sched, cur: CursorData<SRCRun>|nu
         items: res.data.data,
         asOf: Date.now(),
         desc: `runs ${nextPos}..${nextPos + RUN_BATCH_COUNT}`,
-        pos: res.data.pagination.max == res.data.pagination.size ? nextPos.toString() : null
+        done: (cur?.done || 0) + res.data.data.length,
+        total: 0,
+        pos: res.data.pagination.max == res.data.pagination.size ? (nextPos + RUN_BATCH_COUNT).toString() : null
     }
 }
 
-export async function generate_latest_runs(sched: Sched, cur: CursorData<SRCRun>|null): Promise<CursorData<SRCRun>|null> {
-    const res = await puller.do_pull(sched.storedb, `/runs?max=200&orderby=submitted&direction=desc&offset=${cur?.pos || 0}`);
+export async function generate_latest_runs(sched: Sched, cur: CursorData<SRCRun>|null, args: string[]): Promise<CursorData<SRCRun>|null> {
+
+    const latest_run_redis_property: 'latest_run_verify_date'|'latest_run_new_date' = args.length && args[0] == 'verified' ? 
+        'latest_run_verify_date' : 
+        'latest_run_new_date';
+
+    const run_date_property: 'status.verify-date'|'submitted' = args.length && args[0] == 'verified' ?
+        'status.verify-date' : 
+        'submitted';
+
+    const search_string = args.length && args[0] == 'verified' ? 
+        `/runs?embed=players&max=${RUN_LATEST_COUNT}&orderby=verify-date&status=verified&direction=desc&offset=${cur?.pos || 0}` :
+        `/runs?embed=players&max=${RUN_LATEST_COUNT}&orderby=submitted&direction=desc&offset=${cur?.pos || 0}`;
+
+    const res = await puller.do_pull(sched.storedb, search_string);
 
     const nextPos = cur ? parseInt(cur.pos!) : RUN_BATCH_COUNT;
 
     // only keep going if the run dates are such that we have enough
+    const latest_run_date: string|null = await sched.storedb!.redis.get(latest_run_redis_property);
+
+    const cur_run_date = _.get(_.last(res.data.data), run_date_property);
+
+    const needs_continue = 
+        res.data.pagination.max == res.data.pagination.size && latest_run_date && latest_run_date < cur_run_date;
+
+    // continuation pointer management
+    if(!cur?.pos) {
+        await sched.storedb!.redis.set(latest_run_redis_property + ':pending', cur_run_date);
+    }
+
+    if(!needs_continue) {
+        await sched.storedb!.redis.rename(latest_run_redis_property + ':pending', latest_run_redis_property);
+    }
 
     return {
         items: res.data.data,
         asOf: Date.now(),
         desc: `runs ${nextPos}..${nextPos + RUN_BATCH_COUNT}`,
-        pos: res.data.pagination.max == res.data.pagination.size ? nextPos.toString() : null
+        done: (cur?.done || 0) + res.data.data.length,
+        total: 0,
+        pos: needs_continue ? 
+            (nextPos + RUN_BATCH_COUNT).toString() : null
     }
 }
 
-export async function apply_runs(sched: Sched, cur: CursorData<SRCRun>) {
+// for pulling a single run which we previously lacked the resources to do
+export async function generate_single_run(sched: Sched, _cur: CursorData<SRCRun>|null, args: string[]): Promise<CursorData<SRCRun>|null> {
+
+    const res = await puller.do_pull(sched.storedb, `/runs/${args[0]}`);
+
+    return {
+        items: [res.data],
+        asOf: Date.now(),
+        desc: `single run ${args[0]}`,
+        done: 1,
+        total: 1,
+        pos: null
+    };
+}
+
+export async function apply_runs(sched: Sched, cur: CursorData<SRCRun>, args: string[]) {
 
     const runs: Run[] = cur.items.map((run: any) => {
         run.game = {id: run.game};
@@ -74,6 +123,7 @@ export async function apply_runs(sched: Sched, cur: CursorData<SRCRun>) {
     });
 
     // handle player obj updates before anything else
+    //console.log(runs);
     const updatedPlayers = _.chain(runs)
         .map('players')
         .flatten()
@@ -87,11 +137,34 @@ export async function apply_runs(sched: Sched, cur: CursorData<SRCRun>) {
     const pr = await populate_run_sub_documents(sched.storedb!, runs);
 
     if (pr.drop_runs.length) {
+
+        // TODO: schedule a job to pull in the game and category that this run depends on, and then pull this game again
+
         _.remove(runs, (r) => _.find(pr.drop_runs, (dr) => dr.id === r.id));
     }
 
     if (runs.length) {
-        await new RunDao(sched.storedb!).save(runs.map((run: Run) => {
+
+        const run_dao = new RunDao(sched.storedb!);
+
+        if(args.indexOf('deletes') != -1) {
+            // delete runs not seen in this continuous segment
+            // its not perfect if runs are between segments, but over time runs should be deleted well enough
+            const early_time = runs[0].submitted;
+            const late_time = runs[0].submitted;
+
+            const dbRuns = await run_dao.load_submitted_segment_ids(early_time, late_time);
+
+            const oldIds = _.map(dbRuns, 'run.id');
+            const newIds = _.map(runs, 'id');
+
+            const toRemove = _.difference(oldIds, newIds)
+            if (toRemove.length) {
+                await run_dao.remove(toRemove);
+            }
+        }
+
+        await run_dao.save(runs.map((run: Run) => {
             return {run: run}
         }));
     }
