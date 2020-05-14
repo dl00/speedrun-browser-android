@@ -39,6 +39,9 @@ export class RecentRunsIndex implements IndexDriver<LeaderboardRunEntry> {
         const latest_run_ids: string[] = await conf.db.redis.zrevrange(this.redis_key + (genre ? ':' + genre : ''),
             offset, offset + this.max_return - 1);
 
+        if(!latest_run_ids.length)
+            return [];
+
         return await conf.load(latest_run_ids);
     }
 

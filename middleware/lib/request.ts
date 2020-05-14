@@ -1,10 +1,6 @@
-import * as request from 'request-promise-native';
+import got from 'got';
 
-export default request.defaults({
-    headers: {
-        'User-Agent': 'SpeedrunAndroidMiddlewareScrapebot (report@danb.email)',
-    },
-
-    // sets the content type to json, and the accepts header. Auto parsing!
-    json: true,
+export default got.extend({
+    responseType: 'json',
+    headers: { 'User-Agent': 'SpeedrunAndroidMiddlewareSchedV2 (report@danb.email)' }
 });

@@ -170,6 +170,12 @@ export class RunDao extends Dao<LeaderboardRunEntry> {
         }).then(_.noop, console.error);
 
         db.mongo.collection(this.collection).createIndex({
+            'run.submitted': 1,
+        }, {
+            background: true
+        }).then(_.noop, console.error);
+
+        db.mongo.collection(this.collection).createIndex({
             'run.game.id': 1,
             'run.date': 1,
         }, {

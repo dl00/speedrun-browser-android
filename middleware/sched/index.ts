@@ -1,6 +1,8 @@
 import * as _ from 'lodash';
 import * as ioredis from 'ioredis';
 
+import * as http from 'http';
+
 import bluebird from 'bluebird';
 
 const debug = require('debug')('sched:verbose');
@@ -24,9 +26,9 @@ const RDB_JOB_RUN_LOG = 'runLog';
 const DUST_NEXT_EVENT = 25;
 
 const MIN_BACKOFF = 1000;
-const MAX_BACKOFF = 60 * 60 * 1000;
+const MAX_BACKOFF = 15 * 60 * 1000;
 
-const MAX_CONCURRENT = 3;
+const MAX_CONCURRENT = 1;
 
 const RUNNING_WAIT = 10 * 1000; // 10 seconds
 
@@ -247,6 +249,12 @@ export interface SchedConfig {
   /** database which should be used for recording the result of the jobs */
   db: DBConfig;
 
+  /** configuration for the webserver which is used for health and metrics */
+  server: {
+    host: string,
+    port: number,
+  }
+
   /** resources which the jobs will be able to access */
   resources: { [key: string]: InitResource };
 
@@ -269,6 +277,9 @@ export class Sched extends EventEmitter {
   
   /** the database connection object */
   private db: DB|null = null;
+
+  /** reference to http server for healthcheck and etc. */
+  private server: http.Server|null = null;
 
   /** pending call to the `loop` function, in case a cancel is needed */
   private loopPending: any|null = null;
@@ -506,7 +517,7 @@ export class Sched extends EventEmitter {
                     this.loop().then(_.noop);
 
                   } catch(err) {
-                    debugInfo(`job seg fail (dead): ${doJob.name}: %O`, err);
+                    debugInfo(`job seg task fail (dead): ${doJob.name}: %O`, err);
                     await this.push_failed_segment(doJob, newCur!);
                     await this.mark_job_exec_finish(doJob, doJob.cur);
                   }
@@ -587,6 +598,19 @@ export class Sched extends EventEmitter {
   }
   
   async exec() {
+    this.server = http.createServer((req, res) => {
+      if(req.url === '/') {
+        return res.end('OK');
+      }
+
+      // add metrics here later
+
+      res.statusCode = 404;
+      res.end();
+    });
+
+    this.server.listen(this.config.server.port, this.config.server.host);
+
     this.loop(true).then(_.noop);
   }
 
@@ -610,6 +634,10 @@ export class Sched extends EventEmitter {
   }
 
   async close() {
+
+    if(this.server)
+      this.server.close();
+
     if(this.db)
       await close_db(this.db);
     

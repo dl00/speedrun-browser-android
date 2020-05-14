@@ -19,6 +19,71 @@ function get_leaderboard_id_for_run(run: Run) {
         (run.level ? '_' + (run.level as BulkLevel).id : '');
 }
 
+function generate_run_obsolete_filter(categories: {[key: string]: Category|null}, run: LeaderboardRunEntry) {
+    const filter: any = {
+        'run.game.id': run.run.game.id,
+        'run.category.id': run.run.category.id,
+        "$or": [
+            {'run.date': {$lt: run.run.date}},
+            {'run.date': run.run.date, 'run.times.primary_t': {$gt: run.run.times.primary_t} },
+            {'run.date': null},
+        ],
+    };
+
+    if (run.run.level && run.run.level.id) {
+        filter['run.level.id'] = run.run.level.id;
+    }
+
+    // matching players
+    filter['run.players'] = {$size: run.run.players.length};
+    run.run.players.forEach((player, i) => {
+        if (player.id) {
+            filter[`run.players.${i}.id`] = player.id;
+        }
+        else if (player.name) {
+            filter[`run.players.${i}.name`] = player.name;
+        }
+        else {
+            // TODO: this is hacky
+            filter[`unused_dummy`] = 'foobar';
+        }
+    });
+
+    // return early if we dont have a category with variables to pull
+    if (!categories[run.run.category.id]) {
+        return filter;
+    }
+
+    const subcategory_var_ids = _.chain(categories[run.run.category.id]!.variables)
+        .filter('is-subcategory')
+        .map('id')
+        .value();
+
+    // matching subcategories
+    for (const id of subcategory_var_ids) {
+        if (run.run.values[id]) {
+            filter[`run.values.${id}`] = run.run.values[id];
+        }
+    }
+
+    // we check if its false here because the behavior of `obsoletes` appears to be as follows:
+    // if false, only mark as obsolete if the subcategory variable remains the same
+    // if true, always mark as obsolete regardless of filter value (aka no filter needed)
+    const obsoletes_var_ids = _.chain(categories[run.run.category.id]!.variables)
+        .reject('obsoletes')
+        .map('id')
+        .value();
+
+    // matching "obsoletes" var ids
+    for (const id of obsoletes_var_ids) {
+        if (run.run.values[id]) {
+            filter[`run.values.${id}`] = run.run.values[id];
+        }
+    }
+
+    return filter;
+}
+
 export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntry> {
     public name: string;
 
@@ -88,88 +153,69 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
 
     public async update_obsoletes(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[], categories: {[key: string]: Category|null}) {
 
+
+        const usable_runs = runs.filter((v) => v.run.status.status === 'verified' &&
+            v.run.category &&
+            v.run.category.id &&
+            v.run.submitted &&
+            v.run.date);
+        
+        
+        const run_filters = usable_runs.map(_.partial(generate_run_obsolete_filter, categories));
+
+        // should this run (itself) be obsolete?
+        const not_obsolete_filters: any[] = [];
+        const to_obsolete: LeaderboardRunEntry[] = [];
+
+        await Promise.all(usable_runs.map(async (r, i) => {
+            if(r.obsolete) {
+                // nothing to do
+                return;
+            }
+
+            // see if there is a newer run
+            const filter_mod = _.cloneDeep(run_filters[i]);
+
+            // its the same filter except the date and time conditions are opposite
+            filter_mod.$or = [
+                {'run.date': {$gt: r.run.date}},
+                {'run.date': r.run.date, 'run.times.primary_t': {$lt: r.run.times.primary_t} },
+                {'run.date': null},
+            ]
+
+            const npb = await conf.db.mongo.collection(conf.collection).findOne(filter_mod);
+
+            if(npb) {
+                // this run should be obsoleted by another
+                to_obsolete.push(r);
+            }
+            else {
+                // this run should be obsoleting other runs
+                not_obsolete_filters.push(run_filters[i]);
+            }
+        }));
+
+
         const filter: any = {
             // only runs with a category we have and which are verified can
-            $or: runs.filter((v) => v.run.status.status === 'verified' &&
-                v.run.category &&
-                v.run.category.id &&
-                v.run.submitted &&
-                v.run.date).map((run) => {
-
-                const filter: any = {
-                    'run.game.id': run.run.game.id,
-                    'run.category.id': run.run.category.id,
-                    "$or": [
-                        {'run.date': {$lt: run.run.date}},
-                        {'run.date': run.run.date, 'run.times.primary_t': {$gt: run.run.times.primary_t} },
-                        {'run.date': null},
-                    ],
-                };
-
-                if (run.run.level && run.run.level.id) {
-                    filter['run.level.id'] = run.run.level.id;
-                }
-
-                // matching players
-                filter['run.players'] = {$size: run.run.players.length};
-                run.run.players.forEach((player, i) => {
-                    if (player.id) {
-                        filter[`run.players.${i}.id`] = player.id;
-                    }
-                    else if (player.name) {
-                        filter[`run.players.${i}.name`] = player.name;
-                    }
-                    else {
-                        // TODO: this is hacky
-                        filter[`unused_dummy`] = 'foobar';
-                    }
-                });
-
-                // return early if we dont have a category with variables to pull
-                if (!categories[run.run.category.id]) {
-                    return filter;
-                }
-
-                const subcategory_var_ids = _.chain(categories[run.run.category.id]!.variables)
-                    .filter('is-subcategory')
-                    .map('id')
-                    .value();
-
-                // matching subcategories
-                for (const id of subcategory_var_ids) {
-                    if (run.run.values[id]) {
-                        filter[`run.values.${id}`] = run.run.values[id];
-                    }
-                }
-
-                // we check if its false here because the behavior of `obsoletes` appears to be as follows:
-                // if false, only mark as obsolete if the subcategory variable remains the same
-                // if true, always mark as obsolete regardless of filter value (aka no filter needed)
-                const obsoletes_var_ids = _.chain(categories[run.run.category.id]!.variables)
-                    .reject('obsoletes')
-                    .map('id')
-                    .value();
-
-                // matching "obsoletes" var ids
-                for (const id of obsoletes_var_ids) {
-                    if (run.run.values[id]) {
-                        filter[`run.values.${id}`] = run.run.values[id];
-                    }
-                }
-
-                return filter;
-            }),
+            $or: not_obsolete_filters,
         };
 
-        if (!filter.$or.length) {
-            return;
+        if (filter.$or.length) {
+            await conf.db.mongo.collection(conf.collection).updateMany(filter, {
+                $set: {
+                    obsolete: true,
+                },
+            });
         }
 
-        await conf.db.mongo.collection(conf.collection).updateMany(filter, {
-            $set: {
-                obsolete: true,
-            },
-        });
+        if(to_obsolete.length) {
+            await conf.db.mongo.collection(conf.collection).updateMany({
+                'run.id': { $in: _.map(to_obsolete, 'run.id') }
+            }, {
+                $set: { obsolete: true }
+            });
+        }
     }
 
     public async load(_conf: DaoConfig<LeaderboardRunEntry>, _keys: string[]): Promise<Array<LeaderboardRunEntry|null>> {

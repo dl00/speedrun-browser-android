@@ -91,7 +91,10 @@ export async function load_db(conf: DBConfig): Promise<DB> {
 
     await db.redis.connect();
 
-    db.indexers = _.mapValues(conf.indexers, load_indexer);
+    for(const idxr in conf.indexers) {
+        conf.indexers[idxr].redis = _.defaults(conf.indexers[idxr].redis, conf.redis);
+        db.indexers[idxr] = load_indexer(conf.indexers[idxr], idxr);
+    }
 
     return db;
 }

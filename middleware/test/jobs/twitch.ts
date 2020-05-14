@@ -58,6 +58,8 @@ describe('jobs/twitch', () => {
       }],
       asOf: Date.now(),
       pos: null,
+      done: 0,
+      total: 0,
       desc: 'dummy'
     });
 
@@ -113,6 +115,8 @@ describe('jobs/twitch', () => {
       }],
       asOf: Date.now(),
       pos: null,
+      done: 0,
+      total: 0,
       desc: 'dummy'
     });
 
@@ -129,6 +133,8 @@ describe('jobs/twitch', () => {
       }],
       asOf: Date.now(),
       pos: null,
+      done: 0,
+      total: 0,
       desc: 'dummy'
     });
 

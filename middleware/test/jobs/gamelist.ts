@@ -52,6 +52,8 @@ describe('jobs/gamelist', () => {
     await jobFuncs.apply_games(sched, {
       items: [testGame],
       pos: null,
+      done: 0,
+      total: 0,
       asOf: Date.now(),
       desc: 'dummy'
     });

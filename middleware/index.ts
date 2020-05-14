@@ -50,7 +50,7 @@ export async function start_sched(config: any) {
             task: 'apply_games',
             args: [],
             blockedBy: [],
-            timeout: 20000
+            timeout: 90000
         });
     }
 

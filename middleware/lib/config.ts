@@ -39,6 +39,16 @@ export interface Config {
     db: DBConfig;
 
     sched: SchedConfig;
+
+    /// Configure push notifications
+    pushNotify: {
+        /// Whether or not to send out push notifications
+        enabled: boolean,
+
+        /// Authentication JSON file as provided by firebase
+        credentialFile: string,
+
+    }
 }
 
 export const DEFAULT_CONFIG: Config = {
@@ -110,6 +120,12 @@ export const DEFAULT_CONFIG: Config = {
             indexers: {}
         },
 
+        /** configuration for the webserver which is used for health and metrics */
+        server: {
+            host: '0.0.0.0',
+            port: 3501,
+        },
+
         resources: {
             src: {
                 name: 'src',
@@ -138,11 +154,11 @@ export const DEFAULT_CONFIG: Config = {
                     task: 'apply_games',
                     args: [],
                     blockedBy: ['init_games'],
-                    timeout: 20000
+                    timeout: 90000
                 }
             },
             'runs': {
-                interval: 14 * 7 * 60 * 60 * 1000,
+                interval: 4 * 7 * 60 * 60 * 1000,
                 job: {
                     name: 'runs',
                     resources: ['src', 'local'],
@@ -150,7 +166,7 @@ export const DEFAULT_CONFIG: Config = {
                     task: 'apply_runs',
                     args: ['deletes'],
                     blockedBy: ['init_games'],
-                    timeout: 20000
+                    timeout: 60000
                 }
             },
             'latest_runs': {
@@ -227,6 +243,12 @@ export const DEFAULT_CONFIG: Config = {
             }
         }
     },
+    
+    pushNotify: {
+        enabled: false,
+        credentialFile: '/speedrunbrowser-middleware/secrets/firebase-service-account.json',
+    },
+
 };
 
 /// A list of places to look for configuration files. Later configurations override prior configs.

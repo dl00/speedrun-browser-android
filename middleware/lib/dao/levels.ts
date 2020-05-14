@@ -5,7 +5,7 @@ import { DB } from '../db';
 import { RedisMultiIndex } from './backing/redis';
 
 import {
-    BaseMiddleware, normalize,
+    BaseMiddleware, normalize, Variable,
 } from '../speedrun-api';
 
 import { Dao } from './';
@@ -16,7 +16,9 @@ export interface BulkLevel {
     game?: string;
 }
 
-export interface Level extends BulkLevel, BaseMiddleware {}
+export interface Level extends BulkLevel, BaseMiddleware {
+    variables: Variable[]
+}
 
 export function level_to_bulk(level: Level): BulkLevel {
     return _.pick(level, 'id', 'name');

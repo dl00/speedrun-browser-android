@@ -2,7 +2,7 @@
 
 import * as _ from 'lodash'
 
-import * as request from 'request-promise-native';
+import * as request from 'request-promise';
 
 import { StreamDao, Stream } from '../lib/dao/streams';
 import { UserDao, User, user_to_bulk } from '../lib/dao/users';

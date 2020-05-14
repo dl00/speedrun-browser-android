@@ -12,7 +12,7 @@ let taskCalled = 0;
 
 // test spy functions for the sched
 async function generate_test(_sched: Sched, cur: CursorData<any> | null) {
-  return { items: [], asOf: Date.now(), pos: cur?.pos != '1' ? '1' : null, desc: 'test' }
+  return { items: [], asOf: Date.now(), pos: cur?.pos != '1' ? '1' : null, desc: 'test', done: 0, total: 0 }
 }
 
 async function apply_test() {
@@ -30,6 +30,8 @@ function test_timeout(_sched: Sched, _cur: CursorData<any> | null) {
 
 export const SCHED_TEST_CONFIG: SchedConfig = {
   db: load_config().db,
+
+  server: { host: 'localhost', port: 3051 },
 
   resources: {
     'slow': {
@@ -78,6 +80,7 @@ describe('Sched', () => {
       generator: 'test',
       task: 'test',
       args: [],
+      blockedBy: [],
       timeout: 10
     };
 
@@ -153,6 +156,7 @@ describe('Sched', () => {
       generator: 'test',
       task: 'test',
       args: [],
+      blockedBy: [],
       timeout: 10
     };
 
@@ -162,6 +166,7 @@ describe('Sched', () => {
       generator: 'test',
       task: 'test',
       args: [],
+      blockedBy: [],
       timeout: 10
     };
 
@@ -202,6 +207,7 @@ describe('Sched', () => {
       generator: 'timeout',
       task: 'test',
       args: [],
+      blockedBy: [],
       timeout: 1
     };
 
@@ -222,6 +228,7 @@ describe('Sched', () => {
       generator: 'test',
       task: 'timeout',
       args: [],
+      blockedBy: [],
       timeout: 4
     };
 

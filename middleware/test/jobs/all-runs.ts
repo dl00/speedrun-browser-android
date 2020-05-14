@@ -193,8 +193,10 @@ describe('jobs/all-runs', () => {
       items: [sampleRun],
       pos: null,
       asOf: 0,
+      done: 0,
+      total: 0,
       desc: 'dummy',
-    });
+    }, []);
 
     const [lbr] = await run_dao.load('the_run');
 
