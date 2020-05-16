@@ -2,7 +2,9 @@
 
 import * as _ from 'lodash'
 
-import * as request from 'request-promise';
+import got_up from '../lib/request';
+
+import * as querystring from 'querystring';
 
 import { StreamDao, Stream } from '../lib/dao/streams';
 import { UserDao, User, user_to_bulk } from '../lib/dao/users';
@@ -20,7 +22,23 @@ const TWITCH_ID_TOKEN_URL = 'https://id.twitch.tv/oauth2/token'
 
 const TWITCH_STREAMS_BATCH_SIZE = 80;
 
-let TWITCH_BEARER_TOKEN = ''
+let TWITCH_BEARER_TOKEN = '';
+let TWITCH_BEARER_UPDATED = 0;
+
+const got = got_up.extend({
+    hooks: {
+        beforeRequest: [
+            async options => {
+                if(TWITCH_BEARER_UPDATED < Date.now() - 20 * 60 * 1000) {
+                    await refresh_token();
+                }
+
+                options.headers['Client-ID'] = config.twitch?.token;
+                options.headers['Authorization'] = `Bearer ${TWITCH_BEARER_TOKEN}`;
+            }
+        ]
+    }
+})
 
 interface TwitchRawGame {
     id: string;
@@ -48,16 +66,16 @@ export function extract_user_twitch_login(twitch_url: string|undefined) {
 }
 
 async function refresh_token() {
-    const twitch_response = await request.post(TWITCH_ID_TOKEN_URL, {
-        qs: {
+    const twitch_response = await got_up.post(TWITCH_ID_TOKEN_URL, {
+        searchParams: {
             client_id: config.twitch!!.token,
             client_secret: config.twitch!!.secret,
             grant_type: 'client_credentials'
-        },
-        json: true
-    })
+        }
+    });
 
-    TWITCH_BEARER_TOKEN = twitch_response.access_token
+    TWITCH_BEARER_TOKEN = (<any>twitch_response.body).access_token;
+    TWITCH_BEARER_UPDATED = Date.now();
 }
 
 async function poll_stream_statuses(game_dao: GameDao, user_dao: UserDao, user_logins: { user_id: string, user_login: string}[]): Promise<Stream[]> {
@@ -65,33 +83,30 @@ async function poll_stream_statuses(game_dao: GameDao, user_dao: UserDao, user_l
 
     const keyed_logins = _.keyBy(user_logins, v => v.user_login.toLowerCase())
 
-    const raw_streams = (await request.get(TWITCH_STREAMS_URL, {
-        json: true,
-        qs: {
-            first: 100,
-            user_login: _.map(user_logins, 'user_login')
-        },
-        auth: {
-            bearer: TWITCH_BEARER_TOKEN
-        }
-    })).data
+    const raw_streams = (await got.get<{data: Stream[] }>(TWITCH_STREAMS_URL + '?' + querystring.stringify({
+        first: 100,
+        user_login: _.map(user_logins, 'user_login')
+    }), {})).body.data;
 
     if(!raw_streams.length)
-        return []
+        return [];
 
     // get the games corresponding to all these streams
     const mapped_games = await game_dao.load_by_index('twitch_id', _.map(raw_streams, 'game_id'))
     const mapped_users = await user_dao.load(_.map(raw_streams, (rs) => {
-        const kl = keyed_logins[(<string>rs.user_name).toLowerCase()]
+        const kl = rs ? keyed_logins[(<string>rs.user_name).toLowerCase()] : null;
         if(!kl)
             // this can cometimes happen
             return 'bogus';
         
         return kl.user_id;
-    }))
+    }));
 
-    return _.filter(_.zipWith(raw_streams, mapped_games, mapped_users, (rs: Stream, game: Game|null, user: User|null) => {
+    return _.filter(_.zipWith(raw_streams, mapped_games, mapped_users, (rs: Stream|null, game: Game|null, user: User|null) => {
         if(!user)
+            return null;
+        
+        if(!rs)
             return null;
 
         return {
@@ -105,27 +120,29 @@ async function poll_stream_statuses(game_dao: GameDao, user_dao: UserDao, user_l
             thumbnail_url: rs.thumbnail_url,
             started_at: rs.started_at
         }
-    }), _.isObject) as Stream[]
+    }), _.isObject) as Stream[];
 }
 
-export async function generate_twitch_games(_sched: Sched, cur: CursorData<TwitchRawGame>|null): Promise<CursorData<Stream>|null> {
+export async function generate_twitch_games(_sched: Sched, cur: CursorData<TwitchRawGame>|null): Promise<CursorData<TwitchRawGame>|null> {
     await refresh_token();
 
-    const twitchResponse = await request.get(TWITCH_GAMES_URL, {
-        qs: { after: cur?.pos || undefined, first: 100 },
-        json: true,
-        auth: {
-            bearer: TWITCH_BEARER_TOKEN
-        }
+    const params: any = { first: 100 };
+
+    if(cur?.pos)
+        params.after = cur.pos
+
+
+    const twitchResponse = await got.get<{ data: TwitchRawGame[], pagination: any }>(TWITCH_GAMES_URL, {
+        searchParams: params
     });
 
     return {
-        items: twitchResponse.data,
+        items: twitchResponse.body.data,
         asOf: Date.now(),
-        desc: `twitch games ${twitchResponse.pagination.cursor}`,
-        done: (cur?.done || 0) + twitchResponse.data.length,
+        desc: `twitch games ${twitchResponse.body.pagination.cursor}`,
+        done: (cur?.done || 0) + twitchResponse.body.data.length,
         total: 0,
-        pos: twitchResponse.pagination.cursor ? twitchResponse.pagination.cursor.toString() : null
+        pos: twitchResponse.body.pagination.cursor ? twitchResponse.body.pagination.cursor.toString() : null
     };
 }
 

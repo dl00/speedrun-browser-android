@@ -3,7 +3,7 @@ import * as ioredis from 'ioredis';
 
 import * as http from 'http';
 
-import bluebird from 'bluebird';
+import pTimeout from 'p-timeout';
 
 const debug = require('debug')('sched:verbose');
 const debugInfo = require('debug')('sched')
@@ -26,7 +26,7 @@ const RDB_JOB_RUN_LOG = 'runLog';
 const DUST_NEXT_EVENT = 25;
 
 const MIN_BACKOFF = 1000;
-const MAX_BACKOFF = 15 * 60 * 1000;
+const MAX_BACKOFF = 5 * 60 * 1000;
 
 const MAX_CONCURRENT = 1;
 
@@ -406,6 +406,7 @@ export class Sched extends EventEmitter {
     if(raw_job && _.keys(raw_job).length) {
       raw_job.lastRun = parseInt(<string>raw_job.lastRun);
       raw_job.backoff = parseInt(<string>raw_job.backoff);
+      raw_job.timeout = parseInt(<string>raw_job.timeout);
       raw_job.args = (<string>raw_job.args || '').split(',');
 
       if (raw_job.cur) {
@@ -488,7 +489,7 @@ export class Sched extends EventEmitter {
             (async () => {
               try {
                 // pull the next data from the generator
-                const newCur = await (<bluebird<CursorData<any>>>this.config.generators[doJob.generator](this, doJob.cur, doJob.args)).timeout(doJob.timeout);
+                const newCur = await pTimeout(this.config.generators[doJob.generator](this, doJob.cur, doJob.args), doJob.timeout);
   
                 await this.mark_job_exec_new_cursor(doJob!, now, newCur);
           
@@ -506,7 +507,7 @@ export class Sched extends EventEmitter {
                   try {
                     // process the next data that was generated
                     if(newCur) {
-                      await (<bluebird<CursorData<any>>>this.config.tasks[doJob.task](this, newCur, doJob.args)).timeout(doJob.timeout);
+                      await pTimeout(this.config.tasks[doJob.task](this, newCur, doJob.args), doJob.timeout);
 
                       debugInfo(`complete job seg: ${doJob.name} (${newCur.done} / ${newCur.total})`);
                     }
@@ -625,7 +626,7 @@ export class Sched extends EventEmitter {
     let seg;
     while(seg = await this.pop_failed_segment(job)) {
       try {
-        await (<bluebird<CursorData<any>>>this.config.tasks[job.task](this, seg, job.args)).timeout(job.timeout);
+        await pTimeout(this.config.tasks[job.task](this, seg, job.args), job.timeout);
       } catch(err) {
         debug(`still fails: %O`, err);
         await this.push_failed_segment(job, seg);

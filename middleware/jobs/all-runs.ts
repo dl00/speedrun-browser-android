@@ -11,6 +11,8 @@ import { CursorData, Sched } from '../sched/index';
 const RUN_BATCH_COUNT = 200;
 const RUN_LATEST_COUNT = 25;
 
+const debug = require('debug')('jobs:all-runs');
+
 export interface SRCRun {
 
     id: string;
@@ -70,11 +72,14 @@ export async function generate_latest_runs(sched: Sched, cur: CursorData<SRCRun>
     const cur_run_date = _.get(_.last(res.data.data), run_date_property);
 
     const needs_continue = 
-        res.data.pagination.max == res.data.pagination.size && latest_run_date && latest_run_date < cur_run_date;
+        res.data.pagination.max == res.data.pagination.size && latest_run_date && latest_run_date <= cur_run_date;
+    
+    debug(`continuation: db ${latest_run_date} <= site ${cur_run_date}: ${needs_continue ? 'continue' : 'stop'}`)
 
     // continuation pointer management
     if(!cur?.pos) {
-        await sched.storedb!.redis.set(latest_run_redis_property + ':pending', cur_run_date);
+        const new_latest_run_date = _.get(res.data.data[0], run_date_property)
+        await sched.storedb!.redis.set(latest_run_redis_property + ':pending', new_latest_run_date);
     }
 
     if(!needs_continue) {

@@ -6,12 +6,16 @@ import * as _ from 'lodash';
 
 import * as puller from '../lib/puller';
 
+import pTimeout from 'p-timeout';
+
 import { Category, CategoryDao } from '../lib/dao/categories';
 import { Game, GameDao, BulkGame } from '../lib/dao/games';
 import { GameGroup, GameGroupDao } from '../lib/dao/game-groups';
 import { Level, LevelDao } from '../lib/dao/levels';
 
 import { CursorData, Sched } from '../sched/index';
+
+const debug = require('debug')('jobs:gamelist');
 
 const GAME_BATCH_COUNT = 50;
 
@@ -28,19 +32,24 @@ export async function generate_games(sched: Sched, cur: CursorData<SRCGame>|null
     let res: SRCGame[] = [];
     let pagination: any = null;
     try {
-        const d = (await puller.do_pull(sched.storedb, `/games?embed=levels.variables,categories.variables,platforms,regions,developers,publishers,genres&max=${GAME_BATCH_COUNT}&offset=${cur?.pos || 0}`));
+        const d = await pTimeout(puller.do_pull(
+            sched.storedb, 
+            `/games?embed=levels.variables,categories.variables,platforms,regions,developers,publishers,genres&max=${GAME_BATCH_COUNT}&offset=${cur?.pos || 0}`),
+            30000);
 
         res = d.data.data;
         pagination = d.data.pagination;
     } catch(err) {
         // really naive way to tell if its a 500 error
-        if(err.toString().indexOf('500')) {
+        if(err.toString().indexOf('50') != -1 || err.toString().indexOf('timed out') != -1) {
             // possibly SRC issue, switch to one at a time
+            debug(`src bug: ${err.toString()}, switch to one at a time mode...`);
             for(let i = 0;i < GAME_BATCH_COUNT;i++) {
                 try {
                     const d = await puller.do_pull(sched.storedb, `/games?embed=levels.variables,categories.variables,platforms,regions,developers,publishers,genres&max=1&offset=${(cur?.pos || 0) + i}`);
 
-                    res.push(d.data.data);
+                    if(d.data.data)
+                        res.push(d.data.data);
                 } catch(err) {
                     // ignore 
                 }
@@ -107,9 +116,12 @@ export async function apply_games(sched: Sched, cur: CursorData<SRCGame>) {
         games.push(g as any);
     }
 
+    const game_dao = new GameDao(sched.storedb);
+    const game_group_dao = new GameGroupDao(sched.storedb);
+
     const saves = [
-        new GameDao(sched.storedb).save(games),,
-        new GameGroupDao(sched.storedb).save(gameGroups)
+        game_dao.save(games),
+        game_group_dao.save(gameGroups)
     ];
 
     if(categories.length)
@@ -122,4 +134,6 @@ export async function apply_games(sched: Sched, cur: CursorData<SRCGame>) {
     await Promise.all(saves);
 
     // TODO: rescore for game, game groups
+    await game_dao.rescore_games(_.map(games, 'id'));
+    await game_group_dao.rescore_game_group(_.map(gameGroups, 'id'));
 }

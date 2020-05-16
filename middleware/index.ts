@@ -1,8 +1,5 @@
 import * as _ from 'lodash';
 
-import * as bluebird from 'bluebird'
-global.Promise = bluebird
-
 import { load_config } from './lib/config';
 
 import * as api from './api';

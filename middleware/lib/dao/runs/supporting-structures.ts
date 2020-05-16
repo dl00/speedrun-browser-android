@@ -1,5 +1,7 @@
 import * as _ from 'lodash';
 
+import * as pMap from 'p-map';
+
 import { DaoConfig, IndexDriver } from '../';
 import { BulkCategory, Category, CategoryDao } from '../categories';
 import { correct_leaderboard_run_places, Leaderboard, LeaderboardDao } from '../leaderboards';
@@ -167,7 +169,7 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
         const not_obsolete_filters: any[] = [];
         const to_obsolete: LeaderboardRunEntry[] = [];
 
-        await Promise.all(usable_runs.map(async (r, i) => {
+        await pMap(usable_runs, async (r, i) => {
             if(r.obsolete) {
                 // nothing to do
                 return;
@@ -183,6 +185,9 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
                 {'run.date': null},
             ]
 
+            // run must be verified in order to obsolete this run
+            filter_mod['run.status.status'] = 'verified';
+
             const npb = await conf.db.mongo.collection(conf.collection).findOne(filter_mod);
 
             if(npb) {
@@ -193,7 +198,7 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
                 // this run should be obsoleting other runs
                 not_obsolete_filters.push(run_filters[i]);
             }
-        }));
+        }, {concurrency: 5});
 
 
         const filter: any = {

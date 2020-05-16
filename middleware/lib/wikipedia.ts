@@ -25,8 +25,8 @@ export interface WikipediaSearchResult {
 /// Search for an article ID by name
 /// Returns list of matches from wikipedia
 export async function search(name: string) {
-    const res = await request(WIKIPEDIA_API_URL, {
-        qs: {
+    const res = await request<{query: WikipediaSearchResult }>(WIKIPEDIA_API_URL, {
+        searchParams: {
             format: 'json',
             action: 'query',
             list: 'search',
@@ -34,7 +34,7 @@ export async function search(name: string) {
         },
     });
 
-    return res.query as WikipediaSearchResult;
+    return res.body.query;
 }
 
 /// Query for the number of pageviews for an article.
@@ -43,7 +43,7 @@ export async function search(name: string) {
 /// * end: a Date representing the end of the data to collect
 /// Returns the total number of pageviews within that date range
 export async function get_pageviews(article: string, start: moment.Moment, end: moment.Moment) {
-    const res = await request(`${WIKIMEDIA_REST_URL}/metrics/pageviews/per-article/en.wikipedia/all-access/all-agents/${article}/daily/${start.format(DATE_FORMAT)}/${end.format(DATE_FORMAT)}`);
+    const res = await request<{items: number[]}>(`${WIKIMEDIA_REST_URL}/metrics/pageviews/per-article/en.wikipedia/all-access/all-agents/${article}/daily/${start.format(DATE_FORMAT)}/${end.format(DATE_FORMAT)}`);
 
-    return _.sum(_.map(res.items, 'views'));
+    return _.sum(_.map(res.body.items, 'views'));
 }
