@@ -93,7 +93,7 @@ export async function generate_latest_runs(sched: Sched, cur: CursorData<SRCRun>
         done: (cur?.done || 0) + res.data.data.length,
         total: 0,
         pos: needs_continue ? 
-            (nextPos + RUN_BATCH_COUNT).toString() : null
+            (nextPos + RUN_LATEST_COUNT).toString() : null
     }
 }
 
@@ -169,8 +169,41 @@ export async function apply_runs(sched: Sched, cur: CursorData<SRCRun>, args: st
             }
         }
 
-        await run_dao.save(runs.map((run: Run) => {
+        let save_runs = runs.map((run: Run) => {
             return {run: run}
-        }));
+        })
+
+        const cur_runs = await run_dao.load(_.map(save_runs, 'run.id'));
+
+        // compare and look for runs that have been updated
+
+        // compare a few key properies
+        const RUN_CMP_PROPERTIES = [
+            'run.date',
+            'run.comment',
+            'run.times.primary',
+            'run.status.status',
+            'run.videos.links[0].uri',
+            'run.players[0].id',
+            'run.players[1].id'
+        ];
+
+        save_runs = save_runs.filter((run, i) => {
+            const cur_run = cur_runs[i];
+
+            if(!cur_run)
+                return true;
+            
+            for (const prop of RUN_CMP_PROPERTIES) {
+                if (!_.isEqual(_.get(cur_run, prop), _.get(run, prop)))
+                    return true;
+            }
+
+            return false; // no need to re-save this run
+        });
+
+        if(save_runs.length) {
+            await run_dao.save(save_runs);
+        }
     }
 }

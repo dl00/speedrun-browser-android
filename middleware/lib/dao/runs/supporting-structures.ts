@@ -167,6 +167,7 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
 
         // should this run (itself) be obsolete?
         const not_obsolete_filters: any[] = [];
+        const not_obsolete: LeaderboardRunEntry[] = [];
         const to_obsolete: LeaderboardRunEntry[] = [];
 
         await pMap(usable_runs, async (r, i) => {
@@ -196,6 +197,7 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
             }
             else {
                 // this run should be obsoleting other runs
+                not_obsolete.push(r);
                 not_obsolete_filters.push(run_filters[i]);
             }
         }, {concurrency: 5});
@@ -221,6 +223,8 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
                 $set: { obsolete: true }
             });
         }
+
+        return not_obsolete;
     }
 
     public async load(_conf: DaoConfig<LeaderboardRunEntry>, _keys: string[]): Promise<Array<LeaderboardRunEntry|null>> {
@@ -238,12 +242,14 @@ export class SupportingStructuresIndex implements IndexDriver<LeaderboardRunEntr
             categories = _.zipObject(category_ids, await new CategoryDao(conf.db!).load(category_ids));
         }
 
-        await this.update_obsoletes(conf, runs, categories);
+        const not_obsolete_runs = await this.update_obsoletes(conf, runs, categories);
 
-        await Promise.all([
-            this.update_leaderboard(conf, _.cloneDeep(runs), categories),
-            this.update_player_pbs(conf, _.cloneDeep(runs), categories),
-        ]);
+        if(not_obsolete_runs.length) {
+            await Promise.all([
+                this.update_leaderboard(conf, _.cloneDeep(not_obsolete_runs), categories),
+                this.update_player_pbs(conf, _.cloneDeep(not_obsolete_runs), categories),
+            ]);
+        }
     }
 
     public async clear(conf: DaoConfig<LeaderboardRunEntry>, runs: LeaderboardRunEntry[]) {

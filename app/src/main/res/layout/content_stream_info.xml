@@ -42,7 +42,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             tools:ignore="HardcodedText"
-            android:text="gymnast86"
+            android:text="Unknown Player"
             android:textAlignment="center"
             android:textSize="@dimen/text_size_player"
             android:fontFamily="@font/saira_condensed_light"
@@ -55,7 +55,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             tools:ignore="HardcodedText"
-            android:text="BIG STREAM YAY"
+            android:text="Unknown Title"
             android:fontFamily="@font/saira_condensed_bold"
             android:ellipsize="end"
             android:maxLines="1" />
@@ -66,14 +66,14 @@
             android:layout_height="wrap_content"
             tools:ignore="HardcodedText"
             android:fontFamily="@font/saira_condensed_light"
-            android:text="Legend of Zelda: Wind Waker HD" />
+            android:text="Unknown Game" />
 
         <TextView
             android:id="@+id/txtViewerCount"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             tools:ignore="HardcodedText"
-            android:text="169 Viewers"
+            android:text="0 Viewers"
             android:fontFamily="@font/saira_condensed_light"
             android:textAlignment="textEnd" />
 

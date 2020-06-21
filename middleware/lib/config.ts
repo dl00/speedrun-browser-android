@@ -146,7 +146,7 @@ export const DEFAULT_CONFIG: Config = {
 
         jobs: {
             'games': {
-                interval: 7 * 24 * 60 * 60 * 1000,
+                interval: 3 * 24 * 60 * 60 * 1000,
                 job: {
                     name: 'games',
                     resources: ['src', 'local'],
@@ -158,15 +158,15 @@ export const DEFAULT_CONFIG: Config = {
                 }
             },
             'runs': {
-                interval: 4 * 7 * 60 * 60 * 1000,
+                interval: 14 * 7 * 60 * 60 * 1000,
                 job: {
                     name: 'runs',
                     resources: ['src', 'local'],
                     generator: 'generate_all_runs',
                     task: 'apply_runs',
                     args: ['deletes'],
-                    blockedBy: ['init_games'],
-                    timeout: 60000
+                    blockedBy: ['init_games', 'h'],
+                    timeout: 90000
                 }
             },
             'latest_runs': {
@@ -178,7 +178,7 @@ export const DEFAULT_CONFIG: Config = {
                     task: 'apply_runs',
                     args: [],
                     blockedBy: ['init_games'],
-                    timeout: 20000
+                    timeout: 60000
                 }
             },
             'verified_runs': {
@@ -190,7 +190,7 @@ export const DEFAULT_CONFIG: Config = {
                     task: 'apply_runs',
                     args: ['verified'],
                     blockedBy: ['init_games'],
-                    timeout: 20000
+                    timeout: 60000
                 }
             },
             'charts_game_groups': {

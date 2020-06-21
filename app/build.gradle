@@ -17,11 +17,11 @@ else
     logger.warn('Keystore file not loaded.')
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
     defaultConfig {
         applicationId "danb.speedrunbrowser"
         minSdkVersion 21
-        targetSdkVersion 29
+        targetSdkVersion 30
         versionCode 34
         versionName "1.14"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

@@ -47,6 +47,8 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
 
     private val mDisposables = CompositeDisposable()
 
+    private var hasFocusedGameList = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_speedrun_browser)
@@ -173,7 +175,7 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
 
         val cp = args?.getString(EXTRA_FRAGMENT_CLASSPATH)
 
-        val frag: Fragment?
+        val frag: Fragment
 
         when {
             cp != null -> frag = (Class.forName(cp) as Class<Fragment>).getConstructor().newInstance()
@@ -217,8 +219,9 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
             return
         }
 
-        if (supportFragmentManager.fragments[0] is GameListFragment) {
+        if (supportFragmentManager.fragments[0] is GameListFragment && hasFocusedGameList) {
             (supportFragmentManager.fragments[0] as GameListFragment).requestFocus()
+            hasFocusedGameList = true
             return
         }
 
@@ -227,6 +230,8 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
 
     private fun showFragment(frag: Fragment, args: Bundle?, backstack: Boolean = true) {
         mVideoView.stopVideo()
+
+        hasFocusedGameList = false
 
         if (args != null)
             frag.arguments = args

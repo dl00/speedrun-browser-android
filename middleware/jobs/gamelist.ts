@@ -95,8 +95,9 @@ export async function apply_games(sched: Sched, cur: CursorData<SRCGame>) {
             return l;
         }));
 
-        delete g.categories;
-        delete g.levels;
+        // to preserve order of categories, levels...
+        (<any>g).categories = _.map(g.categories.data, 'id');
+        (<any>g).levels = _.map(g.levels.data, 'id');
 
         for(let groupable of ['genres', 'platforms', 'developers', 'publishers']) {
             let ggg: GameGroup[] = (g as { [key: string]: any })[groupable].data;

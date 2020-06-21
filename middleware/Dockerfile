@@ -1,6 +1,6 @@
 FROM node:10-alpine
 
-RUN apk add --no-cache git tini
+RUN apk add --no-cache git tini curl # curl needed for healthcheck
 
 WORKDIR /usr/src
 
