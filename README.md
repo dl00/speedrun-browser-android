@@ -1,6 +1,11 @@
 Speedrun Android Client
 ====
 
+![Android CI](https://github.com/dl00/speedrun-browser-android/workflows/Android%20CI/badge.svg)
+[![GitHub license](https://img.shields.io/github/license/dl00/speedrun-browser-android.svg)](https://github.com/dl00/speedrun-browser-android/blob/master/LICENSE)
+
+<a href='https://play.google.com/store/apps/details?id=danb.speedrunbrowser&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' width="200px" /></a>
+
 Welcome to the source code repository for Speedrun Browser (Unofficial) for Android. This project aims to provide a fully-featured Android viewer for https://speedrun.com/. The interface should be fast, intuitive, and functional.
 
 Current features:
