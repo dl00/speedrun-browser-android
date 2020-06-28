@@ -35,7 +35,9 @@ class FiltersDialog(
 
         val layout = LinearLayout(context)
         layout.orientation = LinearLayout.VERTICAL
-        layout.background = ColorDrawable(context.getColor(R.color.colorPrimary))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            layout.background = ColorDrawable(context.getColor(R.color.colorPrimary))
+        }
 
         val scrollView = ScrollView(context)
 
@@ -136,7 +138,10 @@ class FiltersDialog(
         cv.isClickable = true
         cv.isCheckable = true
         cv.isFocusable = true
-        cv.foreground = context.resources.getDrawable(R.drawable.clickable_item)
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            cv.foreground = context.resources.getDrawable(R.drawable.clickable_item)
+        }
 
         cv.setOnCheckedChangeListener(this)
 

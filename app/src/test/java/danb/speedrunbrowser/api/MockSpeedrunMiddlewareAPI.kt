@@ -23,14 +23,16 @@ class MockSpeedrunMiddlewareAPI : SpeedrunMiddlewareAPI.Endpoints {
     override fun listGenres(query: String): Observable<SpeedrunMiddlewareAPI.APIResponse<Genre>>
         = response(sampleGenres.filterValues { it.name.contains(query) }.values)
 
-    override fun listGames(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Game>>
-        = response(sampleGames.values)
-
-    override fun listGamesByGenre(genreId: String, offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Game>>
-        = listGames(0)
+    override fun listGames(mode: String, offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Game>> {
+        TODO("Not yet implemented")
+    }
 
     override fun listGames(ids: String): Observable<SpeedrunMiddlewareAPI.APIResponse<Game>>
         = splitIdsResponse(ids, sampleGames)
+
+    override fun listGamesByGenre(genreId: String, mode: String, offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Game>> {
+        TODO("Not yet implemented")
+    }
 
     override fun listPlayers(ids: String): Observable<SpeedrunMiddlewareAPI.APIResponse<User>>
         = splitIdsResponse(ids, samplePlayers)
@@ -38,11 +40,13 @@ class MockSpeedrunMiddlewareAPI : SpeedrunMiddlewareAPI.Endpoints {
     override fun listLeaderboards(categoryId: String): Observable<SpeedrunMiddlewareAPI.APIResponse<Leaderboard>>
         = splitIdsResponse(categoryId, sampleLeaderboards)
 
-    override fun listLatestRuns(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<LeaderboardRunEntry>>
-        = response(sampleRuns.values)
+    override fun listLatestRuns(offset: Int, verified: Boolean): Observable<SpeedrunMiddlewareAPI.APIResponse<LeaderboardRunEntry>> {
+        TODO("Not yet implemented")
+    }
 
-    override fun listLatestRunsByGenre(genreId: String, offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<LeaderboardRunEntry>>
-        = response(sampleRuns.filterValues { it.run.game?.genres?.contains(sampleGenres.getValue(genreId)) ?: true }.values)
+    override fun listLatestRunsByGenre(genreId: String, offset: Int, verified: Boolean): Observable<SpeedrunMiddlewareAPI.APIResponse<LeaderboardRunEntry>> {
+        TODO("Not yet implemented")
+    }
 
     override fun listRuns(runIds: String): Observable<SpeedrunMiddlewareAPI.APIResponse<LeaderboardRunEntry>>
         = splitIdsResponse(runIds, sampleRuns)
@@ -59,6 +63,10 @@ class MockSpeedrunMiddlewareAPI : SpeedrunMiddlewareAPI.Endpoints {
         }
 
         return response(entries)
+    }
+
+    override fun getGameGroupMetrics(ggId: String): Observable<SpeedrunMiddlewareAPI.APIChartResponse> {
+        TODO("Not yet implemented")
     }
 
     private fun<T> splitIdsResponse(ids: String, from: Map<String, T>): Observable<SpeedrunMiddlewareAPI.APIResponse<T>> {
@@ -79,10 +87,6 @@ class MockSpeedrunMiddlewareAPI : SpeedrunMiddlewareAPI.Endpoints {
             ))
     }
 
-    override fun getSiteMetrics(): Observable<SpeedrunMiddlewareAPI.APIChartResponse> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
     override fun getGameMetrics(gameId: String): Observable<SpeedrunMiddlewareAPI.APIChartResponse> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
@@ -97,5 +101,21 @@ class MockSpeedrunMiddlewareAPI : SpeedrunMiddlewareAPI.Endpoints {
 
     override fun getUserGameMetrics(gameId: String, playerId: String): Observable<SpeedrunMiddlewareAPI.APIChartResponse> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun listStreamsByGameGroup(ggId: String, offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Stream>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun listStreamsByGameGroup(ggId: String, lang: String, offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Stream>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun listStreamsByGame(gameId: String, offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Stream>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun listStreamsByGame(gameId: String, lang: String, offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Stream>> {
+        TODO("Not yet implemented")
     }
 }

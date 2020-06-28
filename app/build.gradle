@@ -72,6 +72,10 @@ android {
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8.toString()
     }
+
+    lintOptions {
+        disable "IncompatibleIidVersion"
+    }
 }
 
 repositories {
@@ -108,7 +112,7 @@ dependencies {
     implementation "androidx.core:core-ktx:1.2.0"
     implementation "androidx.leanback:leanback:1.0.0"
 
-    implementation 'com.android.support:support-tv-provider:27.0.0'
+    implementation 'androidx.tvprovider:tvprovider:1.0.0'
 
     implementation 'com.google.android.gms:play-services-auth:17.0.0'
 
