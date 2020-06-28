@@ -42,6 +42,10 @@ data class Variable(
         val level: String? = null
     ) : Serializable
 
+    override fun equals(other: Any?): Boolean {
+        return other is Variable && other.id == id
+    }
+
     class VariableSelections(run: Run? = null) : Serializable {
 
         private val selections: MutableMap<String, MutableSet<String>> = mutableMapOf()
@@ -61,7 +65,7 @@ data class Variable(
             }
         }
 
-        fun shouldShowRun(run: Run, activeVariables: List<Variable>): Boolean {
+        fun shouldShowRun(run: Run, activeVariables: Collection<Variable>): Boolean {
 
             if (run.values != null) {
 
@@ -87,7 +91,7 @@ data class Variable(
             return true
         }
 
-        fun filterLeaderboardRuns(lb: Leaderboard, activeVariables: List<Variable>): List<LeaderboardRunEntry> {
+        fun filterLeaderboardRuns(lb: Leaderboard, activeVariables: Collection<Variable>): List<LeaderboardRunEntry> {
             val shownRuns = ArrayList<LeaderboardRunEntry>()
 
             var curPlace = 1

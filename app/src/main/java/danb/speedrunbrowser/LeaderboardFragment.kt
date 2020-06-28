@@ -374,7 +374,7 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
             mFilteredLeaderboardRuns = if (filter != null) {
                 Log.d(TAG, "Filtering runs: $leaderboardId")
 
-                val activeVars = if (mLevel != null) { mLevel!!.variables!! } else { mCategory!!.variables!! }
+                val activeVars = if (mLevel != null) { mLevel!!.variables!!.intersect(mCategory!!.variables!!) } else { mCategory!!.variables!! }
 
                 filter!!.filterLeaderboardRuns(mLeaderboard!!, activeVars)
             } else

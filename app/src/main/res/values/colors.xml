@@ -9,6 +9,9 @@
 
     <color name="colorLinkText">#5555ff</color>
 
+    <color name="colorLevel">#0D47A1</color> <!-- blue 900 -->
+    <color name="colorLevelSelected">#1E88E5</color> <!-- blue 600 -->
+
     <color name="colorBackgroundError">#331111</color>
 
     <color name="colorMenuIconTint">#ffffff</color>
