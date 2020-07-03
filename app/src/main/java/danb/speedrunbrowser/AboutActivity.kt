@@ -25,6 +25,7 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var mLinkRateThis: TextView
     private lateinit var mLinkShareThis: TextView
+    private lateinit var mLinkSourceCode: TextView
     private lateinit var mLinkComplain: TextView
     private lateinit var mLinkTermsAndConditions: TextView
     private lateinit var mLinkPrivacyPolicy: TextView
@@ -40,6 +41,7 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
         mLinkComplain = findViewById(R.id.linkComplain)
         mLinkRateThis = findViewById(R.id.linkRateThis)
         mLinkShareThis = findViewById(R.id.linkShareThis)
+        mLinkSourceCode = findViewById(R.id.linkSourceCode)
         mLinkPrivacyPolicy = findViewById(R.id.linkPrivacyPolicy)
         mLinkTermsAndConditions = findViewById(R.id.linkTermsAndConditions)
         mLinkOpenSourceLicenses = findViewById(R.id.linkOpenSourceLicenses)
@@ -48,6 +50,7 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
         mLinkSpeedrunComLogo.setOnClickListener(this)
         mLinkRateThis.setOnClickListener(this)
         mLinkShareThis.setOnClickListener(this)
+        mLinkSourceCode.setOnClickListener(this)
         mLinkComplain.setOnClickListener(this)
         mLinkTermsAndConditions.setOnClickListener(this)
         mLinkPrivacyPolicy.setOnClickListener(this)
@@ -90,7 +93,7 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
                     .setTitle(R.string.dialog_title_send_email)
                     .setMessage(R.string.dialog_msg_send_email)
                     .setPositiveButton(R.string.dialog_button_send_email) { _, _ ->
-                        startActivity(Intent.createChooser(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$COMPLAIN_EMAIL?subject=$COMPLAIN_EMAIL_TITLE")), "Send using"))
+                        openLink(COMPLAIN_URL)
                     }
                     .setNeutralButton(android.R.string.cancel, null)
                     .create()
@@ -101,6 +104,8 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
             openLink(PLAY_STORE_APP)
         else if (v === mLinkShareThis)
             Util.openShare(this)
+        else if (v === mLinkSourceCode)
+            openLink(SOURCE_CODE_URL)
         else if (v === mLinkTermsAndConditions)
             openLink(TERMS_AND_CONDITIONS)
         else if (v === mLinkPrivacyPolicy)
@@ -116,8 +121,11 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
 
         private val PLAY_STORE_APP = Uri.parse("https://play.google.com/store/apps/details?id=danb.speedrunbrowser")
 
-        private val COMPLAIN_EMAIL = Uri.parse("playstore@danb.email")
-        private val COMPLAIN_EMAIL_TITLE = Uri.parse("[SR BROWSER] Problem Report")
+        private val SOURCE_CODE_URL = Uri.parse("https://github.com/dl00/speedrun-browser-android")
+
+        private val TRANSLATE_URL = Uri.parse("https://github.com/dl00/speedrun-browser-android")
+
+        private val COMPLAIN_URL = Uri.parse("https://github.com/dl00/speedrun-browser-android/issues/new/choose")
 
         private val TERMS_AND_CONDITIONS = Uri.parse("https://speedrun-browser-4cc82.firebaseapp.com/terms.html")
         private val PRIVACY_POLICY = Uri.parse("https://speedrun-browser-4cc82.firebaseapp.com/privacy-policy.html")
