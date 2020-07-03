@@ -107,15 +107,14 @@ class SimpleTabStrip(context: Context, attrs: AttributeSet) : FrameLayout(contex
                 val verticalLayout = LinearLayout(context)
                 verticalLayout.orientation = LinearLayout.VERTICAL
                 verticalLayout.gravity = Gravity.CENTER
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    verticalLayout.foreground = resources.getDrawable(R.drawable.clickable_item)
+                }
 
                 verticalLayout.addView(iv)
                 verticalLayout.addView(tv)
 
                 verticalLayout.setOnClickListener { mPager!!.currentItem = i }
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    verticalLayout.isFocusable = false
-                }
 
                 mLayout.addView(verticalLayout)
             } else {
