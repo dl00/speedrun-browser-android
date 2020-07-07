@@ -39,8 +39,15 @@ class MultiVideoView(context: Context, attrs: AttributeSet?) : FrameLayout(conte
     init {
         // configure the webview to support playing video
         mWebView.settings.setAppCacheMaxSize((1 * 1024 * 1024).toLong())
+
+        // obviously
         mWebView.settings.javaScriptEnabled = true
+
+        // can play the video automatically
         mWebView.settings.mediaPlaybackRequiresUserGesture = false
+
+        // required or twitch crashes now
+        mWebView.settings.domStorageEnabled = true
         mWebView.webChromeClient = CustomWebChromeClient(context)
 
         isFocusable = true
