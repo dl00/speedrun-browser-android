@@ -36,6 +36,7 @@
     <string name="error_twitch">Could not load twitch player! Please try again later.</string>
     <string name="error_twitch_app">Could not load twitch app! Is it installed?</string>
     <string name="button_filters">Filters</string>
+    <string name="button_filters_used">Filters &#9733;</string>
     <string name="dialog_title_choose_filters">Filter runs by:</string>
     <string name="dialog_title_choose_genres">Show games/runs by genre:</string>
     <string name="empty_no_splits">Splits are coming soon!</string>

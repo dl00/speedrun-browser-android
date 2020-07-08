@@ -2,8 +2,10 @@ package danb.speedrunbrowser
 
 import android.animation.Animator
 import android.annotation.SuppressLint
+import android.content.Context.MODE_PRIVATE
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
@@ -93,24 +95,28 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
 
         val args = arguments
 
-        mVariableSelections = when {
-            savedInstanceState != null -> savedInstanceState.getSerializable(SAVED_FILTERS) as Variable.VariableSelections
-            args?.get(ARG_VARIABLE_SELECTIONS) != null -> args.getSerializable(ARG_VARIABLE_SELECTIONS) as Variable.VariableSelections
-            else -> Variable.VariableSelections()
-        }
-
         when {
             args == null -> {
                 Log.e(TAG, "No arguments provided")
                 return
             }
-            savedInstanceState != null -> mGame = savedInstanceState.getSerializable(SAVED_GAME) as Game
+            savedInstanceState != null -> {
+                mGame = savedInstanceState.getSerializable(SAVED_GAME) as Game
+                mVariableSelections = savedInstanceState.getSerializable(SAVED_FILTERS) as Variable.VariableSelections
+            }
             args.containsKey(ARG_GAME_ID) -> {
                 // Load the dummy content specified by the fragment
                 // arguments. In a real-world scenario, use a Loader
                 // to load content from a content provider.
 
-                val gameId = args.getString(ARG_GAME_ID)
+                val gameId = args.getString(ARG_GAME_ID)!!
+
+                mVariableSelections = when {
+                    args.get(ARG_VARIABLE_SELECTIONS) != null -> args.getSerializable(ARG_VARIABLE_SELECTIONS) as Variable.VariableSelections
+                    else -> loadFilterPreferences(gameId)
+                }
+
+
                 loadGame(gameId, args.getString(ARG_LEADERBOARD_ID))
             }
         }
@@ -251,6 +257,7 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
             mGameHeader!!.visibility = View.VISIBLE
         }
 
+        mFiltersButton.setText(if (mVariableSelections!!.empty) R.string.button_filters else R.string.button_filters_used)
         mFiltersButton.setOnClickListener { openFiltersDialog() }
 
         setViewData()
@@ -353,7 +360,7 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
 
     private fun openFiltersDialog() {
         val dialog = FiltersDialog(context!!, mGame!!,
-                mCategoryTabStrip!!.pagerAdapter!!.getCategoryOfIndex(mLeaderboardPager!!.currentItem).variables!!, mVariableSelections!!)
+                currentVariables, mVariableSelections!!)
 
         dialog.show()
 
@@ -361,8 +368,48 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
             for (lbf in subscribedLeaderbards)
                 lbf.notifyFilterChanged(mVariableSelections!!)
 
+            recordFilterPreferences(mGame!!.id)
+
+            mFiltersButton.setText(if (mVariableSelections!!.empty) R.string.button_filters else R.string.button_filters_used)
+
             mLeaderboardPager!!.requestFocus()
         }
+    }
+
+    private val currentVariables
+    get() = mCategoryTabStrip!!.pagerAdapter!!.getCategoryOfIndex(mLeaderboardPager!!.currentItem).variables!!
+
+    private fun recordFilterPreferences(gameId: String) {
+        val prefs = context!!.getSharedPreferences(SHARED_PREFS_GAME_FILTERS + gameId, MODE_PRIVATE).edit()
+
+        // platform and region are special
+        val vars = currentVariables
+                .map { it.id }
+                .union(setOf("platform", "region"))
+
+        for(cv in vars) {
+            val cvv = mVariableSelections!!.getSelections(cv)
+            if (cvv != null) {
+                prefs.putStringSet(cv, cvv)
+            }
+            else {
+                prefs.remove(cv)
+            }
+        }
+
+        prefs.apply()
+    }
+
+    private fun loadFilterPreferences(gameId: String): Variable.VariableSelections {
+        val prefs = context!!.getSharedPreferences(SHARED_PREFS_GAME_FILTERS + gameId, MODE_PRIVATE)
+
+        val vs = Variable.VariableSelections()
+
+        for (pref in prefs.all) {
+            vs.selectOnly(pref.key, prefs.getStringSet(pref.key, setOf())!!)
+        }
+
+        return vs
     }
 
     private fun openSubscriptionDialog() {
@@ -476,6 +523,8 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
         private const val SAVED_GAME = "game"
         private const val SAVED_PAGER = "pager"
         private const val SAVED_FILTERS = "variable_selections"
+
+        private const val SHARED_PREFS_GAME_FILTERS = "game_filters_"
     }
 
     override fun onPageScrollStateChanged(state: Int) {}

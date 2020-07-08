@@ -50,6 +50,12 @@ data class Variable(
 
         private val selections: MutableMap<String, MutableSet<String>> = mutableMapOf()
 
+        val empty: Boolean
+        get() {
+            println("FILTER EMPTY? " + selections.keys)
+            return selections.isEmpty()
+        }
+
         init {
             if(run?.values != null) {
                 for((key, value) in run.values)
@@ -147,6 +153,10 @@ data class Variable(
         fun selectOnly(variableId: String, valueId: String) {
             selections.remove(variableId)
             select(variableId, valueId, true)
+        }
+
+        fun selectOnly(variableId: String, valueIds: Set<String>) {
+            selections[variableId] = valueIds.toMutableSet()
         }
 
         fun getSelections(variableId: String): Set<String>? {
