@@ -28,7 +28,7 @@ class FiltersDialog(
         private val mVariables: List<Variable>,
         private val mVariableSelections: Variable.VariableSelections
 ) : AlertDialog(ctx, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) android.R.style.Theme_DeviceDefault_Dialog_Alert
-    else THEME_DEVICE_DEFAULT_DARK), CompoundButton.OnCheckedChangeListener, View.OnClickListener {
+    else THEME_DEVICE_DEFAULT_DARK), CompoundButton.OnCheckedChangeListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -116,9 +116,19 @@ class FiltersDialog(
         okButtonLayoutParams.weight = 0f
         okButton.layoutParams = okButtonLayoutParams
 
-        okButton.setOnClickListener(this)
+        okButton.setOnClickListener { dismiss() }
 
         layout.addView(okButton)
+
+        val clearButton = Button(context)
+        clearButton.setText(R.string.button_clear)
+        val clearButtonLayoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        clearButtonLayoutParams.weight = 0f
+        clearButton.layoutParams = clearButtonLayoutParams
+
+        clearButton.setOnClickListener { clearSelections() }
+
+        layout.addView(clearButton)
 
         setContentView(layout)
     }
@@ -158,7 +168,8 @@ class FiltersDialog(
         mVariableSelections.select(spl[0], spl[1], isChecked)
     }
 
-    override fun onClick(v: View) {
+    private fun clearSelections() {
+        mVariableSelections.clear()
         dismiss()
     }
 }

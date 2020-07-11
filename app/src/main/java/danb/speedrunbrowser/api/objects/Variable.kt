@@ -163,6 +163,8 @@ data class Variable(
             return selections[variableId]
         }
 
+        fun clear() = selections.clear()
+
         companion object {
             val FILTER_KEY_PLATFORM = "platform"
             val FILTER_KEY_REGION = "region"
