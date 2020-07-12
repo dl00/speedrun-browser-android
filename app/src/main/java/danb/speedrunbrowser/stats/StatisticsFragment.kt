@@ -9,13 +9,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
-import android.widget.ScrollView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import danb.speedrunbrowser.R
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
-import danb.speedrunbrowser.api.objects.Metric
 import danb.speedrunbrowser.views.ProgressSpinnerView
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -46,7 +43,7 @@ abstract class StatisticsFragment : Fragment() {
 
     override fun onStop() {
         super.onStop()
-        clearCharts()
+        //clearCharts()
     }
 
     fun setDataSourceAPIResponse(d: Observable<SpeedrunMiddlewareAPI.APIChartResponse>) {
@@ -144,6 +141,17 @@ abstract class StatisticsFragment : Fragment() {
 
         val v = ChartView(context!!, options)
         v.layoutParams = lp
+
+        layout.addView(v)
+    }
+
+    fun addTabbedSwitcher(options: TabbedSwitcherOptions) {
+        val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+
+        val v = TabbedSwitcherView(context!!, childFragmentManager, options)
+        v.layoutParams = lp
+
+        println("ADD TABBED SWITCHER")
 
         layout.addView(v)
     }

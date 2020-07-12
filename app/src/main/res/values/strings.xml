@@ -217,4 +217,8 @@
     <string name="label_welcome_help">Choose an option from the left to get started!</string>
     <string name="label_about_source_code">View Source Code</string>
     <string name="button_clear">Clear</string>
+    <string name="chart_title_player_game">Player Game Records</string>
+    <string name="chart_desc_player_game">Detailed Information about a player for each game.</string>
+    <string name="chart_title_pbs">PBs</string>
+    <string name="chart_desc_pbs">Personal best times of this player charted over time</string>
 </resources>
