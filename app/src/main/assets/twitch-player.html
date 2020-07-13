@@ -37,7 +37,7 @@
 
     window.confirmInteract = function() {
         var iframe = document.getElementsByTagName("iframe")[0];
-        var elem = iframe.contentWindow.document.getElementById('mature-link')
+        var elem = iframe.contentWindow.document.getElementsByTagName('button')[0];
 
         if(elem) {
             console.log('accepting content warning')
