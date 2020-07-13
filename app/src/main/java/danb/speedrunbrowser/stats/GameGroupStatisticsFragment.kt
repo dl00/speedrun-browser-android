@@ -12,55 +12,55 @@ class GameGroupStatisticsFragment : StatisticsFragment() {
 
         Analytics.logItemView(context!!, "game_group_chart", gameGroupId)
 
-        addChart(ChartOptions(
+        statsView.addChart(ChartOptions(
                 name = getString(R.string.chart_title_count_over_time),
                 description = getString(R.string.chart_title_count_over_time),
                 identifier = "count_over_time",
-                setLabels = { getString(R.string.chart_legend_volume) },
+                setLabels = { _,_ -> getString(R.string.chart_legend_volume) },
                 xValueFormat = ::formatMonthYear
         ))
 
-        addMetrics(listOf(
+        statsView.addMetrics(listOf(
             ChartOptions(
                 name = getString(R.string.metric_title_total_runs),
                 description = getString(R.string.metric_desc_total_runs),
                 identifier = "total_run_count",
                 xValueFormat = ::formatBigNumber,
-                setLabels = { "" }
+                setLabels = { _,_ -> "" }
             ),
             ChartOptions(
                     name = getString(R.string.metric_title_total_players),
                     description = getString(R.string.metric_desc_total_players),
                     identifier = "total_players",
                     xValueFormat = ::formatBigNumber,
-                    setLabels = { "" }
+                    setLabels = { _,_ -> "" }
             )
         ))
 
         if (gameGroupId == "site") {
-            addMetrics(listOf(
+            statsView.addMetrics(listOf(
                     ChartOptions(
                             name = getString(R.string.metric_title_total_games),
                             description = getString(R.string.metric_desc_total_games),
                             identifier = "total_games",
                             xValueFormat = ::formatBigNumber,
-                            setLabels = { "" }
+                            setLabels = { _,_ -> "" }
                     ),
                     ChartOptions(
                             name = getString(R.string.metric_title_total_leaderboards),
                             description = getString(R.string.metric_desc_total_leaderboards),
                             identifier = "total_leaderboards",
                             xValueFormat = ::formatBigNumber,
-                            setLabels = { "" }
+                            setLabels = { _,_ -> "" }
                     )
             ))
         }
 
-        addChart(ChartOptions(
+        statsView.addChart(ChartOptions(
                 name = getString(R.string.chart_title_volume),
                 description = getString(R.string.chart_desc_volume),
                 identifier = "volume",
-                setLabels = { getString(R.string.chart_legend_volume) },
+                setLabels = { _,_ -> getString(R.string.chart_legend_volume) },
                 xValueFormat = ::formatMonthYear
         ))
 

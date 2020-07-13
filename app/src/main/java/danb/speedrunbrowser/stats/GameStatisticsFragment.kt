@@ -18,55 +18,55 @@ class GameStatisticsFragment : StatisticsFragment() {
                 activity!!.title = it.game!!.resolvedName
             }
 
-            addMetrics(listOf(
+            statsView.addMetrics(listOf(
                 ChartOptions(
                     name = getString(R.string.metric_title_total_runs),
                     description = getString(R.string.metric_desc_total_runs),
                     identifier = "total_run_count",
                     xValueFormat = ::formatBigNumber,
-                    setLabels = { "" }
+                    setLabels = { _,_ -> "" }
                 ),
                 ChartOptions(
                     name = getString(R.string.metric_title_total_players),
                     description = getString(R.string.metric_desc_total_players),
                     identifier = "total_players",
                     xValueFormat = ::formatBigNumber,
-                    setLabels = { "" }
+                    setLabels = { _,_ -> "" }
                 )
             ))
 
-            addMetrics(listOf(
+            statsView.addMetrics(listOf(
                 ChartOptions(
                     name = getString(R.string.metric_title_total_leaderboards),
                     description = getString(R.string.metric_desc_total_leaderboards),
                     identifier = "total_leaderboards",
                     xValueFormat = ::formatBigNumber,
-                    setLabels = { "" }
+                    setLabels = { _,_ -> "" }
                 )
             ))
 
-            addChart(ChartOptions(
+            statsView.addChart(ChartOptions(
                     name = getString(R.string.chart_title_volume),
                     description = getString(R.string.chart_desc_volume),
                     identifier = "volume",
-                    setLabels = { getString(R.string.chart_legend_volume) },
+                    setLabels = { _,_ -> getString(R.string.chart_legend_volume) },
                     xValueFormat = ::formatMonthYear
             ))
 
-            addMetrics(listOf(
+            statsView.addMetrics(listOf(
                 ChartOptions(
                     name = getString(R.string.metric_title_total_runs_full_game),
                     description = getString(R.string.metric_desc_total_runs),
                     identifier = "full_game_run_count",
                     xValueFormat = ::formatBigNumber,
-                    setLabels = { "" }
+                    setLabels = { _,_ -> "" }
                 ),
                 ChartOptions(
                     name = getString(R.string.metric_title_total_runs_level),
                     description = getString(R.string.metric_desc_total_runs),
                     identifier = "level_run_count",
                     xValueFormat = ::formatBigNumber,
-                    setLabels = { "" }
+                    setLabels = { _,_ -> "" }
                 )
             ))
 

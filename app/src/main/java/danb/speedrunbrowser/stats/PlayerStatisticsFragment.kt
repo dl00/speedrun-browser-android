@@ -11,10 +11,7 @@ import danb.speedrunbrowser.R
 import danb.speedrunbrowser.RunDetailFragment
 import danb.speedrunbrowser.SpeedrunBrowserActivity
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
-import danb.speedrunbrowser.api.objects.Game
-import danb.speedrunbrowser.api.objects.LeaderboardRunEntry
-import danb.speedrunbrowser.api.objects.Run
-import danb.speedrunbrowser.api.objects.RunTimes
+import danb.speedrunbrowser.api.objects.*
 import danb.speedrunbrowser.holders.RunViewHolder
 import danb.speedrunbrowser.utils.Analytics
 import danb.speedrunbrowser.utils.ViewHolderSource
@@ -24,7 +21,7 @@ import java.lang.StringBuilder
 class PlayerStatisticsFragment : StatisticsFragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val v = super.onCreateView(inflater, container, savedInstanceState)
+        val v = super.onCreateView(inflater, container, savedInstanceState)!!
 
         val playerId: String? = arguments!!.getString(ARG_PLAYER_ID)
 
@@ -32,29 +29,29 @@ class PlayerStatisticsFragment : StatisticsFragment() {
 
             Analytics.logItemView(context!!, "player_chart", playerId)
 
-            addChart(ChartOptions(
+            statsView.addChart(ChartOptions(
                     name = getString(R.string.chart_title_favorite_games),
                     description = getString(R.string.chart_desc_favorite_games),
                     identifier = "favorite_games",
                     pieLabels = {
                         (it as Game).resolvedName
                     },
-                    setLabels = {""}
+                    setLabels = { _,_ -> "" }
             ))
 
-            addMetric(ChartOptions(
+            statsView.addMetric(ChartOptions(
                     name = getString(R.string.metric_title_total_runs),
                     description = getString(R.string.metric_desc_total_runs),
                     identifier = "total_run_count",
                     xValueFormat = ::formatBigNumber,
-                    setLabels = { "" }
+                    setLabels = { _,_ -> "" }
             ))
 
-            addChart(ChartOptions(
+            statsView.addChart(ChartOptions(
                     name = getString(R.string.chart_title_volume),
                     description = getString(R.string.chart_desc_volume),
                     identifier = "volume",
-                    setLabels = { getString(R.string.chart_legend_volume) },
+                    setLabels = { _,_ -> getString(R.string.chart_legend_volume) },
                     xValueFormat = ::formatMonthYear
             ))
 
@@ -66,28 +63,28 @@ class PlayerStatisticsFragment : StatisticsFragment() {
                     setLabels = { "" }
             ))*/
 
-            addMetric(ChartOptions(
+            statsView.addMetric(ChartOptions(
                     name = getString(R.string.metric_title_total_run_time),
                     description = getString(R.string.metric_desc_total_run_time),
                     identifier = "total_run_time",
                     xValueFormat = ::formatTime,
-                    setLabels = { "" }
+                    setLabels = { _,_ -> "" }
             ))
 
-            addMetrics(listOf(
+            statsView.addMetrics(listOf(
                     ChartOptions(
                             name = getString(R.string.metric_title_total_runs_full_game),
                             description = getString(R.string.metric_desc_total_runs),
                             identifier = "full_game_run_count",
                             xValueFormat = ::formatBigNumber,
-                            setLabels = { "" }
+                            setLabels = { _,_ -> "" }
                     ),
                     ChartOptions(
                             name = getString(R.string.metric_title_total_runs_level),
                             description = getString(R.string.metric_desc_total_runs),
                             identifier = "level_run_count",
                             xValueFormat = ::formatBigNumber,
-                            setLabels = { "" }
+                            setLabels = { _,_ -> "" }
                     )
                 )
             )
@@ -98,9 +95,9 @@ class PlayerStatisticsFragment : StatisticsFragment() {
                 activity!!.title = it.player?.resolvedName
 
                 // get the list of games that this player has played
-                val games = it.charts["favorite_games"]?.data?.get("main")?.map { itt -> itt.obj as Game }
+                val games = it.charts["favorite_games"]?.data?.get("main")?.map { itt -> (itt as ChartData).obj as Game }
 
-                addTabbedSwitcher(TabbedSwitcherOptions(
+                statsView.addTabbedSwitcher(TabbedSwitcherOptions(
                         name = getString(R.string.chart_title_player_game),
                         description = getString(R.string.chart_desc_player_game),
                         identifier = "player_game",
@@ -109,26 +106,12 @@ class PlayerStatisticsFragment : StatisticsFragment() {
                                         name = getString(R.string.chart_title_pbs),
                                         description = getString(R.string.chart_desc_pbs),
                                         identifier = "pbs",
-                                        setLabels = { k ->
-                                            val spl = k.split('_')
+                                        setLabels = { chartContext,k ->
 
-                                            val builder = StringBuilder()
+                                            // match category id
+                                            val c = chartContext!!.game!!.categories!!.find { v -> v.id == k }
 
-                                            for (i in 0 until spl.size - 1 step 2) {
-                                                val variableId = spl[i]
-                                                val valueId = spl[i + 1]
-
-                                                val variable = chartData!!.category?.variables?.find { v -> v.id == variableId }
-
-                                                if (variable == null)
-                                                    continue
-                                                else {
-                                                    val valueLabel = variable.values[valueId]?.label ?: continue
-                                                    builder.append(valueLabel).append(' ')
-                                                }
-                                            }
-
-                                            builder.toString()
+                                            c?.name ?: "Unknown"
                                         },
                                         xValueFormat = ::formatMonthYear,
                                         yValueFormat = { t -> RunTimes.format(t) ?: t.toString() },

@@ -93,14 +93,17 @@ object SpeedrunMiddlewareAPI {
         var error: Error? = null
     )
 
+    open class APIChartDataContext(
+            val category: Category? = null,
+            val level: Level? = null,
+            val game: Game? = null,
+            val player: User? = null
+    )
+
     data class APIChartData(
-        val category: Category?,
-        val level: Level?,
-        val game: Game?,
-        val player: User?,
         val metrics: Map<String, Metric>,
         val charts: Map<String, Chart>
-    )
+    ) : APIChartDataContext()
 
     data class APIChartResponse(
         var data: APIChartData,

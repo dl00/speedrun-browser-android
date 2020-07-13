@@ -1,6 +1,5 @@
 package danb.speedrunbrowser.stats
 
-import android.app.ActionBar
 import android.content.Context
 import android.os.Bundle
 import android.view.Gravity
@@ -18,6 +17,68 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+
+class StatisticsView(ctx: Context) : LinearLayout(ctx) {
+
+
+    fun addMetrics(options: Iterable<ChartOptions>) {
+        val ll = LinearLayout(context!!)
+        ll.orientation = LinearLayout.HORIZONTAL
+        ll.gravity = Gravity.CENTER
+
+        for(opts in options) {
+
+            val mv = MetricView(context!!, opts)
+            mv.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f)
+
+            ll.addView(mv)
+        }
+
+        addView(ll)
+    }
+
+    fun addMetric(options: ChartOptions): Unit = addMetrics(listOf(options))
+
+    fun addChart(options: ChartOptions) {
+        val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+
+        val v = ChartView(context!!, options)
+        v.layoutParams = lp
+
+        addView(v)
+    }
+
+    fun addTabbedSwitcher(options: TabbedSwitcherOptions) {
+        val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+
+        val v = TabbedSwitcherView(context!!, options)
+        v.layoutParams = lp
+
+        addView(v)
+    }
+
+    fun applyData(chartData: SpeedrunMiddlewareAPI.APIChartData) {
+        children.forEach { view ->
+            when(view) {
+                is ChartView -> {
+                    val d = chartData.charts[view.options.identifier]
+                    if (d != null)
+                        view.setData(chartData, d)
+                }
+                is LinearLayout -> {
+                    view.children.forEach {innerView: View ->
+                        when(innerView) {
+                            is MetricView -> innerView.metricData = chartData.metrics[innerView.options.identifier]
+                        }
+                    }
+                }
+                else -> {}
+            }
+        }
+    }
+
+    fun clearCharts() = removeAllViews()
+}
 
 abstract class StatisticsFragment : Fragment() {
 
@@ -43,7 +104,7 @@ abstract class StatisticsFragment : Fragment() {
 
     override fun onStop() {
         super.onStop()
-        //clearCharts()
+        statsView.clearCharts()
     }
 
     fun setDataSourceAPIResponse(d: Observable<SpeedrunMiddlewareAPI.APIChartResponse>) {
@@ -54,9 +115,10 @@ abstract class StatisticsFragment : Fragment() {
     }
 
     private lateinit var rootLayout: FrameLayout
-    private lateinit var layout: LinearLayout
 
     private lateinit var spinner: ProgressSpinnerView
+
+    protected lateinit var statsView: StatisticsView
 
     var dispose: Disposable? = null
 
@@ -74,95 +136,35 @@ abstract class StatisticsFragment : Fragment() {
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT)
         rootLayout.addView(spinner, 0)
 
-        layout = LinearLayout(context)
-        layout.orientation = LinearLayout.VERTICAL
-        layout.visibility = View.GONE
+        statsView = StatisticsView(context)
+        statsView.orientation = LinearLayout.VERTICAL
+        statsView.visibility = View.GONE
 
-        layout.layoutParams = LinearLayout.LayoutParams(
+        statsView.layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         )
 
-        rootLayout.addView(layout)
+        rootLayout.addView(statsView)
     }
 
     private fun setDataSource(d: Observable<SpeedrunMiddlewareAPI.APIChartData>) {
         spinner.visibility = View.VISIBLE
-        layout.visibility = View.GONE
+        statsView.visibility = View.GONE
 
         dispose = d
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe {
-
                     animateChartsIn()
-
-                    chartData = it
-
-                    layout.children.forEach { view ->
-                        when(view) {
-                            is ChartView -> view.chartData = it.charts[view.options.identifier]
-                            is LinearLayout -> {
-                                view.children.forEach {innerView: View ->
-                                    when(innerView) {
-                                        is MetricView -> innerView.metricData = it.metrics[innerView.options.identifier]
-                                    }
-                                }
-                            }
-                            else -> {}
-                        }
-                    }
+                    statsView.applyData(it)
 
                     if(onDataReadyListener != null)
                         onDataReadyListener!!(it)
                 }
     }
 
-    fun addMetrics(options: Iterable<ChartOptions>) {
-        val ll = LinearLayout(context!!)
-        ll.orientation = LinearLayout.HORIZONTAL
-        ll.gravity = Gravity.CENTER
-
-        for(opts in options) {
-
-            val mv = MetricView(context!!, opts)
-            mv.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f)
-
-            ll.addView(mv)
-        }
-
-        layout.addView(ll)
-    }
-
-    fun addMetric(options: ChartOptions): Unit = addMetrics(listOf(options))
-
-    fun addChart(options: ChartOptions) {
-        val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-
-        val v = ChartView(context!!, options)
-        v.layoutParams = lp
-
-        layout.addView(v)
-    }
-
-    fun addTabbedSwitcher(options: TabbedSwitcherOptions) {
-        val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-
-        val v = TabbedSwitcherView(context!!, childFragmentManager, options)
-        v.layoutParams = lp
-
-        println("ADD TABBED SWITCHER")
-
-        layout.addView(v)
-    }
-
-    private fun clearCharts() {
-        layout.removeAllViews()
-    }
-
     private fun animateChartsIn() {
-
-
         val animTime = resources.getInteger(
                 android.R.integer.config_longAnimTime)
 
@@ -171,11 +173,11 @@ abstract class StatisticsFragment : Fragment() {
         spinner.visibility = View.GONE
 
         rootLayout.alpha = 0.0f
-        layout.visibility = View.VISIBLE
+        statsView.visibility = View.VISIBLE
 
         rootLayout.translationY = translationDistance.toFloat()
-        rootLayout.scaleY = 0.975f
-        rootLayout.scaleX = 0.975f
+        //rootLayout.scaleY = 0.975f
+        //rootLayout.scaleX = 0.975f
 
         rootLayout.animate()
                 .alpha(1.0f)

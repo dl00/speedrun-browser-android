@@ -23,6 +23,7 @@ import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.github.mikephil.charting.utils.ColorTemplate
 import danb.speedrunbrowser.R
+import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.Chart
 import danb.speedrunbrowser.api.objects.ChartData
 import danb.speedrunbrowser.utils.ViewPagerAdapter
@@ -31,19 +32,19 @@ import danb.speedrunbrowser.views.SimpleTabStrip
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.content_chart_view.view.*
 
-fun Chart.generateMpLineSetData(context: Context, labels: (v: String) -> String): LineData {
+fun Chart.generateMpLineSetData(context: Context, chartContext: SpeedrunMiddlewareAPI.APIChartDataContext, labels: (chartContext: SpeedrunMiddlewareAPI.APIChartDataContext, v: String) -> String): LineData {
     val mpData = LineData()
 
     val ds = datasets.map {
         it to data.getValue(it).map { vv ->
-            Entry(vv.x, vv.y, vv.obj)
+            Entry((vv as ChartData).x, vv.y, vv.obj)
         }
     }
 
     var curColor = 0
     ds.forEach {
 
-        val dataSet = LineDataSet(it.second, labels(it.first))
+        val dataSet = LineDataSet(it.second, labels(chartContext, it.first))
 
         val color = ColorTemplate.VORDIPLOM_COLORS[curColor++ % ColorTemplate.VORDIPLOM_COLORS.size]
 
@@ -61,19 +62,19 @@ fun Chart.generateMpLineSetData(context: Context, labels: (v: String) -> String)
     return mpData
 }
 
-fun Chart.generateMpBarSetData(context: Context, labels: (v: String) -> String): BarData {
+fun Chart.generateMpBarSetData(context: Context, chartContext: SpeedrunMiddlewareAPI.APIChartDataContext, labels: (chartContext: SpeedrunMiddlewareAPI.APIChartDataContext, v: String) -> String): BarData {
     val mpData = BarData()
 
     val dataSets = datasets.map {
         var i = 0
         it to data.getValue(it).map { vv ->
-            BarEntry(i++.toFloat(), vv.y, vv.x)
+            BarEntry(i++.toFloat(), (vv as ChartData).y, vv.x)
         }
     }
 
 
     dataSets.forEach {
-        val dataSet = BarDataSet(it.second, labels(it.first))
+        val dataSet = BarDataSet(it.second, labels(chartContext, it.first))
 
         dataSet.color = ContextCompat.getColor(context, R.color.colorSelected)
 
@@ -89,13 +90,13 @@ fun Chart.generateMpPieSetData(context: Context, labels: ((v: Any) -> String)?):
     val mpData = PieDataSet(data.getValue("main").map {
         if(labels != null)
             PieEntry(
-                    it.y,
+                    (it as ChartData).y,
                     labels(it.obj!!),
                     it.obj
             )
         else
             PieEntry(
-                    it.y,
+                    (it as ChartData).y,
                     it.obj
             )
     }, "")
@@ -117,11 +118,8 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
 
     private var disposables: CompositeDisposable = CompositeDisposable()
 
-    var chartData: Chart? = null
-    set(value) {
-        field = value
-        applyData()
-    }
+    private var chartData: Chart? = null
+    private var chartContext: SpeedrunMiddlewareAPI.APIChartDataContext? = null
 
     private val dataFilter = mutableSetOf<String>()
 
@@ -244,7 +242,8 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
 
             // setup events for highlight
             listAdapter.onClickListener = {
-                val hl = Highlight(chartData!!.data.getValue(s)[it].x, chartData!!.data.getValue(s)[it].y, index)
+                val p = chartData!!.data.getValue(s)[it] as ChartData
+                val hl = Highlight(p.x, p.y, index)
                 hl.dataIndex = 0
 
                 graph?.highlightValue(hl, false)
@@ -287,7 +286,7 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
 
             ll.addView(lv)
 
-            adapter.views.add(options.setLabels(s) to ll)
+            adapter.views.add(options.setLabels(chartContext!!, s) to ll)
         }
 
         listPager.adapter = adapter
@@ -299,6 +298,12 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
             listTabs.visibility = View.VISIBLE
             listTabs.setup(listPager)
         }
+    }
+
+    fun setData(chartContext: SpeedrunMiddlewareAPI.APIChartDataContext, chartData: Chart) {
+        this.chartContext = chartContext
+        this.chartData = chartData
+        applyData()
     }
 
     private fun applyData() {
@@ -317,9 +322,9 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
                 val cd = CombinedData()
 
                 if(data.chart_type == "line")
-                    cd.setData(data.generateMpLineSetData(context, options.setLabels))
+                    cd.setData(data.generateMpLineSetData(context, chartContext!!, options.setLabels))
                 else if(data.chart_type == "bar")
-                    cd.setData(data.generateMpBarSetData(context, options.setLabels))
+                    cd.setData(data.generateMpBarSetData(context, chartContext!!, options.setLabels))
 
                 graph!!.data = cd
 
@@ -377,7 +382,7 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
 
             val dataIndex = chartData!!.data
                 .getValue(chartData!!.datasets[h.dataSetIndex]).indexOfFirst {
-                    it.obj == e!!.data
+                    (it as ChartData).obj == e!!.data
                 }
 
             // this so complicated because h.dataIndex does not include useful data for some reason
@@ -389,7 +394,7 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
         disposables.dispose()
     }
 
-    inner class ChartDataAdapter(private val chartData: List<ChartData>, private val recyclerView: RecyclerView) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    inner class ChartDataAdapter(private val chartData: List<Any>, private val recyclerView: RecyclerView) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
         var selectedIndex: Int? = null
         set(value) {
@@ -423,8 +428,8 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
 
             val d = chartData[reversePosition(position)]
 
-            if(d.obj != null)
-                options.chartListViewHolderSource!!.applyToViewHolder(context, disposables, holder, d.obj)
+            if((d as ChartData).obj != null)
+                options.chartListViewHolderSource!!.applyToViewHolder(context, disposables, holder, d.obj!!)
 
             if(reversePosition(position) == selectedIndex)
                 holder.itemView.background = ColorDrawable(resources.getColor(R.color.colorAccent))
@@ -434,8 +439,8 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
             holder.itemView.setOnClickListener {
 
                 if(selectedIndex == reversePosition(position) &&
-                        options.chartListOnSelected != null && chartData[position].obj != null)
-                    options.chartListOnSelected!!(chartData[selectedIndex!!].obj!!)
+                        options.chartListOnSelected != null && (chartData[position] as ChartData).obj != null)
+                    options.chartListOnSelected!!((chartData[selectedIndex!!] as ChartData).obj!!)
 
                 selectedIndex = reversePosition(position)
 

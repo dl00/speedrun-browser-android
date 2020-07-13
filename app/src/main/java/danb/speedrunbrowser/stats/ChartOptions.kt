@@ -16,7 +16,7 @@ data class ChartOptions(
         val name: String,
         val description: String,
 
-        val setLabels: (v: String) -> String,
+        val setLabels: (ctx: SpeedrunMiddlewareAPI.APIChartDataContext, v: String) -> String,
 
         val pieLabels: ((v: Any) -> String)? = null,
 

@@ -42,11 +42,11 @@ class LeaderboardStatisticsFragment : StatisticsFragment() {
                 addRulesText(it.category)
             }
 
-            addChart(ChartOptions(
+            statsView.addChart(ChartOptions(
                     name = getString(R.string.chart_title_wrs),
                     description = getString(R.string.chart_desc_wrs),
                     identifier = "wrs",
-                    setLabels = {
+                    setLabels = { chartContext,it ->
                         val spl = it.split('_')
 
                         val builder = StringBuilder()
@@ -55,7 +55,7 @@ class LeaderboardStatisticsFragment : StatisticsFragment() {
                             val variableId = spl[i]
                             val valueId = spl[i + 1]
 
-                            val variable = chartData!!.category?.variables?.find { v -> v.id == variableId }
+                            val variable = chartContext.category?.variables?.find { v -> v.id == variableId }
 
                             if (variable == null)
                                 continue
@@ -85,19 +85,19 @@ class LeaderboardStatisticsFragment : StatisticsFragment() {
                     chartListOnSelected = { viewRun(it as Run) }
             ))
 
-            addChart(ChartOptions(
+            statsView.addChart(ChartOptions(
                     name = getString(R.string.chart_title_volume),
                     description = getString(R.string.chart_desc_volume),
                     identifier = "volume",
-                    setLabels = { getString(R.string.chart_legend_volume) },
+                    setLabels = { _,_ -> getString(R.string.chart_legend_volume) },
                     xValueFormat = ::formatMonthYear
             ))
 
-            addChart(ChartOptions(
+            statsView.addChart(ChartOptions(
                     name = getString(R.string.chart_title_distribution),
                     description = getString(R.string.chart_desc_distribution),
                     identifier = "distribution",
-                    setLabels = {
+                    setLabels = { chartContext, it ->
                         val spl = it.split('_')
 
                         val builder = StringBuilder()
@@ -106,7 +106,7 @@ class LeaderboardStatisticsFragment : StatisticsFragment() {
                             val variableId = spl[i]
                             val valueId = spl[i + 1]
 
-                            val variable = chartData!!.category?.variables?.find { v -> v.id == variableId }
+                            val variable = chartContext.category?.variables?.find { v -> v.id == variableId }
 
                             if (variable == null)
                                 continue
