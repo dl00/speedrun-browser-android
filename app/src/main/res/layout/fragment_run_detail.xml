@@ -50,6 +50,8 @@
                 android:backgroundTint="@color/colorAccent"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/fab_margin"
+                android:layout_marginTop="@dimen/fab_margin"
                 android:text="@string/button_view_on_official" />
 
             <danb.speedrunbrowser.views.ProgressSpinnerView
@@ -251,7 +253,24 @@
                         android:textAlignment="center"
                         android:id="@+id/txtRunTime" />
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content">* &#183;</TextView>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAlignment="center"
+                        android:id="@+id/txtRunDate" />
+
                 </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="center"
+                    android:layout_gravity="center"
+                    android:id="@+id/txtRunSubmitted" />
 
             </LinearLayout>
 
@@ -294,14 +313,55 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
-                <TextView
+                <!--<TextView
                     android:id="@+id/emptySplits"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textAlignment="center"
-                    android:text="@string/empty_no_splits" />
+                    android:text="@string/empty_no_splits" /> -->
 
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/layoutApproveOrReject"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="100">
+
+            <Button
+                android:id="@+id/buttonApprove"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="40"
+                android:background="@color/colorGood"
+                android:text="@string/button_approve" />
+
+            <Button
+                android:id="@+id/buttonSkip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="20"
+                android:text="@string/button_skip" />
+
+            <Button
+                android:id="@+id/buttonReject"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="40"
+                android:background="@color/colorBad"
+                android:text="@string/button_reject" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
 </LinearLayout>

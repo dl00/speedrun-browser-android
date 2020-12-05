@@ -15,4 +15,7 @@
     <color name="colorBackgroundError">#331111</color>
 
     <color name="colorMenuIconTint">#ffffff</color>
+
+    <color name="colorBad">#ff0000</color>
+    <color name="colorGood">#00ff00</color>
 </resources>

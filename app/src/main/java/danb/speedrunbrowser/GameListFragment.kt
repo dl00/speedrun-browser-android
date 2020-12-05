@@ -4,16 +4,19 @@ package danb.speedrunbrowser
 
 import android.app.ActivityOptions
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.*
 import android.widget.FrameLayout
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
+import androidx.preference.PreferenceManager
 import androidx.viewpager.widget.ViewPager
 import com.google.android.gms.security.ProviderInstaller
 import com.google.firebase.crash.FirebaseCrash
@@ -27,11 +30,14 @@ import danb.speedrunbrowser.utils.Util
 import danb.speedrunbrowser.views.SimpleTabStrip
 import io.reactivex.Observable
 import io.reactivex.ObservableSource
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.Function
 import io.reactivex.schedulers.Schedulers
+import kotlinx.android.synthetic.main.menu_moderation.*
 import java.net.URL
 import java.util.*
+import kotlin.collections.ArrayList
 
 /**
  * An activity representing a list of Games. This activity
@@ -44,6 +50,10 @@ import java.util.*
 class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListener, SpeedrunBrowserActivity.MediaControlListener {
 
     private var mDB: AppDatabase? = null
+
+    private var mPrefs: SharedPreferences? = null
+
+    private var mMenu: Menu? = null
 
     private var mGameGroup: GameGroup? = null
 
@@ -59,6 +69,10 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
 
     private var mDetailFragment: GameDetailFragment? = null
 
+    private var mModeratorRunSequence: List<String> = listOf()
+
+    private lateinit var api: SpeedrunMiddlewareAPI.Endpoints
+
     // The detail container view will be present only in the
     // large-screen layouts (res/values-w900dp).
     // If this view is present, then the
@@ -70,7 +84,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
         super.onCreate(savedInstanceState)
 
         if(arguments?.containsKey(ARG_GAME_GROUP) == true)
-            mGameGroup = arguments!!.getSerializable(ARG_GAME_GROUP) as GameGroup
+            mGameGroup = requireArguments().getSerializable(ARG_GAME_GROUP) as GameGroup
 
         mDisposables = CompositeDisposable()
     }
@@ -85,17 +99,19 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
 
         mMainView = inflater.inflate(R.layout.fragment_game_list, container, false)
 
-        mDB = AppDatabase.make(context!!)
+        api = SpeedrunMiddlewareAPI.make(requireContext())
+        mDB = AppDatabase.make(requireContext())
+        mPrefs = PreferenceManager.getDefaultSharedPreferences(requireActivity())
 
         @Suppress("DEPRECATION")
         FirebaseCrash.setCrashCollectionEnabled(!BuildConfig.DEBUG)
 
-        Util.showNewFeaturesDialog(context!!)
+        Util.showNewFeaturesDialog(requireContext())
 
         // might need to update certificates/connection modes on older android versions
         // TODO: this is the synchronous call, may block user interation when installing provider. Consider using async
         try {
-            ProviderInstaller.installIfNeeded(context!!.applicationContext)
+            ProviderInstaller.installIfNeeded(requireContext().applicationContext)
         } catch (e: Exception) {
             Log.w(TAG, "Could not install latest certificates using Google Play Services")
         }
@@ -120,7 +136,12 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
     override fun onResume() {
         super.onResume()
 
-        activity!!.title = if (mGameGroup != null)
+        val userId = mPrefs!!.getString(PreferenceFragment.PREF_SRC_USER_ID, null)
+        if(userId != "" && userId != null) {
+            initModeration(userId)
+        }
+
+        requireActivity().title = if (mGameGroup != null)
             "${mGameGroup!!.type.capitalize()}: ${mGameGroup!!.name}"
         else
             getString(R.string.app_name)
@@ -140,11 +161,25 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
+
         inflater.inflate(R.menu.game_group, menu)
+
+
+        val modItem = menu.findItem(R.id.menu_moderation)
+
+        modItem.isVisible = mPrefs!!.getString(PreferenceFragment.PREF_SRC_USER_ID, "") != ""
+
+        // for some reason have to set click listener for the action group
+        modItem.actionView.setOnClickListener { onOptionsItemSelected(modItem) }
+
+        mMenu = menu
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return if(item.itemId == R.id.menu_site_stats) {
+        return if(item.itemId == R.id.menu_moderation) {
+            viewModRuns()
+            true
+        } else if(item.itemId == R.id.menu_site_stats) {
             viewStats()
             true
         }
@@ -152,7 +187,32 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
             showAbout()
             true
         }
+        else if(item.itemId == R.id.menu_settings) {
+            showSettings()
+            true
+        }
         else super.onOptionsItemSelected(item)
+    }
+
+    private fun initModeration(userId: String) {
+        mDisposables!!.add(api.listModRuns(userId, "")
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+            // right now we only care about the IDs, so cut out all the other data
+
+            if (it.data != null && it.data.isNotEmpty()) {
+
+                Log.d(TAG, "got moderation data for this user: " + it.data.size);
+
+                mModeratorRunSequence = it.data.map { v -> v!!.run.id }
+
+                // set moderation badge
+                val badge = mMenu!!.findItem(R.id.menu_moderation).actionView.findViewById<TextView>(R.id.badge)
+
+                badge.text = if (mModeratorRunSequence.size > 20) "20+" else mModeratorRunSequence.size.toString()
+                badge.visibility = View.VISIBLE
+            }
+        })
     }
 
     private fun showGame(id: String) {
@@ -169,7 +229,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                     .replace(R.id.detail_container, mDetailFragment!!)
                     .commit()
         } else {
-            val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
+            val intent = Intent(requireContext(), SpeedrunBrowserActivity::class.java)
             intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, GameDetailFragment::class.java.canonicalName)
             intent.putExtra(GameDetailFragment.ARG_GAME_ID, id)
 
@@ -189,7 +249,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                     .replace(R.id.detail_container, newFrag)
                     .commit()
         } else {
-            val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
+            val intent = Intent(requireContext(), SpeedrunBrowserActivity::class.java)
             intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, PlayerDetailFragment::class.java.canonicalName)
             intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, id)
 
@@ -198,7 +258,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
     }
 
     private fun showRun(id: String) {
-        val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
+        val intent = Intent(requireContext(), SpeedrunBrowserActivity::class.java)
         intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, RunDetailFragment::class.java.canonicalName)
         intent.putExtra(RunDetailFragment.ARG_RUN_ID, id)
 
@@ -211,12 +271,19 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
         try {
             startActivity(intent)
         } catch (e: java.lang.Exception) {
-            Util.showErrorToast(context!!, getString(R.string.error_twitch_app))
+            Util.showErrorToast(requireContext(), getString(R.string.error_twitch_app))
         }
     }
 
     private fun showAbout() {
         val intent = Intent(context, AboutActivity::class.java)
+        startActivity(intent)
+    }
+
+    private fun showSettings() {
+        val intent = Intent(context, SpeedrunBrowserActivity::class.java)
+        intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, PreferenceFragment::class.java.canonicalName)
+
         startActivity(intent)
     }
 
@@ -230,8 +297,20 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
         }
     }
 
+    private fun viewModRuns() {
+        if(mModeratorRunSequence.isEmpty()) {
+            Util.showMsgToast(requireContext(), getString(R.string.msg_no_mod_runs))
+            return
+        }
+
+        val intent = Intent(requireContext(), SpeedrunBrowserActivity::class.java)
+        intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, RunDetailFragment::class.java.canonicalName)
+        intent.putExtra(RunDetailFragment.ARG_MODERATION_LIST, ArrayList(mModeratorRunSequence))
+        startActivity(intent)
+    }
+
     private fun viewStats() {
-        val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
+        val intent = Intent(requireContext(), SpeedrunBrowserActivity::class.java)
         intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, GameGroupStatisticsFragment::class.java.canonicalName)
 
         if (mGameGroup != null) {
@@ -382,18 +461,18 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                     fragments[0].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
                         override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
                             return if (mGameGroup != null)
-                                SpeedrunMiddlewareAPI.make(context!!).listGamesByGenre(mGameGroup!!.id, "popular", offset).map(ItemListFragment.GenericMapper())
+                                api.listGamesByGenre(mGameGroup!!.id, "popular", offset).map(ItemListFragment.GenericMapper())
                             else
-                                SpeedrunMiddlewareAPI.make(context!!).listGames("popular", offset).map(ItemListFragment.GenericMapper())
+                                api.listGames("popular", offset).map(ItemListFragment.GenericMapper())
                         }
                     }, "popular", getString(R.string.label_list_mode_popular)))
 
                     fragments[0].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
                         override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
                             return if (mGameGroup != null)
-                                SpeedrunMiddlewareAPI.make(context!!).listGamesByGenre(mGameGroup!!.id, "trending", offset).map(ItemListFragment.GenericMapper())
+                                api.listGamesByGenre(mGameGroup!!.id, "trending", offset).map(ItemListFragment.GenericMapper())
                             else
-                                SpeedrunMiddlewareAPI.make(context!!).listGames("trending", offset).map(ItemListFragment.GenericMapper())
+                                api.listGames("trending", offset).map(ItemListFragment.GenericMapper())
                         }
                     }, "trending", getString(R.string.label_list_mode_trending)))
                 }
@@ -401,9 +480,9 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                     fragments[1].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
                         override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
                             return (if (mGameGroup != null)
-                                SpeedrunMiddlewareAPI.make(context!!).listLatestRunsByGenre(mGameGroup!!.id, offset, true)
+                                api.listLatestRunsByGenre(mGameGroup!!.id, offset, true)
                             else
-                                SpeedrunMiddlewareAPI.make(context!!).listLatestRuns(offset, true)
+                                api.listLatestRuns(offset, true)
                                     ).map(ItemListFragment.GenericMapper())
                         }
                     }, "verified", getString(R.string.label_list_mode_verified)))
@@ -411,10 +490,10 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                     fragments[1].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
                         override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
                             return (if (mGameGroup != null)
-                                SpeedrunMiddlewareAPI.make(context!!).listLatestRunsByGenre(
+                                api.listLatestRunsByGenre(
                                         mGameGroup!!.id, offset, false)
                             else
-                                SpeedrunMiddlewareAPI.make(context!!).listLatestRuns(offset, false)
+                                api.listLatestRuns(offset, false)
                                     ).map(ItemListFragment.GenericMapper())
                         }
                     }, "unverified", getString(R.string.label_list_mode_unverified)))
@@ -422,21 +501,21 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                 2 -> {
                     fragments[2].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
                         override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
-                            return SpeedrunMiddlewareAPI.make(context!!).listStreamsByGameGroup(if (mGameGroup != null) mGameGroup!!.id else "site", offset).map(ItemListFragment.GenericMapper())
+                            return api.listStreamsByGameGroup(if (mGameGroup != null) mGameGroup!!.id else "site", offset).map(ItemListFragment.GenericMapper())
                         }
                     }, "all", getString(R.string.label_list_mode_all)))
 
                     if (Locale.getDefault().language != Locale.ENGLISH.language) {
                         fragments[2].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
                             override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
-                                return SpeedrunMiddlewareAPI.make(context!!).listStreamsByGameGroup(if (mGameGroup != null) mGameGroup!!.id else "site", Locale.getDefault().language, offset).map(ItemListFragment.GenericMapper())
+                                return api.listStreamsByGameGroup(if (mGameGroup != null) mGameGroup!!.id else "site", Locale.getDefault().language, offset).map(ItemListFragment.GenericMapper())
                             }
                         }, "locale", Locale.getDefault().displayLanguage))
                     }
 
                     fragments[2].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
                         override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
-                            return SpeedrunMiddlewareAPI.make(context!!).listStreamsByGameGroup(if (mGameGroup != null) mGameGroup!!.id else "site", Locale.ENGLISH.language, offset).map(ItemListFragment.GenericMapper())
+                            return api.listStreamsByGameGroup(if (mGameGroup != null) mGameGroup!!.id else "site", Locale.ENGLISH.language, offset).map(ItemListFragment.GenericMapper())
                         }
                     }, "english", Locale.ENGLISH.displayLanguage))
                 }

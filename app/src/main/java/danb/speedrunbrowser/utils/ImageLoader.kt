@@ -77,12 +77,12 @@ class ImageLoader(ctx: Context) {
             if (!res.isSuccessful) {
                 // TODO properly throw this error
                 //throw new IOException();
-                Log.w(TAG, "failed to download image: " + res.body()!!.string())
+                Log.w(TAG, "failed to download image: " + res.body!!.string())
                 return null
             }
 
 
-            val data = res.body()!!.bytes()
+            val data = res.body!!.bytes()
 
             if (saveToCache) {
                 val fo = FileOutputStream(getCacheFile(url))

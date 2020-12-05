@@ -44,6 +44,7 @@ object SpeedrunMiddlewareAPI {
             gson.registerTypeAdapter(Run::class.java, Run.JsonConverter())
             gson.registerTypeAdapter(Variable::class.java, Variable.JsonConverter())
             gson.registerTypeAdapter(Chart::class.java, Chart.JsonConverter())
+            gson.registerTypeAdapter(Ranking::class.java, Ranking.JsonConverter())
             gson.registerTypeAdapter(GameMaker::class.java, GameMaker.JsonConverter())
 
             //gson.registerTypeAdapter(List::class.java, NestedListDeserializer())
@@ -102,6 +103,7 @@ object SpeedrunMiddlewareAPI {
 
     data class APIChartData(
         val metrics: Map<String, Metric>,
+        val rankings: Map<String, Ranking>,
         val charts: Map<String, Chart>
     ) : APIChartDataContext()
 
@@ -148,6 +150,9 @@ object SpeedrunMiddlewareAPI {
                 @Query("id") genreId: String,
                 @Query("start") offset: Int,
                 @Query("verified") verified: Boolean): Observable<APIResponse<LeaderboardRunEntry>>
+
+        @GET("runs/new/{mod}")
+        fun listModRuns(@Path("mod") userId: String, @Query("start") startAtId: String): Observable<APIResponse<LeaderboardRunEntry>>
 
         @GET("runs/{ids}")
         fun listRuns(@Path("ids") runIds: String): Observable<APIResponse<LeaderboardRunEntry>>

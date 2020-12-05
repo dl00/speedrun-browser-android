@@ -30,7 +30,7 @@ data class Chart(
         val item_type: String,
         val chart_type: String,
         val timestamp: Date?,
-        val data: Map<String, List<Any>>
+        val data: Map<String, List<ChartData>>
 ) {
 
     val datasets: List<String>
@@ -52,18 +52,14 @@ data class Chart(
             val chartType = obj.getNotNull("chart_type")!!.asString
             val itemType = obj.getNotNull("parent_type")?.asString ?: obj.getNotNull("item_type")!!.asString
 
-            val dataMap = mutableMapOf<String, List<Any>>()
+            val dataMap = mutableMapOf<String, List<ChartData>>()
 
             val chartData = obj.getNotNull("data")!!.asJsonObject
 
             for(entry in chartData.entrySet()) {
                 dataMap[entry.key] =
                 entry.value.asJsonArray.map {
-                    when (chartType) {
-                        "line", "bar", "pie" -> ChartData.deserialize(it, context, itemType)
-                        "list" -> RankData.deserialize(it, context, itemType)
-                        else -> throw InvalidParameterException("unknown chart type: $chartType")
-                    }
+                    ChartData.deserialize(it, context, itemType)
                 }
             }
 
@@ -100,31 +96,6 @@ data class ChartData(
                 x = context.deserialize(obj.get("x"), Float::class.java),
                 y = context.deserialize(obj.get("y"), Float::class.java),
                 obj = if(t == null || obj.get("obj")?.isJsonNull != false) null else context.deserialize(obj.getNotNull("obj"), t) as Any
-            )
-        }
-    }
-}
-
-data class RankData(
-    val score: Float,
-    val obj: Any?
-) {
-    companion object {
-        fun deserialize(json: JsonElement, context: JsonDeserializationContext, itemType: String): RankData {
-
-            val obj = json.asJsonObject
-
-            val t = when(itemType) {
-                "games" -> Game::class.java
-                "users" -> User::class.java
-                "runs" -> Run::class.java
-                "leaderboards" -> Run::class.java
-                else -> null
-            }
-
-            return RankData(
-                    score = context.deserialize(obj.get("score"), Float::class.java),
-                    obj = if(t == null || obj.get("obj")?.isJsonNull != false) null else context.deserialize(obj.getNotNull("obj"), t) as Any
             )
         }
     }

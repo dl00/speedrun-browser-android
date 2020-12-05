@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="HardcodedText"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:gravity="center"
+    android:layout_margin="@dimen/metric_margin"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/txtLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Some Ranking"
+        android:textAlignment="viewStart"
+        tools:ignore="HardcodedText"
+        android:textSize="@dimen/text_size_metric" />
+
+    <danb.speedrunbrowser.views.SimpleTabStrip
+        android:id="@+id/rankTabStrip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <androidx.viewpager.widget.ViewPager
+        android:id="@+id/rankPager"
+        android:layout_width="match_parent"
+        android:layout_height="300dp" />
+
+</LinearLayout>

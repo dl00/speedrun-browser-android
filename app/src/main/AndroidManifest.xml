@@ -73,6 +73,16 @@
                 android:value="danb.speedrunbrowser.SpeedrunBrowserActivity" />
         </activity>
 
+        <activity
+            android:name=".WebViewActivity"
+            android:label="@string/title_activity_webview"
+            android:parentActivityName=".SpeedrunBrowserActivity"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="danb.speedrunbrowser.SpeedrunBrowserActivity" />
+        </activity>
+
     </application>
 
 </manifest>

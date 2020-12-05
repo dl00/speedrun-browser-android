@@ -2,6 +2,7 @@ package danb.speedrunbrowser.stats
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -17,19 +18,20 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import java.lang.Exception
 
 class StatisticsView(ctx: Context) : LinearLayout(ctx) {
 
 
     fun addMetrics(options: Iterable<ChartOptions>) {
         val ll = LinearLayout(context!!)
-        ll.orientation = LinearLayout.HORIZONTAL
+        ll.orientation = HORIZONTAL
         ll.gravity = Gravity.CENTER
 
         for(opts in options) {
 
             val mv = MetricView(context!!, opts)
-            mv.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f)
+            mv.layoutParams = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1.0f)
 
             ll.addView(mv)
         }
@@ -40,7 +42,7 @@ class StatisticsView(ctx: Context) : LinearLayout(ctx) {
     fun addMetric(options: ChartOptions): Unit = addMetrics(listOf(options))
 
     fun addChart(options: ChartOptions) {
-        val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        val lp = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
 
         val v = ChartView(context!!, options)
         v.layoutParams = lp
@@ -48,8 +50,17 @@ class StatisticsView(ctx: Context) : LinearLayout(ctx) {
         addView(v)
     }
 
+    fun addRanking(options: RankOptions) {
+        val lp = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
+
+        val v = RankView(context!!, options)
+        v.layoutParams = lp
+
+        addView(v)
+    }
+
     fun addTabbedSwitcher(options: TabbedSwitcherOptions) {
-        val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        val lp = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
 
         val v = TabbedSwitcherView(context!!, options)
         v.layoutParams = lp
@@ -59,20 +70,29 @@ class StatisticsView(ctx: Context) : LinearLayout(ctx) {
 
     fun applyData(chartData: SpeedrunMiddlewareAPI.APIChartData) {
         children.forEach { view ->
-            when(view) {
-                is ChartView -> {
-                    val d = chartData.charts[view.options.identifier]
-                    if (d != null)
-                        view.setData(chartData, d)
-                }
-                is LinearLayout -> {
-                    view.children.forEach {innerView: View ->
-                        when(innerView) {
-                            is MetricView -> innerView.metricData = chartData.metrics[innerView.options.identifier]
+            try {
+                when(view) {
+                    is ChartView -> {
+                        val d = chartData.charts[view.options.identifier]
+                        if (d != null)
+                            view.setData(chartData, d)
+                    }
+                    is RankView -> {
+                        val d = chartData.rankings[view.options.identifier]
+                        if (d != null)
+                            view.setData(chartData, d)
+                    }
+                    is LinearLayout -> {
+                        view.children.forEach {innerView: View ->
+                            when(innerView) {
+                                is MetricView -> innerView.metricData = chartData.metrics[innerView.options.identifier]
+                            }
                         }
                     }
+                    else -> {}
                 }
-                else -> {}
+            } catch (e: Exception) {
+                Log.e(StatisticsFragment.TAG, "Failed rendering single stat:", e)
             }
         }
     }
@@ -192,5 +212,9 @@ abstract class StatisticsFragment : Fragment() {
         super.onDestroy()
 
         dispose?.dispose()
+    }
+
+    companion object {
+        val TAG: String = StatisticsFragment::class.java.simpleName
     }
 }

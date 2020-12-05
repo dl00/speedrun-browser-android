@@ -1,28 +1,29 @@
 package danb.speedrunbrowser
 
 import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.graphics.Point
-import android.media.tv.TvContract
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.text.InputType
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.fragment.app.Fragment
+import androidx.preference.PreferenceManager
 import androidx.tvprovider.media.tv.TvContractCompat
 import androidx.tvprovider.media.tv.WatchNextProgram
-
 import com.google.android.flexbox.FlexboxLayout
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
-import java.util.concurrent.TimeUnit
-
+import danb.speedrunbrowser.api.SpeedrunAPI
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.*
 import danb.speedrunbrowser.utils.*
@@ -36,8 +37,7 @@ import io.reactivex.functions.Action
 import io.reactivex.functions.Consumer
 import io.reactivex.internal.operators.flowable.FlowableInterval
 import io.reactivex.schedulers.Schedulers
-import java.lang.IllegalArgumentException
-import java.lang.UnsupportedOperationException
+import java.util.concurrent.TimeUnit
 
 class RunDetailFragment : Fragment(), MultiVideoView.Listener {
 
@@ -67,13 +67,16 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
     private lateinit var mRunPlaceImg: ImageView
     private lateinit var mRunPlaceTxt: TextView
     private lateinit var mRunTime: TextView
+    private lateinit var mRunDate: TextView
+    private lateinit var mRunSubmitted: TextView
 
     private lateinit var mRunComment: TextView
 
     private lateinit var mRunSplits: ListView
-    private lateinit var mRunEmptySplits: TextView
 
     private lateinit var mViewOnOfficial: Button
+
+    private lateinit var mModerationTools: LinearLayout
 
     /**
      * Video views
@@ -89,10 +92,19 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
     private var mLevel: Level? = null
     private var mRun: LeaderboardRunEntry? = null
 
+    private var mModerationList = listOf<String>()
+
+    private var mModerationIndex = 0
+
+    private lateinit var mSrcApiKey: String
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+
+        mSrcApiKey = PreferenceManager.getDefaultSharedPreferences(requireContext()).getString("srcApiKey", "")!!
+
         val v = inflater.inflate(R.layout.fragment_run_detail, container, false)
 
-        mDB = AppDatabase.make(context!!)
+        mDB = AppDatabase.make(requireContext())
 
         mRootView = v.findViewById(R.id.contentLayout)
         mSpinner = v.findViewById(R.id.spinner)
@@ -109,14 +121,20 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
         mRunPlaceImg = v.findViewById(R.id.imgRunPlace)
         mRunPlaceTxt = v.findViewById(R.id.txtRunPlace)
         mRunTime = v.findViewById(R.id.txtRunTime)
+        mRunDate = v.findViewById(R.id.txtRunDate)
+        mRunSubmitted = v.findViewById(R.id.txtRunSubmitted)
         mVideoFrame = v.findViewById(R.id.videoFrame)
         mViewOnOfficial = v.findViewById(R.id.buttonViewOnOfficial)
 
         mRunComment = v.findViewById(R.id.txtRunComment)
 
         mRunSplits = v.findViewById(R.id.runSplitsList)
-        mRunEmptySplits = v.findViewById(R.id.emptySplits)
 
+        mModerationTools = v.findViewById(R.id.layoutApproveOrReject)
+
+        mModerationTools.findViewById<Button>(R.id.buttonApprove).setOnClickListener { doApprove() }
+        mModerationTools.findViewById<Button>(R.id.buttonReject).setOnClickListener { doReject() }
+        mModerationTools.findViewById<Button>(R.id.buttonSkip).setOnClickListener { doNextModeration() }
 
         if(activity is VideoSupplier)
             mVideoView = (activity as VideoSupplier).requestVideoView()
@@ -139,30 +157,43 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
             return null
         }
 
-        val args = arguments!!
+        val args = requireArguments()
 
-        if (args.getSerializable(ARG_RUN) != null) {
-            mRun = args.getSerializable(ARG_RUN) as LeaderboardRunEntry
+        mModerationList = args.getStringArrayList(ARG_MODERATION_LIST) ?: listOf()
 
-            mGame = args.getSerializable(ARG_GAME) as Game
-            mCategory = args.getSerializable(ARG_CATEGORY) as Category
-            mLevel = args.getSerializable(ARG_LEVEL) as Level
+        when {
+            mModerationList.isNotEmpty() -> {
+                doNextModeration(false)
+                mModerationTools.visibility = View.VISIBLE
+            }
+            args.getSerializable(ARG_RUN) != null -> {
+                mRun = args.getSerializable(ARG_RUN) as LeaderboardRunEntry
 
-            onDataReady()
-        } else if (args.getString(ARG_RUN_ID) != null) {
-            loadRun(args.getString(ARG_RUN_ID))
-        } else {
+                mGame = args.getSerializable(ARG_GAME) as Game
+                mCategory = args.getSerializable(ARG_CATEGORY) as Category
+                mLevel = args.getSerializable(ARG_LEVEL) as Level
 
-            mGame = args.getSerializable(ARG_GAME) as Game
-            mCategory = args.getSerializable(ARG_CATEGORY) as Category
-            mLevel = args.getSerializable(ARG_LEVEL) as Level
-            mRun = args.getSerializable(ARG_RUN) as LeaderboardRunEntry
+                onDataReady()
+            }
+            args.getString(ARG_RUN_ID) != null -> {
+                loadRun(args.getString(ARG_RUN_ID))
+            }
+            else -> {
 
-            onDataReady()
+                mGame = args.getSerializable(ARG_GAME) as Game
+                mCategory = args.getSerializable(ARG_CATEGORY) as Category
+                mLevel = args.getSerializable(ARG_LEVEL) as Level
+                mRun = args.getSerializable(ARG_RUN) as LeaderboardRunEntry
+
+                onDataReady()
+            }
         }
 
         v.findViewById<Button>(R.id.buttonViewRules).setOnClickListener { viewRules() }
         v.findViewById<ImageView>(R.id.imgShare).setOnClickListener { doShare() }
+
+        v.findViewById<Button>(R.id.buttonApprove).setOnClickListener { doApprove() }
+        v.findViewById<Button>(R.id.buttonReject).setOnClickListener { doReject() }
 
         mGameInfoPane.getChildAt(0).setOnClickListener { viewGame() }
         mViewOnOfficial.setOnClickListener { viewOnOfficial() }
@@ -172,12 +203,12 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
 
     private fun loadRun(runId: String?) {
         Log.d(TAG, "Download runId: " + runId!!)
-        mDisposables.add(SpeedrunMiddlewareAPI.make(context!!).listRuns(runId)
+        mDisposables.add(SpeedrunMiddlewareAPI.make(requireContext()).listRuns(runId)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(Consumer { (data) ->
                     if (data == null) {
                         // game was not able to be found for some reason?
-                        Util.showErrorToast(context!!, getString(R.string.error_missing_game, runId))
+                        Util.showErrorToast(requireContext(), getString(R.string.error_missing_game, runId))
                         return@Consumer
                     }
 
@@ -187,13 +218,13 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
                     mLevel = mRun!!.run.level
 
                     onDataReady()
-                }, ConnectionErrorConsumer(context!!)))
+                }, ConnectionErrorConsumer(requireContext())))
     }
 
     override fun onResume() {
         super.onResume()
 
-        activity!!.title = ""
+        requireActivity().title = ""
         onConfigurationChanged(resources.configuration)
     }
 
@@ -237,7 +268,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
                     .setId(mRun!!.run.id.hashCode().toLong())
 
             try {
-                context!!.contentResolver
+                requireContext().contentResolver
                         .insert(TvContractCompat.WatchNextPrograms.CONTENT_URI,
                                 builder.build().toContentValues())
             } catch (err: IllegalArgumentException) {}
@@ -257,7 +288,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
         setViewData()
         mSpinner.visibility = View.GONE
 
-        Analytics.logItemView(context!!, "run", mRun!!.run.id)
+        Analytics.logItemView(requireContext(), "run", mRun!!.run.id)
 
         onConfigurationChanged(resources.configuration)
 
@@ -297,7 +328,9 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
             // just record the fact that the video page was accessed
             mVideoView!!.setVideoFrameOther(mRun!!.run.videos!!.links!![0])
             mViewOnOfficial.visibility = View.GONE
-            writeWatchToDb(0)
+
+            if (mModerationList.isNotEmpty())
+                writeWatchToDb(0)
         }
     }
 
@@ -307,7 +340,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
         if (mSpinner.visibility == View.VISIBLE)
             return
 
-        val act = activity!!
+        val act = requireActivity()
 
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
 
@@ -315,7 +348,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
                 act.applyFullscreenMode(true)
 
             // if the screen's aspect ratio is < 16:9, re-orient the text view so it still centers properly
-            val displ = activity!!.windowManager.defaultDisplay
+            val displ = requireActivity().windowManager.defaultDisplay
             val size = Point()
             displ.getSize(size)
 
@@ -343,6 +376,10 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
     }
 
     private fun recordStartPlaybackTime() {
+
+        if(mModerationList.isNotEmpty())
+            return // dont record on moderation
+
         if (mVideoView!!.hasLoadedVideo() && mVideoView!!.seekTime != 0)
             writeWatchToDb(mVideoView!!.seekTime.toLong())
     }
@@ -384,7 +421,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
             fullCategoryName.append(" \u2022 ").append(mLevel!!.name)
 
         if (mGame!!.shouldShowPlatformFilter() && mRun!!.run.system != null) {
-            val chip = Chip(context!!)
+            val chip = Chip(requireContext())
 
             for ((id, name) in mGame!!.platforms!!) {
                 if (id == mRun!!.run.system!!.platform) {
@@ -396,7 +433,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
         }
 
         if (mGame!!.shouldShowRegionFilter() && mRun!!.run.system != null) {
-            val chip = Chip(context!!)
+            val chip = Chip(requireContext())
 
             for ((id, name) in mGame!!.regions!!) {
                 if (id == mRun!!.run.system!!.region) {
@@ -410,7 +447,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
         if (mCategory!!.variables != null) {
             for ((id, name, _, _, _, _, isSubcategory, values) in mCategory!!.variables!!) {
                 if (mRun!!.run.values!!.containsKey(id) && !isSubcategory && values.containsKey(mRun!!.run.values!![id])) {
-                    val chip = Chip(context!!)
+                    val chip = Chip(requireContext())
                     chip.text = StringBuilder(name).append(": ").append(values[mRun!!.run.values!![id]]!!.label)
                     mVariableChips.addView(chip)
                 } else if (isSubcategory && values.containsKey(mRun!!.run.values!![id])) {
@@ -425,18 +462,18 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
             coverConsumer.roundedCorners = resources.getDimensionPixelSize(R.dimen.game_cover_rounded_corners).toFloat()
 
             mDisposables.add(
-                    ImageLoader(context!!).loadImage(mGame!!.assets.coverLarge!!.uri)
+                    ImageLoader(requireContext()).loadImage(mGame!!.assets.coverLarge!!.uri)
                             .subscribe(coverConsumer))
         }
 
         mPlayerNames.removeAllViews()
         for (player in mRun!!.run.players!!) {
 
-            val iv = ImageView(context!!)
+            val iv = ImageView(requireContext())
             player.applyCountryImage(iv)
             mPlayerNames.addView(iv)
 
-            val tv = TextView(context!!)
+            val tv = TextView(requireContext())
             tv.textSize = 16f
             player.applyTextView(tv)
 
@@ -462,7 +499,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
 
             if(loadImage != null) {
                 mDisposables.add(
-                        ImageLoader(context!!).loadImage(loadImage)
+                        ImageLoader(requireContext()).loadImage(loadImage)
                                 .subscribe(ImageViewPlacerConsumer(mRunPlaceImg)))
             }
 
@@ -473,17 +510,20 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
             mRunPlaceImg.visibility = View.GONE
             mRunPlaceTxt.visibility = View.GONE
         }
-        mRunTime.text = mRun!!.run.times!!.time
+        mRunTime.text = mRun!!.run.times!!.time + " • " + mRun!!.run.date
+
+        mRunSubmitted.text = getString(R.string.msg_submitted_at, mRun!!.run.submitted)
+
 
         mRunComment.text = mRun!!.run.comment
 
-        val emptyTv = TextView(context!!)
+        //val emptyTv = TextView(requireContext())
 
-        emptyTv.setText(R.string.empty_no_splits)
+        //emptyTv.setText(R.string.empty_no_splits)
     }
 
     private fun viewPlayer(player: User) {
-        val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
+        val intent = Intent(requireContext(), SpeedrunBrowserActivity::class.java)
         intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, PlayerDetailFragment::class.java.canonicalName)
         intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, player.id)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -494,10 +534,10 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
     }
 
     private fun viewGame() {
-        val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
+        val intent = Intent(requireContext(), SpeedrunBrowserActivity::class.java)
         intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, GameDetailFragment::class.java.canonicalName)
         intent.putExtra(GameDetailFragment.ARG_GAME_ID, mGame!!.id)
-        intent.putExtra(GameDetailFragment.ARG_LEADERBOARD_ID, mCategory!!.id + (if(mLevel != null) "_" + mLevel!!.id else ""))
+        intent.putExtra(GameDetailFragment.ARG_LEADERBOARD_ID, mCategory!!.id + (if (mLevel != null) "_" + mLevel!!.id else ""))
         intent.putExtra(GameDetailFragment.ARG_VARIABLE_SELECTIONS, Variable.VariableSelections(mRun?.run))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             intent.flags = Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT
@@ -513,7 +553,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
         if (rulesText.isEmpty())
             rulesText = getString(R.string.msg_no_rules_content)
 
-        val dialog = AlertDialog.Builder(context!!, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+        val dialog = AlertDialog.Builder(requireContext(), AlertDialog.THEME_DEVICE_DEFAULT_DARK)
                 .setMessage(rulesText)
                 .setNeutralButton(android.R.string.ok, null)
                 .create()
@@ -539,8 +579,79 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
         }
     }
 
+    private fun disableModTools() {
+        mModerationTools.findViewById<Button>(R.id.buttonApprove).isEnabled = false
+        mModerationTools.findViewById<Button>(R.id.buttonSkip).isEnabled = false
+        mModerationTools.findViewById<Button>(R.id.buttonReject).isEnabled = false
+    }
+
+    private fun enableModTools() {
+        mModerationTools.findViewById<Button>(R.id.buttonApprove).isEnabled = true
+        mModerationTools.findViewById<Button>(R.id.buttonSkip).isEnabled = true
+        mModerationTools.findViewById<Button>(R.id.buttonReject).isEnabled = true
+    }
+
+    private fun doApprove() {
+
+        disableModTools()
+
+        mDisposables.add(SpeedrunAPI.make(requireContext()).setRunStatus(mSrcApiKey, mRun!!.run.id, SpeedrunAPI.APIRunStatus(status = RunStatus(status = "verified")))
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    doNextModeration()
+                }, {
+                    Log.e(TAG, "Failed talking to SRC API:", it)
+                    Util.showErrorToast(requireContext(), "Could not set run: ${it.localizedMessage}")
+                }))
+    }
+
+    private fun doReject() {
+        // get the reason from the user
+
+        val builder = AlertDialog.Builder(requireContext(), if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) android.R.style.Theme_DeviceDefault_Dialog_Alert else AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+        builder.setTitle(R.string.dialog_title_reject_reason)
+
+        val input = EditText(requireContext())
+        input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_SHORT_MESSAGE
+        builder.setView(input)
+
+        builder.setPositiveButton(android.R.string.ok) { _,_ ->
+            disableModTools()
+
+            mDisposables.add(SpeedrunAPI.make(requireContext()).setRunStatus(mSrcApiKey, mRun!!.run.id, SpeedrunAPI.APIRunStatus(status = RunStatus(
+                    status = "rejected",
+                    reason = input.text.toString()
+            )))
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe({
+                        doNextModeration()
+                    }, {
+                        Log.e(TAG, "Failed talking to SRC API:", it)
+                        Util.showErrorToast(requireContext(), "Could not set run: ${it.localizedMessage}")
+                    }))
+        }
+        builder.setNegativeButton(android.R.string.cancel) { _,_ -> }
+
+        builder.show()
+
+        (requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY)
+        input.requestFocus()
+    }
+
+    private fun doNextModeration(increment: Boolean = true) {
+        if (increment)
+            mModerationIndex++
+
+        if(mModerationIndex >= mModerationList.size) {
+            // finish this
+            (requireActivity() as SpeedrunBrowserActivity).onBackPressed()
+        }
+
+        loadRun(mModerationList[mModerationIndex])
+    }
+
     override fun onFullscreenToggleListener() {
-        activity!!.requestedOrientation = if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE)
+        requireActivity().requestedOrientation = if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE)
             ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         else
             ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -548,7 +659,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
         // prevent screen rotation from being locked
         mDisposables.add(Observable.timer(SCREEN_LOCK_ROTATE_PERIOD.toLong(), TimeUnit.SECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { activity!!.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED })
+                .subscribe { requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED })
     }
 
     interface VideoSupplier {
@@ -564,6 +675,8 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
         const val ARG_RUN = "run"
 
         const val ARG_RUN_ID = "runId"
+
+        const val ARG_MODERATION_LIST = "moderationList"
 
         /// how often to save the current watch position/time to the watch history db
         private const val BACKGROUND_SEEK_SAVE_START = 15

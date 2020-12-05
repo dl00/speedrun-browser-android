@@ -359,7 +359,7 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
     }
 
     private fun openFiltersDialog() {
-        val dialog = FiltersDialog(context!!, mGame!!,
+        val dialog = FiltersDialog(requireContext(), mGame!!,
                 currentVariables, mVariableSelections!!)
 
         dialog.show()
@@ -453,7 +453,7 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe {
                         mMenu!!.findItem(R.id.menu_subscribe).actionView = null
-                        Util.showMsgToast(context!!, getString(R.string.success_subscription))
+                        Util.showMsgToast(requireContext(), getString(R.string.success_subscription))
                         mSubscription = dialog.subscriptions
                         setMenu()
                     }
@@ -463,7 +463,7 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
 
     private fun viewStats() {
         if(mGame != null) {
-            val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
+            val intent = Intent(requireContext(), SpeedrunBrowserActivity::class.java)
             intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, GameStatisticsFragment::class.java.canonicalName)
             intent.putExtra(GameStatisticsFragment.EXTRA_GAME_ID, mGame!!.id)
             startActivity(intent)

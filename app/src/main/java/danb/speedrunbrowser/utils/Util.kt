@@ -23,9 +23,9 @@ import androidx.core.app.TaskStackBuilder
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.UpdateAvailability
-import danb.speedrunbrowser.BuildConfig
-import danb.speedrunbrowser.R
+import danb.speedrunbrowser.*
 import danb.speedrunbrowser.api.objects.User
+import danb.speedrunbrowser.stats.GameStatisticsFragment
 import io.noties.markwon.Markwon
 import io.noties.markwon.image.ImagesPlugin
 import io.noties.markwon.linkify.LinkifyPlugin
@@ -39,6 +39,21 @@ object Util {
 
     private const val NOTIFICATION_GROUP = "records"
     private var httpClient: OkHttpClient? = null
+
+    fun formatRank(place: Int?): String {
+        if(place == null)
+            return "-"
+
+        if (place / 10 % 10 == 1)
+            return place.toString() + "th"
+
+        return when (place % 10) {
+            1 -> place.toString() + "st"
+            2 -> place.toString() + "nd"
+            3 -> place.toString() + "rd"
+            else -> place.toString() + "th"
+        }
+    }
 
     fun showErrorToast(ctx: Context, msg: CharSequence) {
         Toast.makeText(ctx, msg, Toast.LENGTH_LONG).show()
@@ -194,8 +209,8 @@ object Util {
                 .setNeutralButton(R.string.button_got_it, null)
 
         if(lastVersion != null) {
-            db.setPositiveButton(R.string.dialog_button_share) { _, _ ->
-                openShare(ctx)
+            db.setPositiveButton(R.string.dialog_button_rate_now) { _, _ ->
+                openPlayStorePage(ctx)
             }
         }
 
@@ -220,25 +235,10 @@ object Util {
     }
 
     fun openInBrowser(ctx: Context, uri: Uri): Intent {
+        val intent = Intent(ctx, WebViewActivity::class.java)
+        intent.putExtra(WebViewActivity.ARG_URL, uri.toString())
 
-        val i = Intent(Intent.ACTION_VIEW)
-        // using the actual URI does not work because android is too smart and will only give back my own app. So we use a dummy URL to force it over.
-        i.data = Uri.parse("https://atotallyrealsiterightnow.com/whatever")
-
-        val resInfos = ctx.packageManager.queryIntentActivities(i, 0)
-        if (resInfos.isNotEmpty()) {
-            for (resInfo in resInfos) {
-                val packageName = resInfo.activityInfo.packageName
-                if (!packageName.toLowerCase(Locale.US).contains("danb.speedrunbrowser")) {
-                    val browserIntent = Intent(Intent.ACTION_VIEW, uri)
-                    browserIntent.component = ComponentName(packageName, resInfo.activityInfo.name)
-                    browserIntent.setPackage(packageName)
-                    return browserIntent
-                }
-            }
-        }
-
-        throw ClassNotFoundException("Could not find the browser!")
+        return intent
     }
 
     private fun openPlayStorePage(context: Context, packageName: String? = null) {

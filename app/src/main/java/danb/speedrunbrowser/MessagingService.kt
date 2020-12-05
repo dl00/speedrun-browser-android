@@ -74,7 +74,7 @@ class MessagingService : FirebaseMessagingService() {
                 throw IOException()
 
 
-            featureImg = BitmapFactory.decodeStream(res.body()!!.byteStream())
+            featureImg = BitmapFactory.decodeStream(res.body!!.byteStream())
         } catch (e: IOException) {
             Log.e(TAG, "Could not download player feature img:", e)
         }
@@ -123,7 +123,7 @@ class MessagingService : FirebaseMessagingService() {
                 throw IOException()
 
 
-            featureImg = BitmapFactory.decodeStream(res.body()!!.byteStream())
+            featureImg = BitmapFactory.decodeStream(res.body!!.byteStream())
         } catch (e: IOException) {
             Log.e(TAG, "Could not download player feature img:", e)
         }

@@ -11,7 +11,7 @@
         <item name="android:textColor">@android:color/white</item>
         <item name="android:textColorHint">@android:color/darker_gray</item>
 
-        <item name="buttonStyle">@style/AppTheme.Button</item>
+        <item name="android:buttonStyle">@style/AppTheme.Button</item>
 
         <item name="android:itemBackground">@color/colorPrimary</item>
 

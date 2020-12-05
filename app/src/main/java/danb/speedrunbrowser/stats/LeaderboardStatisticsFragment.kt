@@ -2,12 +2,14 @@ package danb.speedrunbrowser.stats
 
 import android.content.Context
 import android.content.Intent
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.view.setPadding
 import androidx.recyclerview.widget.RecyclerView
+import danb.speedrunbrowser.PlayerDetailFragment
 import danb.speedrunbrowser.R
 import danb.speedrunbrowser.RunDetailFragment
 import danb.speedrunbrowser.SpeedrunBrowserActivity
@@ -21,6 +23,7 @@ import danb.speedrunbrowser.utils.ViewHolderSource
 import io.noties.markwon.Markwon
 import io.reactivex.disposables.CompositeDisposable
 import java.lang.StringBuilder
+import kotlin.math.floor
 
 class LeaderboardStatisticsFragment : StatisticsFragment() {
     override fun onStart() {
@@ -83,6 +86,46 @@ class LeaderboardStatisticsFragment : StatisticsFragment() {
                     },
                     chartListReverse = true,
                     chartListOnSelected = { viewRun(it as Run) }
+            ))
+
+            statsView.addRanking(RankOptions(
+                    name = getString(R.string.chart_title_longest_holders),
+                    description = getString(R.string.chart_desc_longest_holders),
+                    identifier = "longest_holders",
+                    setLabels = { ctx,it ->
+                        val spl = it.split('_')
+
+                        val builder = StringBuilder()
+
+                        for (i in 0 until spl.size - 1 step 2) {
+                            val variableId = spl[i]
+                            val valueId = spl[i + 1]
+
+                            val variable = ctx.category?.variables?.find { v -> v.id == variableId }
+
+                            if (variable == null)
+                                continue
+                            else {
+                                val valueLabel = variable.values[valueId]?.label ?: continue
+                                builder.append(valueLabel).append(' ')
+                            }
+                        }
+
+                        builder.toString()
+                    },
+                    objRender = {
+                        val tv = TextView(context)
+                        tv.text = getString(R.string.unknown)
+                        tv.setTextSize(TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.text_size_player))
+                        (it as User?)?.applyTextView(tv)
+                        listOf(tv)
+                    },
+                    scoreFormat = {
+                        getString(R.string.label_days, floor(it / 86400).toInt())
+                    },
+                    onSelected = {
+                        viewPlayer(it as User)
+                    }
             ))
 
             statsView.addChart(ChartOptions(
@@ -162,6 +205,17 @@ class LeaderboardStatisticsFragment : StatisticsFragment() {
         val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
         intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, RunDetailFragment::class.java.canonicalName)
         intent.putExtra(RunDetailFragment.ARG_RUN_ID, run.id)
+        startActivity(intent)
+    }
+
+    private fun viewPlayer(user: User) {
+        if (user.id == null) {
+            Util.showInfoDialog(context!!, getString(R.string.msg_player_not_account))
+            return
+        }
+        val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
+        intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, PlayerDetailFragment::class.java.canonicalName)
+        intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, user.id)
         startActivity(intent)
     }
 

@@ -36,7 +36,10 @@
         </item>-->
 
         <item name="android:textViewStyle">@style/AppTheme.TextView</item>
+        <item name="materialButtonStyle">@style/AppTheme.Button</item>
         <item name="android:buttonStyle">@style/AppTheme.Button</item>
+        <item name="android:borderlessButtonStyle">@style/AppTheme.Button</item>
+        <item name="android:radioButtonStyle">@style/AppTheme.Button</item>
         <item name="android:editTextStyle">@style/AppTheme.EditText</item>
         <item name="android:checkboxStyle">@style/AppTheme.Checkbox</item>
 
@@ -69,13 +72,17 @@
     </style>
 
     <style name="AppTheme.Button" parent="Widget.AppCompat.Button">
-        <item name="fontFamily">@font/saira_condensed</item>
-        <item name="android:fontFamily">@font/saira_condensed</item>
+        <item name="fontFamily">@font/saira_condensed_bold</item>
+        <item name="android:fontFamily">@font/saira_condensed_bold</item>
+
+        <item name="android:background">@color/colorAccent</item>
+        <item name="android:textColor">@android:color/white</item>
     </style>
 
     <style name="AppTheme.EditText" parent="Widget.AppCompat.EditText">
         <item name="fontFamily">@font/saira_condensed</item>
         <item name="android:fontFamily">@font/saira_condensed</item>
+        <item name="android:textColor">@android:color/white</item>
     </style>
 
     <style name="AppTheme.Checkbox" parent="Widget.AppCompat.CompoundButton.CheckBox">

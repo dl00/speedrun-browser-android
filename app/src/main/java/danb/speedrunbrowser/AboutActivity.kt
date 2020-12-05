@@ -3,7 +3,6 @@
 package danb.speedrunbrowser
 
 import android.app.AlertDialog
-import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -87,19 +86,8 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
     override fun onClick(v: View) {
         if (v === mLinkSpeedrunComTrophy || v === mLinkSpeedrunComLogo)
             openLink(SPEEDRUN_COM_ABOUT)
-        else if (v === mLinkComplain) {
-            val dialog = AlertDialog.Builder(this, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) android.R.style.Theme_DeviceDefault_Dialog_Alert
-                else AlertDialog.THEME_DEVICE_DEFAULT_DARK)
-                    .setTitle(R.string.dialog_title_send_email)
-                    .setMessage(R.string.dialog_msg_send_email)
-                    .setPositiveButton(R.string.dialog_button_send_email) { _, _ ->
-                        openLink(COMPLAIN_URL)
-                    }
-                    .setNeutralButton(android.R.string.cancel, null)
-                    .create()
-
-            dialog.show()
-        }
+        else if (v == mLinkComplain)
+            openLink(COMPLAIN)
         else if (v === mLinkRateThis)
             openLink(PLAY_STORE_APP)
         else if (v === mLinkShareThis)
@@ -117,15 +105,13 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
     companion object {
         private val TAG = LeaderboardFragment::class.java.simpleName
 
+        private val COMPLAIN = Uri.parse("https://github.com/dl00/speedrun-browser-android/issues/new/choose")
+
         private val SPEEDRUN_COM_ABOUT = Uri.parse("https://www.speedrun.com/about")
 
         private val PLAY_STORE_APP = Uri.parse("https://play.google.com/store/apps/details?id=danb.speedrunbrowser")
 
         private val SOURCE_CODE_URL = Uri.parse("https://github.com/dl00/speedrun-browser-android")
-
-        private val TRANSLATE_URL = Uri.parse("https://github.com/dl00/speedrun-browser-android")
-
-        private val COMPLAIN_URL = Uri.parse("https://github.com/dl00/speedrun-browser-android/issues/new/choose")
 
         private val TERMS_AND_CONDITIONS = Uri.parse("https://speedrun-browser-4cc82.firebaseapp.com/terms.html")
         private val PRIVACY_POLICY = Uri.parse("https://speedrun-browser-4cc82.firebaseapp.com/privacy-policy.html")

@@ -4,21 +4,16 @@ import android.content.Context
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-
-import danb.speedrunbrowser.api.objects.GameAssets
-import danb.speedrunbrowser.api.objects.Genre
-import danb.speedrunbrowser.api.objects.MediaLink
-import danb.speedrunbrowser.api.objects.Platform
-import danb.speedrunbrowser.api.objects.Region
-import danb.speedrunbrowser.api.objects.Run
-import danb.speedrunbrowser.api.objects.Variable
+import danb.speedrunbrowser.api.objects.*
 import danb.speedrunbrowser.utils.Util
 import io.reactivex.Observable
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.GET
-import retrofit2.http.Path
+import retrofit2.http.*
+
 
 object SpeedrunAPI {
 
@@ -43,11 +38,17 @@ object SpeedrunAPI {
         }
 
     fun make(context: Context): Endpoints {
+
+        val interceptor = HttpLoggingInterceptor()
+        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
+        val client = OkHttpClient.Builder().addInterceptor(interceptor).build()
+
+
         val retrofit = Retrofit.Builder()
                 .baseUrl("https://www.speedrun.com/api/v1/")
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
                 .addConverterFactory(GsonConverterFactory.create(gson))
-                .client(Util.getHTTPClient(context)!!)
+                .client(client)
                 .build()
 
         return retrofit.create(Endpoints::class.java)
@@ -57,9 +58,17 @@ object SpeedrunAPI {
         var data: T? = null
     }
 
+    data class APIRunStatus(
+            val status: RunStatus
+    )
+
     interface Endpoints {
-        // Runs
-        @GET("runs/{id}?embed=game,game.platforms,category,level,players")
-        fun getRun(@Path("id") runId: String): Observable<APIResponse<Run>>
+
+        // Profile
+        @GET("profile")
+        fun getProfile(@Header("X-API-Key") apiKey: String): Observable<APIResponse<User>>
+
+        @PUT("runs/{id}/status")
+        fun setRunStatus(@Header("X-API-Key") apiKey: String, @Path("id") runId: String, @Body result: APIRunStatus): Observable<APIResponse<Unit>>
     }
 }

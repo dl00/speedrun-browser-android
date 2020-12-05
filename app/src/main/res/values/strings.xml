@@ -67,15 +67,16 @@
     <string name="button_got_it">Got it!</string>
 
     <!-- release notes: edit for each release for now -->
-    <string name="dialog_title_release_notes">Support for Android TV/Fire TV</string>
+    <string name="dialog_title_release_notes">Welcome to Speedrun Browser (Unofficial)!</string>
     <string name="dialog_msg_first_run">
         Thanks for downloading the app and giving it a try!\n
         \n
         Here are some useful tips while using the app:\n
         * If you select a Speedrun to watch, your progress is automatically recorded. Feel free
         to leave and come back later!\n
+        * Filters can be used on any leaderboard. Your filter options are saved for next time.\n
         * You can subscribe to categories and players to be notified of a new PB/WR.\n
-        * Charts are available for the site, games, categories/levels, and players.\n
+        * Charts are available for the site, games, categories/levels, and players. Just click the graph icon.\n
         * Want to watch speedruns on your TV? This app is available for Android TV or Amazon Fire TV (currently in beta).\n
         \n
         This project started in March 2019 out of my distaste for viewing the Speedrun.com website directly from
@@ -87,21 +88,15 @@
     <string name="dialog_msg_release_notes">
         Thanks for downloading the app!\n
         \n
-        I know its been a while since the last release, but major changes were completed on the backend, and
-        the project has been reorganized to make it easier to contribute and report problems.\n
+        Are you a moderator? This app now has minimal functionality for approving and rejecting runs
+        for games which you are a moderator for. Click "Settings" on the top right and enter your
+        API to get started!\n
         \n
-        The source code for the project has been moved to GitHub. You can find the link in the "About App"
-        page. New problem reports for the app will also be directed there.\n
-        \n
-        Other changes to expect:\n
-        * Improved stability and performance changes\n
-        * Levels not showing runs should be fixed now. Level categories should also be more visible, with a blue
-        highlight\n
-        \n
-        If you have ideas for the app design could be improved (I know it could look better), please
-        report your idea (or edit the code yourself!).\n
-        \n
-        If you are enjoying the app (and have read this far), please consider rating or sharing!
+        It has been exciting to see the app continue to grow these past few months. I wish I could
+        create a chat group for continued support of the project, but so far no good options have
+        been available. Perhaps in the future a channel on the Speedrun.com discord server could
+        be attained, but for now if you need support, please open a ticket on GitHub (link on "About"
+        page) or submit a review on the play store.
     </string>
 
     <string name="dialog_button_rate_now">Rate now!</string>
@@ -221,4 +216,21 @@
     <string name="chart_desc_player_game">Detailed Information about a player for each game.</string>
     <string name="chart_title_pbs">PBs</string>
     <string name="chart_desc_pbs">Personal best times of this player charted over time</string>
+    <string name="label_days">%d days</string>
+    <string name="chart_title_longest_holders">All-Time Longest Record Holders</string>
+    <string name="chart_desc_longest_holders">Sum of the number of days which the world record was held for a player in a category. Individual world records tend to not last for long, so this chart exposes common contenders.</string>
+    <string name="unknown">Unknown</string>
+    <string name="msg_player_not_account">This player does not have an account to look at.</string>
+    <string name="msg_get_api_key">Login, Open Settings, and copy your API Key</string>
+    <string name="menu_settings">Settings</string>
+    <string name="error_api_key_invalid">Could not read profile. Is the API Key valid?</string>
+    <string name="msg_welcome_user">Welcome, %s</string>
+    <string name="button_skip">Skip</string>
+    <string name="button_approve">Approve</string>
+    <string name="button_reject">Reject</string>
+    <string name="menu_moderation">Do Moderation</string>
+    <string name="title_activity_webview">Web View</string>
+    <string name="msg_no_mod_runs">No new runs are pending review.</string>
+    <string name="dialog_title_reject_reason">Reason for rejection:</string>
+    <string name="msg_submitted_at">Submitted to Speedrun.com at %s</string>
 </resources>
