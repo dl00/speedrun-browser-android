@@ -26,7 +26,7 @@ object SpeedrunMiddlewareAPI {
         get() = if (BuildConfig.DEBUG) {
             "https://dev.sr-browser.dbeal.dev/api/v1/"
         } else {
-            "https://sr-browser.dbeal.dev/api/v1/"
+            "https://dev.sr-browser.dbeal.dev/api/v1/"
         }
 
     // type adapters go here
@@ -143,13 +143,13 @@ object SpeedrunMiddlewareAPI {
         // Runs
         @GET("runs/latest")
         fun listLatestRuns(@Query("start") offset: Int,
-                           @Query("verified") verified: Boolean): Observable<APIResponse<LeaderboardRunEntry>>
+                           @Query("list") list: String): Observable<APIResponse<LeaderboardRunEntry>>
 
         @GET("runs/latest")
         fun listLatestRunsByGenre(
                 @Query("id") genreId: String,
                 @Query("start") offset: Int,
-                @Query("verified") verified: Boolean): Observable<APIResponse<LeaderboardRunEntry>>
+                @Query("verified") list: String): Observable<APIResponse<LeaderboardRunEntry>>
 
         @GET("runs/new/{mod}")
         fun listModRuns(@Path("mod") userId: String, @Query("start") startAtId: String): Observable<APIResponse<LeaderboardRunEntry>>
@@ -190,4 +190,8 @@ object SpeedrunMiddlewareAPI {
         @GET("streams/games/{gameId}/{lang}")
         fun listStreamsByGame(@Path("gameId") gameId: String, @Path("lang") lang: String, @Query("start") offset: Int): Observable<APIResponse<Stream>>
     }
+
+    const val LIST_LATEST_VERIFIED_RUNS = "latest_verified_runs"
+    const val LIST_LATEST_UNVERIFIED_RUNS = "latest_new_runs"
+    const val LIST_LATEST_WR_RUNS = "latest_wr_runs"
 }

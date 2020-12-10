@@ -17,6 +17,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.preference.PreferenceManager
 import androidx.tvprovider.media.tv.TvContractCompat
 import androidx.tvprovider.media.tv.WatchNextProgram
@@ -531,6 +532,8 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
         }
 
         startActivity(intent)
+
+        findNavController().navigate(RunDetailFragmentDirections.actionRunDetailFragmentToPlayerDetailFragment(null, player.id))
     }
 
     private fun viewGame() {
@@ -544,6 +547,12 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
         }
 
         startActivity(intent)
+
+        findNavController().navigate(RunDetailFragmentDirections.actionRunDetailFragmentToGameDetailFragment(
+                mGame!!.id,
+                mCategory!!.id + (if (mLevel != null) "_" + mLevel!!.id else ""),
+                Variable.VariableSelections(mRun?.run)
+        ))
     }
 
     // show game rules as a Alert Dialog

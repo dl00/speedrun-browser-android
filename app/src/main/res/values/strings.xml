@@ -88,15 +88,12 @@
     <string name="dialog_msg_release_notes">
         Thanks for downloading the app!\n
         \n
-        Are you a moderator? This app now has minimal functionality for approving and rejecting runs
-        for games which you are a moderator for. Click "Settings" on the top right and enter your
-        API to get started!\n
+        This is a regular release, with the following changes:\n
+        * Complete navigation system overhaul. App should feel even more fluid and navigate correctly\n
+        * New recent WR section, viewable on every game group\n
+        * Misc bug fixes (special thanks Avasam for reporting a few and being so detailed)\n
         \n
-        It has been exciting to see the app continue to grow these past few months. I wish I could
-        create a chat group for continued support of the project, but so far no good options have
-        been available. Perhaps in the future a channel on the Speedrun.com discord server could
-        be attained, but for now if you need support, please open a ticket on GitHub (link on "About"
-        page) or submit a review on the play store.
+        Enjoying the app? Please consider rating or sharing!
     </string>
 
     <string name="dialog_button_rate_now">Rate now!</string>
@@ -233,4 +230,5 @@
     <string name="msg_no_mod_runs">No new runs are pending review.</string>
     <string name="dialog_title_reject_reason">Reason for rejection:</string>
     <string name="msg_submitted_at">Submitted to Speedrun.com at %s</string>
+    <string name="label_list_mode_wrs">Recent WRs</string>
 </resources>

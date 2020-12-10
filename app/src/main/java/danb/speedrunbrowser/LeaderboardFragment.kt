@@ -17,6 +17,7 @@ import androidx.core.view.get
 import java.util.Objects
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
@@ -289,18 +290,16 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
 
     // show game rules as a Alert Dialog
     fun viewInfo() {
-
-        val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
-        intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, LeaderboardStatisticsFragment::class.java.canonicalName)
-        intent.putExtra(LeaderboardStatisticsFragment.EXTRA_LEADERBOARD_ID, leaderboardId)
-        startActivity(intent)
+        if(leaderboardId != null) {
+            findNavController().navigate(GameDetailFragmentDirections.actionGameDetailFragmentToLeaderboardStatisticsFragment(leaderboardId!!))
+        }
     }
 
     @Throws(Exception::class)
     override fun accept(leaderboardAPIResponse: SpeedrunMiddlewareAPI.APIResponse<Leaderboard>) {
 
         if(leaderboardAPIResponse.error != null) {
-            Util.showErrorToast(context!!, getString(R.string.error_could_not_connect))
+            Util.showErrorToast(requireContext(), getString(R.string.error_could_not_connect))
             return
         }
 
@@ -308,7 +307,7 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
 
         if (leaderboards!!.isEmpty()) {
             // not found
-            Util.showErrorToast(context!!, getString(R.string.error_missing_leaderboard, leaderboardId))
+            Util.showErrorToast(requireContext(), getString(R.string.error_missing_leaderboard, leaderboardId))
             return
         }
 
@@ -403,10 +402,11 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
         private val mOnClickListener = View.OnClickListener { view ->
             val (run) = view.tag as LeaderboardRunEntry
 
-            val intent = Intent(context, SpeedrunBrowserActivity::class.java)
-            intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, RunDetailFragment::class.java.canonicalName)
-            intent.putExtra(RunDetailFragment.ARG_RUN_ID, run.id)
-            startActivity(intent)
+            try {
+                findNavController().navigate(GameDetailFragmentDirections.actionGameDetailFragmentToRunDetailFragment(null, null, null, null, run.id))
+            } catch(e: Exception) {
+                findNavController().navigate(GameListFragmentDirections.actionGameListFragmentToRunDetailFragment(null, null, null, null, run.id))
+            }
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RunViewHolder {

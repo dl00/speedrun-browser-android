@@ -23,6 +23,7 @@ import java.net.MalformedURLException
 import java.net.URL
 import java.util.ArrayList
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry
 import danb.speedrunbrowser.api.objects.User
@@ -66,9 +67,9 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
 
         setHasOptionsMenu(true)
 
-        mDB = AppDatabase.make(context!!)
+        mDB = AppDatabase.make(requireContext())
 
-        activity!!.setTitle(R.string.title_loading)
+        requireActivity().setTitle(R.string.title_loading)
 
         val args = arguments
 
@@ -136,7 +137,7 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
             return true
         }
         else if(item.itemId == R.id.menu_view_website) {
-            startActivity(Util.openInBrowser(context!!, Uri.parse(mPlayer!!.weblink)))
+            startActivity(Util.openInBrowser(requireContext(), Uri.parse(mPlayer!!.weblink)))
             return true
         }
 
@@ -157,12 +158,12 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
         Log.d(TAG, "Download playerId: " + playerId!!)
 
         /// TODO: ideally this would be zipped/run in parallel
-        mDisposables.add(SpeedrunMiddlewareAPI.make(context!!).listPlayers(playerId)
+        mDisposables.add(SpeedrunMiddlewareAPI.make(requireContext()).listPlayers(playerId)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(Consumer { gameAPIResponse ->
                     if (gameAPIResponse.data == null || gameAPIResponse.data.isEmpty()) {
                         // game was not able to be found for some reason?
-                        Util.showErrorToast(context!!, getString(R.string.error_missing_game, playerId))
+                        Util.showErrorToast(requireContext(), getString(R.string.error_missing_game, playerId))
                         return@Consumer
                     }
 
@@ -171,28 +172,28 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
                     setViewData()
 
 
-                    Analytics.logItemView(context!!, "player", playerId)
-                }, ConnectionErrorConsumer(context!!)))
+                    Analytics.logItemView(requireContext(), "player", playerId)
+                }, ConnectionErrorConsumer(requireContext())))
     }
 
     private fun toggleSubscribed(): Boolean {
 
         val subscribeMenuItem = mMenu!!.findItem(R.id.menu_subscribe)
 
-        val psv = ProgressSpinnerView(context!!, null)
+        val psv = ProgressSpinnerView(requireContext(), null)
         psv.setDirection(ProgressSpinnerView.Direction.RIGHT)
         psv.setScale(0.5f)
 
         subscribeMenuItem.actionView = psv
 
-        val sc = SubscriptionChanger(context!!, mDB)
+        val sc = SubscriptionChanger(requireContext(), mDB)
 
         if (mSubscription != null) {
             mDisposables.add(sc.unsubscribeFrom(mSubscription!!)
                     .subscribe {
                         mSubscription = null
                         setMenu()
-                        Util.showMsgToast(context!!, getString(R.string.success_subscription))
+                        Util.showMsgToast(requireContext(), getString(R.string.success_subscription))
                     })
 
             return true
@@ -202,7 +203,7 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
             mDisposables.add(sc.subscribeTo(mSubscription!!)
                     .subscribe {
                         setMenu()
-                        Util.showMsgToast(context!!, getString(R.string.success_subscription))
+                        Util.showMsgToast(requireContext(), getString(R.string.success_subscription))
                     })
 
             return true
@@ -230,14 +231,14 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
     override fun onResume() {
         super.onResume()
         if (mPlayer != null)
-            activity!!.title = mPlayer!!.resolvedName
+            requireActivity().title = mPlayer!!.resolvedName
     }
 
     private fun setViewData() {
         if (mPlayer != null) {
-            val il = ImageLoader(context!!)
+            val il = ImageLoader(requireContext())
 
-            activity!!.title = mPlayer!!.resolvedName
+            requireActivity().title = mPlayer!!.resolvedName
 
             // find out if we are subscribed
             setMenu()
@@ -381,18 +382,12 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
     }
 
     private fun viewRun(runId: String) {
-        val intent = Intent(context, SpeedrunBrowserActivity::class.java)
-        intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, RunDetailFragment::class.java.canonicalName)
-        intent.putExtra(RunDetailFragment.ARG_RUN_ID, runId)
-        startActivity(intent)
+        findNavController().navigate(PlayerDetailFragmentDirections.actionPlayerDetailFragmentToRunDetailFragment(null, null, null, null, runId))
     }
 
     private fun viewStats() {
         if(mPlayer != null) {
-            val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
-            intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, PlayerStatisticsFragment::class.java.canonicalName)
-            intent.putExtra(PlayerStatisticsFragment.ARG_PLAYER_ID, mPlayer!!.id)
-            startActivity(intent)
+            findNavController().navigate(PlayerDetailFragmentDirections.actionPlayerDetailFragmentToPlayerStatisticsFragment(mPlayer!!.id))
         }
     }
 
@@ -413,6 +408,6 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
         private val TAG = PlayerDetailFragment::class.java.simpleName
 
         val ARG_PLAYER = "player"
-        val ARG_PLAYER_ID = "player_id"
+        val ARG_PLAYER_ID = "playerId"
     }
 }

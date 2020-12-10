@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/nav_graph"
+    app:startDestination="@id/gameListFragment">
+
+    <fragment
+        android:id="@+id/gameListFragment"
+        android:name="danb.speedrunbrowser.GameListFragment"
+        tools:layout="@layout/fragment_game_list" >
+        <action
+            android:id="@+id/action_gameListFragment_to_gameDetailFragment"
+            app:destination="@id/gameDetailFragment"
+            app:enterAnim="@anim/fade_shift_end_in"
+            app:exitAnim="@anim/fade_shift_start_out"
+            app:popEnterAnim="@anim/fade_shift_start_in"
+            app:popExitAnim="@anim/fade_shift_end_out" />
+        <argument
+            android:name="gameGroup"
+            app:argType="danb.speedrunbrowser.api.objects.GameGroup"
+            app:nullable="true" />
+        <action
+            android:id="@+id/action_gameListFragment_to_runDetailFragment"
+            app:destination="@id/runDetailFragment"
+            app:enterAnim="@anim/fade_shift_end_in"
+            app:exitAnim="@anim/fade_shift_start_out"
+            app:popEnterAnim="@anim/fade_shift_start_in"
+            app:popExitAnim="@anim/fade_shift_end_out" />
+        <action
+            android:id="@+id/action_gameListFragment_to_playerDetailFragment"
+            app:destination="@id/playerDetailFragment"
+            app:enterAnim="@anim/fade_shift_end_in"
+            app:exitAnim="@anim/fade_shift_start_out"
+            app:popEnterAnim="@anim/fade_shift_start_in"
+            app:popExitAnim="@anim/fade_shift_end_out" />
+        <action
+            android:id="@+id/action_gameListFragment_to_gameGroupStatisticsFragment"
+            app:destination="@id/gameGroupStatisticsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/gameDetailFragment"
+        android:name="danb.speedrunbrowser.GameDetailFragment"
+        tools:layout="@layout/game_detail" >
+        <action
+            android:id="@+id/action_gameDetailFragment_to_runDetailFragment"
+            app:destination="@id/runDetailFragment"
+            app:enterAnim="@anim/fade_shift_end_in"
+            app:exitAnim="@anim/fade_shift_start_out"
+            app:popEnterAnim="@anim/fade_shift_start_in"
+            app:popExitAnim="@anim/fade_shift_end_out" />
+        <argument
+            android:name="gameId"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_gameDetailFragment_to_gameStatisticsFragment"
+            app:destination="@id/gameStatisticsFragment"
+            app:enterAnim="@anim/fade_shift_end_in"
+            app:exitAnim="@anim/fade_shift_start_out"
+            app:popEnterAnim="@anim/fade_shift_start_in"
+            app:popExitAnim="@anim/fade_shift_end_out" />
+        <action
+            android:id="@+id/action_gameDetailFragment_to_leaderboardStatisticsFragment"
+            app:destination="@id/leaderboardStatisticsFragment"
+            app:enterAnim="@anim/fade_shift_end_in"
+            app:exitAnim="@anim/fade_shift_start_out"
+            app:popEnterAnim="@anim/fade_shift_start_in"
+            app:popExitAnim="@anim/fade_shift_end_out" />
+        <argument android:name="leaderboardId"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="variableSelections"
+            app:argType="danb.speedrunbrowser.api.objects.Variable$VariableSelections"
+            app:nullable="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/runDetailFragment"
+        android:name="danb.speedrunbrowser.RunDetailFragment"
+        tools:layout="@layout/fragment_run_detail" >
+        <action
+            android:id="@+id/action_runDetailFragment_to_playerDetailFragment"
+            app:destination="@id/playerDetailFragment"
+            app:enterAnim="@anim/fade_shift_end_in"
+            app:exitAnim="@anim/fade_shift_start_out"
+            app:popEnterAnim="@anim/fade_shift_start_in"
+            app:popExitAnim="@anim/fade_shift_end_out" />
+        <action
+            android:id="@+id/action_runDetailFragment_to_gameDetailFragment"
+            app:destination="@id/gameDetailFragment"
+            app:enterAnim="@anim/fade_shift_end_in"
+            app:exitAnim="@anim/fade_shift_start_out"
+            app:popEnterAnim="@anim/fade_shift_start_in"
+            app:popExitAnim="@anim/fade_shift_end_out" />
+        <argument
+            android:name="game"
+            app:argType="danb.speedrunbrowser.api.objects.Game"
+            app:nullable="true" />
+        <argument
+            android:name="category"
+            app:argType="danb.speedrunbrowser.api.objects.Category"
+            app:nullable="true" />
+        <argument android:name="level"
+            app:argType="danb.speedrunbrowser.api.objects.Level"
+            app:nullable="true" />
+        <argument
+            android:name="run"
+            app:argType="danb.speedrunbrowser.api.objects.LeaderboardRunEntry"
+            app:nullable="true" />
+        <argument
+            android:name="runId"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="moderationList"
+            app:argType="string[]"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/playerDetailFragment"
+        android:name="danb.speedrunbrowser.PlayerDetailFragment"
+        tools:layout="@layout/activity_player_detail" >
+        <action
+            android:id="@+id/action_playerDetailFragment_to_gameDetailFragment"
+            app:destination="@id/gameDetailFragment"
+            app:enterAnim="@anim/fade_shift_end_in"
+            app:exitAnim="@anim/fade_shift_start_out"
+            app:popEnterAnim="@anim/fade_shift_start_in"
+            app:popExitAnim="@anim/fade_shift_end_out" />
+        <argument
+            android:name="player"
+            app:argType="danb.speedrunbrowser.api.objects.User"
+            app:nullable="true" />
+        <argument
+            android:name="playerId"
+            app:argType="string"
+            app:nullable="true" />
+        <action
+            android:id="@+id/action_playerDetailFragment_to_runDetailFragment"
+            app:destination="@id/runDetailFragment"
+            app:enterAnim="@anim/fade_shift_end_in"
+            app:exitAnim="@anim/fade_shift_start_out"
+            app:popEnterAnim="@anim/fade_shift_start_in"
+            app:popExitAnim="@anim/fade_shift_end_out" />
+        <action
+            android:id="@+id/action_playerDetailFragment_to_playerStatisticsFragment"
+            app:destination="@id/playerStatisticsFragment"
+            app:enterAnim="@anim/fade_shift_end_in"
+            app:exitAnim="@anim/fade_shift_start_out"
+            app:popEnterAnim="@anim/fade_shift_start_in"
+            app:popExitAnim="@anim/fade_shift_end_out" />
+    </fragment>
+    <fragment
+        android:id="@+id/gameStatisticsFragment"
+        android:name="danb.speedrunbrowser.stats.GameStatisticsFragment">
+        <argument
+            android:name="gameId"
+            app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/leaderboardStatisticsFragment"
+        android:name="danb.speedrunbrowser.stats.LeaderboardStatisticsFragment">
+        <argument
+            android:name="leaderboardId"
+            app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/playerStatisticsFragment"
+        android:name="danb.speedrunbrowser.stats.PlayerStatisticsFragment">
+        <argument
+            android:name="playerId"
+            app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/notFoundFragment"
+        android:name="danb.speedrunbrowser.NotFoundFragment" />
+    <fragment
+        android:id="@+id/gameGroupStatisticsFragment"
+        android:name="danb.speedrunbrowser.stats.GameGroupStatisticsFragment" >
+        <argument
+            android:name="ggId"
+            app:argType="string"
+            app:nullable="true" />
+    </fragment>
+    <fragment
+        android:id="@+id/preferenceFragment"
+        android:name="danb.speedrunbrowser.PreferenceFragment" />
+</navigation>

@@ -10,7 +10,7 @@ class GameGroupStatisticsFragment : StatisticsFragment() {
 
         val gameGroupId = arguments?.getString(EXTRA_GAME_GROUP_ID) ?: "site"
 
-        Analytics.logItemView(context!!, "game_group_chart", gameGroupId)
+        Analytics.logItemView(requireContext(), "game_group_chart", gameGroupId)
 
         statsView.addChart(ChartOptions(
                 name = getString(R.string.chart_title_count_over_time),
@@ -65,11 +65,11 @@ class GameGroupStatisticsFragment : StatisticsFragment() {
         ))
 
         setDataSourceAPIResponse(
-                SpeedrunMiddlewareAPI.make(context!!).getGameGroupMetrics(gameGroupId)
+                SpeedrunMiddlewareAPI.make(requireContext()).getGameGroupMetrics(gameGroupId)
         )
     }
 
     companion object {
-        const val EXTRA_GAME_GROUP_ID = "gg_id"
+        const val EXTRA_GAME_GROUP_ID = "ggId"
     }
 }

@@ -4,6 +4,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'io.fabric'
+apply plugin: "androidx.navigation.safeargs.kotlin"
 
 def keystorePropertiesFile = rootProject.file("keystore.properties")
 
@@ -22,8 +23,8 @@ android {
         applicationId "danb.speedrunbrowser"
         minSdkVersion 21
         targetSdkVersion 30
-        versionCode 41
-        versionName "1.17"
+        versionCode 42
+        versionName "1.18"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         multiDexEnabled true
@@ -90,7 +91,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
-    implementation 'androidx.recyclerview:recyclerview:1.2.0-alpha06'
+    implementation 'androidx.recyclerview:recyclerview:1.2.0-beta01'
 
     implementation "androidx.constraintlayout:constraintlayout:2.0.4"
 
@@ -115,11 +116,20 @@ dependencies {
 
     implementation 'androidx.tvprovider:tvprovider:1.0.0'
 
-    implementation 'androidx.preference:preference:1.1.1'
+    implementation 'androidx.preference:preference-ktx:1.1.1'
 
-    implementation 'com.google.android.gms:play-services-auth:18.1.0'
+    implementation "androidx.navigation:navigation-fragment-ktx:2.3.2"
+    implementation "androidx.navigation:navigation-ui-ktx:2.3.2"
 
-    implementation 'com.google.android.play:core:1.8.3'
+    implementation "androidx.navigation:navigation-dynamic-features-fragment:2.3.2"
+
+
+    implementation "androidx.navigation:navigation-compose:1.0.0-alpha03"
+
+
+    implementation 'com.google.android.gms:play-services-auth:19.0.0'
+
+    implementation 'com.google.android.play:core:1.9.0'
 
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'

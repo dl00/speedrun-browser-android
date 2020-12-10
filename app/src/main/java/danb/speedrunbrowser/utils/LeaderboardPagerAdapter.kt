@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager
+import danb.speedrunbrowser.BuildConfig
 
 import danb.speedrunbrowser.LeaderboardFragment
 import danb.speedrunbrowser.api.objects.Category
@@ -55,13 +56,11 @@ class LeaderboardPagerAdapter(fm: FragmentManager, private val game: Game, priva
             }
         }
 
-        if (!perLevelCategories.isEmpty()) {
+        if (perLevelCategories.isNotEmpty()) {
             this.levels = game.levels
         } else {
             this.levels = ArrayList(0)
         }
-
-        assert(perLevelCategories.isEmpty() || !levels!!.isEmpty())
 
         existingFragments = arrayOfNulls(count)
 

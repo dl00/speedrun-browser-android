@@ -8,14 +8,14 @@ class GameStatisticsFragment : StatisticsFragment() {
     override fun onStart() {
         super.onStart()
 
-        val gameId: String? = arguments!!.getString(EXTRA_GAME_ID)
+        val gameId: String? = requireArguments().getString(EXTRA_GAME_ID)
 
         if(gameId != null) {
 
-            Analytics.logItemView(context!!, "game_chart", gameId)
+            Analytics.logItemView(requireContext(), "game_chart", gameId)
 
             onDataReadyListener = {
-                activity!!.title = it.game!!.resolvedName
+                requireActivity().title = it.game!!.resolvedName
             }
 
             statsView.addMetrics(listOf(
@@ -71,12 +71,12 @@ class GameStatisticsFragment : StatisticsFragment() {
             ))
 
             setDataSourceAPIResponse(
-                    SpeedrunMiddlewareAPI.make(context!!).getGameMetrics(gameId)
+                    SpeedrunMiddlewareAPI.make(requireContext()).getGameMetrics(gameId)
             )
         }
     }
 
     companion object {
-        const val EXTRA_GAME_ID = "game_id"
+        const val EXTRA_GAME_ID = "gameId"
     }
 }

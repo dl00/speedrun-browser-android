@@ -29,11 +29,14 @@ import android.os.PersistableBundle
 import android.view.*
 import android.view.inputmethod.InputMethodManager
 import androidx.core.content.ContextCompat
+import androidx.navigation.*
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.NavigationUI
 import androidx.viewpager.widget.ViewPager
 import danb.speedrunbrowser.views.MultiVideoView
 
 
-class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.OnItemClickListener, Consumer<SpeedrunMiddlewareAPI.APIResponse<WhatIsEntry>>, RunDetailFragment.VideoSupplier {
+class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.OnItemClickListener, Consumer<SpeedrunMiddlewareAPI.APIResponse<WhatIsEntry>>, RunDetailFragment.VideoSupplier, NavController.OnDestinationChangedListener {
 
     private var whatIsQuery: Disposable? = null
 
@@ -48,6 +51,14 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
     private val mDisposables = CompositeDisposable()
 
     private var hasFocusedGameList = false
+
+    private val searchNavOptions = NavOptions.Builder()
+            .setEnterAnim(R.anim.fade_shift_top_in)
+            .setExitAnim(R.anim.fade_shift_top_out)
+            .setPopExitAnim(R.anim.fade_shift_top_out)
+            .setPopEnterAnim(R.anim.fade_shift_top_out)
+            .build()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,13 +77,11 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
 
         mVideoView = MultiVideoView(this, null)
 
-        supportFragmentManager.removeOnBackStackChangedListener {
-            onFragmentMove()
-        }
 
-        supportFragmentManager.addOnBackStackChangedListener {
-            onFragmentMove()
-        }
+        val navController = findNavController(R.id.nav_host)
+        navController.addOnDestinationChangedListener(this)
+
+        NavigationUI.setupActionBarWithNavController(this, navController)
 
         if (savedInstanceState?.getBundle(SAVED_INTENT_EXTRAS) != null && intent.getStringExtra(EXTRA_FRAGMENT_CLASSPATH) == null) {
             val intent = Intent(this, SpeedrunBrowserActivity::class.java)
@@ -98,13 +107,9 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         outState.putBundle(SAVED_INTENT_EXTRAS, intent.extras)
     }
 
-    private fun onFragmentMove() {
+    override fun onDestinationChanged(controller: NavController, destination: NavDestination, arguments: Bundle?) {
         applyFullscreenMode(false)
-
         hideKeyboard()
-
-        supportActionBar!!.setDisplayHomeAsUpEnabled(supportFragmentManager.backStackEntryCount != 0 ||
-                supportFragmentManager.fragments[0] !is GameListFragment)
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -126,17 +131,13 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
-        // reattach current fragment
-        val frag = supportFragmentManager.fragments[0]
-
-        // TODO: clean this up
-        if (frag is RunDetailFragment)
-            return
+        /*val frag = supportFragmentManager.primaryNavigationFragment!!
 
         supportFragmentManager.beginTransaction()
                 .detach(frag)
-                .attach(frag)
-                .commit()
+                //.attach(frag)
+                .replace(R.id.nav_host, frag)
+                .commit()*/
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -149,18 +150,7 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
         if (id == android.R.id.home) {
-            if(supportFragmentManager.backStackEntryCount >= 1) {
-                val entry = supportFragmentManager.getBackStackEntryAt(
-                        0)
-
-                // clear the backstack and return to app root
-                supportFragmentManager.popBackStack(entry.id,
-                        FragmentManager.POP_BACK_STACK_INCLUSIVE)
-                supportFragmentManager.executePendingTransactions()
-            }
-            else {
-                showFragment(GameListFragment(), null, false)
-            }
+            return findNavController(R.id.nav_host).navigateUp()
         }
         return super.onOptionsItemSelected(item)
     }
@@ -169,23 +159,14 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
 
         setIntent(intent)
 
-        // Create the detail fragment and add it to the activity
-        // using a fragment transaction.
-        val args = intent.extras
-
-        val cp = args?.getString(EXTRA_FRAGMENT_CLASSPATH)
-
-        val frag: Fragment
-
         when {
-            cp != null -> frag = (Class.forName(cp) as Class<Fragment>).getConstructor().newInstance()
             intent.data != null -> {
                 val segs = intent.data!!.pathSegments
 
                 if (segs.intersect(BLACKLIST_URL_SEGS).isNotEmpty()) {
                     val notFoundArgs = Bundle()
                     notFoundArgs.putParcelable(NotFoundFragment.ARG_URL, intent.data!!)
-                    showFragment(NotFoundFragment(), notFoundArgs)
+                    findNavController(R.id.nav_host).navigate(R.id.notFoundFragment, notFoundArgs)
                     return
                 }
 
@@ -202,14 +183,8 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
                             .subscribe(this, ConnectionErrorConsumer(this))
                     return
                 }
-                else {
-                    frag = GameListFragment()
-                }
             }
-            else -> frag = GameListFragment()
         }
-
-        showFragment(frag, args, true)
     }
 
     override fun onBackPressed() {
@@ -226,31 +201,6 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         }
 
         super.onBackPressed()
-    }
-
-    private fun showFragment(frag: Fragment, args: Bundle?, backstack: Boolean = true) {
-        mVideoView.stopVideo()
-
-        hasFocusedGameList = false
-
-        if (args != null)
-            frag.arguments = args
-
-        val transaction = supportFragmentManager.beginTransaction()
-        transaction
-                .setCustomAnimations(
-                        R.anim.fade_shift_top_in,
-                        R.anim.fade_shift_top_out,
-                        R.anim.fade_shift_top_in,
-                        R.anim.fade_shift_top_out)
-                .replace(R.id.detail_container, frag)
-
-        if (backstack && supportFragmentManager.fragments.isNotEmpty()) {
-            transaction.addToBackStack(null)
-            supportActionBar?.setDisplayShowHomeEnabled(true)
-        }
-
-        transaction.commit()
     }
 
     fun applyFullscreenMode(enabled: Boolean) {
@@ -286,7 +236,6 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         }
 
         val args = Bundle()
-        var frag: Fragment? = null
 
         val entries = whatIsEntryAPIResponse.data.filterNotNull()
 
@@ -294,7 +243,7 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
             Analytics.logNotFound(this, intent.data!!)
 
             args.putParcelable(NotFoundFragment.ARG_URL, intent.data!!)
-            showFragment(NotFoundFragment(), args)
+            findNavController(R.id.nav_host).navigate(R.id.notFoundFragment, args)
 
             return
         }
@@ -304,20 +253,17 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
         when (lastEntry.type) {
             "game" -> {
                 args.putString(GameDetailFragment.ARG_GAME_ID, lastEntry.id)
-                frag = GameDetailFragment()
+                findNavController(R.id.nav_host).navigate(R.id.gameDetailFragment, args)
             }
             "player" -> {
                 args.putString(PlayerDetailFragment.ARG_PLAYER_ID, lastEntry.id)
-                frag = PlayerDetailFragment()
+                findNavController(R.id.nav_host).navigate(R.id.playerDetailFragment, args)
             }
             "run" -> {
                 args.putString(RunDetailFragment.ARG_RUN_ID, lastEntry.id)
-                frag = RunDetailFragment()
+                findNavController(R.id.nav_host).navigate(R.id.runDetailFragment, args)
             }
         }
-
-        if (frag != null)
-            showFragment(frag, args)
     }
 
     override fun beforeTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {
@@ -348,27 +294,21 @@ class SpeedrunBrowserActivity : AppCompatActivity(), TextWatcher, AdapterView.On
     }
 
     private fun showGame(gameId: String) {
-        val intent = Intent(this, SpeedrunBrowserActivity::class.java)
-        intent.putExtra(EXTRA_FRAGMENT_CLASSPATH, GameDetailFragment::class.java.canonicalName)
-        intent.putExtra(GameDetailFragment.ARG_GAME_ID, gameId)
-
-        startActivity(intent)
+        val b = Bundle()
+        b.putString("gameId", gameId)
+        findNavController(R.id.nav_host).navigate(R.id.gameDetailFragment, b, searchNavOptions)
     }
 
     private fun showGameGroup(gameGroup: GameGroup) {
-        val intent = Intent(this, SpeedrunBrowserActivity::class.java)
-        intent.putExtra(EXTRA_FRAGMENT_CLASSPATH, GameListFragment::class.java.canonicalName)
-        intent.putExtra(GameListFragment.ARG_GAME_GROUP, gameGroup)
-
-        startActivity(intent)
+        val b = Bundle()
+        b.putSerializable("gameGroup", gameGroup)
+        findNavController(R.id.nav_host).navigate(R.id.gameListFragment, b, searchNavOptions)
     }
 
     private fun showPlayer(playerId: String) {
-        val intent = Intent(this, SpeedrunBrowserActivity::class.java)
-        intent.putExtra(EXTRA_FRAGMENT_CLASSPATH, PlayerDetailFragment::class.java.canonicalName)
-        intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, playerId)
-
-        startActivity(intent)
+        val b = Bundle()
+        b.putString("playerId", playerId)
+        findNavController(R.id.nav_host).navigate(R.id.playerDetailFragment, b, searchNavOptions)
     }
 
     private fun hideKeyboard() {

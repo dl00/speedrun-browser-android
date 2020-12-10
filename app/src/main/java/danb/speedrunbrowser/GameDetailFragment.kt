@@ -21,6 +21,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.navigation.fragment.findNavController
 import java.util.HashSet
 
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
@@ -463,10 +464,7 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
 
     private fun viewStats() {
         if(mGame != null) {
-            val intent = Intent(requireContext(), SpeedrunBrowserActivity::class.java)
-            intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, GameStatisticsFragment::class.java.canonicalName)
-            intent.putExtra(GameStatisticsFragment.EXTRA_GAME_ID, mGame!!.id)
-            startActivity(intent)
+            findNavController().navigate(GameDetailFragmentDirections.actionGameDetailFragmentToGameStatisticsFragment(mGame!!.id))
         }
     }
 
@@ -513,9 +511,9 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
          * The fragment argument representing the item ID that this fragment
          * represents.
          */
-        const val ARG_GAME_ID = "game_id"
-        const val ARG_LEADERBOARD_ID = "leaderboard_id"
-        const val ARG_VARIABLE_SELECTIONS = "variable_selections"
+        const val ARG_GAME_ID = "gameId"
+        const val ARG_LEADERBOARD_ID = "leaderboardId"
+        const val ARG_VARIABLE_SELECTIONS = "variableSelections"
 
         /**
          * Saved state options

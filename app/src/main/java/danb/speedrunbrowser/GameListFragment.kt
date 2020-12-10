@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
+import androidx.navigation.fragment.findNavController
 import androidx.preference.PreferenceManager
 import androidx.viewpager.widget.ViewPager
 import com.google.android.gms.security.ProviderInstaller
@@ -229,11 +230,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                     .replace(R.id.detail_container, mDetailFragment!!)
                     .commit()
         } else {
-            val intent = Intent(requireContext(), SpeedrunBrowserActivity::class.java)
-            intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, GameDetailFragment::class.java.canonicalName)
-            intent.putExtra(GameDetailFragment.ARG_GAME_ID, id)
-
-            startActivity(intent)
+            findNavController().navigate(GameListFragmentDirections.actionGameListFragmentToGameDetailFragment(id, null, null))
         }
     }
 
@@ -249,20 +246,12 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                     .replace(R.id.detail_container, newFrag)
                     .commit()
         } else {
-            val intent = Intent(requireContext(), SpeedrunBrowserActivity::class.java)
-            intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, PlayerDetailFragment::class.java.canonicalName)
-            intent.putExtra(PlayerDetailFragment.ARG_PLAYER_ID, id)
-
-            startActivity(intent)
+            findNavController().navigate(GameListFragmentDirections.actionGameListFragmentToPlayerDetailFragment(null, id))
         }
     }
 
     private fun showRun(id: String) {
-        val intent = Intent(requireContext(), SpeedrunBrowserActivity::class.java)
-        intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, RunDetailFragment::class.java.canonicalName)
-        intent.putExtra(RunDetailFragment.ARG_RUN_ID, id)
-
-        startActivity(intent)
+        findNavController().navigate(GameListFragmentDirections.actionGameListFragmentToRunDetailFragment(null, null, null, null, id))
     }
 
     private fun showStream(twitchUrl: String) {
@@ -281,10 +270,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
     }
 
     private fun showSettings() {
-        val intent = Intent(context, SpeedrunBrowserActivity::class.java)
-        intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, PreferenceFragment::class.java.canonicalName)
-
-        startActivity(intent)
+        findNavController().navigate(R.id.preferenceFragment)
     }
 
     override fun onItemSelected(itemType: ItemType?, itemId: String, fragment: Fragment, options: ActivityOptions?) {
@@ -303,21 +289,12 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
             return
         }
 
-        val intent = Intent(requireContext(), SpeedrunBrowserActivity::class.java)
-        intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, RunDetailFragment::class.java.canonicalName)
-        intent.putExtra(RunDetailFragment.ARG_MODERATION_LIST, ArrayList(mModeratorRunSequence))
-        startActivity(intent)
+        findNavController().navigate(GameListFragmentDirections.actionGameListFragmentToRunDetailFragment(null, null, null, null, null, mModeratorRunSequence.toTypedArray()))
+
     }
 
     private fun viewStats() {
-        val intent = Intent(requireContext(), SpeedrunBrowserActivity::class.java)
-        intent.putExtra(SpeedrunBrowserActivity.EXTRA_FRAGMENT_CLASSPATH, GameGroupStatisticsFragment::class.java.canonicalName)
-
-        if (mGameGroup != null) {
-            intent.putExtra(GameGroupStatisticsFragment.EXTRA_GAME_GROUP_ID, mGameGroup!!.id)
-        }
-
-        startActivity(intent)
+        findNavController().navigate(GameListFragmentDirections.actionGameListFragmentToGameGroupStatisticsFragment(mGameGroup?.id))
     }
 
     fun requestFocus() {
@@ -480,9 +457,19 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                     fragments[1].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
                         override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
                             return (if (mGameGroup != null)
-                                api.listLatestRunsByGenre(mGameGroup!!.id, offset, true)
+                                api.listLatestRunsByGenre(mGameGroup!!.id, offset, SpeedrunMiddlewareAPI.LIST_LATEST_WR_RUNS)
                             else
-                                api.listLatestRuns(offset, true)
+                                api.listLatestRuns(offset, SpeedrunMiddlewareAPI.LIST_LATEST_WR_RUNS)
+                                    ).map(ItemListFragment.GenericMapper())
+                        }
+                    }, "wrs", getString(R.string.label_list_mode_wrs)))
+
+                    fragments[1].addListMode(ItemListFragment.Companion.ItemListMode(object : ItemListFragment.ItemSource {
+                        override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
+                            return (if (mGameGroup != null)
+                                api.listLatestRunsByGenre(mGameGroup!!.id, offset, SpeedrunMiddlewareAPI.LIST_LATEST_VERIFIED_RUNS)
+                            else
+                                api.listLatestRuns(offset, SpeedrunMiddlewareAPI.LIST_LATEST_VERIFIED_RUNS)
                                     ).map(ItemListFragment.GenericMapper())
                         }
                     }, "verified", getString(R.string.label_list_mode_verified)))
@@ -491,9 +478,9 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                         override fun list(offset: Int): Observable<SpeedrunMiddlewareAPI.APIResponse<Any?>> {
                             return (if (mGameGroup != null)
                                 api.listLatestRunsByGenre(
-                                        mGameGroup!!.id, offset, false)
+                                        mGameGroup!!.id, offset, SpeedrunMiddlewareAPI.LIST_LATEST_UNVERIFIED_RUNS)
                             else
-                                api.listLatestRuns(offset, false)
+                                api.listLatestRuns(offset, SpeedrunMiddlewareAPI.LIST_LATEST_UNVERIFIED_RUNS)
                                     ).map(ItemListFragment.GenericMapper())
                         }
                     }, "unverified", getString(R.string.label_list_mode_unverified)))
@@ -588,7 +575,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
     companion object {
         private val TAG = GameListFragment::class.java.simpleName
 
-        const val ARG_GAME_GROUP = "game_group"
+        const val ARG_GAME_GROUP = "gameGroup"
 
         private const val SAVED_MAIN_PAGER = "main_pager"
     }

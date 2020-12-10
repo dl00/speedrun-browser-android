@@ -8,6 +8,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.fragment.app.Fragment
+import androidx.navigation.NavOptions
+import androidx.navigation.fragment.findNavController
 import danb.speedrunbrowser.utils.Util
 
 class NotFoundFragment : Fragment() {
@@ -16,7 +18,7 @@ class NotFoundFragment : Fragment() {
 
     override fun setArguments(args: Bundle?) {
         super.setArguments(args)
-        data = args!!.getParcelable(ARG_URL) ?: Uri.EMPTY
+        data = args?.getParcelable(ARG_URL) ?: Uri.EMPTY
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -34,11 +36,14 @@ class NotFoundFragment : Fragment() {
     }
 
     private fun openWebsite() {
-        startActivity(Util.openInBrowser(context!!, data))
+        startActivity(Util.openInBrowser(requireContext(), data))
     }
 
     private fun showMainPage() {
-        val intent = Intent(context!!, SpeedrunBrowserActivity::class.java)
+
+        findNavController().navigate(R.id.gameListFragment, null, NavOptions.Builder().setLaunchSingleTop(true).build())
+
+        val intent = Intent(requireContext(), SpeedrunBrowserActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(intent)
     }

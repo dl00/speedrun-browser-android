@@ -220,6 +220,6 @@ class LeaderboardStatisticsFragment : StatisticsFragment() {
     }
 
     companion object {
-        const val EXTRA_LEADERBOARD_ID = "game_id"
+        const val EXTRA_LEADERBOARD_ID = "leaderboardId"
     }
 }

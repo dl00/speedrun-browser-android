@@ -157,6 +157,6 @@ class PlayerStatisticsFragment : StatisticsFragment() {
     }
 
     companion object {
-        const val ARG_PLAYER_ID = "player_id"
+        const val ARG_PLAYER_ID = "playerId"
     }
 }
