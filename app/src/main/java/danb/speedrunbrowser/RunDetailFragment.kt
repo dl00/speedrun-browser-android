@@ -205,6 +205,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
     private fun loadRun(runId: String?) {
         Log.d(TAG, "Download runId: " + runId!!)
         mDisposables.add(SpeedrunMiddlewareAPI.make(requireContext()).listRuns(runId)
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(Consumer { (data) ->
                     if (data == null) {
@@ -242,6 +243,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
 
         // set an interval to record the watch time
         mDisposableBackgroundSaveInterval = FlowableInterval(BACKGROUND_SEEK_SAVE_START.toLong(), BACKGROUND_SEEK_SAVE_PERIOD.toLong(), TimeUnit.SECONDS, Schedulers.io())
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ recordStartPlaybackTime() }, { throwable -> Log.w(TAG, "Problem running background save interval: ", throwable) })
     }
@@ -464,6 +466,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
 
             mDisposables.add(
                     ImageLoader(requireContext()).loadImage(mGame!!.assets.coverLarge!!.uri)
+                            .subscribeOn(Schedulers.io())
                             .subscribe(coverConsumer))
         }
 
@@ -501,6 +504,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
             if(loadImage != null) {
                 mDisposables.add(
                         ImageLoader(requireContext()).loadImage(loadImage)
+                                .subscribeOn(Schedulers.io())
                                 .subscribe(ImageViewPlacerConsumer(mRunPlaceImg)))
             }
 
@@ -605,6 +609,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
         disableModTools()
 
         mDisposables.add(SpeedrunAPI.make(requireContext()).setRunStatus(mSrcApiKey, mRun!!.run.id, SpeedrunAPI.APIRunStatus(status = RunStatus(status = "verified")))
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
                     doNextModeration()
@@ -631,6 +636,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
                     status = "rejected",
                     reason = input.text.toString()
             )))
+                    .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe({
                         doNextModeration()
@@ -667,6 +673,7 @@ class RunDetailFragment : Fragment(), MultiVideoView.Listener {
 
         // prevent screen rotation from being locked
         mDisposables.add(Observable.timer(SCREEN_LOCK_ROTATE_PERIOD.toLong(), TimeUnit.SECONDS)
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED })
     }

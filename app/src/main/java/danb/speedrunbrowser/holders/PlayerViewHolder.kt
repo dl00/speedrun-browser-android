@@ -15,6 +15,7 @@ import danb.speedrunbrowser.api.objects.User
 import danb.speedrunbrowser.utils.ImageLoader
 import danb.speedrunbrowser.utils.ImageViewPlacerConsumer
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 
 class PlayerViewHolder(v: View) : RecyclerView.ViewHolder(v) {
 
@@ -31,6 +32,7 @@ class PlayerViewHolder(v: View) : RecyclerView.ViewHolder(v) {
             mPlayerImage.visibility = View.VISIBLE
             try {
                 disposables.add(ImageLoader(context).loadImage(user.iconUrl)
+                        .subscribeOn(Schedulers.io())
                         .subscribe(ImageViewPlacerConsumer(mPlayerImage)))
             } catch (e: MalformedURLException) {
                 Log.w(TAG, "Could not generate player image URL:", e)

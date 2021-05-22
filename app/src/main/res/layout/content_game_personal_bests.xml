@@ -25,16 +25,16 @@
             android:layout_width="60dp"
             android:layout_height="85dp" />
 
-        <TableLayout
+        <LinearLayout
             android:id="@+id/tablePersonalBests"
-            android:stretchColumns="*"
+            android:orientation="vertical"
             android:layout_marginLeft="@dimen/half_fab_margin"
             android:layout_marginRight="@dimen/half_fab_margin"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1">
 
-        </TableLayout>
+        </LinearLayout>
 
     </LinearLayout>
 </LinearLayout>

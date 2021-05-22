@@ -173,6 +173,7 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
     private fun loadGame(gameId: String?, leaderboardId: String?): Disposable {
         Log.d(TAG, "Downloading game data: " + gameId!!)
         return SpeedrunMiddlewareAPI.make(context!!).listGames(gameId)
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(Consumer { gameAPIResponse ->
 
@@ -351,9 +352,11 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
 
                 if (mGame!!.assets.coverLarge != null)
                     mDisposables.add(il.loadImage(mGame!!.assets.coverLarge!!.uri)
+                            .subscribeOn(Schedulers.io())
                             .subscribe(coverConsumer))
                 if (mGame!!.assets.background != null && mBackground != null)
                     mDisposables.add(il.loadImage(mGame!!.assets.background!!.uri)
+                            .subscribeOn(Schedulers.io())
                             .subscribe(ImageViewPlacerConsumer(mBackground!!)))
             }
         }

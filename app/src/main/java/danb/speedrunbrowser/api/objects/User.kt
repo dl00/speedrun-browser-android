@@ -44,8 +44,6 @@ data class User(
     val youtube: MediaLink? = null,
     val twitter: MediaLink? = null,
     val speedrunslive: MediaLink? = null,
-
-    val bests: Map<String, UserGameBests>? = null
 ) : Serializable, SearchResultItem {
 
     override val type: String
@@ -92,38 +90,6 @@ data class User(
             tv.paint.shader = nameStyle.getTextShader(bounds.width().toFloat(), false)
         }
     }
-
-    data class UserGameBests(
-        val id: String? = null,
-        val names: Map<String, String>? = null,
-        val assets: GameAssets? = null,
-
-        val categories: Map<String, UserCategoryBest>? = null
-    ) : Serializable {
-
-        val newestRun: LeaderboardRunEntry?
-            get() = categories?.maxBy { it.value.newestRun.run.date ?: "" }!!.value.run
-    }
-
-    data class UserCategoryBest(
-        val id: String,
-        val name: String,
-        val type: String? = null,
-
-        val levels: HashMap<String, UserLevelBest>? = null,
-
-        val run: LeaderboardRunEntry? = null
-    ) : Serializable {
-        val newestRun: LeaderboardRunEntry
-            get() = run ?: levels?.maxBy { it.value.run.run.date ?: "" }!!.value.run
-    }
-
-    data class UserLevelBest(
-            val id: String,
-            val name: String,
-
-            val run: LeaderboardRunEntry
-    ) : Serializable
 
     companion object {
 

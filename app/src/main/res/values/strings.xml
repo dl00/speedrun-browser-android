@@ -86,12 +86,13 @@
         If you like the app, please consider supporting my motivation by sharing or rating.
     </string>
     <string name="dialog_msg_release_notes">
-        Thanks for downloading the app!\n
+        Thanks for using the app!\n
         \n
-        This is a regular release, with the following changes:\n
-        * Complete navigation system overhaul. App should feel even more fluid and navigate correctly\n
-        * New recent WR section, viewable on every game group\n
-        * Misc bug fixes (special thanks Avasam for reporting a few and being so detailed)\n
+        I know its been awhile! This release was created to address some issues with the growing
+        size of leaderboards and some player record pages. Specifically:\n
+        * Partial loading of leaderboards which are very, very long\n
+        * Paginated loading of player pages and regrouping\n
+        * Server side improvements to signficiantly reduce costs and improve performance\n
         \n
         Enjoying the app? Please consider rating or sharing!
     </string>

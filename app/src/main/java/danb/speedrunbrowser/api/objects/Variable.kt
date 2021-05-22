@@ -97,14 +97,14 @@ data class Variable(
             return true
         }
 
-        fun filterLeaderboardRuns(lb: Leaderboard, activeVariables: Collection<Variable>): List<LeaderboardRunEntry> {
+        fun filterLeaderboardRuns(lb: ArrayList<LeaderboardRunEntry>, activeVariables: Collection<Variable>): List<LeaderboardRunEntry> {
             val shownRuns = ArrayList<LeaderboardRunEntry>()
 
             var curPlace = 1
             var lastTime = -1.0f
             val seenPlayers = mutableSetOf<String>()
 
-            for (re in lb.runs!!) {
+            for (re in lb) {
                 if (shouldShowRun(re.run, activeVariables)) {
 
                     val playerIds = re.run.players!!.joinToString("_") { if(!it.isGuest) { it.id } else { it.name.toString() } }

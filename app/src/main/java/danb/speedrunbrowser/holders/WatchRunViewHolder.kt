@@ -12,6 +12,7 @@ import danb.speedrunbrowser.api.objects.LeaderboardRunEntry
 import danb.speedrunbrowser.utils.ImageLoader
 import danb.speedrunbrowser.utils.ImageViewPlacerConsumer
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 
 class WatchRunViewHolder(v: View) : RecyclerView.ViewHolder(v) {
 
@@ -41,6 +42,7 @@ class WatchRunViewHolder(v: View) : RecyclerView.ViewHolder(v) {
             consumer.roundedCorners = context.resources.getDimensionPixelSize(R.dimen.game_cover_rounded_corners).toFloat()
 
             disposables.add(ImageLoader(context).loadImage(entry.run.game.assets.coverLarge.uri)
+                    .subscribeOn(Schedulers.io())
                     .subscribe(consumer))
         } else
             mGameImage.visibility = View.GONE

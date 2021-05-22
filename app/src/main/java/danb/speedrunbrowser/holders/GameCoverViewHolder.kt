@@ -12,6 +12,7 @@ import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.utils.ImageLoader
 import danb.speedrunbrowser.utils.ImageViewPlacerConsumer
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 
 class GameCoverViewHolder(v: View) : ParallaxViewHolder(v) {
     private val mName: TextView = v.findViewById(R.id.txtGameName)
@@ -23,6 +24,7 @@ class GameCoverViewHolder(v: View) : ParallaxViewHolder(v) {
 
         if (game.assets.coverLarge != null)
             disposables.add(ImageLoader(ctx).loadImage(game.assets.coverLarge.uri)
+                    .subscribeOn(Schedulers.io())
                     .subscribe(ImageViewPlacerConsumer(mCover)))
         else {
         }

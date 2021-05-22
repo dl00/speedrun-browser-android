@@ -197,6 +197,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
 
     private fun initModeration(userId: String) {
         mDisposables!!.add(api.listModRuns(userId, "")
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
             // right now we only care about the IDs, so cut out all the other data

@@ -18,6 +18,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.QueryMap
 
 object SpeedrunMiddlewareAPI {
     const val MIN_AUTOCOMPLETE_LENGTH = 3
@@ -26,7 +27,7 @@ object SpeedrunMiddlewareAPI {
         get() = if (BuildConfig.DEBUG) {
             "https://dev.sr-browser.dbeal.dev/api/v1/"
         } else {
-            "https://dev.sr-browser.dbeal.dev/api/v1/"
+            "https://sr-browser.dbeal.dev/api/v1/"
         }
 
     // type adapters go here
@@ -136,9 +137,15 @@ object SpeedrunMiddlewareAPI {
         @GET("users/{ids}")
         fun listPlayers(@Path("ids") ids: String): Observable<APIResponse<User>>
 
+        @GET("users/{playerId}/bests")
+        fun listPlayerBests(@Path("playerId") id: String, @Query("startAfter") startAfter: String): Observable<APIResponse<LeaderboardRunEntry>>
+
         // Leaderboards
         @GET("leaderboards/{leaderboardId}")
         fun listLeaderboards(@Path("leaderboardId") categoryId: String): Observable<APIResponse<Leaderboard>>
+
+        @GET("leaderboards/{leaderboardId}/runs")
+        fun listLeaderboardRuns(@Path("leaderboardId") categoryId: String, @Query("startAfter") startAfter: String, @QueryMap vars: Map<String, String>): Observable<APIResponse<LeaderboardRunEntry>>
 
         // Runs
         @GET("runs/latest")

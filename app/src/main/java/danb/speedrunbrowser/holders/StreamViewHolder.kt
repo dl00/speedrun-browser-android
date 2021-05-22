@@ -10,6 +10,7 @@ import danb.speedrunbrowser.api.objects.Stream
 import danb.speedrunbrowser.utils.ImageLoader
 import danb.speedrunbrowser.utils.ImageViewPlacerConsumer
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import java.net.URL
 
 class StreamViewHolder(v: View) : RecyclerView.ViewHolder(v) {
@@ -34,6 +35,7 @@ class StreamViewHolder(v: View) : RecyclerView.ViewHolder(v) {
                 .replace("{height}", mThumbnailImage.height.toString()))
 
         disposables.add(ImageLoader(context).loadImage(finalThumbnailUrl, false)
+                .subscribeOn(Schedulers.io())
                 .subscribe(ImageViewPlacerConsumer(mThumbnailImage)))
     }
 }

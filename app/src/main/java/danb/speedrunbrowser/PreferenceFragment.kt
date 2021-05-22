@@ -12,6 +12,7 @@ import danb.speedrunbrowser.api.SpeedrunAPI
 import danb.speedrunbrowser.utils.Util
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.functions.Consumer
+import io.reactivex.schedulers.Schedulers
 
 class PreferenceFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -39,8 +40,9 @@ class PreferenceFragment : PreferenceFragmentCompat() {
             if (key != null && key != "") {
                 // check API key
                  SpeedrunAPI.make(context).getProfile(key)
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(Consumer { data ->
+                     .subscribeOn(Schedulers.io())
+                     .observeOn(AndroidSchedulers.mainThread())
+                     .subscribe(Consumer { data ->
                             //Util.showMsgToast(context, getString(R.string.msg_welcome_user, data.data!!.resolvedName))
                             val d = ContextCompat.getDrawable(context, R.drawable.baseline_done_24)!!
                             d.setTint(ContextCompat.getColor(context, R.color.colorGood))

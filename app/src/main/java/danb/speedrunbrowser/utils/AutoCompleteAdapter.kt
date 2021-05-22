@@ -21,6 +21,7 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.Consumer
+import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.Subject
 
 class AutoCompleteAdapter(private val ctx: Context, private val disposables: CompositeDisposable) : BaseAdapter(), Consumer<SpeedrunMiddlewareAPI.APISearchResponse> {
@@ -100,6 +101,7 @@ class AutoCompleteAdapter(private val ctx: Context, private val disposables: Com
         val iconUrl = item.iconUrl
         if (iconUrl != null) {
             disposables.add(ImageLoader(ctx).loadImage(iconUrl)
+                    .subscribeOn(Schedulers.io())
                     .subscribe(ImageViewPlacerConsumer(viewIcon)))
         }
         else
@@ -132,6 +134,7 @@ class AutoCompleteAdapter(private val ctx: Context, private val disposables: Com
                     else
                         SpeedrunMiddlewareAPI.make(ctx).autocomplete(s)
                 }
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this))
     }

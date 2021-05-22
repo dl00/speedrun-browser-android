@@ -23,8 +23,8 @@ android {
         applicationId "danb.speedrunbrowser"
         minSdkVersion 21
         targetSdkVersion 30
-        versionCode 42
-        versionName "1.18"
+        versionCode 44
+        versionName "1.19 "
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         multiDexEnabled true

@@ -100,12 +100,12 @@
             android:layout_marginStart="@dimen/half_fab_margin"
             android:layout_marginEnd="@dimen/half_fab_margin"
             android:layout_height="wrap_content">
-
+            
             <LinearLayout
-                android:id="@+id/bestsLayout"
-                android:orientation="vertical"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -121,6 +121,17 @@
                     android:layout_gravity="center"
                     android:text="@string/label_you_can_click" />
 
+                <LinearLayout
+                    android:id="@+id/bestsLayout"
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <danb.speedrunbrowser.views.ProgressSpinnerView
+                    android:id="@+id/bestsSpinner"
+                    android:layout_gravity="center"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
 
             </LinearLayout>
 

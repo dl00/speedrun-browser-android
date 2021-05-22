@@ -11,6 +11,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.activity.result.ActivityResultCallback
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.ActivityResultRegistry
+import androidx.activity.result.contract.ActivityResultContract
 import androidx.core.content.ContextCompat
 import androidx.core.view.get
 
@@ -39,12 +43,13 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Consumer
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_run_detail.*
 
 /**
  * A fragment representing a single leaderboard, containing a list a records.
  */
-class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIResponse<Leaderboard>> {
+class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIResponse<LeaderboardRunEntry>> {
 
     private var mDisposables: CompositeDisposable? = null
 
@@ -67,7 +72,8 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
 
     private var mContentLayout: LinearLayout? = null
 
-    private var mLeaderboard: Leaderboard? = null
+    private var mRuns: ArrayList<LeaderboardRunEntry> = arrayListOf()
+    private var mRunsLength: Int? = null
     private var mFilteredLeaderboardRuns: List<LeaderboardRunEntry>? = null
 
     private var mHsvSubcategories: HorizontalScrollView? = null
@@ -88,6 +94,12 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
         }
     }
 
+
+    private val lastLoadedRunId: String?
+    get() {
+        return mRuns.lastOrNull()?.run?.id
+    }
+
     val leaderboardId
         get() = if(mLevel != null) mCategory!!.id + "_" + mLevel!!.id else mCategory?.id
 
@@ -105,14 +117,14 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
         mDisposables = CompositeDisposable()
 
         var p = parentFragment
-        while(p != null) {
+        while (p != null) {
             if (p is LeaderboardInteracter)
                 p.addLeaderboard(this)
 
             p = p.parentFragment
         }
 
-        val args = Objects.requireNonNull<Bundle>(arguments)
+        val args = requireArguments()
 
         game = args.getSerializable(ARG_GAME) as Game
         mCategory = args.getSerializable(ARG_CATEGORY) as Category
@@ -121,11 +133,12 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
         if (filter != null)
             filter!!.setDefaults(mCategory!!.variables!!)
 
-        assert(game != null)
-        assert(mCategory != null)
+        if (BuildConfig.DEBUG && (mCategory == null || game == null)) {
+            error("game or category is not defined")
+        }
 
-        if (leaderboardId != null)
-            loadLeaderboard(leaderboardId!!)
+        /*if (leaderboardId != null)
+            loadLeaderboard(leaderboardId!!)*/
     }
 
     override fun onDestroy() {
@@ -135,11 +148,24 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
 
     fun loadLeaderboard(leaderboardId: String): Disposable {
 
-        Log.d(TAG, "Loading leaderboard: $leaderboardId")
+        Log.d(TAG, "Loading leaderboard: $leaderboardId ($lastLoadedRunId)")
 
-        return SpeedrunMiddlewareAPI.make(context!!).listLeaderboards(leaderboardId)
+        if(mRuns.isEmpty()) {
+            mProgressSpinner?.visibility = View.VISIBLE
+            mProgressSpinner?.start()
+        }
+
+        val filters = mCategory!!.variables?.mapNotNull {
+            if (!it.isSubcategory || it.scope!!.type == "single-level" && (mLevel == null || it.scope.level != mLevel!!.id))
+                null
+            else
+                "var_" + it.id to filter!!.getSelections(it.id)!!.first()
+        }?.toMap()
+
+        return SpeedrunMiddlewareAPI.make(requireContext()).listLeaderboardRuns(leaderboardId, lastLoadedRunId ?: "", filters ?: mapOf())
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(this, ConnectionErrorConsumer(context!!))
+                .subscribe(this, ConnectionErrorConsumer(requireContext()))
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -171,11 +197,11 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
 
         viewRulesButton.setOnClickListener { viewInfo() }
 
-        if (mLeaderboard != null) {
+        if (mRuns.isNotEmpty()) {
             mProgressSpinner!!.visibility = View.GONE
             mContentLayout!!.visibility = View.VISIBLE
 
-            if (mFilteredLeaderboardRuns != null && mFilteredLeaderboardRuns!!.isEmpty()) {
+            if (mRuns.isEmpty()) {
                 mEmptyRuns!!.visibility = View.VISIBLE
             }
         }
@@ -198,7 +224,7 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
             if (!isSubcategory || scope!!.type == "single-level" && (mLevel == null || scope.level != mLevel!!.id))
                 continue
 
-            val cg = ChipGroup(Objects.requireNonNull<Context>(context))
+            val cg = ChipGroup(requireContext())
             cg.tag = id
             cg.isFocusable = false
 
@@ -210,9 +236,9 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
             cg.layoutParams = lp
 
             for (vv in values.keys) {
-                val cv = Chip(context!!, null, R.style.Widget_MaterialComponents_Chip_Choice)
+                val cv = Chip(requireContext(), null, R.style.Widget_MaterialComponents_Chip_Choice)
                 cv.text = values.getValue(vv).label
-                cv.chipBackgroundColor = ContextCompat.getColorStateList(context!!, R.color.filter)
+                cv.chipBackgroundColor = ContextCompat.getColorStateList(requireContext(), R.color.filter)
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
                     cv.foreground = resources.getDrawable(R.drawable.clickable_item)
@@ -278,11 +304,11 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
     override fun onResume() {
         super.onResume()
 
-        if (mLeaderboard != null) {
+        if (mRuns.isNotEmpty()) {
             mProgressSpinner!!.visibility = View.GONE
             mContentLayout!!.visibility = View.VISIBLE
 
-            if (mFilteredLeaderboardRuns != null && mFilteredLeaderboardRuns!!.isEmpty()) {
+            if (mRuns.isEmpty()) {
                 mEmptyRuns!!.visibility = View.VISIBLE
             }
         }
@@ -296,33 +322,35 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
     }
 
     @Throws(Exception::class)
-    override fun accept(leaderboardAPIResponse: SpeedrunMiddlewareAPI.APIResponse<Leaderboard>) {
+    override fun accept(leaderboardAPIResponse: SpeedrunMiddlewareAPI.APIResponse<LeaderboardRunEntry>) {
 
         if(leaderboardAPIResponse.error != null) {
             Util.showErrorToast(requireContext(), getString(R.string.error_could_not_connect))
             return
         }
 
-        val leaderboards = leaderboardAPIResponse.data
+        val runs = leaderboardAPIResponse.data
 
-        if (leaderboards!!.isEmpty()) {
+        /*if (runs!!.isEmpty()) {
+            if(mRuns.si)
             // not found
             Util.showErrorToast(requireContext(), getString(R.string.error_missing_leaderboard, leaderboardId))
             return
-        }
+        }*/
 
-        mLeaderboard = leaderboards[0]
+        if(runs!!.isEmpty())
+            mRunsLength = mRuns.size
 
-        if(mLeaderboard == null)
-            mLeaderboard = Leaderboard.EMPTY_LEADERBOARD
+        mRuns.addAll(runs.filterNotNull())
+        generateFilteredRuns()
 
-        Log.d(TAG, "Downloaded " + mLeaderboard!!.runs!!.size + " runs!")
+        Log.d(TAG, "Downloaded " + mRuns.size + " runs!")
 
         if (mRunsListAdapter != null) {
             mRunsListAdapter!!.notifyDataSetChanged()
-            notifyFilterChanged()
+            //notifyFilterChanged()
 
-            if (context != null)
+            if (mRuns.size > 0 && mRuns.size == runs!!.size && context != null)
                 animateLeaderboardIn()
         }
     }
@@ -341,6 +369,9 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
                     override fun onAnimationStart(animator: Animator) {}
 
                     override fun onAnimationEnd(animator: Animator) {
+                        mProgressSpinner!!.translationY = 0.0f
+                        mProgressSpinner!!.alpha = 1.0f;
+                        mProgressSpinner!!.visibility = View.GONE
                         mProgressSpinner!!.stop()
                     }
 
@@ -369,16 +400,22 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
 
         updateSubcategorySelections()
 
-        if (mLeaderboard != null) {
+        mRuns.clear()
+        mRunsLength = null
+        mRunsListAdapter?.notifyDataSetChanged()
+
+        if (leaderboardId != null)
+            loadLeaderboard(leaderboardId!!)
+
+        /*if (mRuns.isNotEmpty()) {
             mFilteredLeaderboardRuns = if (filter != null) {
                 Log.d(TAG, "Filtering runs: $leaderboardId")
 
                 val activeVars = if (mLevel != null) { mLevel!!.variables!!.intersect(mCategory!!.variables!!) } else { mCategory!!.variables!! }
 
-                filter!!.filterLeaderboardRuns(mLeaderboard!!, activeVars)
+                filter!!.filterLeaderboardRuns(mRuns, activeVars)
             } else
-                mLeaderboard!!.runs
-
+                mRuns
             if (mRunsListAdapter != null) {
                 mRunsListAdapter!!.notifyDataSetChanged()
 
@@ -387,6 +424,26 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
                 } else {
                     mEmptyRuns!!.visibility = View.GONE
                 }
+            }
+        }*/
+    }
+
+    fun generateFilteredRuns() {
+        mFilteredLeaderboardRuns = if (filter != null) {
+            Log.d(TAG, "Filtering runs: $leaderboardId")
+
+            val activeVars = if (mLevel != null) { mLevel!!.variables!!.intersect(mCategory!!.variables!!) } else { mCategory!!.variables!! }
+
+            filter!!.filterLeaderboardRuns(mRuns, activeVars)
+        } else
+            mRuns
+        if (mRunsListAdapter != null) {
+            mRunsListAdapter!!.notifyDataSetChanged()
+
+            if (mFilteredLeaderboardRuns!!.isEmpty()) {
+                mEmptyRuns!!.visibility = View.VISIBLE
+            } else {
+                mEmptyRuns!!.visibility = View.GONE
             }
         }
     }
@@ -421,10 +478,13 @@ class LeaderboardFragment : Fragment(), Consumer<SpeedrunMiddlewareAPI.APIRespon
 
             holder.itemView.setOnClickListener(mOnClickListener)
             holder.itemView.tag = run
+
+            if(position == mFilteredLeaderboardRuns!!.size - 1 && mRunsLength == null)
+                loadLeaderboard(leaderboardId!!)
         }
 
         override fun getItemCount(): Int {
-            return if (mFilteredLeaderboardRuns != null) mFilteredLeaderboardRuns!!.size else 0
+            return mFilteredLeaderboardRuns?.size ?: 0
         }
     }
 

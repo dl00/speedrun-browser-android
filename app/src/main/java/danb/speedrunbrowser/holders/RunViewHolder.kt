@@ -21,6 +21,7 @@ import danb.speedrunbrowser.api.objects.User
 import danb.speedrunbrowser.utils.ImageLoader
 import danb.speedrunbrowser.utils.ImageViewPlacerConsumer
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 
 class RunViewHolder(v: View, val showRank: Boolean = true) : RecyclerView.ViewHolder(v) {
 
@@ -67,18 +68,22 @@ class RunViewHolder(v: View, val showRank: Boolean = true) : RecyclerView.ViewHo
             when {
                 entry.place == 1 && game.assets.trophy1st != null ->
                     disposables.add(il.loadImage(game.assets.trophy1st.uri)
+                            .subscribeOn(Schedulers.io())
                             .subscribe(ImageViewPlacerConsumer(mRankImg)))
 
                 entry.place == 2 && game.assets.trophy2nd != null ->
                     disposables.add(il.loadImage(game.assets.trophy2nd.uri)
+                            .subscribeOn(Schedulers.io())
                             .subscribe(ImageViewPlacerConsumer(mRankImg)))
 
                 entry.place == 3 && game.assets.trophy3rd != null ->
                     disposables.add(il.loadImage(game.assets.trophy3rd.uri)
+                            .subscribeOn(Schedulers.io())
                             .subscribe(ImageViewPlacerConsumer(mRankImg)))
 
                 entry.place == 4 && game.assets.trophy4th != null ->
                     disposables.add(il.loadImage(game.assets.trophy4th.uri)
+                            .subscribeOn(Schedulers.io())
                             .subscribe(ImageViewPlacerConsumer(mRankImg)))
 
                 else -> mRankImg.setImageDrawable(ColorDrawable(Color.TRANSPARENT))

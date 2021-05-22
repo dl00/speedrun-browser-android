@@ -25,9 +25,9 @@ import java.util.ArrayList
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
+import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry
 import danb.speedrunbrowser.api.objects.User
-import danb.speedrunbrowser.stats.PlayerStatisticsFragment
 import danb.speedrunbrowser.utils.*
 import danb.speedrunbrowser.views.ProgressSpinnerView
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -40,13 +40,16 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
     private val mDisposables = CompositeDisposable()
 
     private lateinit var mDB: AppDatabase
+    private lateinit var mImageLoader: ImageLoader
 
     private var mPlayer: User? = null
+    private var mPlayerBests: ArrayList<LeaderboardRunEntry> = arrayListOf()
     private var mSubscription: AppDatabase.Subscription? = null
 
     private var mMenu: Menu? = null
 
     private lateinit var mSpinner: ProgressSpinnerView
+    private lateinit var mBestsSpinner: ProgressSpinnerView
     private lateinit var mPlayerHead: View
     private var mScrollBests: View? = null
     private var mFrameBests: View? = null
@@ -68,10 +71,12 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
         setHasOptionsMenu(true)
 
         mDB = AppDatabase.make(requireContext())
+        mImageLoader = ImageLoader(requireContext())
 
         requireActivity().setTitle(R.string.title_loading)
 
         val args = arguments
+
 
         if(args != null) {
             mPlayer = args.getSerializable(ARG_PLAYER) as User?
@@ -116,6 +121,8 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
         mIconYoutube.setOnClickListener(this)
         mIconZSR.setOnClickListener(this)
 
+        mBestsSpinner = rootView.findViewById(R.id.bestsSpinner)
+
         setViewData()
 
         return rootView
@@ -157,8 +164,8 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
     private fun loadPlayer(playerId: String?) {
         Log.d(TAG, "Download playerId: " + playerId!!)
 
-        /// TODO: ideally this would be zipped/run in parallel
         mDisposables.add(SpeedrunMiddlewareAPI.make(requireContext()).listPlayers(playerId)
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(Consumer { gameAPIResponse ->
                     if (gameAPIResponse.data == null || gameAPIResponse.data.isEmpty()) {
@@ -168,9 +175,46 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
                     }
 
                     mPlayer = gameAPIResponse.data[0]
+                    loadPlayerBests(mPlayer!!.id)
 
                     setViewData()
 
+
+                    Analytics.logItemView(requireContext(), "player", playerId)
+                }, ConnectionErrorConsumer(requireContext())))
+    }
+
+    private fun loadPlayerBests(playerId: String, replace: Boolean = false) {
+
+        var startAfter = ""
+        if (!replace) {
+            startAfter = mPlayerBests.lastOrNull()?.run?.id ?: ""
+        }
+
+        mBestsSpinner.start()
+        mBestsSpinner.visibility = View.VISIBLE
+
+        mDisposables.add(SpeedrunMiddlewareAPI.make(requireContext()).listPlayerBests(playerId, startAfter)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(Consumer { runsApiResponse ->
+                    if (runsApiResponse.data == null || runsApiResponse.data.isEmpty()) {
+                        // game was not able to be found for some reason?
+                        Util.showErrorToast(requireContext(), getString(R.string.error_missing_game, playerId))
+                        return@Consumer
+                    }
+
+                    val runsList = runsApiResponse.data.filterNotNull()
+
+                    if (replace)
+                        mPlayerBests = ArrayList(runsList)
+                    else
+                        mPlayerBests.addAll(runsList)
+
+                    populateBestsFrame(replace)
+
+                    mBestsSpinner.stop()
+                    mBestsSpinner.visibility = View.GONE
 
                     Analytics.logItemView(requireContext(), "player", playerId)
                 }, ConnectionErrorConsumer(requireContext())))
@@ -259,6 +303,7 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
 
                     mBestsFrame.visibility = View.VISIBLE
                     mDisposables.add(il.loadImage(URL(String.format(Constants.AVATAR_IMG_LOCATION, mPlayer!!.names!!["international"])))
+                            .subscribeOn(Schedulers.io())
                             .subscribe(placer))
                 } catch (e: MalformedURLException) {
                     Log.w(TAG, "Chould not show player logo:", e)
@@ -268,7 +313,7 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
             } else
                 mBestsFrame.visibility = View.GONE
 
-            populateBestsFrame(il)
+            populateBestsFrame()
 
             mSpinner.visibility = View.GONE
             mPlayerHead.visibility = View.VISIBLE
@@ -278,87 +323,81 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
         }
     }
 
-    @SuppressLint("SetTextI18n")
-    private fun populateBestsFrame(il: ImageLoader) {
-        if (mPlayer!!.bests == null)
-            return
+    @SuppressLint("SetTextI18n", "InflateParams")
+    private fun populateBestsFrame(replace: Boolean = true) {
 
-        val playerGameBests: List<User.UserGameBests> =
-                ArrayList(mPlayer!!.bests!!.values)
-                        .sortedBy { it.newestRun?.run?.date ?: "00000000000" }.reversed()
+        if(replace) {
+            mBestsFrame.removeAllViews()
+        }
 
-        for (gameBests in playerGameBests) {
-            val gameLayout = layoutInflater.inflate(R.layout.content_game_personal_bests, null)
+        var curGameLayout: View? = null
+        var curGame: Game? = null
+        for (pb in mPlayerBests) {
 
-            (gameLayout.findViewById<View>(R.id.txtGameName) as TextView).text = gameBests.names!!["international"]
+            if(curGame?.id != pb.run.game?.id) {
+                if (curGameLayout != null)
+                    mBestsFrame.addView(curGameLayout)
 
-            if (gameBests.assets!!.coverLarge != null) {
-                val imgView = gameLayout.findViewById<ImageView>(R.id.imgGameCover)
+                curGameLayout = layoutInflater.inflate(R.layout.content_game_personal_bests, null)
+                curGame = pb.run.game
 
-                val placer = ImageViewPlacerConsumer(imgView)
-                placer.roundedCorners = resources.getDimensionPixelSize(R.dimen.game_cover_rounded_corners).toFloat()
+                (curGameLayout.findViewById<View>(R.id.txtGameName) as TextView).text = curGame!!.names!!["international"]
 
-                mDisposables.add(il.loadImage(gameBests.assets.coverLarge!!.uri)
-                        .subscribe(placer))
-            }
+                if (curGame.assets.coverLarge != null) {
+                    val imgView = curGameLayout.findViewById<ImageView>(R.id.imgGameCover)
 
-            val runsToAdd: MutableList<PersonalBestRunRow> = mutableListOf()
+                    val placer = ImageViewPlacerConsumer(imgView)
+                    placer.roundedCorners = resources.getDimensionPixelSize(R.dimen.game_cover_rounded_corners).toFloat()
 
-            for (categoryBest in gameBests.categories!!.values) {
-
-                if (categoryBest.levels != null && categoryBest.levels.isNotEmpty()) {
-                    for (levelBest in categoryBest.levels.values) {
-                        val rr = PersonalBestRunRow(categoryBest.name, levelBest.name, levelBest.run)
-                        runsToAdd.add(rr)
-                    }
-                } else {
-                    val rr = PersonalBestRunRow(categoryBest.name, null, categoryBest.run!!)
-                    runsToAdd.add(rr)
+                    mDisposables.add(mImageLoader.loadImage(curGame.assets.coverLarge!!.uri)
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(placer))
                 }
             }
 
-            // sort these runs by date, descending
-            val runsAdded = runsToAdd.sortedByDescending { it.re.run.date ?: "00000000000" }
+            val bestTable = curGameLayout!!.findViewById<LinearLayout>(R.id.tablePersonalBests)
 
-            val bestTable = gameLayout.findViewById<TableLayout>(R.id.tablePersonalBests)
-
-            for (row in runsAdded) {
-                val rowPersonalBest = layoutInflater.inflate(R.layout.content_row_personal_best, null) as TableRow
-                (rowPersonalBest.findViewById<View>(R.id.txtRunCategory) as TextView).text = row.label
-
-                val placeImg = rowPersonalBest.findViewById<ImageView>(R.id.imgPlace)
-
-                if (row.re.place == 1 && gameBests.assets.trophy1st != null) {
-                    mDisposables.add(il.loadImage(gameBests.assets.trophy1st.uri)
-                            .subscribe(ImageViewPlacerConsumer(placeImg)))
-                }
-                if (row.re.place == 2 && gameBests.assets.trophy2nd != null) {
-                    mDisposables.add(il.loadImage(gameBests.assets.trophy2nd.uri)
-                            .subscribe(ImageViewPlacerConsumer(placeImg)))
-                }
-                if (row.re.place == 3 && gameBests.assets.trophy3rd != null) {
-                    mDisposables.add(il.loadImage(gameBests.assets.trophy3rd.uri)
-                            .subscribe(ImageViewPlacerConsumer(placeImg)))
-                }
-                if (row.re.place == 4 && gameBests.assets.trophy4th != null) {
-                    mDisposables.add(il.loadImage(gameBests.assets.trophy4th.uri)
-                            .subscribe(ImageViewPlacerConsumer(placeImg)))
-                } else
-                    (placeImg as ImageView).setImageDrawable(ColorDrawable(Color.TRANSPARENT))
-
-                (rowPersonalBest.findViewById<View>(R.id.txtPlace) as TextView).text = row.re.placeName
-
-                (rowPersonalBest.findViewById<View>(R.id.txtRunTime) as TextView).text = row.re.run.times!!.time
-                (rowPersonalBest.findViewById<View>(R.id.txtRunDate) as TextView).text = row.re.run.date
-
-                rowPersonalBest.setOnClickListener { viewRun(row.re.run.id) }
-                rowPersonalBest.isFocusable = true
-                rowPersonalBest.background = resources.getDrawable(R.drawable.clickable_item)
-
-                bestTable.addView(rowPersonalBest)
+            val rowPersonalBest = layoutInflater.inflate(R.layout.content_row_personal_best, null) as LinearLayout
+            (rowPersonalBest.findViewById<View>(R.id.txtRunCategory) as TextView).text = if (pb.run.level?.name != null) {
+                "${pb.run.category!!.name} - ${pb.run.level.name}"
+            } else {
+                pb.run.category!!.name
             }
 
-            mBestsFrame.addView(gameLayout)
+            val placeImg = rowPersonalBest.findViewById<ImageView>(R.id.imgPlace)
+
+            if (pb.place == 1 && curGame!!.assets.trophy1st != null) {
+                mDisposables.add(mImageLoader.loadImage(curGame.assets.trophy1st!!.uri)
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(ImageViewPlacerConsumer(placeImg)))
+            }
+            if (pb.place == 2 && curGame!!.assets.trophy2nd != null) {
+                mDisposables.add(mImageLoader.loadImage(curGame.assets.trophy2nd!!.uri)
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(ImageViewPlacerConsumer(placeImg)))
+            }
+            if (pb.place == 3 && curGame!!.assets.trophy3rd != null) {
+                mDisposables.add(mImageLoader.loadImage(curGame.assets.trophy3rd!!.uri)
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(ImageViewPlacerConsumer(placeImg)))
+            }
+            if (pb.place == 4 && curGame!!.assets.trophy4th != null) {
+                mDisposables.add(mImageLoader.loadImage(curGame.assets.trophy4th!!.uri)
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(ImageViewPlacerConsumer(placeImg)))
+            } else
+                (placeImg as ImageView).setImageDrawable(ColorDrawable(Color.TRANSPARENT))
+
+            (rowPersonalBest.findViewById<View>(R.id.txtPlace) as TextView).text = pb.placeName
+
+            (rowPersonalBest.findViewById<View>(R.id.txtRunTime) as TextView).text = pb.run.times!!.time
+            (rowPersonalBest.findViewById<View>(R.id.txtRunDate) as TextView).text = pb.run.date
+
+            rowPersonalBest.setOnClickListener { viewRun(pb.run.id) }
+            rowPersonalBest.isFocusable = true
+            rowPersonalBest.background = resources.getDrawable(R.drawable.clickable_item)
+
+            bestTable.addView(rowPersonalBest)
         }
     }
 
@@ -388,19 +427,6 @@ class PlayerDetailFragment : Fragment(), View.OnClickListener {
     private fun viewStats() {
         if(mPlayer != null) {
             findNavController().navigate(PlayerDetailFragmentDirections.actionPlayerDetailFragmentToPlayerStatisticsFragment(mPlayer!!.id))
-        }
-    }
-
-    private class PersonalBestRunRow(categoryName: String, levelName: String?, var re: LeaderboardRunEntry) {
-
-        var label: String
-
-        init {
-
-            if (levelName != null)
-                label = "$categoryName - $levelName"
-            else
-                label = categoryName
         }
     }
 

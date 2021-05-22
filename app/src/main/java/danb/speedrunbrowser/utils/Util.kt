@@ -234,10 +234,16 @@ object Util {
                 .show()
     }
 
-    fun openInBrowser(ctx: Context, uri: Uri): Intent {
+    fun openInInternalBrowser(ctx: Context, uri: Uri): Intent {
         val intent = Intent(ctx, WebViewActivity::class.java)
         intent.putExtra(WebViewActivity.ARG_URL, uri.toString())
 
+        return intent
+    }
+
+    fun openInBrowser(ctx: Context, uri: Uri): Intent {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.setData(uri)
         return intent
     }
 
