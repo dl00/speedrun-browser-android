@@ -1,0 +1,230 @@
+<resources>
+    <string name="app_name">Navegador Speedrun.com</string>
+    <string name="title_game_detail">Ver tablas de clasificación del juego</string>
+    <string name="enter_game_name">Buscar juego por nombre&#8230;</string>
+    <string name="enter_genre_filter">Filtrar por género&#8230;</string>
+    <string name="label_key_platforms">Plataformas</string>
+    <string name="empty" />
+
+    <string name="error_missing_game">Error: Juego no encontrado: %1$s</string>
+    <string name="error_missing_leaderboard">Error: Tabla de clasificación no encontrada: %1$s</string>
+    <string name="error_missing_run">Error: Jugada/Ejecución no encontrada: %1$s</string>
+    <string name="button_view_rules">Ver reglas</string>
+    <string name="msg_no_rules_content">No se proporcionaron reglas para esta categoría.</string>
+    <string name="title_run_detail">Ver Speedrun</string>
+    <string name="desc_game_cover">Portada del juego (Imagen)</string>
+    <string name="desc_game_background">Fondo del juego (Imagen)</string>
+    <string name="msg_cannot_play_video">Lo sentimos, este video no se puede reproducir actualmente dentro de la aplicación.</string>
+    <string name="btn_open_browser">Abrir en el navegador</string>
+    <string name="title_activity_about">Acerca de</string>
+    <string name="label_about_subtitle">Navegador de Android no oficial</string>
+    <string name="label_about_author">Desarrollado por Daniel Beal (klbyte)</string>
+    <string name="label_about_author2">Datos proporcionados por Speedrun.com</string>
+    <string name="label_about_speedrun_legal">
+        Términos oficiales y legales de Speedrun.com:\n
+        El contenido original proporcionado en este sitio tiene licencia de Creative Commons Attribution-NonCommercial 4.0 International.
+        Adicionalmente, el contenido subido por los usuarios, como las imágenes de portada de juegos, es propiedad de sus respectivos propietarios;
+        lo mismo se aplica al contenido vinculado, como videos de YouTube e imágenes o documentos externos.\n
+        \n
+        Las aplicaciones cuya funcionalidad principal está directamente relacionada con el sitio pueden usar el nombre de dominio (speedrun.com)
+        en sus nombres, siempre que no sea el único nombre, y la aplicación se adhiera a la licencia aplicable al
+        contenido que utiliza. El nombre de la aplicación o la descripción deben indicar explícitamente que la aplicación no es oficial.
+    </string>
+    <string name="label_about_os_licenses">Ver licencias de código abierto</string>
+    <string name="menu_about">Acerca de</string>
+    <string name="error_could_not_connect">¡Error de conexión con el servidor! Verifique su conexión a Internet y vuelva a intentarlo más tarde.</string>
+    <string name="error_twitch">¡No se pudo cargar el reproductor Twitch! Vuelve a intentarlo más tarde.</string>
+    <string name="error_twitch_app">¡No se pudo cargar la aplicación de twitch! Verifique que esté instalado.</string>
+    <string name="button_filters">Filtros</string>
+    <string name="button_filters_used">Filtros &#9733;</string>
+    <string name="dialog_title_choose_filters">Filtrar juegos/ejecuciones por:</string>
+    <string name="dialog_title_choose_genres">Mostrar juegos/ejecuciones por género:</string>
+    <string name="empty_no_splits">¡Las divisiones llegarán pronto!</string>
+    <string name="empty_no_runs">No hay jugadas aquí (¡Es gratis!)</string>
+    <string name="msg_no_video">Esta ejecución no tiene video.</string>
+    <string name="error_invalod_url">URL no válida: %s</string>
+    <string name="label_game_search">Juegos</string>
+    <string name="label_player_search">Jugadores</string>
+    <string name="label_personal_bests">Récords personales</string>
+    <string name="label_you_can_click">Selecciona una ejecución para ver:</string>
+    <string name="error_cannot_play_video">Algo salió mal al ejecutar el reproductor.</string>
+    <string name="missing_watch_history">Las jugadas/carreras aparecerán aquí mientras las miras.</string>
+    <string name="menu_history">Historial de reproducciones</string>
+    <string name="title_activity_history">Historial de reproducciones</string>
+    <string name="title_loading">Cargando&#8230;</string>
+    <string name="menu_subscribe">Subscribirse</string>
+    <string name="menu_unsubscribe">Cancelar suscripción</string>
+    <string name="success_subscription">¡Se actualizó la configuración de notificaciones!</string>
+    <string name="default_notification_channel_id">Predeterminado</string>
+    <string name="notification_channel_title">Jugadores/juegos suscritos</string>
+
+    <string name="notify_title_player_record">PB: %1s en %2s</string>
+    <string name="notify_msg_player_record">%1s &#x2022; %2s en %3s</string>
+
+    <string name="notify_title_game_record">WR: %1s de %2s</string>
+    <string name="notify_msg_game_record">%1s &#x2022; %2s en %3s</string>
+
+    <string name="button_got_it">¡Entendido!</string>
+
+    <!-- release notes: edit for each release for now -->
+    <string name="dialog_title_release_notes">¡Bienvenido a Speedrun Browser (no oficial)!</string>
+    <string name="dialog_msg_first_run">
+        ¡Gracias por descargar la aplicación y probarla! \n
+        \n
+        A continuación, algunos consejos útiles para utilizar la aplicación: \ n
+        * Si selecciona un Speedrun para mirar, su progreso se registra automáticamente. Eres libre de retirarte y volver más tarde! \n
+        * Los filtros se pueden utilizar en cualquier tabla de clasificación. Sus opciones de filtro se guardan para la próxima vez. \n
+        * Puedes suscribirte a categorías y jugadores para recibir notificaciones de un nuevo PB/WR. \n
+        * Los gráficos están disponibles para el sitio, juegos, categorías/niveles y jugadores. Simplemente haga clic en el icono de gráfico. \n
+        * ¿Quieres ver Speedruns en tu televisor? Esta aplicación está disponible para Android TV o Amazon Fire TV (actualmente en versión beta). \n
+        \n
+        Este proyecto comenzó en marzo de 2019 debido a mi deseo de ver el sitio web Speedrun.com directamente desde
+        un teléfono. Si bien el sitio es compatible con dispositivos móviles, carece de algunas funciones útiles que normalmente se encuentran en
+        teléfonos inteligentes. Sigo proporcionando correcciones de errores y nuevas funciones para esta aplicación casi todos los meses. \n
+        \n
+        Si te gusta la aplicación, apoya mi motivación compartiéndola o calificándola, te lo agradeceré mucho!
+    </string>
+    <string name = "dialog_msg_release_notes">
+        ¡Gracias por usar la aplicación! \n
+        \n
+        Aquí lo nuevo de esta versión: \n
+        * Traducción a español (gracias a una amiga Maguie Velasco) \n
+        * Mejoras en algunos problemas reportados, gracias por reportar! \n
+        \n
+        ¿Disfrutas de la aplicación? ¡Dale una calificación o compartir!
+    </string>
+    <string name="dialog_button_rate_now">¡Calificar ahora!</string>
+
+    <string name="label_about_privacy_policy">Política de privacidad</string>
+    <string name="label_about_terms_and_conditions"><![CDATA[Terms & Conditions]]></string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hola fragmento en blanco</string>
+    <string name="title_tab_subscribed_games">Juegos suscritos</string>
+    <string name="title_tab_popular_games">Juegos populares</string>
+    <string name="title_tab_players">Jugadores</string>
+    <string name="title_tab_subscribed_players">Jugadores suscritos</string>
+    <string name="title_tab_games">Juegos</string>
+    <string name="empty_no_players">¡No hay jugadores para mostrar! Escribe en el cuadro de búsqueda para buscar un jugador por su nombre.</string>
+    <string name="empty_no_games">No se encontraron juegos.</string>
+    <string name="title_tab_latest_runs">Últimas ejecuciones</string>
+    <string name="transition_feature_img">featureImg</string>
+    <string name="title_tab_recently_watched">Visto recientemente</string>
+    <string name="error_could_not_find">No se pudieron encontrar los datos: %1$s</string>
+    <string name="title_item_detail">Navegador Speedrun.com (no oficial)</string>
+    <string name="dialog_msg_choose_categories">Seleccione las categorías/niveles en los que desea recibir notificaciones de nuevos registros. Elija "Seleccionar ninguno" para cancelar la suscripción.</string>
+    <string name="button_select_all">Seleccionar todo</string>
+    <string name="button_select_none">Seleccionar ninguno</string>
+    <string name="button_save">Guardar</string>
+    <string name="render_level_category">%1$s &#x2022; %2$s</string>
+    <string name="label_filter_platform">Plataforma</string>
+    <string name="label_filter_region">Región</string>
+    <string name="menu_genres">Géneros</string>
+    <string name="label_all_genres">Todos los géneros</string>
+    <string name="button_view_on_official">Ver en el reproductor oficial</string>
+    <string name="msg_share_run">Speedrun por %s en %s, %s %s</string>
+    <string name="msg_share_run_explain">Compartir ejecución</string>
+    <string name="label_about_rate_this">¡Califica esta aplicación!</string>
+    <string name="label_about_complain">Reportar un problema</string>
+    <string name="dialog_title_send_email">Reportar un problema</string>
+    <string name="dialog_msg_send_email">
+        Hago todo lo posible para rastrear, monitorear y resolver fallas y otros malos comportamientos de aplicaciones que se pueden observar a través de
+        información analítica (analytics). Sin embargo, he tenido muchas dificultades para resolver algunos que han sido informados en Play Store
+        por no tener una línea de comunicación directa o recibir detalles más específicos del problema. \n
+        \n
+        Como alternativa, este proyecto usa GitHub Issues para rastrear problemas y comunicar problemas.
+        Si deseas reportar uno, el primer requisito es tener una cuenta de GitHub. Seguidamente, será más sencillo si incluyes: \n
+        \n
+        * Capturas de pantalla y páginas sobre el problema, cuando corresponda \n
+        * Una descripción detallada de su sesión, incluidos los juegos, jugadores y ejecuciones que pudiste haber visto.
+    </string>
+    <string name="dialog_button_send_email">Abrir GitHub</string>
+    <string name="chart_title_volume">Volumen de envío</string>
+    <string name="chart_desc_volume">Número de ejecuciones enviadas en un período de tiempo. Una señal potencial de nuevos saltos o nivel de popularidad.</string>
+    <string name="menu_charts_and_statistics">Gráficos y estadísticas</string>
+    <string name="title_game_stats">Estadísticas del juego</string>
+    <string name="chart_legend_volume">PB enviados</string>
+    <string name="chart_title_wrs">Progresión del récord mundial</string>
+    <string name="chart_desc_wrs">¡Toque un elemento de la lista mientras está seleccionado para ver la ejecución!\n
+        \n
+        Tiempo de finalización del juego por récords mundiales a lo largo del tiempo. Trazado por cada subcategoría en la misma línea.</string>
+    <string name="title_leaderboard_stats">Estadísticas de la tabla de clasificación</string>
+    <string name="button_view_leaderboard_info">Ver reglas/estadísticas</string>
+    <string name="chart_title_distribution">Distribución PB</string>
+    <string name="chart_desc_distribution">
+        Traza todas las carreras de la tabla de clasificación en un solo gráfico.
+        \n
+        Esta tabla ofrece una visión holística de cómo se vería un tiempo hábil "típico", lo que separa a los corredores experimentados de los novatos.
+    </string>
+    <string name="chart_title_favorite_games">Juegos favoritos</string>
+    <string name="chart_desc_favorite_games">El número de PB que este jugador ha enviado para cada juego, mostrado como una rueda circular.</string>
+    <string name="chart_title_count_over_time">Total de registros de PB</string>
+    <string name="chart_desc_count_over_time">La cantidad de ejecuciones verificadas registradas en el sitio a lo largo del tiempo.</string>
+    <string name="prelude_rules">**Reglas:**\n\n %s</string>
+    <string name="title_site_statistics">Estadísticas del sitio Speedrun.com</string>
+    <string name="title_player_stats">Estadísticas del jugador</string>
+    <string name="try_website">Cargue esto en el sitio web</string>
+    <string name="button_main_page">Página principal</string>
+    <string name="error_not_loadable">No se pudo cargar esta URL. Es posible que la aplicación no lo admita.</string>
+    <string name="menu_view_website">Ver en el sitio web</string>
+    <string name="switch_bleeding_edge">Mostrar ejecuciones no verificadas</string>
+    <string name="label_filter_this">Filtrar a este grupo</string>
+    <string name="dialog_msg_old_version">El servidor ha indicado que la versión de su aplicación es demasiado antigua. Algunas características pueden no funcionar como se espera. Para solucionarlo, actualice la aplicación.</string>
+    <string name="dialog_title_old_version">Aplicación desactualizada</string>
+    <string name="dialog_button_play_store">Abrir Play Store</string>
+    <string name="ignore">Ignorar</string>
+    <string name="dialog_button_share">Compartir aplicación</string>
+    <string name="msg_share_app">Consulte el navegador no oficial Speedrun.com de klbyte para Android https://play.google.com/store/apps/details?id=danb.speedrunbrowser
+    </string>
+    <string name="label_about_share_this">¡Comparte esta aplicación!</string>
+    <string name="metric_title_total_runs">Total de carreras enviadas</string>
+    <string name="metric_desc_total_runs">Número de PB enviados en todo momento.</string>
+    <string name="metric_title_total_players">Total Speedrunners</string>
+    <string name="metric_desc_total_players">Número de cuentas únicas de Speedrun.com que han enviado un speedrun.</string>
+    <string name="metric_title_total_games">Total de juegos</string>
+    <string name="metric_desc_total_games">Número de juegos con al menos speedrun enviados.</string>
+    <string name="metric_title_total_leaderboards">Tablas de clasificación totales</string>
+    <string name="metric_desc_total_leaderboards">Número de tablas de clasificación, ignorando las subcategorías, incluidas las tablas de clasificación vacías.</string>
+    <string name="metric_title_total_run_time">Tiempo de ejecución acumulado</string>
+    <string name="metric_desc_total_run_time">Número de PB enviados en todo momento.</string>
+    <string name="metric_title_total_runs_full_game">Ejecuciones del juego completo enviadas</string>
+    <string name="metric_desc_total_runs_full_game">Número de PB enviados en todo el tiempo solo para ejecuciones de juegos completos.</string>
+    <string name="metric_title_total_runs_level">Ejecuciones de nivel enviadas</string>
+    <string name="metric_desc_total_runs_level">Número de PB enviados durante todo el tiempo solo para ejecuciones de nivel individual.</string>
+    <string name="label_list_mode_popular">Popular</string>
+    <string name="label_list_mode_trending"><![CDATA[New & Trending]]></string>
+    <string name="label_list_mode_verified">Verificado</string>
+    <string name="label_list_mode_unverified">Sin verificar</string>
+    <string name="title_tab_streams">Transmisiones</string>
+    <string name="empty_no_streams">No se encontraron transmisiones.</string>
+    <string name="label_stream_viewers">%s mirando</string>
+    <string name="label_list_mode_all">Todo</string>
+    <string name="label_welcome">¡Bienvenido al navegador Speedrun.com (no oficial)!</string>
+    <string name="label_welcome_help">¡Elija una opción de la izquierda para comenzar!</string>
+    <string name="label_about_source_code">Ver código fuente</string>
+    <string name="button_clear">Borrar</string>
+    <string name="chart_title_player_game">Registros de partidas de jugadores</string>
+    <string name="chart_desc_player_game">Información detallada sobre un jugador para cada juego.</string>
+    <string name="chart_title_pbs">PBs</string>
+    <string name="chart_desc_pbs">Los mejores tiempos personales de este jugador registrados a lo largo del tiempo</string>
+    <string name="label_days">%d días</string>
+    <string name="chart_title_longest_holders">Dueños de récords más largos de todos los tiempos</string>
+    <string name="chart_desc_longest_holders">
+    Total de días que se mantuvo en el récord mundial para un jugador en una categoría. Los récords mundiales individuales tienden a no durar mucho, por lo que esta tabla expone a contendientes comunes.
+    </string>
+    <string name="unknown">Deconocido</string>
+    <string name="msg_player_not_account">Este jugador no tiene una cuenta para mirar.</string>
+    <string name="msg_get_api_key">Inicie sesión, abra Configuración y copie su clave de API</string>
+    <string name="menu_settings">Configuración</string>
+    <string name="error_api_key_invalid">No se pudo leer el perfil. ¿Es válida la clave de API?</string>
+    <string name="msg_welcome_user">Bienvenido, %s</string>
+    <string name="button_skip">Omitir</string>
+    <string name="button_approve">Aprobar</string>
+    <string name="button_reject">Rechazar</string>
+    <string name="menu_moderation">Hacer moderación</string>
+    <string name="title_activity_webview">Vista web</string>
+    <string name="msg_no_mod_runs">No hay nuevas ejecuciones pendientes de revisión.</string>
+    <string name="dialog_title_reject_reason">Motivo del rechazo:</string>
+    <string name="msg_submitted_at">Enviado a Speedrun.com en %s</string>
+    <string name="label_list_mode_wrs">WR recientes</string>
+</resources>
