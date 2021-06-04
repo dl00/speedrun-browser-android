@@ -92,7 +92,7 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
 
         setHasOptionsMenu(true)
 
-        mDB = AppDatabase.make(context!!)
+        mDB = AppDatabase.make(requireContext())
 
         val args = arguments
 
@@ -145,7 +145,7 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
             return true
         }
         else if(item.itemId == R.id.menu_view_website && mGame != null) {
-            startActivity(Util.openInBrowser(context!!, Uri.parse(mGame!!.weblink)))
+            startActivity(Util.openInBrowser(requireContext(), Uri.parse(mGame!!.weblink)))
         }
 
         return false
@@ -172,18 +172,18 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
 
     private fun loadGame(gameId: String?, leaderboardId: String?): Disposable {
         Log.d(TAG, "Downloading game data: " + gameId!!)
-        return SpeedrunMiddlewareAPI.make(context!!).listGames(gameId)
+        return SpeedrunMiddlewareAPI.make(requireContext()).listGames(gameId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(Consumer { gameAPIResponse ->
 
                     if (gameAPIResponse.error != null) {
-                        Util.showErrorToast(context!!, getString(R.string.error_could_not_connect))
+                        Util.showErrorToast(requireContext(), getString(R.string.error_could_not_connect))
                     }
 
                     if (gameAPIResponse.data!!.isEmpty()) {
                         // game was not able to be found for some reason?
-                        Util.showErrorToast(context!!, getString(R.string.error_missing_game, gameId))
+                        Util.showErrorToast(requireContext(), getString(R.string.error_missing_game, gameId))
                         return@Consumer
                     }
 
@@ -196,8 +196,8 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
                         switchToLeaderboard(leaderboardId)
                     }
 
-                    Analytics.logItemView(context!!, "game", gameId)
-                }, ConnectionErrorConsumer(context!!))
+                    Analytics.logItemView(requireContext(), "game", gameId)
+                }, ConnectionErrorConsumer(requireContext()))
     }
 
     private fun switchToLeaderboard(leaderboardId: String) {
@@ -384,7 +384,7 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
     get() = mCategoryTabStrip!!.pagerAdapter!!.getCategoryOfIndex(mLeaderboardPager!!.currentItem).variables!!
 
     private fun recordFilterPreferences(gameId: String) {
-        val prefs = context!!.getSharedPreferences(SHARED_PREFS_GAME_FILTERS + gameId, MODE_PRIVATE).edit()
+        val prefs = requireContext().getSharedPreferences(SHARED_PREFS_GAME_FILTERS + gameId, MODE_PRIVATE).edit()
 
         // platform and region are special
         val vars = currentVariables
@@ -405,7 +405,7 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
     }
 
     private fun loadFilterPreferences(gameId: String): Variable.VariableSelections {
-        val prefs = context!!.getSharedPreferences(SHARED_PREFS_GAME_FILTERS + gameId, MODE_PRIVATE)
+        val prefs = requireContext().getSharedPreferences(SHARED_PREFS_GAME_FILTERS + gameId, MODE_PRIVATE)
 
         val vs = Variable.VariableSelections()
 
@@ -418,7 +418,7 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
 
     private fun openSubscriptionDialog() {
 
-        val dialog = GameSubscribeDialog(context!!, mSubscription!!.clone() as GameSubscription)
+        val dialog = GameSubscribeDialog(requireContext(), mSubscription!!.clone() as GameSubscription)
 
         dialog.show()
 
@@ -435,13 +435,13 @@ class GameDetailFragment : Fragment(), LeaderboardFragment.LeaderboardInteracter
                 return@OnDismissListener
             }
 
-            val psv = ProgressSpinnerView(context!!, null)
+            val psv = ProgressSpinnerView(requireContext(), null)
             psv.setDirection(ProgressSpinnerView.Direction.RIGHT)
             psv.setScale(0.5f)
 
             mMenu!!.findItem(R.id.menu_subscribe).actionView = psv
 
-            val sc = SubscriptionChanger(context!!, mDB)
+            val sc = SubscriptionChanger(requireContext(), mDB)
 
             // change all the subscriptions async in one go
             mDisposables.add(Observable.fromIterable<AppDatabase.Subscription>(delSubs)

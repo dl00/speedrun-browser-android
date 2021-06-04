@@ -20,10 +20,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.preference.PreferenceManager
 import androidx.viewpager.widget.ViewPager
 import com.google.android.gms.security.ProviderInstaller
-import com.google.firebase.crash.FirebaseCrash
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.GameGroup
-import danb.speedrunbrowser.stats.GameGroupStatisticsFragment
 import danb.speedrunbrowser.utils.Analytics
 import danb.speedrunbrowser.utils.AppDatabase
 import danb.speedrunbrowser.utils.ItemType
@@ -35,7 +33,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.Function
 import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.menu_moderation.*
 import java.net.URL
 import java.util.*
 import kotlin.collections.ArrayList
@@ -103,9 +100,6 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
         api = SpeedrunMiddlewareAPI.make(requireContext())
         mDB = AppDatabase.make(requireContext())
         mPrefs = PreferenceManager.getDefaultSharedPreferences(requireActivity())
-
-        @Suppress("DEPRECATION")
-        FirebaseCrash.setCrashCollectionEnabled(!BuildConfig.DEBUG)
 
         Util.showNewFeaturesDialog(requireContext())
 
@@ -231,6 +225,7 @@ class GameListFragment : Fragment(), ItemListFragment.OnFragmentInteractionListe
                     .replace(R.id.detail_container, mDetailFragment!!)
                     .commit()
         } else {
+
             findNavController().navigate(GameListFragmentDirections.actionGameListFragmentToGameDetailFragment(id, null, null))
         }
     }

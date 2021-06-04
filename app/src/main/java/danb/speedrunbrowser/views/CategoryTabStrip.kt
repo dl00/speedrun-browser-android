@@ -21,7 +21,6 @@ import danb.speedrunbrowser.api.objects.Game
 import danb.speedrunbrowser.api.objects.Level
 import danb.speedrunbrowser.api.objects.Variable
 import danb.speedrunbrowser.utils.LeaderboardPagerAdapter
-import kotlinx.android.synthetic.main.game_list.view.*
 import kotlin.math.floor
 
 class CategoryTabStrip(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs), ViewPager.OnPageChangeListener {

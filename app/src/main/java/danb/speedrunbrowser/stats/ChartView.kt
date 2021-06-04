@@ -30,7 +30,6 @@ import danb.speedrunbrowser.utils.ViewPagerAdapter
 import danb.speedrunbrowser.utils.Util
 import danb.speedrunbrowser.views.SimpleTabStrip
 import io.reactivex.disposables.CompositeDisposable
-import kotlinx.android.synthetic.main.content_chart_view.view.*
 
 fun Chart.generateMpLineSetData(context: Context, chartContext: SpeedrunMiddlewareAPI.APIChartDataContext, labels: (chartContext: SpeedrunMiddlewareAPI.APIChartDataContext, v: String) -> String): LineData {
     val mpData = LineData()
@@ -378,7 +377,7 @@ class ChartView(ctx: Context, val options: ChartOptions) : FrameLayout(ctx), OnC
 
         if(h != null && listAdapters.size != 0) {
 
-            pagerChartList.currentItem = h.dataSetIndex
+            listPager.currentItem = h.dataSetIndex
 
             val dataIndex = chartData!!.data
                 .getValue(chartData!!.datasets[h.dataSetIndex]).indexOfFirst {

@@ -2,7 +2,6 @@ package danb.speedrunbrowser
 
 import android.animation.Animator
 import android.content.Context
-import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -11,16 +10,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import androidx.activity.result.ActivityResultCallback
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.ActivityResultRegistry
-import androidx.activity.result.contract.ActivityResultContract
 import androidx.core.content.ContextCompat
-import androidx.core.view.get
 
-import java.util.Objects
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.chip.Chip
@@ -29,14 +21,11 @@ import com.google.android.material.chip.ChipGroup
 import danb.speedrunbrowser.api.SpeedrunMiddlewareAPI
 import danb.speedrunbrowser.api.objects.Category
 import danb.speedrunbrowser.api.objects.Game
-import danb.speedrunbrowser.api.objects.Leaderboard
 import danb.speedrunbrowser.api.objects.LeaderboardRunEntry
 import danb.speedrunbrowser.api.objects.Level
 import danb.speedrunbrowser.api.objects.Variable
 import danb.speedrunbrowser.holders.RunViewHolder
-import danb.speedrunbrowser.stats.LeaderboardStatisticsFragment
 import danb.speedrunbrowser.utils.ConnectionErrorConsumer
-import danb.speedrunbrowser.utils.ItemType
 import danb.speedrunbrowser.utils.Util
 import danb.speedrunbrowser.views.ProgressSpinnerView
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -44,7 +33,6 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.fragment_run_detail.*
 
 /**
  * A fragment representing a single leaderboard, containing a list a records.
